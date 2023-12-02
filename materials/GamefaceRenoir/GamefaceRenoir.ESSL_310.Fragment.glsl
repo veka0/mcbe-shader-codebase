@@ -1,0 +1,214 @@
+#version 310 es
+
+/*
+* Available Macros:
+*
+* Passes:
+* - TRANSPARENT_PASS (not used)
+*/
+
+#if GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define attribute in
+#define varying in
+out vec4 bgfx_FragColor;
+varying vec4 v_additional;
+varying vec4 v_color;
+varying vec4 v_screenPosition;
+varying vec4 v_varyingParam0;
+varying vec4 v_varyingParam1;
+struct NoopSampler {
+    int noop;
+};
+
+vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
+    return texture(_sampler, _coord);
+}
+vec4 textureSample(mediump sampler3D _sampler, vec3 _coord) {
+    return texture(_sampler, _coord);
+}
+vec4 textureSample(mediump samplerCube _sampler, vec3 _coord) {
+    return texture(_sampler, _coord);
+}
+vec4 textureSample(mediump sampler2D _sampler, vec2 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
+vec4 textureSample(mediump sampler3D _sampler, vec3 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
+vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
+    return texture(_sampler, _coord);
+}
+vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
+vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+struct NoopImage2D {
+    int noop;
+};
+
+struct NoopImage3D {
+    int noop;
+};
+
+struct rayQueryKHR {
+    int noop;
+};
+
+struct accelerationStructureKHR {
+    int noop;
+};
+
+uniform vec4 u_viewRect;
+uniform mat4 u_proj;
+uniform vec4 GradientMidColor;
+uniform mat4 u_view;
+uniform vec4 u_viewTexel;
+uniform mat4 u_invView;
+uniform mat4 u_invProj;
+uniform mat4 u_viewProj;
+uniform mat4 u_invViewProj;
+uniform mat4 u_prevViewProj;
+uniform mat4 u_model[4];
+uniform mat4 u_modelView;
+uniform vec4 GradientYCoord;
+uniform mat4 u_modelViewProj;
+uniform vec4 u_prevWorldPosOffset;
+uniform vec4 ShaderType;
+uniform vec4 u_alphaRef4;
+uniform vec4 GradientEndColor;
+uniform vec4 MaskScaleAndOffset;
+uniform vec4 GradientStartColor;
+uniform mat4 Transform;
+uniform mat4 CoordTransformVS;
+vec4 ViewRect;
+mat4 Proj;
+mat4 View;
+vec4 ViewTexel;
+mat4 InvView;
+mat4 InvProj;
+mat4 ViewProj;
+mat4 InvViewProj;
+mat4 PrevViewProj;
+mat4 WorldArray[4];
+mat4 World;
+mat4 WorldView;
+mat4 WorldViewProj;
+vec4 PrevWorldPosOffset;
+vec4 AlphaRef4;
+float AlphaRef;
+struct VertexInput {
+    vec4 position;
+    vec4 color;
+    vec4 additional;
+};
+
+struct VertexOutput {
+    vec4 position;
+    vec4 screenPosition;
+    vec4 color;
+    vec4 varyingParam0;
+    vec4 additional;
+    vec4 varyingParam1;
+};
+
+struct FragmentInput {
+    vec4 screenPosition;
+    vec4 color;
+    vec4 varyingParam0;
+    vec4 additional;
+    vec4 varyingParam1;
+};
+
+struct FragmentOutput {
+    vec4 Color0;
+};
+
+uniform lowp sampler2D s_Texture0;
+uniform lowp sampler2D s_Texture1;
+uniform lowp sampler2D s_Texture2;
+float Mirror(float u) {
+    float t = 2.0 * fract(u * 0.5);
+    return t < 1.0 ? t : 2.0 - t;
+}
+void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    float tVal = 0.0;
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x2)) * 2)))) >= (int(0x2)))) {
+        tVal = fragInput.varyingParam0.x;
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x4)) * 2)))) >= (int(0x4)))) {
+        tVal = length(fragInput.varyingParam0.xy);
+    }
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x80)) * 2)))) >= (int(0x80)))) {
+        tVal = fract(tVal);
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x100)) * 2)))) >= (int(0x100)))) {
+        tVal = Mirror(tVal);
+    }
+    vec4 colorTemp = vec4(0, 0, 0, 0);
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x8)) * 2)))) >= (int(0x8)))) {
+        colorTemp = mix(GradientStartColor, GradientEndColor, clamp(tVal, 0.0, 1.0));
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x10)) * 2)))) >= (int(0x10)))) {
+        float oneMinus2t = 1.0 - (2.0 * tVal);
+        colorTemp = clamp(oneMinus2t, 0.0, 1.0) * GradientStartColor;
+        colorTemp += (1.0 - min(abs(oneMinus2t), 1.0)) * GradientMidColor;
+        colorTemp += clamp(-oneMinus2t, 0.0, 1.0) * GradientEndColor;
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x20)) * 2)))) >= (int(0x20)))) {
+        vec2 coord = vec2(tVal, GradientYCoord.x);
+        colorTemp = textureSample(s_Texture2, coord);
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x1)) * 2)))) >= (int(0x1)))) {
+        vec2 uvCoords = (vec2((vec2(fragInput.additional.xy)).x, 1.0 - (vec2(fragInput.additional.xy)).y));
+        colorTemp = textureSample(s_Texture0, uvCoords);
+    }
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x40)) * 2)))) >= (int(0x40)))) {
+        float mask = textureSample(s_Texture1, fragInput.varyingParam1.xy).a;
+        colorTemp *= mask;
+    }
+    fragOutput.Color0 = colorTemp * clamp(fragInput.additional.z, 0.0, 1.0);
+}
+void main() {
+    FragmentInput fragmentInput;
+    FragmentOutput fragmentOutput;
+    fragmentInput.screenPosition = v_screenPosition;
+    fragmentInput.color = v_color;
+    fragmentInput.varyingParam0 = v_varyingParam0;
+    fragmentInput.additional = v_additional;
+    fragmentInput.varyingParam1 = v_varyingParam1;
+    fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+    ViewRect = u_viewRect;
+    Proj = u_proj;
+    View = u_view;
+    ViewTexel = u_viewTexel;
+    InvView = u_invView;
+    InvProj = u_invProj;
+    ViewProj = u_viewProj;
+    InvViewProj = u_invViewProj;
+    PrevViewProj = u_prevViewProj;
+    {
+        WorldArray[0] = u_model[0];
+        WorldArray[1] = u_model[1];
+        WorldArray[2] = u_model[2];
+        WorldArray[3] = u_model[3];
+    }
+    World = u_model[0];
+    WorldView = u_modelView;
+    WorldViewProj = u_modelViewProj;
+    PrevWorldPosOffset = u_prevWorldPosOffset;
+    AlphaRef4 = u_alphaRef4;
+    AlphaRef = u_alphaRef4.x;
+    Frag(fragmentInput, fragmentOutput);
+    bgfx_FragColor = fragmentOutput.Color0;
+}
+
