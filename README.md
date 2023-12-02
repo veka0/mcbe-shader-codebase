@@ -1,5 +1,5 @@
 # Overview
-This repository contains vanilla GLSL shader code from Minecraft Bedrock Edition.
+This repository contains vanilla Minecraft: Bedrock Edition GLSL shaders.
 
 Shader code is auto-generated with **COMING SOON** using material.bin files extracted from Android MCBE version.
 ## Branches
