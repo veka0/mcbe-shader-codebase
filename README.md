@@ -7,7 +7,7 @@ Different editions are divided into separate branches
 - `main` - release versions
 - `preview` - preview versions
 ## Accuracy
-Generated code is usually accurate, however sometimes the tool is unable to generate exact macro condition, in this case it will use the best approximation it could find and insert a comment just before macro condition, which will look like this:
+Generated code is usually accurate, however sometimes the tool is unable to generate exact macro condition, in that case it will use the best approximation it could find and insert a comment just before macro condition, which will look like this:
 ```glsl
 // Approximation, matches 44 cases out of 48
 #if defined(SEASONS__ON) && !defined(DEPTH_ONLY_OPAQUE_PASS) && !defined(DEPTH_ONLY_PASS) && !defined(TRANSPARENT_PBR_PASS)
