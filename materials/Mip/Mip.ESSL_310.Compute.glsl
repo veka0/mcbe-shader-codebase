@@ -32,8 +32,8 @@ struct accelerationStructureKHR {
 };
 
 uniform vec4 Levels;
-uniform mat4 SceneInverseProjection;
 uniform vec4 ScreenSize;
+uniform mat4 SceneInverseProjection;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
 uvec3 GlobalInvocationID;

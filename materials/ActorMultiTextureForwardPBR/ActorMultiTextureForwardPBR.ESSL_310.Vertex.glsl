@@ -109,17 +109,17 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform vec4 UseAlphaRewrite;
 uniform mat4 PointLightProj;
+uniform vec4 UseAlphaRewrite;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
-uniform vec4 PointLightShadowParams1;
 uniform vec4 SunDir;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
-uniform vec4 PBRTextureFlags;
 uniform vec4 ShadowSlopeBias;
+uniform vec4 PBRTextureFlags;
 uniform mat4 u_invView;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
@@ -127,8 +127,8 @@ uniform vec4 OverlayColor;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PrepassUVOffset;
+uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
@@ -145,8 +145,8 @@ uniform vec4 UVAnimation;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
 uniform vec4 ShadowPCFWidth;
-uniform vec4 VolumeDimensions;
 uniform vec4 ActorFPEpsilon;
+uniform vec4 VolumeDimensions;
 uniform vec4 FogColor;
 uniform vec4 MetalnessUniform;
 uniform vec4 MultiplicativeTintColor;
@@ -166,8 +166,8 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 CameraLightIntensity;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterDimensions;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 MoonDir;
 uniform mat4 PrevBones[8];
@@ -220,6 +220,20 @@ struct PBRLightingContributions {
     vec3 emissive;
 };
 
+struct LightSourceWorldInfo {
+    vec4 worldSpaceDirection;
+    vec4 diffuseColorAndIlluminance;
+    vec4 shadowDirection;
+    mat4 shadowProj0;
+    mat4 shadowProj1;
+    mat4 shadowProj2;
+    mat4 shadowProj3;
+    int isSun;
+    int shadowCascadeNumber;
+    int pad0;
+    int pad1;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -239,18 +253,8 @@ struct PBRTextureData {
     float pad;
 };
 
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
+struct LightData {
+    float lookup;
 };
 
 struct Light {
@@ -260,10 +264,6 @@ struct Light {
     float gridLevelRadius;
     float higherGridLevelRadius;
     float lowerGridLevelRadius;
-};
-
-struct LightData {
-    float lookup;
 };
 
 struct VertexInput {

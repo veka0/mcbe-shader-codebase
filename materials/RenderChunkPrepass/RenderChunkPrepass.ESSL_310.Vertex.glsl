@@ -189,20 +189,25 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
+    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
     vec4 color0;
-    #ifdef OPAQUE_PASS
+    #endif
     vec2 lightmapUV;
-    #endif
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(TRANSPARENT_PBR_PASS)
+    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
     vec4 fog;
-    vec3 tangent;
     #endif
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
+    vec4 color0;
+    #endif
+    #ifdef OPAQUE_PASS
+    vec4 fog;
+    #endif
+    #ifndef TRANSPARENT_PBR_PASS
     vec3 normal;
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
+    #endif
     vec3 tangent;
+    #ifdef TRANSPARENT_PBR_PASS
+    vec3 normal;
     #endif
     vec3 bitangent;
     vec3 worldPos;
@@ -216,20 +221,25 @@ struct VertexOutput {
 
 struct FragmentInput {
     vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
+    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
     vec4 color0;
-    #ifdef OPAQUE_PASS
+    #endif
     vec2 lightmapUV;
-    #endif
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(TRANSPARENT_PBR_PASS)
+    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
     vec4 fog;
-    vec3 tangent;
     #endif
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
+    vec4 color0;
+    #endif
+    #ifdef OPAQUE_PASS
+    vec4 fog;
+    #endif
+    #ifndef TRANSPARENT_PBR_PASS
     vec3 normal;
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
+    #endif
     vec3 tangent;
+    #ifdef TRANSPARENT_PBR_PASS
+    vec3 normal;
     #endif
     vec3 bitangent;
     vec3 worldPos;
@@ -475,20 +485,25 @@ void main() {
     vertexInput.pbrTextureId = int(a_texcoord4);
     #endif
     vertexOutput.texcoord0 = vec2(0, 0);
-    #ifndef OPAQUE_PASS
-    vertexOutput.lightmapUV = vec2(0, 0);
-    #endif
+    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #ifdef OPAQUE_PASS
+    #endif
     vertexOutput.lightmapUV = vec2(0, 0);
-    #endif
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(TRANSPARENT_PBR_PASS)
+    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
     vertexOutput.fog = vec4(0, 0, 0, 0);
-    vertexOutput.tangent = vec3(0, 0, 0);
     #endif
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
+    vertexOutput.color0 = vec4(0, 0, 0, 0);
+    #endif
+    #ifdef OPAQUE_PASS
+    vertexOutput.fog = vec4(0, 0, 0, 0);
+    #endif
+    #ifndef TRANSPARENT_PBR_PASS
     vertexOutput.normal = vec3(0, 0, 0);
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
+    #endif
     vertexOutput.tangent = vec3(0, 0, 0);
+    #ifdef TRANSPARENT_PBR_PASS
+    vertexOutput.normal = vec3(0, 0, 0);
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
@@ -522,20 +537,25 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_texcoord0 = vertexOutput.texcoord0;
-    #ifndef OPAQUE_PASS
-    v_lightmapUV = vertexOutput.lightmapUV;
-    #endif
+    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
     v_color0 = vertexOutput.color0;
-    #ifdef OPAQUE_PASS
+    #endif
     v_lightmapUV = vertexOutput.lightmapUV;
-    #endif
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(TRANSPARENT_PBR_PASS)
+    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
     v_fog = vertexOutput.fog;
-    v_tangent = vertexOutput.tangent;
     #endif
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
+    v_color0 = vertexOutput.color0;
+    #endif
+    #ifdef OPAQUE_PASS
+    v_fog = vertexOutput.fog;
+    #endif
+    #ifndef TRANSPARENT_PBR_PASS
     v_normal = vertexOutput.normal;
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
+    #endif
     v_tangent = vertexOutput.tangent;
+    #ifdef TRANSPARENT_PBR_PASS
+    v_normal = vertexOutput.normal;
     #endif
     v_bitangent = vertexOutput.bitangent;
     v_worldPos = vertexOutput.worldPos;

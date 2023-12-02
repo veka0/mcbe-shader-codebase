@@ -115,12 +115,12 @@ struct accelerationStructureKHR {
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
-uniform vec4 FogControl;
+uniform vec4 ChangeColor;
+uniform vec4 PointLightShadowParams1;
+uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
-uniform vec4 SunDir;
-uniform vec4 PointLightShadowParams1;
-uniform vec4 ChangeColor;
+uniform vec4 FogControl;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
 uniform mat4 u_viewProj;
@@ -129,44 +129,44 @@ uniform vec4 OverlayColor;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PrepassUVOffset;
+uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 UVScale;
 uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 UVScale;
 uniform vec4 ColorBased;
 uniform vec4 TileLightIntensity;
 uniform vec4 SubPixelOffset;
-uniform vec4 FogColor;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 VolumeDimensions;
+uniform vec4 FogColor;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 TileLightColor;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
-uniform vec4 GlintColor;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 GlintColor;
 uniform vec4 AtmosphericScatteringEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistance;
-uniform vec4 MoonColor;
 uniform vec4 ShadowParams;
+uniform vec4 MoonColor;
 uniform vec4 SkyAmbientLightColorIntensity;
-uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterDimensions;
-uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
-uniform vec4 MoonDir;
+uniform vec4 ClusterSize;
+uniform vec4 FogAndDistanceControl;
 uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 SunColor;
+uniform vec4 MoonDir;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform vec4 SunColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 FogSkyBlend;
 uniform vec4 RenderChunkFogAlpha;
@@ -215,6 +215,20 @@ struct PBRLightingContributions {
     vec3 emissive;
 };
 
+struct LightSourceWorldInfo {
+    vec4 worldSpaceDirection;
+    vec4 diffuseColorAndIlluminance;
+    vec4 shadowDirection;
+    mat4 shadowProj0;
+    mat4 shadowProj1;
+    mat4 shadowProj2;
+    mat4 shadowProj3;
+    int isSun;
+    int shadowCascadeNumber;
+    int pad0;
+    int pad1;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -234,18 +248,8 @@ struct PBRTextureData {
     float pad;
 };
 
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
+struct LightData {
+    float lookup;
 };
 
 struct Light {
@@ -257,25 +261,21 @@ struct Light {
     float lowerGridLevelRadius;
 };
 
-struct LightData {
-    float lookup;
-};
-
 struct VertexInput {
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 normal;
-    #endif
     vec3 position;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     vec4 normal;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    vec3 position;
     #endif
     vec2 texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 glintUV;
-    #endif
     vec4 color0;
-    #if defined(INSTANCING__ON)&&(defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS))
+    #endif
     vec4 glintUV;
+    #if defined(INSTANCING__ON)&&(defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS))
+    vec4 color0;
     #endif
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -283,7 +283,7 @@ struct VertexInput {
     vec4 instanceData2;
     #endif
     #if defined(INSTANCING__OFF)&&(defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS))
-    vec4 glintUV;
+    vec4 color0;
     #endif
 };
 
@@ -291,44 +291,44 @@ struct VertexOutput {
     vec4 position;
     vec2 texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 glintUV;
-    #endif
     vec4 color0;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     vec4 glintUV;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    vec4 color0;
     #endif
     #if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-    vec4 light;
     vec4 fog;
+    vec4 light;
     #endif
     vec3 worldPos;
     vec3 prevWorldPos;
     vec3 normal;
     #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-    vec4 fog;
     vec4 light;
+    vec4 fog;
     #endif
 };
 
 struct FragmentInput {
     vec2 texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 glintUV;
-    #endif
     vec4 color0;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     vec4 glintUV;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    vec4 color0;
     #endif
     #if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-    vec4 light;
     vec4 fog;
+    vec4 light;
     #endif
     vec3 worldPos;
     vec3 prevWorldPos;
     vec3 normal;
     #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-    vec4 fog;
     vec4 light;
+    vec4 fog;
     #endif
 };
 
@@ -1432,22 +1432,22 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.texcoord0 = v_texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    fragmentInput.glintUV = v_glintUV;
-    #endif
     fragmentInput.color0 = v_color0;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     fragmentInput.glintUV = v_glintUV;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    fragmentInput.color0 = v_color0;
     #endif
     #if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-    fragmentInput.light = v_light;
     fragmentInput.fog = v_fog;
+    fragmentInput.light = v_light;
     #endif
     fragmentInput.worldPos = v_worldPos;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.normal = v_normal;
     #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-    fragmentInput.fog = v_fog;
     fragmentInput.light = v_light;
+    fragmentInput.fog = v_fog;
     #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;

@@ -119,15 +119,15 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec2 colorUV;
-    vec2 parallaxUV;
     float encodedPlane;
+    vec2 parallaxUV;
     vec4 fog;
 };
 
 struct FragmentInput {
     vec2 colorUV;
-    vec2 parallaxUV;
     float encodedPlane;
+    vec2 parallaxUV;
     vec4 fog;
 };
 
@@ -194,8 +194,8 @@ void main() {
     vertexInput.instanceData0 = i_data1;
     #endif
     vertexOutput.colorUV = vec2(0, 0);
-    vertexOutput.parallaxUV = vec2(0, 0);
     vertexOutput.encodedPlane = 0.0;
+    vertexOutput.parallaxUV = vec2(0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
@@ -221,8 +221,8 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
     v_colorUV = vertexOutput.colorUV;
-    v_parallaxUV = vertexOutput.parallaxUV;
     v_encodedPlane = vertexOutput.encodedPlane;
+    v_parallaxUV = vertexOutput.parallaxUV;
     v_fog = vertexOutput.fog;
     gl_Position = vertexOutput.position;
 }

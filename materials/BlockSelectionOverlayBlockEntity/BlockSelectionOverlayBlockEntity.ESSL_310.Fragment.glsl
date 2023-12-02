@@ -102,8 +102,8 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    int boneId;
     vec3 position;
+    int boneId;
     vec2 texcoord0;
 };
 

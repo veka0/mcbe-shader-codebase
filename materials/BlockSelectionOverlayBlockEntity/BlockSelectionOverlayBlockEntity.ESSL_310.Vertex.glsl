@@ -66,8 +66,8 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    int boneId;
     vec3 position;
+    int boneId;
     vec2 texcoord0;
 };
 
@@ -94,8 +94,8 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.boneId = int(a_indices);
     vertexInput.position = (a_position);
+    vertexInput.boneId = int(a_indices);
     vertexInput.texcoord0 = (a_texcoord0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);

@@ -45,8 +45,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightsPerCluster;
 uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 LightsPerCluster;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 vec4 ViewRect;
@@ -65,12 +65,12 @@ mat4 WorldViewProj;
 vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
-struct LightData {
-    float lookup;
-};
-
 struct LightCluster {
     int count;
+};
+
+struct LightData {
+    float lookup;
 };
 
 struct LightExtends {

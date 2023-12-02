@@ -106,8 +106,8 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform vec4 UseAlphaRewrite;
 uniform mat4 u_view;
-uniform vec4 FogControl;
 uniform vec4 ChangeColor;
+uniform vec4 FogControl;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -121,16 +121,16 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 TileLightIntensity;
 uniform vec4 UVAnimation;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 ColorBased;
-uniform vec4 SubPixelOffset;
 uniform vec4 TintedAlphaTestEnabled;
+uniform vec4 SubPixelOffset;
 uniform vec4 HudOpacity;
-uniform vec4 ActorFPEpsilon;
 uniform vec4 FogColor;
+uniform vec4 ActorFPEpsilon;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 TileLightColor;
 uniform mat4 Bones[8];
@@ -153,18 +153,18 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec3 position;
-    #endif
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 normal;
-    #endif
-    int boneId;
     #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
     vec3 position;
     #endif
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
+    int boneId;
+    #endif
     vec4 normal;
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    int boneId;
+    #endif
+    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
+    vec3 position;
     #endif
     vec2 texcoord0;
     vec4 color0;
@@ -179,36 +179,36 @@ struct VertexOutput {
     vec4 position;
     vec2 texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
     vec4 texcoords;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     vec4 color0;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    vec4 texcoords;
     #endif
     #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 fog;
-    #endif
     vec4 light;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    #endif
     vec4 fog;
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    vec4 light;
     #endif
 };
 
 struct FragmentInput {
     vec2 texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
     vec4 texcoords;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     vec4 color0;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    vec4 texcoords;
     #endif
     #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 fog;
-    #endif
     vec4 light;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    #endif
     vec4 fog;
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    vec4 light;
     #endif
 };
 
@@ -460,18 +460,18 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.texcoord0 = v_texcoord0;
     #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    fragmentInput.color0 = v_color0;
-    #endif
     fragmentInput.texcoords = v_texcoords;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #endif
     fragmentInput.color0 = v_color0;
+    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    fragmentInput.texcoords = v_texcoords;
     #endif
     #ifndef DEPTH_ONLY_OPAQUE_PASS
-    fragmentInput.fog = v_fog;
-    #endif
     fragmentInput.light = v_light;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    #endif
     fragmentInput.fog = v_fog;
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    fragmentInput.light = v_light;
     #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;

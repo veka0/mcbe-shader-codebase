@@ -31,21 +31,21 @@ struct accelerationStructureKHR {
     int noop;
 };
 
-uniform vec4 CameraFarPlane;
-uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 LightsPerCluster;
+uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 CameraFarPlane;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
 uvec3 GlobalInvocationID;
 uvec3 WorkGroupID;
-struct LightData {
-    float lookup;
-};
-
 struct LightCluster {
     int count;
+};
+
+struct LightData {
+    float lookup;
 };
 
 struct LightExtends {

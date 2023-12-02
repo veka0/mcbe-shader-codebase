@@ -124,15 +124,15 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec2 colorUV;
-    vec2 parallaxUV;
     float encodedPlane;
+    vec2 parallaxUV;
     vec4 fog;
 };
 
 struct FragmentInput {
     vec2 colorUV;
-    vec2 parallaxUV;
     float encodedPlane;
+    vec2 parallaxUV;
     vec4 fog;
 };
 
@@ -160,8 +160,8 @@ void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.colorUV = v_colorUV;
-    fragmentInput.parallaxUV = v_parallaxUV;
     fragmentInput.encodedPlane = v_encodedPlane;
+    fragmentInput.parallaxUV = v_parallaxUV;
     fragmentInput.fog = v_fog;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
