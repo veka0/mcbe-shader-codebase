@@ -130,7 +130,6 @@ uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PrepassUVOffset;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;

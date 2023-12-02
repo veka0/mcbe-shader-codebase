@@ -115,7 +115,6 @@ uniform vec4 OverlayColor;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 PrepassUVOffset;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;

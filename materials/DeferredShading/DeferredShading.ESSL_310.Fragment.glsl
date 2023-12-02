@@ -106,7 +106,6 @@ uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 PrepassUVOffset;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
@@ -632,70 +631,70 @@ vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
 }
 vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
     vec3 outCoordinate = inCoordinate;
-    if (inCoordinate.y > 1.0) {
+    if (inCoordinate.y > 1.0f) {
         switch(int(inCoordinate.z)) {
             case 0 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = 2.0 - inCoordinate.y;
+            outCoordinate.z = float(3);
+            outCoordinate.x = 2.0f - inCoordinate.y;
             outCoordinate.y = inCoordinate.x;
             break;
             case 1 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = inCoordinate.y - 1.0f;
             outCoordinate.y = 1.0f - inCoordinate.x;
             break;
             case 2 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = 2.0f - inCoordinate.y;
-            break;
-            case 3 :
             outCoordinate.z = float(4);
             outCoordinate.x = inCoordinate.x;
             outCoordinate.y = inCoordinate.y - 1.0f;
             break;
+            case 3 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
             case 4 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = inCoordinate.x;
             outCoordinate.y = inCoordinate.y - 1.0f;
             break;
             case 5 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = 2.0f - inCoordinate.y;
             break;
             default :
             break;
         }
-    } else if (inCoordinate.y < 0.0) {
+    } else if (inCoordinate.y < 0.0f) {
         switch(int(inCoordinate.z)) {
             case 0 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = 1.0f + inCoordinate.y;
             outCoordinate.y = 1.0f - inCoordinate.x;
             break;
             case 1 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = -inCoordinate.y;
             outCoordinate.y = inCoordinate.x;
             break;
             case 2 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0f + inCoordinate.y;
-            break;
-            case 3 :
             outCoordinate.z = float(5);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = -inCoordinate.y;
             break;
-            case 4 :
-            outCoordinate.z = float(3);
+            case 3 :
+            outCoordinate.z = float(4);
             outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0 + inCoordinate.y;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
             break;
             case 5 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = -inCoordinate.y;
             break;
@@ -718,13 +717,13 @@ vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
             break;
             case 2 :
             outCoordinate.z = float(0);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = 2.0f - uvCache.x;
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = uvCache.x - 1.0f;
             break;
             case 3 :
             outCoordinate.z = float(0);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = uvCache.x - 1.0f;
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = 2.0f - uvCache.x;
             break;
             case 4 :
             outCoordinate.z = float(0);
@@ -753,13 +752,13 @@ vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
             break;
             case 2 :
             outCoordinate.z = float(1);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = 1.0f + uvCache.x;
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = -uvCache.x;
             break;
             case 3 :
             outCoordinate.z = float(1);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = -uvCache.x;
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = 1.0f + uvCache.x;
             break;
             case 4 :
             outCoordinate.z = float(1);
@@ -832,7 +831,7 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * PointLightShadowParams1.w;
-            vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(sampleCoordinates + vec3(offset.x, offset.y, 0.0f));
+            vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(vec3(sampleCoordinates.x + offset.x, 1.0f - sampleCoordinates.y + offset.y, sampleCoordinates.z));
             offsetSampleCoordinates.z = float(lightInfo.shadowProbeIndex * 6) + offsetSampleCoordinates.z;
             directOcclusion += shadow2DArray(s_PointLightShadowTextureArray, vec4(offsetSampleCoordinates, surfaceProjPos.z));
         }
@@ -1050,7 +1049,6 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
 }
 PBRFragmentInfo getPBRFragmentInfo(FragmentInput fragInput) {
     vec2 uv = fragInput.texcoord0;
-    uv.x = uv.x * PrepassUVOffset.x + PrepassUVOffset.y;
     float z = textureSample(s_SceneDepth, uv).r;
     z = z * 2.0f - 1.0f;
     vec4 viewPosition = projToView(vec4(fragInput.projPosition.xy, z, 1.0), InvProj);

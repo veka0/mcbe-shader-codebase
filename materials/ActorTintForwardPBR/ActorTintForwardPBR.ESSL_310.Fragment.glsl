@@ -142,7 +142,6 @@ uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PrepassUVOffset;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
@@ -156,6 +155,7 @@ uniform vec4 ActorFPEpsilon;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
+uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 Bones[8];
@@ -186,7 +186,6 @@ uniform vec4 RenderChunkFogAlpha;
 uniform vec4 RoughnessUniform;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
-uniform vec4 SkyZenithColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
@@ -876,70 +875,70 @@ vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
 }
 vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
     vec3 outCoordinate = inCoordinate;
-    if (inCoordinate.y > 1.0) {
+    if (inCoordinate.y > 1.0f) {
         switch(int(inCoordinate.z)) {
             case 0 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = 2.0 - inCoordinate.y;
+            outCoordinate.z = float(3);
+            outCoordinate.x = 2.0f - inCoordinate.y;
             outCoordinate.y = inCoordinate.x;
             break;
             case 1 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = inCoordinate.y - 1.0f;
             outCoordinate.y = 1.0f - inCoordinate.x;
             break;
             case 2 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = 2.0f - inCoordinate.y;
-            break;
-            case 3 :
             outCoordinate.z = float(4);
             outCoordinate.x = inCoordinate.x;
             outCoordinate.y = inCoordinate.y - 1.0f;
             break;
+            case 3 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
             case 4 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = inCoordinate.x;
             outCoordinate.y = inCoordinate.y - 1.0f;
             break;
             case 5 :
-            outCoordinate.z = float(2);
+            outCoordinate.z = float(3);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = 2.0f - inCoordinate.y;
             break;
             default :
             break;
         }
-    } else if (inCoordinate.y < 0.0) {
+    } else if (inCoordinate.y < 0.0f) {
         switch(int(inCoordinate.z)) {
             case 0 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = 1.0f + inCoordinate.y;
             outCoordinate.y = 1.0f - inCoordinate.x;
             break;
             case 1 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = -inCoordinate.y;
             outCoordinate.y = inCoordinate.x;
             break;
             case 2 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0f + inCoordinate.y;
-            break;
-            case 3 :
             outCoordinate.z = float(5);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = -inCoordinate.y;
             break;
-            case 4 :
-            outCoordinate.z = float(3);
+            case 3 :
+            outCoordinate.z = float(4);
             outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0 + inCoordinate.y;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
             break;
             case 5 :
-            outCoordinate.z = float(3);
+            outCoordinate.z = float(2);
             outCoordinate.x = 1.0f - inCoordinate.x;
             outCoordinate.y = -inCoordinate.y;
             break;
@@ -962,13 +961,13 @@ vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
             break;
             case 2 :
             outCoordinate.z = float(0);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = 2.0f - uvCache.x;
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = uvCache.x - 1.0f;
             break;
             case 3 :
             outCoordinate.z = float(0);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = uvCache.x - 1.0f;
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = 2.0f - uvCache.x;
             break;
             case 4 :
             outCoordinate.z = float(0);
@@ -997,13 +996,13 @@ vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
             break;
             case 2 :
             outCoordinate.z = float(1);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = 1.0f + uvCache.x;
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = -uvCache.x;
             break;
             case 3 :
             outCoordinate.z = float(1);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = -uvCache.x;
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = 1.0f + uvCache.x;
             break;
             case 4 :
             outCoordinate.z = float(1);
@@ -1076,7 +1075,7 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * PointLightShadowParams1.w;
-            vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(sampleCoordinates + vec3(offset.x, offset.y, 0.0f));
+            vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(vec3(sampleCoordinates.x + offset.x, 1.0f - sampleCoordinates.y + offset.y, sampleCoordinates.z));
             offsetSampleCoordinates.z = float(lightInfo.shadowProbeIndex * 6) + offsetSampleCoordinates.z;
             directOcclusion += shadow2DArray(s_PointLightShadowTextureArray, vec4(offsetSampleCoordinates, surfaceProjPos.z));
         }
@@ -1298,7 +1297,6 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
     vec4 clipPosition = ((Proj) * (viewPosition));
     vec3 ndcPosition = clipPosition.xyz / clipPosition.w;
     vec2 uv = (ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
-    uv.x = uv.x * PrepassUVOffset.x + PrepassUVOffset.y;
     vec4 worldNormal = vec4(normalize(surfaceOutput.ViewSpaceNormal), 1.0);
     vec4 viewNormal = ((View) * (worldNormal));
     fragmentData.lightClusterUV = uv;
