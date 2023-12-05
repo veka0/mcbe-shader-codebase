@@ -70,20 +70,20 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     vec3 normal;
+    vec3 position;
     vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec3 normal;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec3 normal;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -98,11 +98,11 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
     vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -126,8 +126,8 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     v_normal = vertexOutput.normal;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

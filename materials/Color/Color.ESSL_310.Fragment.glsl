@@ -58,8 +58,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
 uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MatColor;
 vec4 ViewRect;
 mat4 Proj;
@@ -78,10 +78,10 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
-    vec4 normal;
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -91,14 +91,14 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
 };
 
@@ -202,8 +202,8 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.color0 = v_color0;
+    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.viewSpaceNormal = v_viewSpaceNormal;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;

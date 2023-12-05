@@ -31,21 +31,26 @@ struct accelerationStructureKHR {
     int noop;
 };
 
-uniform vec4 LightsPerCluster;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraFarPlane;
+uniform vec4 LightsPerCluster;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
 uvec3 GlobalInvocationID;
 uvec3 WorkGroupID;
+struct LightData {
+    float lookup;
+};
+
 struct LightCluster {
     int count;
 };
 
-struct LightData {
-    float lookup;
+struct LightDistance {
+    float distance;
+    int indexInLookUp;
 };
 
 struct LightExtends {
@@ -56,11 +61,6 @@ struct LightExtends {
     int pad0;
     int pad1;
     int pad2;
-};
-
-struct LightDistance {
-    float distance;
-    int indexInLookUp;
 };
 
 struct VertexInput {
@@ -79,8 +79,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
+layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 float getClusterDepthByIndex(float index, float maxSlices, vec2 clusterNearFar) {
     float zNear = clusterNearFar.x;
     float zFar = clusterNearFar.y;

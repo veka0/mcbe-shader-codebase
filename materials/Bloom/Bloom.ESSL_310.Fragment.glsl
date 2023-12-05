@@ -87,10 +87,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 BloomParams1;
+uniform vec4 BloomParams2;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
-uniform vec4 BloomParams2;
-uniform vec4 BloomParams1;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -125,10 +125,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_HDRi;
-uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_BlurPyramidTexture;
 uniform lowp sampler2D s_DepthTexture;
+uniform lowp sampler2D s_HDRi;
+uniform lowp sampler2D s_RasterColor;
 #ifdef BLOOM_HIGH_PASS
 float luminance(vec3 clr) {
     return dot(clr, vec3(0.2126, 0.7152, 0.0722));
@@ -155,25 +155,24 @@ vec4 DualFilterUpsample(sampler2D srcImg, vec2 uv, vec2 pixelOffsets) {
 }
 #endif
 #ifdef BLOOM_HIGH_PASS
-vec4 HighPass(vec4 col, float threshold) {
+vec4 HighPass(vec4 col) {
     float lum = luminance(col.rgb);
-    col.rgb *= step(threshold, lum);
     return vec4(col.rgb, lum);
 }
-vec4 HighPassDFDownsample(sampler2D srcImg, sampler2D depthImg, vec2 uv, vec2 pixelOffsets, float brightnessThreshold) {
+vec4 HighPassDFDownsample(sampler2D srcImg, sampler2D depthImg, vec2 uv, vec2 pixelOffsets) {
     vec4 col = vec4(0, 0, 0, 0);
-    col += 0.5 * HighPass(textureSample(srcImg, uv), brightnessThreshold);
-    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(pixelOffsets.x, pixelOffsets.y)), brightnessThreshold);
-    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(-pixelOffsets.x, pixelOffsets.y)), brightnessThreshold);
-    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(pixelOffsets.x, - pixelOffsets.y)), brightnessThreshold);
-    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(-pixelOffsets.x, - pixelOffsets.y)), brightnessThreshold);
+    col += 0.5 * HighPass(textureSample(srcImg, uv));
+    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(pixelOffsets.x, pixelOffsets.y)));
+    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(-pixelOffsets.x, pixelOffsets.y)));
+    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(pixelOffsets.x, - pixelOffsets.y)));
+    col += 0.125 * HighPass(textureSample(srcImg, uv + vec2(-pixelOffsets.x, - pixelOffsets.y)));
     if (bool(BloomParams2.z)) {
         float minRange = BloomParams2.x;
         float maxRange = BloomParams2.y;
         float depth = textureSample(depthImg, uv).r;
         depth = ((depth * maxRange) - minRange) / (maxRange - minRange);
-        depth = clamp(depth, BloomParams1.w, 1.0);
-        col *= pow(depth, BloomParams1.z);
+        depth = clamp(depth, BloomParams1.z, 1.0);
+        col *= pow(depth, BloomParams1.y);
     }
     return col;
 }
@@ -224,8 +223,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(bloomedColor, 1.0);
     #endif
     #ifdef BLOOM_HIGH_PASS
-    float threshold = BloomParams1.y;
-    fragOutput.Color0 = HighPassDFDownsample(s_HDRi, s_DepthTexture, uv, vec2(xOffset, yOffset), threshold);
+    fragOutput.Color0 = HighPassDFDownsample(s_HDRi, s_DepthTexture, uv, vec2(xOffset, yOffset));
     #endif
     #ifdef DF_DOWN_SAMPLE_PASS
     fragOutput.Color0 = DualFilterDownsample(s_BlurPyramidTexture, uv, vec2(xOffset, yOffset));

@@ -49,13 +49,13 @@ uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 PrimProps1;
 uniform vec4 ShaderType;
+uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
-uniform vec4 Viewport;
 uniform vec4 Coefficients[3];
 uniform vec4 PixelOffsets[6];
 uniform mat4 Transform;
+uniform vec4 Viewport;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -73,22 +73,22 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec4 screenPosition;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
 };
 
 struct FragmentInput {
-    vec4 screenPosition;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
 };
 
 struct FragmentOutput {
@@ -111,12 +111,12 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
-    vertexInput.color = (a_color0);
     vertexInput.additional = (a_texcoord3);
-    vertexOutput.screenPosition = vec4(0, 0, 0, 0);
-    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexInput.color = (a_color0);
+    vertexInput.position = (a_position);
     vertexOutput.additional = vec4(0, 0, 0, 0);
+    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexOutput.screenPosition = vec4(0, 0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -140,9 +140,9 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_screenPosition = vertexOutput.screenPosition;
-    v_color = vertexOutput.color;
     v_additional = vertexOutput.additional;
+    v_color = vertexOutput.color;
+    v_screenPosition = vertexOutput.screenPosition;
     gl_Position = vertexOutput.position;
 }
 

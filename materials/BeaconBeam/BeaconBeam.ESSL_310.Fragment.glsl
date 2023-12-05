@@ -94,11 +94,11 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 UVAnimation;
-uniform vec4 TileLightColor;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 SubPixelOffset;
 uniform vec4 FogColor;
+uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 UVAnimation;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -116,25 +116,25 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
-    vec4 normal;
-    vec2 texCoords;
     vec4 color;
+    vec4 normal;
+    vec3 position;
+    vec2 texCoords;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texCoords;
     vec4 color;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentInput {
-    vec2 texCoords;
     vec4 color;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentOutput {
@@ -165,10 +165,10 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texCoords = v_texCoords;
     fragmentInput.color = v_color;
-    fragmentInput.light = v_light;
     fragmentInput.fog = v_fog;
+    fragmentInput.light = v_light;
+    fragmentInput.texCoords = v_texCoords;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

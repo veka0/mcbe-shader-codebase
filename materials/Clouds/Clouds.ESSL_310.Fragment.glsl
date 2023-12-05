@@ -55,9 +55,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 CloudColor;
 uniform vec4 DistanceControl;
 uniform vec4 SubPixelOffset;
-uniform vec4 CloudColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -75,12 +75,12 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     vec4 color0;
+    vec3 position;
     #ifdef INSTANCING__ON
-    vec4 instanceData2;
     vec4 instanceData0;
     vec4 instanceData1;
+    vec4 instanceData2;
     #endif
 };
 

@@ -103,8 +103,8 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform vec4 UseAlphaRewrite;
 uniform mat4 u_view;
-uniform vec4 ChangeColor;
 uniform vec4 FogControl;
+uniform vec4 ChangeColor;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -117,22 +117,22 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 MatColor;
-uniform vec4 TileLightIntensity;
-uniform vec4 UVAnimation;
-uniform vec4 UVScale;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 ColorBased;
-uniform vec4 TintedAlphaTestEnabled;
-uniform vec4 SubPixelOffset;
-uniform vec4 HudOpacity;
 uniform vec4 FogColor;
 uniform vec4 ActorFPEpsilon;
-uniform vec4 MultiplicativeTintColor;
-uniform vec4 TileLightColor;
 uniform mat4 Bones[8];
+uniform vec4 ColorBased;
 uniform vec4 GlintColor;
+uniform vec4 HudOpacity;
+uniform vec4 UVScale;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 TileLightIntensity;
+uniform vec4 MatColor;
+uniform vec4 MultiplicativeTintColor;
+uniform vec4 TintedAlphaTestEnabled;
+uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 UVAnimation;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -150,21 +150,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vec3 position;
-    #endif
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
     int boneId;
-    #endif
-    vec4 normal;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    int boneId;
-    #endif
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec3 position;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -174,31 +164,19 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 layerUv;
-    vec4 light;
-    #endif
     vec4 fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    vec4 light;
     vec4 layerUv;
-    #endif
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 layerUv;
-    vec4 light;
-    #endif
     vec4 fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    vec4 light;
     vec4 layerUv;
-    #endif
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -211,20 +189,10 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 layerUv;
-    #endif
-    vec2 texcoord0;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
     vec4 fog;
-    #endif
+    vec4 layerUv;
     vec4 light;
-    #if ! defined(ALPHA_TEST_PASS)&& ! defined(TRANSPARENT_PASS)
-    vec4 fog;
-    #endif
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    vec4 layerUv;
-    #endif
+    vec2 texcoord0;
 };
 
 struct StandardVertexInput {
@@ -238,20 +206,10 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    result.layerUv = fragInput.layerUv;
-    #endif
-    result.texcoord0 = fragInput.texcoord0;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
     result.fog = fragInput.fog;
-    #endif
+    result.layerUv = fragInput.layerUv;
     result.light = fragInput.light;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(OPAQUE_PASS)
-    result.fog = fragInput.fog;
-    #endif
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    result.layerUv = fragInput.layerUv;
-    #endif
+    result.texcoord0 = fragInput.texcoord0;
     return result;
 }
 #endif
@@ -465,17 +423,11 @@ void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutp
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.color0 = v_color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    fragmentInput.layerUv = v_layerUv;
-    fragmentInput.light = v_light;
-    #endif
     fragmentInput.fog = v_fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    fragmentInput.light = v_light;
     fragmentInput.layerUv = v_layerUv;
-    #endif
+    fragmentInput.light = v_light;
+    fragmentInput.texcoord0 = v_texcoord0;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

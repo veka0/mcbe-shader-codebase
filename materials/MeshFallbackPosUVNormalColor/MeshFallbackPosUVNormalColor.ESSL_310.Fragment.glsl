@@ -100,8 +100,8 @@ struct accelerationStructureKHR {
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
-uniform vec4 ChangeColor;
 uniform vec4 FogControl;
+uniform vec4 ChangeColor;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -114,15 +114,15 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 HudOpacity;
-uniform vec4 DiscardValue;
-uniform vec4 FogColor;
-uniform vec4 ZShiftValue;
-uniform vec4 TileLightIntensity;
 uniform vec4 CurrentColor;
-uniform vec4 TileLightColor;
-uniform vec4 UVAnimation;
+uniform vec4 FogColor;
+uniform vec4 DiscardValue;
+uniform vec4 HudOpacity;
 uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 TileLightIntensity;
+uniform vec4 UVAnimation;
+uniform vec4 ZShiftValue;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -140,25 +140,25 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color;
     vec4 normal;
     vec3 position;
-    vec4 color;
     vec2 texCoords;
 };
 
 struct VertexOutput {
     vec4 position;
     vec4 color;
-    vec2 texCoords;
     vec4 fog;
     vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentInput {
     vec4 color;
-    vec2 texCoords;
     vec4 fog;
     vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentOutput {
@@ -213,9 +213,9 @@ void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.color = v_color;
-    fragmentInput.texCoords = v_texCoords;
     fragmentInput.fog = v_fog;
     fragmentInput.light = v_light;
+    fragmentInput.texCoords = v_texCoords;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

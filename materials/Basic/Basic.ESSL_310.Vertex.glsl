@@ -95,8 +95,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform mat4 UV0Transform;
 uniform vec4 MatColor;
+uniform mat4 UV0Transform;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -114,37 +114,37 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
-    vec4 normal;
-    vec4 tangent;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
-    vec4 instanceData2;
-    vec4 instanceData1;
     vec4 instanceData0;
+    vec4 instanceData1;
+    vec4 instanceData2;
     #endif
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    vec3 wpos;
-    vec3 viewDir;
-    vec3 normal;
-    vec3 tangent;
     vec3 bitangent;
     vec4 color0;
+    vec3 normal;
+    vec3 tangent;
+    vec2 texcoord0;
+    vec3 viewDir;
+    vec3 wpos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    vec3 wpos;
-    vec3 viewDir;
-    vec3 normal;
-    vec3 tangent;
     vec3 bitangent;
     vec4 color0;
+    vec3 normal;
+    vec3 tangent;
+    vec2 texcoord0;
+    vec3 viewDir;
+    vec3 wpos;
 };
 
 struct FragmentOutput {
@@ -191,23 +191,23 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
-    vertexInput.normal = (a_normal);
-    vertexInput.tangent = (a_tangent);
     vertexInput.color0 = (a_color0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.tangent = (a_tangent);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
-    vertexInput.instanceData2 = i_data3;
-    vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData0 = i_data1;
+    vertexInput.instanceData1 = i_data2;
+    vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
-    vertexOutput.wpos = vec3(0, 0, 0);
-    vertexOutput.viewDir = vec3(0, 0, 0);
-    vertexOutput.normal = vec3(0, 0, 0);
-    vertexOutput.tangent = vec3(0, 0, 0);
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.normal = vec3(0, 0, 0);
+    vertexOutput.tangent = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.viewDir = vec3(0, 0, 0);
+    vertexOutput.wpos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -231,13 +231,13 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
-    v_wpos = vertexOutput.wpos;
-    v_viewDir = vertexOutput.viewDir;
-    v_normal = vertexOutput.normal;
-    v_tangent = vertexOutput.tangent;
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
+    v_normal = vertexOutput.normal;
+    v_tangent = vertexOutput.tangent;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_viewDir = vertexOutput.viewDir;
+    v_wpos = vertexOutput.wpos;
     gl_Position = vertexOutput.position;
 }
 

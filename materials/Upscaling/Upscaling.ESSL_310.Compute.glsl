@@ -65,15 +65,15 @@ struct accelerationStructureKHR {
 };
 
 uniform mat4 PreviousViewProjectionMatrixUniform;
-uniform vec4 RenderResolutionDivDisplayResolution;
-uniform vec4 DisplayResolutionDivRenderResolution;
-uniform vec4 RecipDisplayResolution;
 uniform vec4 SubPixelJitter;
 uniform mat4 CurrentViewProjectionMatrixUniform;
-uniform vec4 DisplayResolution;
-uniform vec4 RenderResolution;
 uniform vec4 CurrentWorldOrigin;
+uniform vec4 DisplayResolution;
+uniform vec4 RecipDisplayResolution;
+uniform vec4 DisplayResolutionDivRenderResolution;
 uniform vec4 PreviousWorldOrigin;
+uniform vec4 RenderResolution;
+uniform vec4 RenderResolutionDivDisplayResolution;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
 uvec3 GlobalInvocationID;
@@ -94,9 +94,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
-uniform lowp sampler2D s_InputBufferMotionVectors;
 layout(rgba16f, binding = 3)writeonly uniform highp image2D s_OutputBuffer;
 vec3 bicubicSampleCatmullRom(sampler2D tex, vec2 samplePos, vec2 recipTextureResolution) {
     vec2 tc = floor(samplePos - 0.5) + 0.5;

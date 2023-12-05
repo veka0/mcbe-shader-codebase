@@ -77,14 +77,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 TileLightIntensity;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 ColorBased;
-uniform vec4 SubPixelOffset;
 uniform vec4 FogColor;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MultiplicativeTintColor;
+uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
+uniform vec4 TileLightIntensity;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
 mat4 Proj;
@@ -103,15 +103,10 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 normal;
-    #endif
-    vec3 position;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vec4 normal;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -121,35 +116,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 light;
-    vec4 fog;
-    #endif
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 light;
-    vec4 fog;
-    #endif
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -160,22 +143,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 light;
-    #endif
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
-    #endif
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 fog;
-    vec4 light;
-    #endif
+    vec3 prevWorldPos;
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -189,22 +161,11 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
-    result.light = fragInput.light;
-    #endif
-    #if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
     result.fog = fragInput.fog;
-    #endif
-    #ifdef OPAQUE_PASS
     result.light = fragInput.light;
-    #endif
-    result.worldPos = fragInput.worldPos;
-    result.prevWorldPos = fragInput.prevWorldPos;
     result.normal = fragInput.normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
-    #endif
+    result.prevWorldPos = fragInput.prevWorldPos;
+    result.worldPos = fragInput.worldPos;
     return result;
 }
 #endif
@@ -463,19 +424,13 @@ void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutp
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.color0 = v_color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     fragmentInput.fog = v_fog;
     fragmentInput.light = v_light;
-    #endif
-    fragmentInput.worldPos = v_worldPos;
-    fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.normal = v_normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    fragmentInput.light = v_light;
-    fragmentInput.fog = v_fog;
-    #endif
+    fragmentInput.prevWorldPos = v_prevWorldPos;
+    fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

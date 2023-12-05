@@ -54,11 +54,11 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 ShaderType;
 uniform vec4 u_alphaRef4;
-uniform vec4 GradientEndColor;
-uniform vec4 MaskScaleAndOffset;
-uniform vec4 GradientStartColor;
-uniform mat4 Transform;
 uniform mat4 CoordTransformVS;
+uniform vec4 GradientEndColor;
+uniform vec4 GradientStartColor;
+uniform vec4 MaskScaleAndOffset;
+uniform mat4 Transform;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -76,25 +76,25 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec4 screenPosition;
-    vec4 color;
-    vec4 varyingParam0;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
+    vec4 varyingParam0;
     vec4 varyingParam1;
 };
 
 struct FragmentInput {
-    vec4 screenPosition;
-    vec4 color;
-    vec4 varyingParam0;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
+    vec4 varyingParam0;
     vec4 varyingParam1;
 };
 
@@ -124,13 +124,13 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
-    vertexInput.color = (a_color0);
     vertexInput.additional = (a_texcoord3);
-    vertexOutput.screenPosition = vec4(0, 0, 0, 0);
-    vertexOutput.color = vec4(0, 0, 0, 0);
-    vertexOutput.varyingParam0 = vec4(0, 0, 0, 0);
+    vertexInput.color = (a_color0);
+    vertexInput.position = (a_position);
     vertexOutput.additional = vec4(0, 0, 0, 0);
+    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexOutput.screenPosition = vec4(0, 0, 0, 0);
+    vertexOutput.varyingParam0 = vec4(0, 0, 0, 0);
     vertexOutput.varyingParam1 = vec4(0, 0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
@@ -155,10 +155,10 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_screenPosition = vertexOutput.screenPosition;
-    v_color = vertexOutput.color;
-    v_varyingParam0 = vertexOutput.varyingParam0;
     v_additional = vertexOutput.additional;
+    v_color = vertexOutput.color;
+    v_screenPosition = vertexOutput.screenPosition;
+    v_varyingParam0 = vertexOutput.varyingParam0;
     v_varyingParam1 = vertexOutput.varyingParam1;
     gl_Position = vertexOutput.position;
 }

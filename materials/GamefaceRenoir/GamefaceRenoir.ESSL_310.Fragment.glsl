@@ -90,11 +90,11 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 ShaderType;
 uniform vec4 u_alphaRef4;
-uniform vec4 GradientEndColor;
-uniform vec4 MaskScaleAndOffset;
-uniform vec4 GradientStartColor;
-uniform mat4 Transform;
 uniform mat4 CoordTransformVS;
+uniform vec4 GradientEndColor;
+uniform vec4 GradientStartColor;
+uniform vec4 MaskScaleAndOffset;
+uniform mat4 Transform;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -112,25 +112,25 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec4 screenPosition;
-    vec4 color;
-    vec4 varyingParam0;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
+    vec4 varyingParam0;
     vec4 varyingParam1;
 };
 
 struct FragmentInput {
-    vec4 screenPosition;
-    vec4 color;
-    vec4 varyingParam0;
     vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
+    vec4 varyingParam0;
     vec4 varyingParam1;
 };
 
@@ -181,10 +181,10 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.screenPosition = v_screenPosition;
-    fragmentInput.color = v_color;
-    fragmentInput.varyingParam0 = v_varyingParam0;
     fragmentInput.additional = v_additional;
+    fragmentInput.color = v_color;
+    fragmentInput.screenPosition = v_screenPosition;
+    fragmentInput.varyingParam0 = v_varyingParam0;
     fragmentInput.varyingParam1 = v_varyingParam1;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;

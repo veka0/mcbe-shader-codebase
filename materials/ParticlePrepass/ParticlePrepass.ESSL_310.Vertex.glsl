@@ -84,10 +84,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -105,11 +105,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec2 ambientLight;
+    vec4 color0;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
-    vec4 color0;
-    vec2 ambientLight;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -119,33 +119,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    vec4 color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    vec4 color0;
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    vec4 color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    vec4 color0;
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -157,16 +147,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -284,28 +269,23 @@ void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vert
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.ambientLight = (a_texcoord1);
+    vertexInput.color0 = (a_color0);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
-    vertexInput.color0 = (a_color0);
-    vertexInput.ambientLight = (a_texcoord1);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
-    vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
-    vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.ambientLight = vec2(0, 0);
-    vertexOutput.worldPos = vec3(0, 0, 0);
-    vertexOutput.prevWorldPos = vec3(0, 0, 0);
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
+    vertexOutput.normal = vec3(0, 0, 0);
+    vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -329,18 +309,13 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
-    v_color0 = vertexOutput.color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    v_fog = vertexOutput.fog;
-    #endif
-    v_normal = vertexOutput.normal;
     v_ambientLight = vertexOutput.ambientLight;
-    v_worldPos = vertexOutput.worldPos;
-    v_prevWorldPos = vertexOutput.prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    v_color0 = vertexOutput.color0;
     v_fog = vertexOutput.fog;
-    #endif
+    v_normal = vertexOutput.normal;
+    v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

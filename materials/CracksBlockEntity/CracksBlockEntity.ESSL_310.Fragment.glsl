@@ -83,9 +83,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 UVScale;
-uniform vec4 SubPixelOffset;
 uniform mat4 Bones[8];
+uniform vec4 SubPixelOffset;
+uniform vec4 UVScale;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -103,8 +103,8 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     int boneId;
+    vec3 position;
     vec2 texcoord0;
 };
 

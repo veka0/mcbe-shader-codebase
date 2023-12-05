@@ -80,10 +80,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 SkyColor;
 uniform vec4 FogColor;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 SkyColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -101,11 +101,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color0;
     vec3 position;
     #ifdef GEOMETRY_PREPASS_PASS
     vec2 texcoord0;
     #endif
-    vec4 color0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -115,26 +115,22 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    #ifdef GEOMETRY_PREPASS_PASS
-    vec2 texcoord0;
-    #endif
     vec4 color0;
     #ifdef GEOMETRY_PREPASS_PASS
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
     #endif
 };
 
 struct FragmentInput {
-    #ifdef GEOMETRY_PREPASS_PASS
-    vec2 texcoord0;
-    #endif
     vec4 color0;
     #ifdef GEOMETRY_PREPASS_PASS
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
     #endif
 };
 
@@ -157,9 +153,9 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec4 color0;
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
+    vec3 prevWorldPos;
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -254,24 +250,22 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.color0 = (a_color0);
     vertexInput.position = (a_position);
     #ifdef GEOMETRY_PREPASS_PASS
     vertexInput.texcoord0 = (a_texcoord0);
     #endif
-    vertexInput.color0 = (a_color0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    #ifdef GEOMETRY_PREPASS_PASS
-    vertexOutput.texcoord0 = vec2(0, 0);
-    #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     #ifdef GEOMETRY_PREPASS_PASS
-    vertexOutput.worldPos = vec3(0, 0, 0);
-    vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
+    vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
@@ -300,16 +294,16 @@ void main() {
     #endif
     #ifdef GEOMETRY_PREPASS_PASS
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     #endif
     #ifdef OPAQUE_PASS
     Vert(vertexInput, vertexOutput);
     #endif
     v_color0 = vertexOutput.color0;
     #ifdef GEOMETRY_PREPASS_PASS
-    v_worldPos = vertexOutput.worldPos;
-    v_prevWorldPos = vertexOutput.prevWorldPos;
     v_normal = vertexOutput.normal;
+    v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     #endif
     gl_Position = vertexOutput.position;
 }

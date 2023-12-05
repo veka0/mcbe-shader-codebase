@@ -51,10 +51,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 ClusterNearFarWidthHeight;
-uniform vec4 LightsPerCluster;
 uniform vec4 ClusterDimensions;
+uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
+uniform vec4 LightsPerCluster;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -71,12 +71,17 @@ mat4 WorldViewProj;
 vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
+struct LightData {
+    float lookup;
+};
+
 struct LightCluster {
     int count;
 };
 
-struct LightData {
-    float lookup;
+struct LightDistance {
+    float distance;
+    int indexInLookUp;
 };
 
 struct LightExtends {
@@ -87,11 +92,6 @@ struct LightExtends {
     int pad0;
     int pad1;
     int pad2;
-};
-
-struct LightDistance {
-    float distance;
-    int indexInLookUp;
 };
 
 struct VertexInput {
@@ -110,8 +110,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
+layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
 }

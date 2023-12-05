@@ -4,13 +4,13 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
+* - ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - GEOMETRY_PREPASS_PASS
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
+* - OPAQUE_PASS (not used)
+* - TRANSPARENT_PASS (not used)
 *
 * Fancy:
 * - FANCY__OFF (not used)
@@ -99,14 +99,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 TileLightIntensity;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 ColorBased;
-uniform vec4 SubPixelOffset;
 uniform vec4 FogColor;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MultiplicativeTintColor;
+uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
+uniform vec4 TileLightIntensity;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
 mat4 Proj;
@@ -125,15 +125,10 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 normal;
-    #endif
-    vec3 position;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vec4 normal;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -143,35 +138,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 light;
-    vec4 fog;
-    #endif
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 light;
-    vec4 fog;
-    #endif
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -182,22 +165,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 light;
-    #endif
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vec4 fog;
-    #endif
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
     vec4 light;
-    #endif
-    vec3 worldPos;
-    vec3 prevWorldPos;
     vec3 normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vec4 fog;
-    vec4 light;
-    #endif
+    vec3 prevWorldPos;
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -343,33 +315,22 @@ void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput v
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vertexInput.normal = (a_normal);
-    #endif
-    vertexInput.position = (a_position);
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vertexInput.normal = (a_normal);
-    #endif
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.color0 = (a_color0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.light = vec4(0, 0, 0, 0);
-    #endif
-    vertexOutput.worldPos = vec3(0, 0, 0);
-    vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    vertexOutput.light = vec4(0, 0, 0, 0);
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
+    vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -398,19 +359,13 @@ void main() {
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
     #endif
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
     v_fog = vertexOutput.fog;
     v_light = vertexOutput.light;
-    #endif
-    v_worldPos = vertexOutput.worldPos;
-    v_prevWorldPos = vertexOutput.prevWorldPos;
     v_normal = vertexOutput.normal;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-    v_light = vertexOutput.light;
-    v_fog = vertexOutput.fog;
-    #endif
+    v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

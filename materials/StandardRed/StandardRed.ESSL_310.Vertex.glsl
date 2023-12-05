@@ -80,10 +80,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 ShadowFilterSize;
 uniform vec4 LightAmbientColorAndIntensity;
 uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 ShadowFilterSize;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 ShadowTexel;
 uniform mat4 ShadowTransform;
 vec4 ViewRect;
@@ -103,15 +103,10 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #ifdef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 normal;
-    #endif
-    vec3 position;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 normal;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -121,25 +116,21 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 viewSpacePosition;
-    #endif
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    vec4 viewSpacePosition;
     vec4 worldSpacePosition;
     #endif
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 viewSpacePosition;
-    #endif
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    vec4 viewSpacePosition;
     vec4 worldSpacePosition;
     #endif
 };
@@ -148,8 +139,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ShadowTexture;
 uniform lowp sampler2D s_MatTexture;
+uniform lowp sampler2D s_ShadowTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -270,27 +261,20 @@ void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput v
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    #ifdef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vertexInput.normal = (a_normal);
-    #endif
-    vertexInput.position = (a_position);
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vertexInput.normal = (a_normal);
-    #endif
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.color0 = (a_color0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vertexOutput.viewSpacePosition = vec4(0, 0, 0, 0);
-    #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.viewSpaceNormal = vec3(0, 0, 0);
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    vertexOutput.viewSpacePosition = vec4(0, 0, 0, 0);
     vertexOutput.worldSpacePosition = vec4(0, 0, 0, 0);
     #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
@@ -321,13 +305,11 @@ void main() {
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
     #endif
-    v_texcoord0 = vertexOutput.texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    v_viewSpacePosition = vertexOutput.viewSpacePosition;
-    #endif
     v_color0 = vertexOutput.color0;
+    v_texcoord0 = vertexOutput.texcoord0;
     v_viewSpaceNormal = vertexOutput.viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    v_viewSpacePosition = vertexOutput.viewSpacePosition;
     v_worldSpacePosition = vertexOutput.worldSpacePosition;
     #endif
     gl_Position = vertexOutput.position;

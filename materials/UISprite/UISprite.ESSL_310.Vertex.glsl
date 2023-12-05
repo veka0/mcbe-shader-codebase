@@ -73,19 +73,19 @@ vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
     vec4 color0;
-    vec2 texcoord0;
     vec3 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -102,10 +102,10 @@ void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.position = (a_position);
-    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexInput.texcoord0 = (a_texcoord0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -129,8 +129,8 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

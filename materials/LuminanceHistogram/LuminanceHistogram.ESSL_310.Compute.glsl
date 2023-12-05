@@ -68,12 +68,12 @@ struct accelerationStructureKHR {
     int noop;
 };
 
-uniform vec4 MinLogLuminance;
 uniform vec4 AdaptiveParameters;
 uniform vec4 LogLuminanceRange;
-uniform vec4 ScreenSize;
-uniform vec4 DeltaTime;
 uniform vec4 EnableCustomWeight;
+uniform vec4 DeltaTime;
+uniform vec4 MinLogLuminance;
+uniform vec4 ScreenSize;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
 uvec3 GlobalInvocationID;
@@ -98,9 +98,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_GameColor;
-uniform lowp sampler2D s_CustomWeight;
 layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
+uniform lowp sampler2D s_CustomWeight;
+uniform lowp sampler2D s_GameColor;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 #ifdef BUILD_HISTOGRAM_PASS

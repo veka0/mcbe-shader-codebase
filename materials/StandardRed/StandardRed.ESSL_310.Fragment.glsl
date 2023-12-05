@@ -103,10 +103,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 ShadowFilterSize;
 uniform vec4 LightAmbientColorAndIntensity;
 uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 ShadowFilterSize;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 ShadowTexel;
 uniform mat4 ShadowTransform;
 vec4 ViewRect;
@@ -126,15 +126,10 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #ifdef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 normal;
-    #endif
-    vec3 position;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 normal;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -144,25 +139,21 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 viewSpacePosition;
-    #endif
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    vec4 viewSpacePosition;
     vec4 worldSpacePosition;
     #endif
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    vec4 viewSpacePosition;
-    #endif
     vec4 color0;
+    vec2 texcoord0;
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    vec4 viewSpacePosition;
     vec4 worldSpacePosition;
     #endif
 };
@@ -171,8 +162,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ShadowTexture;
 uniform lowp sampler2D s_MatTexture;
+uniform lowp sampler2D s_ShadowTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -325,13 +316,11 @@ void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutp
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
-    #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
-    fragmentInput.viewSpacePosition = v_viewSpacePosition;
-    #endif
     fragmentInput.color0 = v_color0;
+    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.viewSpaceNormal = v_viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
+    fragmentInput.viewSpacePosition = v_viewSpacePosition;
     fragmentInput.worldSpacePosition = v_worldSpacePosition;
     #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);

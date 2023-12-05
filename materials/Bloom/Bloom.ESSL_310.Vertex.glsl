@@ -50,10 +50,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 BloomParams1;
+uniform vec4 BloomParams2;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
-uniform vec4 BloomParams2;
-uniform vec4 BloomParams1;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -88,10 +88,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_HDRi;
-uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_BlurPyramidTexture;
 uniform lowp sampler2D s_DepthTexture;
+uniform lowp sampler2D s_HDRi;
+uniform lowp sampler2D s_RasterColor;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
     vertOutput.texcoord0 = vec2(vertInput.texcoord0.x, vertInput.texcoord0.y);

@@ -104,14 +104,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 RenderChunkFogAlpha;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 GlobalRoughness;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 FogColor;
+uniform vec4 GlobalRoughness;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
-uniform vec4 FogColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -148,141 +148,72 @@ struct PBRTextureData {
 };
 
 struct VertexInput {
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 normal;
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vec4 tangent;
-    #endif
-    vec3 position;
-    vec2 texcoord0;
-    #ifndef DEPTH_ONLY_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 color0;
-    #ifdef DEPTH_ONLY_PASS
     vec2 lightmapUV;
-    #endif
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 tangent;
-    #endif
-    // Approximation, matches 42 cases out of 48
-    #if ! defined(ALPHA_TEST_PASS)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(TRANSPARENT_PASS)
     vec4 normal;
-    #endif
-    #if defined(INSTANCING__ON)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
+    vec3 position;
+    vec4 tangent;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
     vec4 instanceData2;
     #endif
-    #if defined(DEPTH_ONLY_PASS)&& defined(INSTANCING__OFF)
-    vec4 normal;
-    #endif
-    #if defined(INSTANCING__OFF)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
-    int pbrTextureId;
-    #endif
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
-    vec2 lightmapUV;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 fog;
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
-    #ifdef OPAQUE_PASS
-    vec4 fog;
-    #endif
-    #ifndef TRANSPARENT_PBR_PASS
-    vec3 normal;
-    #endif
-    vec3 tangent;
-    #ifdef TRANSPARENT_PBR_PASS
-    vec3 normal;
-    #endif
     vec3 bitangent;
-    vec3 worldPos;
+    vec4 color0;
+    vec4 fog;
+    vec2 lightmapUV;
+    vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vec4 fog;
-    #endif
+    vec3 tangent;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
-    vec2 lightmapUV;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vec4 fog;
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
-    vec4 color0;
-    #endif
-    #ifdef OPAQUE_PASS
-    vec4 fog;
-    #endif
-    #ifndef TRANSPARENT_PBR_PASS
-    vec3 normal;
-    #endif
-    vec3 tangent;
-    #ifdef TRANSPARENT_PBR_PASS
-    vec3 normal;
-    #endif
     vec3 bitangent;
-    vec3 worldPos;
+    vec4 color0;
+    vec4 fog;
+    vec2 lightmapUV;
+    vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vec4 fog;
-    #endif
+    vec3 tangent;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
     vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
+uniform lowp sampler2D s_LightMapTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_SeasonsTexture;
-uniform lowp sampler2D s_LightMapTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
     vec2 lightmapUV;
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(TRANSPARENT_PBR_PASS)
-    vec2 texcoord0;
-    vec4 fog;
-    #endif
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vec3 normal;
-    #endif
-    vec3 tangent;
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vec3 normal;
-    #endif
     vec3 bitangent;
+    vec4 fog;
+    vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
-    vec3 worldPos;
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
+    vec3 tangent;
     vec2 texcoord0;
-    vec4 fog;
-    #endif
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -403,7 +334,7 @@ float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOut
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;
     vec3 n = stdInput.vertInput.normal.xyz;
     vec3 t = stdInput.vertInput.tangent.xyz;
-    vec3 b = cross(n, t);
+    vec3 b = cross(n, t) * stdInput.vertInput.tangent.w;
     vertOutput.normal = ((World) * (vec4(n, 0.0))).xyz;
     vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
     vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
@@ -448,71 +379,31 @@ void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vert
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-    vertexInput.normal = (a_normal);
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vertexInput.tangent = (a_tangent);
-    #endif
-    vertexInput.position = (a_position);
-    vertexInput.texcoord0 = (a_texcoord0);
-    #ifndef DEPTH_ONLY_PASS
-    vertexInput.lightmapUV = (a_texcoord1);
-    #endif
     vertexInput.color0 = (a_color0);
-    #ifdef DEPTH_ONLY_PASS
     vertexInput.lightmapUV = (a_texcoord1);
-    #endif
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vertexInput.tangent = (a_tangent);
-    #endif
-    // Approximation, matches 42 cases out of 48
-    #if ! defined(ALPHA_TEST_PASS)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(TRANSPARENT_PASS)
     vertexInput.normal = (a_normal);
-    #endif
-    #if defined(INSTANCING__ON)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     vertexInput.pbrTextureId = int(a_texcoord4);
     #endif
+    vertexInput.position = (a_position);
+    vertexInput.tangent = (a_tangent);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    #if defined(DEPTH_ONLY_PASS)&& defined(INSTANCING__OFF)
-    vertexInput.normal = (a_normal);
-    #endif
-    #if defined(INSTANCING__OFF)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
-    vertexInput.pbrTextureId = int(a_texcoord4);
-    #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
-    vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #endif
-    vertexOutput.lightmapUV = vec2(0, 0);
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
-    vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #endif
-    #ifdef OPAQUE_PASS
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
-    #ifndef TRANSPARENT_PBR_PASS
-    vertexOutput.normal = vec3(0, 0, 0);
-    #endif
-    vertexOutput.tangent = vec3(0, 0, 0);
-    #ifdef TRANSPARENT_PBR_PASS
-    vertexOutput.normal = vec3(0, 0, 0);
-    #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
-    vertexOutput.worldPos = vec3(0, 0, 0);
+    vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.lightmapUV = vec2(0, 0);
+    vertexOutput.normal = vec3(0, 0, 0);
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     vertexOutput.pbrTextureId = 0;
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    #endif
+    vertexOutput.tangent = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -536,35 +427,17 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)&& ! defined(OPAQUE_PASS)
-    v_color0 = vertexOutput.color0;
-    #endif
-    v_lightmapUV = vertexOutput.lightmapUV;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(TRANSPARENT_PASS)
-    v_fog = vertexOutput.fog;
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(OPAQUE_PASS)
-    v_color0 = vertexOutput.color0;
-    #endif
-    #ifdef OPAQUE_PASS
-    v_fog = vertexOutput.fog;
-    #endif
-    #ifndef TRANSPARENT_PBR_PASS
-    v_normal = vertexOutput.normal;
-    #endif
-    v_tangent = vertexOutput.tangent;
-    #ifdef TRANSPARENT_PBR_PASS
-    v_normal = vertexOutput.normal;
-    #endif
     v_bitangent = vertexOutput.bitangent;
-    v_worldPos = vertexOutput.worldPos;
+    v_color0 = vertexOutput.color0;
+    v_fog = vertexOutput.fog;
+    v_lightmapUV = vertexOutput.lightmapUV;
+    v_normal = vertexOutput.normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     v_pbrTextureId = vertexOutput.pbrTextureId;
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    v_fog = vertexOutput.fog;
-    #endif
+    v_tangent = vertexOutput.tangent;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

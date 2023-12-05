@@ -91,8 +91,8 @@ struct VertexInput {
     vec3 position;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
-    vec4 instanceData1;
     vec4 instanceData0;
+    vec4 instanceData1;
     vec4 instanceData2;
     #endif
 };
@@ -132,8 +132,8 @@ void main() {
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
-    vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData0 = i_data1;
+    vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.texcoord0 = vec2(0, 0);

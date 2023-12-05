@@ -61,14 +61,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 HudOpacity;
-uniform vec4 TintColor;
-uniform vec4 GlyphSmoothRadius;
 uniform vec4 GlyphCutoff;
-uniform vec4 OutlineCutoff;
+uniform vec4 GlyphSmoothRadius;
+uniform vec4 HudOpacity;
 uniform vec4 OutlineColor;
-uniform vec4 ShadowOffset;
+uniform vec4 OutlineCutoff;
 uniform vec4 ShadowColor;
+uniform vec4 ShadowOffset;
+uniform vec4 TintColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -86,20 +86,20 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec2 texcoord0;
     vec4 color0;
     vec3 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -115,11 +115,11 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.color0 = (a_color0);
     vertexInput.position = (a_position);
-    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexInput.texcoord0 = (a_texcoord0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -143,8 +143,8 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

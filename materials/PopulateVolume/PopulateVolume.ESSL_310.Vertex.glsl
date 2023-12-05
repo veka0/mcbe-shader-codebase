@@ -35,18 +35,19 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform mat4 PointLightProj;
 uniform mat4 PrevInvProj;
+uniform mat4 PointLightProj;
 uniform mat4 u_view;
 uniform vec4 SunDir;
-uniform vec4 PointLightShadowParams1;
 uniform vec4 ShadowBias;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
+uniform vec4 VolumeShadowSettings;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
 uniform vec4 PrepassUVOffset;
@@ -54,42 +55,42 @@ uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 CascadeShadowResolutions;
 uniform vec4 JitterOffset;
+uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
-uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
-uniform vec4 TemporalSettings;
-uniform vec4 VolumeScatteringEnabled;
-uniform mat4 CloudShadowProj;
-uniform vec4 WorldOrigin;
-uniform vec4 AtmosphericScatteringEnabled;
 uniform vec4 AlbedoExtinction;
-uniform vec4 FogSkyBlend;
-uniform vec4 DensityFalloff;
-uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 DirectionalLightToggleAndCountAndMaxDistance;
-uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 FogColor;
-uniform vec4 VolumeDimensions;
-uniform vec4 ShadowPCFWidth;
-uniform vec4 MoonColor;
-uniform vec4 ShadowParams;
-uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 FogAndDistanceControl;
+uniform vec4 ClusterSize;
+uniform vec4 AtmosphericScattering;
+uniform vec4 SkyZenithColor;
+uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 WorldOrigin;
+uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 FogAndDistanceControl;
-uniform vec4 AtmosphericScattering;
-uniform vec4 ClusterSize;
-uniform vec4 MoonDir;
+uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 DirectionalLightToggleAndCountAndMaxDistance;
+uniform vec4 TemporalSettings;
+uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+uniform vec4 VolumeDimensions;
+uniform vec4 ShadowPCFWidth;
+uniform vec4 FogColor;
+uniform vec4 FogSkyBlend;
+uniform vec4 HeightFogScaleBias;
+uniform vec4 IBLParameters;
+uniform vec4 ShadowParams;
+uniform vec4 MoonColor;
 uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 MoonDir;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
-uniform vec4 VolumeNearFar;
 uniform vec4 RenderChunkFogAlpha;
-uniform vec4 IBLParameters;
-uniform vec4 SkyZenithColor;
+uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
+uniform vec4 VolumeNearFar;
+uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -106,27 +107,22 @@ mat4 WorldViewProj;
 vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
+struct DiscreteLightingContributions {
+    vec3 diffuse;
+    vec3 specular;
 };
 
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
+struct LightData {
+    float lookup;
+};
+
+struct Light {
+    vec4 position;
+    vec4 color;
+    int shadowProbeIndex;
+    float gridLevelRadius;
+    float higherGridLevelRadius;
+    float lowerGridLevelRadius;
 };
 
 struct PBRTextureData {
@@ -162,17 +158,27 @@ struct LightSourceWorldInfo {
     int pad1;
 };
 
-struct Light {
-    vec4 position;
-    vec4 color;
-    int shadowProbeIndex;
-    float gridLevelRadius;
-    float higherGridLevelRadius;
-    float lowerGridLevelRadius;
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
 };
 
-struct LightData {
-    float lookup;
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
 };
 
 struct VertexInput {
@@ -191,15 +197,15 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform highp sampler2DShadow s_CloudShadow;
-uniform lowp samplerCube s_SpecularIBL;
 uniform lowp sampler2D s_BrdfLUT;
-uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
-uniform highp sampler2DArrayShadow s_ShadowCascades0;
+uniform highp sampler2DShadow s_CloudShadow;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
+uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
-uniform highp sampler2DArrayShadow s_ShadowCascades1;
 uniform highp sampler2DArray s_ScatteringBuffer;
+uniform highp sampler2DArrayShadow s_ShadowCascades0;
+uniform highp sampler2DArrayShadow s_ShadowCascades1;
+uniform lowp samplerCube s_SpecularIBL;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

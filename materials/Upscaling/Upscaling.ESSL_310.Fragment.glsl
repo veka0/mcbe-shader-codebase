@@ -50,16 +50,16 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 RenderResolutionDivDisplayResolution;
-uniform vec4 RecipDisplayResolution;
-uniform vec4 DisplayResolutionDivRenderResolution;
 uniform vec4 SubPixelJitter;
 uniform mat4 CurrentViewProjectionMatrixUniform;
-uniform vec4 DisplayResolution;
-uniform vec4 RenderResolution;
 uniform vec4 CurrentWorldOrigin;
-uniform vec4 PreviousWorldOrigin;
+uniform vec4 DisplayResolution;
+uniform vec4 RecipDisplayResolution;
+uniform vec4 DisplayResolutionDivRenderResolution;
 uniform mat4 PreviousViewProjectionMatrixUniform;
+uniform vec4 PreviousWorldOrigin;
+uniform vec4 RenderResolution;
+uniform vec4 RenderResolutionDivDisplayResolution;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -92,9 +92,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
-uniform lowp sampler2D s_InputBufferMotionVectors;
 layout(rgba16f, binding = 3)writeonly uniform highp image2D s_OutputBuffer;
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);

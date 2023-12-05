@@ -126,13 +126,13 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_RasterColor;
-uniform lowp sampler2D s_ColorTexture;
-uniform lowp sampler2D s_LuminanceColorTexture;
 uniform lowp sampler2D s_AverageLuminance;
-uniform lowp sampler2D s_MaxLuminance;
-uniform lowp sampler2D s_RasterizedColor;
+uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
+uniform lowp sampler2D s_LuminanceColorTexture;
+uniform lowp sampler2D s_MaxLuminance;
+uniform lowp sampler2D s_RasterColor;
+uniform lowp sampler2D s_RasterizedColor;
 vec3 color_gamma(vec3 clr) {
     float e = 1.0 / 2.2;
     return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));

@@ -74,13 +74,13 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 fog;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 fog;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -104,8 +104,8 @@ void main() {
     VertexOutput vertexOutput;
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -129,8 +129,8 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     v_fog = vertexOutput.fog;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

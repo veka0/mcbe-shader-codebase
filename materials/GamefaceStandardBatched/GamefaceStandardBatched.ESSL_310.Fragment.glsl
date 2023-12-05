@@ -105,22 +105,22 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    float shaderType;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    float shaderType;
 };
 
 struct FragmentInput {
-    float shaderType;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    float shaderType;
 };
 
 struct FragmentOutput {
@@ -173,9 +173,9 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.shaderType = v_shaderType;
-    fragmentInput.color = v_color;
     fragmentInput.additional = v_additional;
+    fragmentInput.color = v_color;
+    fragmentInput.shaderType = v_shaderType;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

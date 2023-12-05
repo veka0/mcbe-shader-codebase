@@ -85,8 +85,8 @@ uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 PrimProps1;
 uniform vec4 ShaderType;
+uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
 uniform vec4 TextureSize1;
 uniform mat4 Transform;
@@ -107,22 +107,22 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec3 screenPosition;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec3 screenPosition;
 };
 
 struct FragmentInput {
-    vec3 screenPosition;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec3 screenPosition;
 };
 
 struct FragmentOutput {
@@ -175,9 +175,9 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.screenPosition = v_screenPosition;
-    fragmentInput.color = v_color;
     fragmentInput.additional = v_additional;
+    fragmentInput.color = v_color;
+    fragmentInput.screenPosition = v_screenPosition;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

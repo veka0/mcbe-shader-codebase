@@ -86,9 +86,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 ViewPositionAndTime;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -106,13 +106,13 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     vec4 color0;
+    vec3 position;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
-    vec4 instanceData2;
-    vec4 instanceData1;
     vec4 instanceData0;
+    vec4 instanceData1;
+    vec4 instanceData2;
     #endif
 };
 
@@ -120,23 +120,23 @@ struct VertexOutput {
     vec4 position;
     vec2 colorUV;
     float encodedPlane;
-    vec2 parallaxUV;
     vec4 fog;
+    vec2 parallaxUV;
 };
 
 struct FragmentInput {
     vec2 colorUV;
     float encodedPlane;
-    vec2 parallaxUV;
     vec4 fog;
+    vec2 parallaxUV;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ParallaxTexture;
 uniform lowp sampler2D s_ColorTexture;
+uniform lowp sampler2D s_ParallaxTexture;
 float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
     float distance = cameraDepth / maxDistance;
     return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
@@ -185,18 +185,18 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
     vertexInput.color0 = (a_color0);
+    vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
-    vertexInput.instanceData2 = i_data3;
-    vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData0 = i_data1;
+    vertexInput.instanceData1 = i_data2;
+    vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.colorUV = vec2(0, 0);
     vertexOutput.encodedPlane = 0.0;
-    vertexOutput.parallaxUV = vec2(0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.parallaxUV = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -222,8 +222,8 @@ void main() {
     Vert(vertexInput, vertexOutput);
     v_colorUV = vertexOutput.colorUV;
     v_encodedPlane = vertexOutput.encodedPlane;
-    v_parallaxUV = vertexOutput.parallaxUV;
     v_fog = vertexOutput.fog;
+    v_parallaxUV = vertexOutput.parallaxUV;
     gl_Position = vertexOutput.position;
 }
 

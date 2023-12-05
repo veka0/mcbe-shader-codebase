@@ -7,7 +7,7 @@
 * - ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
-* - OPAQUE_PASS
+* - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS
 *
 * Instancing:
@@ -86,14 +86,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 RenderChunkFogAlpha;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 GlobalRoughness;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 FogColor;
+uniform vec4 GlobalRoughness;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
-uniform vec4 FogColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -111,64 +111,46 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color0;
+    vec2 lightmapUV;
     vec3 position;
     vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
-    vec4 color0;
-    #if defined(INSTANCING__ON)&& defined(OPAQUE_PASS)
-    vec2 lightmapUV;
-    #endif
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
     vec4 instanceData2;
     #endif
-    #if defined(INSTANCING__OFF)&& defined(OPAQUE_PASS)
-    vec2 lightmapUV;
-    #endif
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 color0;
-    #ifdef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 fog;
+    vec2 lightmapUV;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 color0;
-    #ifdef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 fog;
+    vec2 lightmapUV;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_LightMapTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_SeasonsTexture;
-uniform lowp sampler2D s_LightMapTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
     vec2 lightmapUV;
-    vec2 texcoord0;
     vec4 fog;
+    vec2 texcoord0;
 };
 
 struct StandardVertexInput {
@@ -294,32 +276,19 @@ void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vert
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.color0 = (a_color0);
+    vertexInput.lightmapUV = (a_texcoord1);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
-    #ifndef OPAQUE_PASS
-    vertexInput.lightmapUV = (a_texcoord1);
-    #endif
-    vertexInput.color0 = (a_color0);
-    #if defined(INSTANCING__ON)&& defined(OPAQUE_PASS)
-    vertexInput.lightmapUV = (a_texcoord1);
-    #endif
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    #if defined(INSTANCING__OFF)&& defined(OPAQUE_PASS)
-    vertexInput.lightmapUV = (a_texcoord1);
-    #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
-    #ifndef OPAQUE_PASS
-    vertexOutput.lightmapUV = vec2(0, 0);
-    #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #ifdef OPAQUE_PASS
-    vertexOutput.lightmapUV = vec2(0, 0);
-    #endif
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.lightmapUV = vec2(0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -343,15 +312,10 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
-    #ifndef OPAQUE_PASS
-    v_lightmapUV = vertexOutput.lightmapUV;
-    #endif
     v_color0 = vertexOutput.color0;
-    #ifdef OPAQUE_PASS
-    v_lightmapUV = vertexOutput.lightmapUV;
-    #endif
     v_fog = vertexOutput.fog;
+    v_lightmapUV = vertexOutput.lightmapUV;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

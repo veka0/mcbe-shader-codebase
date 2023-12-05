@@ -4,11 +4,11 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
+* - ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_PASS
-* - DEPTH_ONLY_OPAQUE_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - OPAQUE_PASS (not used)
+* - TRANSPARENT_PASS (not used)
 *
 * Change_Color:
 * - CHANGE_COLOR__MULTI (not used)
@@ -85,8 +85,8 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform vec4 UseAlphaRewrite;
 uniform mat4 u_view;
-uniform vec4 ChangeColor;
 uniform vec4 FogControl;
+uniform vec4 ChangeColor;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -99,20 +99,20 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 MatColor;
-uniform vec4 TileLightIntensity;
-uniform vec4 UVAnimation;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 ColorBased;
-uniform vec4 TintedAlphaTestEnabled;
-uniform vec4 SubPixelOffset;
-uniform vec4 HudOpacity;
 uniform vec4 FogColor;
 uniform vec4 ActorFPEpsilon;
-uniform vec4 MultiplicativeTintColor;
-uniform vec4 TileLightColor;
 uniform mat4 Bones[8];
+uniform vec4 ColorBased;
+uniform vec4 HudOpacity;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 TileLightIntensity;
+uniform vec4 MatColor;
+uniform vec4 MultiplicativeTintColor;
+uniform vec4 TintedAlphaTestEnabled;
+uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 UVAnimation;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -130,21 +130,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vec3 position;
-    #endif
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
     int boneId;
-    #endif
-    vec4 normal;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    int boneId;
-    #endif
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vec3 position;
-    #endif
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -154,27 +144,17 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 light;
-    #endif
     vec4 fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
     vec4 light;
-    #endif
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vec4 light;
-    #endif
     vec4 fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
     vec4 light;
-    #endif
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -187,14 +167,9 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec2 texcoord0;
-    #if defined(ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
     vec4 fog;
-    #endif
     vec4 light;
-    #if ! defined(ALPHA_TEST_PASS)&& ! defined(TRANSPARENT_PASS)
-    vec4 fog;
-    #endif
+    vec2 texcoord0;
 };
 
 struct StandardVertexInput {
@@ -330,35 +305,20 @@ void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput v
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    #if defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
-    vertexInput.position = (a_position);
-    #endif
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
     vertexInput.boneId = int(a_indices);
-    #endif
-    vertexInput.normal = (a_normal);
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    vertexInput.boneId = int(a_indices);
-    #endif
-    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)
-    vertexInput.position = (a_position);
-    #endif
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.color0 = (a_color0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    vertexOutput.light = vec4(0, 0, 0, 0);
-    #endif
     vertexOutput.fog = vec4(0, 0, 0, 0);
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
     vertexOutput.light = vec4(0, 0, 0, 0);
-    #endif
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -387,15 +347,10 @@ void main() {
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
     #endif
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
-    #ifndef DEPTH_ONLY_OPAQUE_PASS
-    v_light = vertexOutput.light;
-    #endif
     v_fog = vertexOutput.fog;
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
     v_light = vertexOutput.light;
-    #endif
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

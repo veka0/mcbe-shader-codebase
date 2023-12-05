@@ -50,8 +50,8 @@ uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 PrimProps1;
 uniform vec4 ShaderType;
+uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
 uniform mat4 Transform;
 vec4 ViewRect;
@@ -71,9 +71,9 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {

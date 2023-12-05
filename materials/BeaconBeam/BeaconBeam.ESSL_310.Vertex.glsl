@@ -57,11 +57,11 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 UVAnimation;
-uniform vec4 TileLightColor;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 SubPixelOffset;
 uniform vec4 FogColor;
+uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 UVAnimation;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -79,25 +79,25 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
-    vec4 normal;
-    vec2 texCoords;
     vec4 color;
+    vec4 normal;
+    vec3 position;
+    vec2 texCoords;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texCoords;
     vec4 color;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentInput {
-    vec2 texCoords;
     vec4 color;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texCoords;
 };
 
 struct FragmentOutput {
@@ -151,14 +151,14 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
-    vertexInput.normal = (a_normal);
-    vertexInput.texCoords = (a_texcoord0);
     vertexInput.color = (a_color0);
-    vertexOutput.texCoords = vec2(0, 0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.texCoords = (a_texcoord0);
     vertexOutput.color = vec4(0, 0, 0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.light = vec4(0, 0, 0, 0);
+    vertexOutput.texCoords = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -182,10 +182,10 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texCoords = vertexOutput.texCoords;
     v_color = vertexOutput.color;
-    v_light = vertexOutput.light;
     v_fog = vertexOutput.fog;
+    v_light = vertexOutput.light;
+    v_texCoords = vertexOutput.texCoords;
     gl_Position = vertexOutput.position;
 }
 

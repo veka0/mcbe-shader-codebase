@@ -80,20 +80,22 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    #ifdef DEBUGFONT_PASS
+    vec4 color0;
+    vec4 color1;
+    #endif
     vec3 position;
     #ifdef DEBUGFONT_PASS
     vec2 texcoord0;
-    vec4 color0;
-    vec4 color1;
     #endif
 };
 
 struct VertexOutput {
     vec4 position;
     #ifdef DEBUGFONT_PASS
-    vec2 texcoord0;
     vec4 color0;
     vec4 color1;
+    vec2 texcoord0;
     #endif
 };
 
@@ -102,9 +104,9 @@ struct FragmentInput {
     float dummy;
     #endif
     #ifdef DEBUGFONT_PASS
-    vec2 texcoord0;
     vec4 color0;
     vec4 color1;
+    vec2 texcoord0;
     #endif
 };
 
@@ -127,14 +129,16 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    #ifdef DEBUGFONT_PASS
+    vertexInput.color0 = (a_color0);
+    vertexInput.color1 = (a_color1);
+    #endif
     vertexInput.position = (a_position);
     #ifdef DEBUGFONT_PASS
     vertexInput.texcoord0 = (a_texcoord0);
-    vertexInput.color0 = (a_color0);
-    vertexInput.color1 = (a_color1);
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.color1 = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
@@ -160,9 +164,9 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
     #ifdef DEBUGFONT_PASS
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
     v_color1 = vertexOutput.color1;
+    v_texcoord0 = vertexOutput.texcoord0;
     #endif
     gl_Position = vertexOutput.position;
 }

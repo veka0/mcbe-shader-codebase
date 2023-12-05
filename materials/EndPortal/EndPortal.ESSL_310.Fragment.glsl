@@ -91,9 +91,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 ViewPositionAndTime;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -111,13 +111,13 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     vec4 color0;
+    vec3 position;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
-    vec4 instanceData2;
-    vec4 instanceData1;
     vec4 instanceData0;
+    vec4 instanceData1;
+    vec4 instanceData2;
     #endif
 };
 
@@ -125,23 +125,23 @@ struct VertexOutput {
     vec4 position;
     vec2 colorUV;
     float encodedPlane;
-    vec2 parallaxUV;
     vec4 fog;
+    vec2 parallaxUV;
 };
 
 struct FragmentInput {
     vec2 colorUV;
     float encodedPlane;
-    vec2 parallaxUV;
     vec4 fog;
+    vec2 parallaxUV;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ParallaxTexture;
 uniform lowp sampler2D s_ColorTexture;
+uniform lowp sampler2D s_ParallaxTexture;
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_ColorTexture, fragInput.colorUV);
     vec3 parallax = textureSample(s_ParallaxTexture, fragInput.parallaxUV).rgb;
@@ -161,8 +161,8 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.colorUV = v_colorUV;
     fragmentInput.encodedPlane = v_encodedPlane;
-    fragmentInput.parallaxUV = v_parallaxUV;
     fragmentInput.fog = v_fog;
+    fragmentInput.parallaxUV = v_parallaxUV;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

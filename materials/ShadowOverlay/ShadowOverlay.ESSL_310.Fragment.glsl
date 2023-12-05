@@ -68,8 +68,8 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     vec4 color0;
+    vec3 position;
 };
 
 struct VertexOutput {

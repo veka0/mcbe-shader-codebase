@@ -86,13 +86,13 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_RasterColor;
-uniform lowp sampler2D s_ColorTexture;
-uniform lowp sampler2D s_LuminanceColorTexture;
 uniform lowp sampler2D s_AverageLuminance;
-uniform lowp sampler2D s_MaxLuminance;
-uniform lowp sampler2D s_RasterizedColor;
+uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
+uniform lowp sampler2D s_LuminanceColorTexture;
+uniform lowp sampler2D s_MaxLuminance;
+uniform lowp sampler2D s_RasterColor;
+uniform lowp sampler2D s_RasterizedColor;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
     vertOutput.texcoord0 = vec2(vertInput.texcoord0.x, vertInput.texcoord0.y);

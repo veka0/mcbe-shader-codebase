@@ -66,9 +66,9 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color;
     vec2 position;
     vec2 uv;
-    vec4 color;
 };
 
 struct VertexOutput {
@@ -95,9 +95,9 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.color = (a_color0);
     vertexInput.position = (a_position);
     vertexInput.uv = (a_texcoord0);
-    vertexInput.color = (a_color0);
     vertexOutput.color = vec4(0, 0, 0, 0);
     vertexOutput.uv = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);

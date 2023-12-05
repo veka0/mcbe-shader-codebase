@@ -98,20 +98,20 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 FogColor;
+uniform vec4 ActorFPEpsilon;
+uniform mat4 Bones[8];
+uniform vec4 ColorBased;
+uniform vec4 HudOpacity;
+uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
-uniform vec4 UVAnimation;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 ColorBased;
-uniform vec4 SubPixelOffset;
-uniform vec4 TintedAlphaTestEnabled;
-uniform vec4 HudOpacity;
-uniform vec4 ActorFPEpsilon;
-uniform vec4 FogColor;
 uniform vec4 MultiplicativeTintColor;
+uniform vec4 TintedAlphaTestEnabled;
+uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
-uniform mat4 Bones[8];
+uniform vec4 UVAnimation;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -129,11 +129,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec3 position;
     int boneId;
-    vec4 normal;
-    vec2 texcoord0;
     vec4 color0;
+    vec4 normal;
+    vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -143,17 +143,17 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -166,9 +166,9 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec2 texcoord0;
-    vec4 light;
     vec4 fog;
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct StandardVertexInput {
@@ -287,20 +287,20 @@ void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vert
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
     vertexInput.boneId = int(a_indices);
-    vertexInput.normal = (a_normal);
-    vertexInput.texcoord0 = (a_texcoord0);
     vertexInput.color0 = (a_color0);
+    vertexInput.normal = (a_normal);
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
-    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.light = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -324,10 +324,10 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
     v_color0 = vertexOutput.color0;
-    v_light = vertexOutput.light;
     v_fog = vertexOutput.fog;
+    v_light = vertexOutput.light;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

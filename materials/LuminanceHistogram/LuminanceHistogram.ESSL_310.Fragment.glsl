@@ -55,8 +55,8 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 AdaptiveParameters;
-uniform vec4 MinLogLuminance;
 uniform vec4 LogLuminanceRange;
+uniform vec4 MinLogLuminance;
 uniform vec4 ScreenSize;
 vec4 ViewRect;
 mat4 Proj;
@@ -94,9 +94,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_GameColor;
-uniform lowp sampler2D s_CustomWeight;
 layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
+uniform lowp sampler2D s_CustomWeight;
+uniform lowp sampler2D s_GameColor;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

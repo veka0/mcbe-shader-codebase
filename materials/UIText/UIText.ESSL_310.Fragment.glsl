@@ -97,14 +97,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 HudOpacity;
-uniform vec4 TintColor;
-uniform vec4 GlyphSmoothRadius;
 uniform vec4 GlyphCutoff;
-uniform vec4 OutlineCutoff;
+uniform vec4 GlyphSmoothRadius;
+uniform vec4 HudOpacity;
 uniform vec4 OutlineColor;
-uniform vec4 ShadowOffset;
+uniform vec4 OutlineCutoff;
 uniform vec4 ShadowColor;
+uniform vec4 ShadowOffset;
+uniform vec4 TintColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -122,20 +122,20 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec2 texcoord0;
     vec4 color0;
     vec3 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
     vec4 color0;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -184,8 +184,8 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.color0 = v_color0;
+    fragmentInput.texcoord0 = v_texcoord0;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

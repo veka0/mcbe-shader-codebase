@@ -69,22 +69,22 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 position;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    vec4 position;
 };
 
 struct VertexOutput {
     vec4 position;
-    float shaderType;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    float shaderType;
 };
 
 struct FragmentInput {
-    float shaderType;
-    vec4 color;
     vec4 additional;
+    vec4 color;
+    float shaderType;
 };
 
 struct FragmentOutput {
@@ -106,12 +106,12 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.position = (a_position);
-    vertexInput.color = (a_color0);
     vertexInput.additional = (a_texcoord3);
-    vertexOutput.shaderType = 0.0;
-    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexInput.color = (a_color0);
+    vertexInput.position = (a_position);
     vertexOutput.additional = vec4(0, 0, 0, 0);
+    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexOutput.shaderType = 0.0;
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -135,9 +135,9 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_shaderType = vertexOutput.shaderType;
-    v_color = vertexOutput.color;
     v_additional = vertexOutput.additional;
+    v_color = vertexOutput.color;
+    v_shaderType = vertexOutput.shaderType;
     gl_Position = vertexOutput.position;
 }
 

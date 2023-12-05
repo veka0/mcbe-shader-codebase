@@ -11,7 +11,7 @@
 * - TRANSPARENT_PASS
 *
 * Instancing:
-* - INSTANCING__OFF
+* - INSTANCING__OFF (not used)
 * - INSTANCING__ON
 *
 * RenderAsBillboards:
@@ -107,14 +107,14 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 RenderChunkFogAlpha;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 GlobalRoughness;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 FogColor;
+uniform vec4 GlobalRoughness;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
-uniform vec4 FogColor;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -132,64 +132,46 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color0;
+    vec2 lightmapUV;
     vec3 position;
     vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
-    vec4 color0;
-    #if defined(INSTANCING__ON)&& defined(OPAQUE_PASS)
-    vec2 lightmapUV;
-    #endif
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
     vec4 instanceData2;
     #endif
-    #if defined(INSTANCING__OFF)&& defined(OPAQUE_PASS)
-    vec2 lightmapUV;
-    #endif
 };
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 color0;
-    #ifdef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 fog;
+    vec2 lightmapUV;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    #ifndef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 color0;
-    #ifdef OPAQUE_PASS
-    vec2 lightmapUV;
-    #endif
     vec4 fog;
+    vec2 lightmapUV;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_LightMapTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_SeasonsTexture;
-uniform lowp sampler2D s_LightMapTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
     vec2 lightmapUV;
-    vec2 texcoord0;
     vec4 fog;
+    vec2 texcoord0;
 };
 
 struct StandardVertexInput {
@@ -203,8 +185,8 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.lightmapUV = fragInput.lightmapUV;
-    result.texcoord0 = fragInput.texcoord0;
     result.fog = fragInput.fog;
+    result.texcoord0 = fragInput.texcoord0;
     return result;
 }
 struct StandardSurfaceOutput {
@@ -336,15 +318,10 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
-    #ifndef OPAQUE_PASS
-    fragmentInput.lightmapUV = v_lightmapUV;
-    #endif
     fragmentInput.color0 = v_color0;
-    #ifdef OPAQUE_PASS
-    fragmentInput.lightmapUV = v_lightmapUV;
-    #endif
     fragmentInput.fog = v_fog;
+    fragmentInput.lightmapUV = v_lightmapUV;
+    fragmentInput.texcoord0 = v_texcoord0;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

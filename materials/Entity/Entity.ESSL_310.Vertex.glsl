@@ -81,17 +81,17 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform mat4 Bones[8];
 uniform vec4 FogColor;
 uniform vec4 DiscardValue;
-uniform vec4 UVScale;
+uniform vec4 GlintColor;
 uniform vec4 UVAnimation;
 uniform vec4 MatColor0;
-uniform vec4 TileLightIntensity;
-uniform vec4 TileLightColor;
-uniform vec4 GlintColor;
 uniform vec4 MatColor1;
 uniform vec4 MatColor2;
-uniform mat4 Bones[8];
+uniform vec4 TileLightColor;
+uniform vec4 TileLightIntensity;
+uniform vec4 UVScale;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -117,17 +117,17 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    vec4 light;
     vec4 fog;
     vec4 layerUv;
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    vec4 light;
     vec4 fog;
     vec4 layerUv;
+    vec4 light;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -187,10 +187,10 @@ void main() {
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
-    vertexOutput.texcoord0 = vec2(0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.layerUv = vec4(0, 0, 0, 0);
+    vertexOutput.light = vec4(0, 0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -214,10 +214,10 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    v_texcoord0 = vertexOutput.texcoord0;
-    v_light = vertexOutput.light;
     v_fog = vertexOutput.fog;
     v_layerUv = vertexOutput.layerUv;
+    v_light = vertexOutput.light;
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

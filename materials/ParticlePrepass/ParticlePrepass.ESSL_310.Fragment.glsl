@@ -99,10 +99,10 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 LightWorldSpaceDirection;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -120,11 +120,11 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec2 ambientLight;
+    vec4 color0;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
-    vec4 color0;
-    vec2 ambientLight;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -134,33 +134,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 texcoord0;
-    vec4 color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    vec4 color0;
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
-    vec2 texcoord0;
-    vec4 color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    vec4 color0;
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -172,16 +162,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec4 fog;
-    #endif
-    vec3 normal;
     vec2 ambientLight;
-    vec3 worldPos;
-    vec3 prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     vec4 fog;
-    #endif
+    vec3 normal;
+    vec3 prevWorldPos;
+    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -194,16 +179,11 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    result.fog = fragInput.fog;
-    #endif
-    result.normal = fragInput.normal;
     result.ambientLight = fragInput.ambientLight;
-    result.worldPos = fragInput.worldPos;
-    result.prevWorldPos = fragInput.prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     result.fog = fragInput.fog;
-    #endif
+    result.normal = fragInput.normal;
+    result.prevWorldPos = fragInput.prevWorldPos;
+    result.worldPos = fragInput.worldPos;
     return result;
 }
 struct StandardSurfaceOutput {
@@ -389,18 +369,13 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    fragmentInput.texcoord0 = v_texcoord0;
-    fragmentInput.color0 = v_color0;
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    fragmentInput.fog = v_fog;
-    #endif
-    fragmentInput.normal = v_normal;
     fragmentInput.ambientLight = v_ambientLight;
-    fragmentInput.worldPos = v_worldPos;
-    fragmentInput.prevWorldPos = v_prevWorldPos;
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    fragmentInput.color0 = v_color0;
     fragmentInput.fog = v_fog;
-    #endif
+    fragmentInput.normal = v_normal;
+    fragmentInput.prevWorldPos = v_prevWorldPos;
+    fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
