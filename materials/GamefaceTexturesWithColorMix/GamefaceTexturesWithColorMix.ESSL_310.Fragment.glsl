@@ -294,8 +294,8 @@ return vec3(0.0, 0.0, 0.0);
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 vec2 uvBackdrop = (vec2((fragInput.additional.zw).x, 1.0 - (fragInput.additional.zw).y));
 vec2 uvSource = (vec2((fragInput.additional.xy).x, 1.0 - (fragInput.additional.xy).y));
-vec4 backdrop = textureSample(s_Texture0, uvBackdrop);
-vec4 source = textureSample(s_Texture1, uvSource) * fragInput.color.a;
+vec4 backdrop = textureSample(s_Texture1, uvBackdrop);
+vec4 source = textureSample(s_Texture0, uvSource) * fragInput.color.a;
 vec3 backdropUnprem = backdrop.rgb / max(backdrop.a, 0.0001);
 vec3 sourceUnprem = source.rgb / max(source.a, 0.0001);
 vec4 result =

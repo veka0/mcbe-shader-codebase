@@ -5,8 +5,8 @@
 *
 * Passes:
 * - DEPTH_ONLY_PASS
-* - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS (not used)
+* - GEOMETRY_PREPASS_PASS (not used)
+* - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
 *
 * AlphaTest:
 * - ALPHA_TEST__OFF (not used)
@@ -197,7 +197,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+#ifndef DEPTH_ONLY_PASS
 void packPrepassVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     vertOutput.worldPos = stdInput.worldPos;
     vertOutput.prevWorldPos = ((World) * (vec4(stdInput.vertInput.position, 1.0))).xyz;
@@ -248,8 +248,8 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 
-#ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-void VertFog(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+#ifdef DEPTH_ONLY_PASS
+void VertOverride(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
 }
 #endif
 #ifndef DEPTH_ONLY_PASS
@@ -268,10 +268,10 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifndef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    VertFog(vertInput, vertOutput);
+    #ifdef DEPTH_ONLY_PASS
+    VertOverride(vertInput, vertOutput);
     #endif
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    #ifndef DEPTH_ONLY_PASS
     VertGeometryPrepass(vertInput, vertOutput);
     #endif
 }

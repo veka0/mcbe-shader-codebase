@@ -126,116 +126,128 @@ float G_Smith(float nDotL, float nDotV, float a) {
     return viewTerm * lightTerm;
 }
 #endif
-float VanDerCorpus(uint n, uint base) {
-    float invBase = 1.0 / float(base);
-    float denom = 1.0;
-    float result = 0.0;
-    for(int i = 0; i < 32; ++ i)
-    {
-        if (n > uint(0))
-        {
-            denom = mod(float(n), 2.0);
-            result += denom * invBase;
-            invBase = invBase / 2.0;
-            n = uint(float(n) / 2.0);
-        }
-    }
-    return result;
+float RadicalInverse_VdC(uint bits) {
+    bits = (bits << 16u)|(bits >> 16u);
+    bits = ((bits & 0x55555555u) << 1u)|((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u)|((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u)|((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u)|((bits & 0xFF00FF00u) >> 8u);
+    return float(bits) * 2.3283064365386963e - 10;
 }
-vec2 Hammersley(int i, int N) {
-    float ri = VanDerCorpus(uint(i), uint(2));
+vec2 Hammersley(uint i, uint N) {
+    float ri = RadicalInverse_VdC(i);
     return vec2(float(i) / float(N), ri);
 }
 vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
     float a = roughness * roughness;
-    float phi = 2.0 * 3.1415926535897932384626433832795 * Xi.x;
-    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + ((a * a) - 1.0) * Xi.y));
-    float sinTheta = cosTheta >= 1.0 ? 0.0 : sqrt(1.0 - cosTheta * cosTheta);
+    float phi = 2.0f * 3.1415926535897932384626433832795 * Xi.x;
+    float cosTheta = sqrt((1.0f - Xi.y) / (1.0f + ((a * a) - 1.0f) * Xi.y));
+    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
     vec3 H;
     H.x = cos(phi) * sinTheta;
     H.y = sin(phi) * sinTheta;
     H.z = cosTheta;
-    vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent = normalize(cross(up, N));
-    vec3 bitangent = cross(N, tangent);
-    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
-    return normalize(sampleVec);
+    vec3 tangentUp = abs(N.z) < 0.999f ? vec3(0, 0, 1) : vec3(1, 0, 0);
+    vec3 tangentX = normalize(cross(tangentUp, N));
+    vec3 tangentY = cross(N, tangentX);
+    return tangentX * H.x + tangentY * H.y + N * H.z;
 }
 #ifdef CONVOLVE_PASS
 vec4 SampleCubemap(vec3 R, float lod) {
     return textureCubeLod(s_CubeMap, R, lod);
 }
-vec3 ImportanceSample(vec3 N) {
-    vec3 R = N;
-    vec3 V = R;
-    float edgeLength = float(int(ConvolutionParameters.z));
-    float roughness = (ConvolutionParameters.y / (ConvolutionParameters.w - 1.0));
+vec3 ImportanceSample(vec3 V, vec3 N, float roughness, uint sampleCount, float edgeLength) {
     float totalWeight = 0.0;
     vec3 prefilteredColor = vec3(0.0, 0.0, 0.0);
-    for(int i = 0; i < int(ConvolutionParameters.x); ++ i) {
-        vec2 Xi = Hammersley(i, int(ConvolutionParameters.x));
+    for(int i = 0; i < int(sampleCount); ++ i) {
+        vec2 Xi = Hammersley(uint(i), sampleCount);
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
-        vec3 L = normalize(2.0 * dot(V, H) * H - V);
-        float NdL = max(dot(N, L), 0.0);
-        if (NdL > 0.0) {
-            float NdH = max(dot(N, H), 0.0);
-            float HdV = max(dot(H, V), 0.0);
-            float pdf = (D_GGX_TrowbridgeReitz(N, H, roughness) * NdH / (4.0 * HdV)) + 0.0001;
-            float saTexel = 4.0 * 3.1415926535897932384626433832795 / (6.0 * edgeLength * edgeLength);
-            float saSample = 1.0 / (ConvolutionParameters.x * pdf + 0.0001);
-            float lod = (roughness == 0.0) ? 0.0 : (0.5 * log2(saSample / saTexel));
-            prefilteredColor += SampleCubemap(L, lod).rgb * NdL;
-            totalWeight += NdL;
+        vec3 L = 2.0f * dot(V, H) * H - V;
+        float NdotL = clamp(dot(N, L), 0.0, 1.0);
+        if (NdotL > 0.0f) {
+            float NdotH = clamp(dot(N, H), 0.0, 1.0);
+            float LdotH = clamp(dot(L, H), 0.0, 1.0);
+            float pdf = D_GGX_TrowbridgeReitz(N, H, roughness * roughness) * NdotH / ((4.0f * LdotH) + 0.0001f);
+            float omegaS = 1.0f / (float(sampleCount) * (pdf + 0.0001f));
+            float omegaP = 4.0f * 3.1415926535897932384626433832795 / (6.0f * edgeLength * edgeLength);
+            float mipLevel = max(0.5f * log2(omegaS / omegaP), 0.0f);
+            prefilteredColor += SampleCubemap(L, mipLevel).rgb * NdotL;
+            totalWeight += NdotL;
         }
     }
-    prefilteredColor = prefilteredColor / totalWeight;
-    return prefilteredColor;
+    totalWeight = max(0.001f, totalWeight);
+    return prefilteredColor / totalWeight;
 }
 #endif
 #ifdef GENERATE_BRDF_PASS
-vec4 IntegrateBrdf(float NdV, float roughness) {
+vec2 IntegrateBrdf(vec3 N, float NdotV, float roughness) {
     vec3 V;
-    V.x = sqrt(1.0 - NdV * NdV);
-    V.y = 0.0;
-    V.z = NdV;
-    float A = 0.0;
-    float B = 0.0;
-    vec3 N = vec3(0.0, 0.0, 1.0);
+    V.x = sqrt(1.0f - NdotV * NdotV);
+    V.y = 0.0f;
+    V.z = NdotV;
+    float A = 0.0f;
+    float B = 0.0f;
     for(int i = 0; i < int(ConvolutionParameters.x); ++ i) {
-        vec2 Xi = Hammersley(i, int(ConvolutionParameters.x));
+        vec2 Xi = Hammersley(uint(i), uint(ConvolutionParameters.x));
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
-        vec3 L = normalize(2.0 * dot(V, H) * H - V);
-        float NdL = max(L.z, 0.0);
-        float NdH = max(H.z, 0.0);
-        float VdH = max(dot(V, H), 0.0);
-        if (NdL > 0.0) {
-            float G = G_Smith(NdL, NdV, roughness * roughness);
-            float G_Vis = (G * VdH) / (NdH * NdV);
-            float Fc = pow(1.0 - VdH, 5.0);
-            A += (1.0 - Fc) * G_Vis;
+        vec3 L = 2.0f * dot(V, H) * H - V;
+        float NdotL = clamp(L.z, 0.0, 1.0);
+        float NdotH = clamp(H.z, 0.0, 1.0);
+        float VdotH = clamp(dot(V, H), 0.0, 1.0);
+        if (NdotL > 0.0f) {
+            float G = G_Smith(NdotL, NdotV, roughness * roughness);
+            float G_Vis = (G * VdotH) / (NdotH * NdotV);
+            float Fc = pow(1.0f - VdotH, 5.0f);
+            A += (1.0f - Fc) * G_Vis;
             B += Fc * G_Vis;
         }
     }
     A /= ConvolutionParameters.x;
     B /= ConvolutionParameters.x;
-    return vec4(A, B, 0.0, 1.0);
+    return vec2(A, B);
 }
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     #ifdef CONVOLVE_PASS
-    vec3 R = normalize(fragInput.viewVec.xyz);
     vec3 importanceSampled;
+    vec3 V = normalize(fragInput.viewVec.xyz);
     if (int(ConvolutionParameters.y) == 0) {
-        importanceSampled = SampleCubemap(R, 0.0).rgb;
+        if (abs(V.x) > abs(V.y)&& abs(V.x) > abs(V.z)) {
+            V.z *= -1.0f;
+            V.y *= -1.0f;
+        }
+        else if (abs(V.z) > abs(V.x)&& abs(V.z) > abs(V.y)) {
+            V.x *= -1.0f;
+            V.y *= -1.0f;
+        }
+        else {
+            V.x *= -1.0f;
+            V.z *= -1.0f;
+        }
+        importanceSampled = SampleCubemap(V, 0.0).rgb;
     }
     else {
-        importanceSampled = ImportanceSample(R);
+        #endif
+        vec3 N = vec3(0, 0, 1);
+        #ifdef CONVOLVE_PASS
+        if (abs(V.x) > abs(V.y)&& abs(V.x) > abs(V.z)) {
+            N = vec3(sign(V.x), 0, 0);
+        }
+        else if (abs(V.z) > abs(V.x)&& abs(V.z) > abs(V.y)) {
+            N = vec3(0, 0, sign(V.z));
+        }
+        else {
+            N = vec3(0, sign(V.y), 0);
+        }
+        importanceSampled = ImportanceSample(V, N, (ConvolutionParameters.y / (ConvolutionParameters.w - 1.0)), uint(ConvolutionParameters.x), float(int(ConvolutionParameters.z)));
     }
     fragOutput.Color0 = vec4(importanceSampled, 1.0);
     #endif
     #ifdef GENERATE_BRDF_PASS
-    vec4 color = IntegrateBrdf(fragInput.texCoord.x, fragInput.texCoord.y);
-    fragOutput.Color0 = color;
+    float NdotV = fragInput.texCoord.x;
+    float roughness = fragInput.texCoord.y;
+    vec2 brdf = IntegrateBrdf(N, NdotV, roughness);
+    fragOutput.Color0 = vec4(brdf.x, brdf.y, 0, 1);
     #endif
 }
 void main() {

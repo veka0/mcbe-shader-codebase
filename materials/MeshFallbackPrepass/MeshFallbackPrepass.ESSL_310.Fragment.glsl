@@ -5,8 +5,8 @@
 *
 * Passes:
 * - DEPTH_ONLY_PASS
-* - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS
+* - GEOMETRY_PREPASS_PASS (not used)
+* - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
 *
 * AlphaTest:
 * - ALPHA_TEST__OFF (not used)
@@ -49,7 +49,7 @@ struct NoopSampler {
     int noop;
 };
 
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& defined(USE_TEXTURES__ON)
+#if defined(USE_TEXTURES__ON)&& ! defined(DEPTH_ONLY_PASS)
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -236,8 +236,6 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#endif
-#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
 vec3 color_degamma(vec3 clr) {
     float e = 2.2;
     return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
@@ -252,7 +250,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+#ifndef DEPTH_ONLY_PASS
 vec2 octWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0);
 }
@@ -280,6 +278,25 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
         surfaceOutput.Roughness
     );
 }
+void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    #ifdef USE_TEXTURES__OFF
+    vec4 albedo = vec4(1, 1, 1, 1);
+    #endif
+    #ifdef USE_TEXTURES__ON
+    vec4 albedo = MatColor;
+    albedo *= textureSample(s_MatTexture, surfaceInput.UV);
+    #endif
+    vec3 surfaceColor = color_degamma(surfaceInput.Color);
+    if (albedo.a < 0.5) {
+        discard;
+    }
+    surfaceOutput.Albedo = albedo.rgb * surfaceInput.Color.rgb;
+    surfaceOutput.Alpha = albedo.a * surfaceInput.Alpha;
+    surfaceOutput.Metallic = merUniforms.x;
+    surfaceOutput.Emissive = merUniforms.y;
+    surfaceOutput.Roughness = merUniforms.z;
+    surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+}
 void SurfGeometryPrepassOverride(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     applyPrepassSurfaceToGBuffer(
         fragInput.worldPos.xyz,
@@ -300,10 +317,6 @@ vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compos
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
 #endif
-#ifdef OPAQUE_PASS
-void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-}
-#endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
@@ -316,27 +329,6 @@ void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutp
 #ifndef DEPTH_ONLY_PASS
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
-}
-void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& defined(USE_TEXTURES__OFF)
-    vec4 albedo = vec4(1, 1, 1, 1);
-    #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& defined(USE_TEXTURES__ON)
-    vec4 albedo = MatColor;
-    albedo *= textureSample(s_MatTexture, surfaceInput.UV);
-    #endif
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    vec3 surfaceColor = color_degamma(surfaceInput.Color);
-    if (albedo.a < 0.5) {
-        discard;
-    }
-    surfaceOutput.Albedo = albedo.rgb * surfaceInput.Color.rgb;
-    surfaceOutput.Alpha = albedo.a * surfaceInput.Alpha;
-    surfaceOutput.Metallic = merUniforms.x;
-    surfaceOutput.Emissive = merUniforms.y;
-    surfaceOutput.Roughness = merUniforms.z;
-    surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
-    #endif
 }
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
@@ -352,12 +344,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     SurfGeometryPrepassOverride(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
-    #ifdef OPAQUE_PASS
-    StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
 }
 #endif
 void main() {
