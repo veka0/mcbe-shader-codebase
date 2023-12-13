@@ -89,7 +89,6 @@ struct FragmentOutput {
 uniform lowp sampler2D s_AverageLuminance;
 uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
-uniform lowp sampler2D s_LuminanceColorTexture;
 uniform lowp sampler2D s_MaxLuminance;
 uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_RasterizedColor;

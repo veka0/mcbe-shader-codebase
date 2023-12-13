@@ -129,7 +129,6 @@ struct FragmentOutput {
 uniform lowp sampler2D s_AverageLuminance;
 uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
-uniform lowp sampler2D s_LuminanceColorTexture;
 uniform lowp sampler2D s_MaxLuminance;
 uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_RasterizedColor;
@@ -210,36 +209,35 @@ vec3 TonemapColorCorrection(vec3 rgb, float luminance, float brightness, float c
     rgb = (rgb - 0.5) * contrast + 0.5 + brightness;
     return mix(vec3_splat(luminance), rgb, max(0.0, saturation));
 }
-vec3 ApplyTonemap(vec3 bloomedHDRi, vec3 sceneHDRi, float averageLuminance, float brightness, float contrast, float saturation, float compensation, float whitePoint, int tonemapper) {
+vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, float contrast, float saturation, float compensation, float whitePoint, int tonemapper) {
     float exposure = (0.18f / averageLuminance) * compensation;
-    bloomedHDRi *= exposure;
+    sceneColor *= exposure;
     float scaledWhitePoint = exposure * whitePoint;
     float whitePointSquared = scaledWhitePoint * scaledWhitePoint;
     if (tonemapper == 1) {
-        bloomedHDRi = TonemapReinhardLuminance(bloomedHDRi, whitePointSquared);
+        sceneColor = TonemapReinhardLuminance(sceneColor, whitePointSquared);
     }
     else if (tonemapper == 2) {
-        bloomedHDRi = TonemapReinhardJodie(bloomedHDRi);
+        sceneColor = TonemapReinhardJodie(sceneColor);
     }
     else if (tonemapper == 3) {
-        bloomedHDRi = TonemapUncharted2(bloomedHDRi, whitePointSquared);
+        sceneColor = TonemapUncharted2(sceneColor, whitePointSquared);
     }
     else if (tonemapper == 4) {
-        bloomedHDRi = TonemapACES(bloomedHDRi);
+        sceneColor = TonemapACES(sceneColor);
     }
     else {
-        bloomedHDRi = TonemapReinhard(bloomedHDRi, whitePointSquared);
+        sceneColor = TonemapReinhard(sceneColor, whitePointSquared);
     }
-    float finalLuminance = luminance(bloomedHDRi);
-    bloomedHDRi = color_gamma(bloomedHDRi);
-    return TonemapColorCorrection(bloomedHDRi, finalLuminance, brightness, contrast, saturation);
+    float finalLuminance = luminance(sceneColor);
+    sceneColor = color_gamma(sceneColor);
+    return TonemapColorCorrection(sceneColor, finalLuminance, brightness, contrast, saturation);
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    vec3 bloomedHDRi = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;
-    vec3 sceneHDRi = textureSample(s_LuminanceColorTexture, fragInput.texcoord0.xy).rgb;
-    vec3 finalColor = bloomedHDRi;
+    vec3 sceneColor = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;
+    vec3 finalColor = sceneColor;
     if (TonemapParams0.y <= 0.5f) {
-        finalColor.rgb = color_gamma(bloomedHDRi.rgb);
+        finalColor.rgb = color_gamma(sceneColor.rgb);
     }
     else {
         float averageLuminance = clamp(textureSample(s_AverageLuminance, vec2(0.5f, 0.5f)).r, LuminanceMinMax.x, LuminanceMinMax.y);
@@ -255,8 +253,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
         whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;
         finalColor.rgb = ApplyTonemap(
-            bloomedHDRi,
-            sceneHDRi,
+            sceneColor,
             averageLuminance,
             TonemapCorrection.x,
             TonemapCorrection.y,

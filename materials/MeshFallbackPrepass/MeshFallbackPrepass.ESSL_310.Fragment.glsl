@@ -300,7 +300,7 @@ void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSur
 void SurfGeometryPrepassOverride(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     applyPrepassSurfaceToGBuffer(
         fragInput.worldPos.xyz,
-        fragInput.prevWorldPos.xyz,
+        fragInput.prevWorldPos.xyz - PrevWorldPosOffset.xyz,
         TileLightColor.x,
         TileLightColor.y,
         surfaceOutput,

@@ -154,20 +154,20 @@ uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 VolumeDimensions;
+uniform vec4 ShadowParams;
+uniform vec4 MoonColor;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform vec4 MultiplicativeTintColor;
+uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
@@ -176,6 +176,8 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
+uniform vec4 TileLightIntensity;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -308,6 +310,7 @@ struct FragmentOutput {
 
 uniform lowp sampler2D s_BrdfLUT;
 uniform lowp sampler2D s_MatTexture;
+uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
@@ -613,6 +616,36 @@ float GetFilteredCloudShadow(vec3 worldPos, float NdL) {
     }
     return amt / float(filterWidth * filterWidth);
 }
+float GetPlayerShadow(vec3 worldPos, float NdL) {
+    const int playerCascade = 0;
+    vec4 playerProjPos = ((PlayerShadowProj) * (vec4(worldPos, 1.0)));
+    playerProjPos /= playerProjPos.w;
+    float bias = ShadowBias[playerCascade] + ShadowSlopeBias[playerCascade] * clamp(tan(acos(NdL)), 0.0, 1.0);
+    playerProjPos.z -= bias / playerProjPos.w;
+    playerProjPos.z = min(playerProjPos.z, 1.0);
+    vec2 playerUv = (vec2(playerProjPos.x, playerProjPos.y) * 0.5f + 0.5f) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth.y;
+    const int MaxFilterWidth = 9;
+    int filterWidth = clamp(int(2.0 * 1.0 + 0.5f), 1, MaxFilterWidth);
+    int filterOffset = filterWidth / 2;
+    float amt = 0.f;
+    playerProjPos.z = playerProjPos.z * 0.5 + 0.5;
+    playerUv.y += 1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth.y;
+    for(int iy = 0; iy < filterWidth; ++ iy) {
+        for(int ix = 0; ix < filterWidth; ++ ix) {
+            float y = float(iy - filterOffset) + 0.5f;
+            float x = float(ix - filterOffset) + 0.5f;
+            vec2 offset = vec2(x, y) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth.z;
+            vec2 newUv = playerUv + (offset * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth.y);
+            if (newUv.x >= 0.0 && newUv.x < 1.0 && newUv.y >= 0.0 && newUv.y < 1.0) {
+                amt += shadow2D(s_PlayerShadowMap, vec3(newUv, playerProjPos.z));
+            }
+            else {
+                amt += 1.0f;
+            }
+        }
+    }
+    return amt / float(filterWidth * filterWidth);
+}
 float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv) {
     const int MaxFilterWidth = 9;
     int filterWidth = clamp(int(ShadowPCFWidth[cascade] * 1.0 + 0.5), 1, MaxFilterWidth);
@@ -638,6 +671,7 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv) {
 float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth) {
     float amt = 1.0;
     float cloudAmt = 1.0;
+    float playerAmt = 1.0;
     vec4 projPos;
     int cascade = GetShadowCascade(lightIndex, worldPos, projPos);
     if (cascade != -1) {
@@ -645,6 +679,10 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth)
         projPos.z -= bias / projPos.w;
         vec2 uv = vec2(projPos.x, projPos.y) * 0.5f + 0.5f;
         amt = GetFilteredShadow(DirectionalLightSources[lightIndex].shadowCascadeNumber, projPos.z, cascade, uv);
+        if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth.x) > 0) {
+            playerAmt = GetPlayerShadow(worldPos, NdL);
+            amt = min(amt, playerAmt);
+        }
         if (DirectionalLightSources[lightIndex].isSun > 0 && int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.y) > 0) {
             cloudAmt = GetFilteredCloudShadow(worldPos, NdL);
             if (cloudAmt < 1.0) {

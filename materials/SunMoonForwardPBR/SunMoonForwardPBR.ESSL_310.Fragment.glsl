@@ -108,12 +108,14 @@ uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+uniform vec4 ShadowParams;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
+uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
-uniform vec4 ShadowParams;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SunMoonColor;
 uniform vec4 VolumeNearFar;
@@ -229,13 +231,14 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp sampler2D s_SunMoonTexture;
 layout(std430, binding = 1)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
-layout(std430, binding = 3)buffer s_LightLookupArray { LightData LightLookupArray[]; };
-layout(std430, binding = 4)buffer s_Lights { Light Lights[]; };
+layout(std430, binding = 4)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 5)buffer s_Lights { Light Lights[]; };
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 float linearToLogDepth(float linearDepth) {
     return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
