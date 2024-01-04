@@ -4,9 +4,19 @@
 * Available Macros:
 *
 * Passes:
-* - TRANSFER_PASS (not used)
+* - CUBEMAP_TO_OFFSCREEN_PASS
+* - FALLBACK_PASS
 */
 
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
+#extension GL_EXT_shader_texture_lod : enable
+#define texture2DLod textureLod
+#define texture2DGrad textureGrad
+#define texture2DProjLod textureProjLod
+#define texture2DProjGrad textureProjGrad
+#define textureCubeLod textureLod
+#define textureCubeGrad textureGrad
+#endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -15,44 +25,13 @@ precision mediump float;
 #define attribute in
 #define varying in
 out vec4 bgfx_FragColor;
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
 varying vec2 v_texCoord;
+#endif
 struct NoopSampler {
     int noop;
 };
 
-vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler3D _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump samplerCube _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler2D _sampler, vec2 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(mediump sampler3D _sampler, vec3 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
-    return vec4(0, 0, 0, 0);
-}
 struct NoopImage2D {
     int noop;
 };
@@ -84,6 +63,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 CurrentFace;
+uniform vec4 CurrentMip;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -101,32 +81,77 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec4 position;
     vec2 texcoord0;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct VertexOutput {
     vec4 position;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec2 texCoord;
+    #endif
 };
 
 struct FragmentInput {
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec2 texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_SrcTexture;
+uniform lowp samplerCube s_SrcTextureCube;
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    vec4 color = textureSample(s_SrcTexture, fragInput.texCoord);
+    vec2 inCoords = fragInput.texCoord * 2.0 - 1.0;
+    vec3 uv = vec3(0.0, inCoords.xy);
+    switch(int(CurrentFace.x)) {
+        case 0 :
+        uv = vec3(1.0, - inCoords.y, - inCoords.x);
+        break;
+        case 1 :
+        uv = vec3(-1.0, - inCoords.y, inCoords.x);
+        break;
+        case 2 :
+        uv = vec3(inCoords.x, 1.0, inCoords.y);
+        break;
+        case 3 :
+        uv = vec3(inCoords.x, - 1.0, - inCoords.y);
+        break;
+        case 4 :
+        uv = vec3(inCoords.x, - inCoords.y, 1.0);
+        break;
+        case 5 :
+        uv = vec3(-inCoords.x, - inCoords.y, - 1.0);
+        break;
+        default :
+        break;
+    }
+    vec4 color = textureCubeLod(s_SrcTextureCube, uv, CurrentMip.x - 1.0);
     fragOutput.Color0 = color;
 }
+#endif
+#ifdef FALLBACK_PASS
+void FallbackFrag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
+}
+#endif
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     fragmentInput.texCoord = v_texCoord;
+    #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -149,7 +174,12 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     Frag(fragmentInput, fragmentOutput);
+    #endif
+    #ifdef FALLBACK_PASS
+    FallbackFrag(fragmentInput, fragmentOutput);
+    #endif
     bgfx_FragColor = fragmentOutput.Color0;
 }
 

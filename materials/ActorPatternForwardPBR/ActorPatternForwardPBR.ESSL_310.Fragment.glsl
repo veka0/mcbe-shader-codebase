@@ -7,6 +7,7 @@
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - FORWARD_PBR_ALPHA_TEST_PASS
+* - FORWARD_PBR_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
 *
 * Change_Color:
@@ -15,9 +16,12 @@
 * - CHANGE_COLOR__ON
 *
 * Emissive:
-* - EMISSIVE__OFF (not used)
+* - EMISSIVE__EMISSIVE
+* - EMISSIVE__EMISSIVE_ONLY
+* - EMISSIVE__OFF
 *
 * Fancy:
+* - FANCY__OFF (not used)
 * - FANCY__ON (not used)
 *
 * Instancing:
@@ -27,9 +31,21 @@
 * MaskedMultitexture:
 * - MASKED_MULTITEXTURE__OFF (not used)
 * - MASKED_MULTITEXTURE__ON
+*
+* MultiColorTint:
+* - MULTI_COLOR_TINT__OFF (not used)
+* - MULTI_COLOR_TINT__ON (not used)
+*
+* Tinting:
+* - TINTING__DISABLED (not used)
+* - TINTING__ENABLED (not used)
+*
+* UIEntity:
+* - UI_ENTITY__DISABLED
+* - UI_ENTITY__ENABLED (not used)
 */
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -41,7 +57,7 @@
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 #extension GL_EXT_texture_array : enable
 #endif
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -65,7 +81,7 @@ struct NoopSampler {
     int noop;
 };
 
-#ifndef DEPTH_ONLY_OPAQUE_PASS
+#if defined(DEPTH_ONLY_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -100,7 +116,7 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
@@ -126,12 +142,13 @@ uniform mat4 u_proj;
 uniform vec4 UseAlphaRewrite;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 u_viewTexel;
-uniform vec4 ShadowBias;
 uniform vec4 SunDir;
 uniform vec4 PointLightShadowParams1;
+uniform vec4 PatternCount;
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
+uniform vec4 ShadowBias;
+uniform vec4 u_viewTexel;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 PBRTextureFlags;
 uniform mat4 u_invView;
@@ -150,7 +167,6 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform mat4 PrevWorld;
-uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
 uniform vec4 ActorFPEpsilon;
@@ -183,11 +199,14 @@ uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
-uniform mat4 PlayerShadowProj;
+uniform vec4 PatternColors[7];
 uniform vec4 PointLightAttenuationWindow;
+uniform vec4 PatternUVOffsetsAndScales[7];
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform mat4 PlayerShadowProj;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 RoughnessUniform;
+uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowParams;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
@@ -338,6 +357,7 @@ uniform lowp sampler2D s_BrdfLUT;
 uniform lowp sampler2D s_MERTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
+uniform lowp sampler2D s_MatTexture2;
 uniform lowp sampler2D s_NormalTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
@@ -404,25 +424,13 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#ifdef DEPTH_ONLY_PASS
-bool shouldDiscard(vec3 diffuse, float alpha, float epsilon) {
-    bool result = false;
-    #ifndef CHANGE_COLOR__OFF
-    result = alpha < epsilon;
-    #endif
-    #ifdef CHANGE_COLOR__OFF
-    result = alpha < 0.5;
-    #endif
-    return result;
-}
-#endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
 }
 #endif
-#if defined(CHANGE_COLOR__MULTI)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+#if defined(CHANGE_COLOR__MULTI)&& defined(FORWARD_PBR_OPAQUE_PASS)
 vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTintColor) {
     vec2 colorMask = diffuse.rg;
     diffuse.rgb = colorMask.rrr * changeColor;
@@ -430,7 +438,7 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 vec4 applyLighting(vec4 diffuse, const vec4 light) {
     diffuse.rgb *= light.rgb;
     return diffuse;
@@ -447,11 +455,30 @@ vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintCol
     return diffuse;
 }
 vec4 applyEmissiveLighting(vec4 diffuse, vec4 light) {
+    #ifndef EMISSIVE__OFF
+    light = mix(vec4(1.0, 1.0, 1.0, 1.0), light, diffuse.a);
+    #endif
     diffuse = applyLighting(diffuse, light);
     return diffuse;
 }
 #endif
-#ifndef DEPTH_ONLY_OPAQUE_PASS
+#if defined(DEPTH_ONLY_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)
+bool shouldDiscard(vec3 diffuse, float alpha, float epsilon) {
+    bool result = false;
+    #ifdef EMISSIVE__EMISSIVE
+    result = dot(vec4(diffuse, alpha), vec4(1.0, 1.0, 1.0, 1.0)) < epsilon;
+    #endif
+    #ifdef EMISSIVE__EMISSIVE_ONLY
+    result = alpha < epsilon || alpha > 1.0 - epsilon;
+    #endif
+    #if defined(EMISSIVE__OFF)&& ! defined(CHANGE_COLOR__OFF)
+    result = alpha < epsilon;
+    #endif
+    #if defined(CHANGE_COLOR__OFF)&& defined(EMISSIVE__OFF)
+    result = alpha < 0.5;
+    #endif
+    return result;
+}
 vec4 getActorAlbedoNoColorChange(vec2 uv) {
     vec4 albedo = MatColor;
     albedo *= textureSample(s_MatTexture, uv);
@@ -463,7 +490,7 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
     return albedo;
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef FORWARD_PBR_OPAQUE_PASS
 vec4 applyActorDiffuse(vec4 albedo, vec3 color, vec4 light) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);
@@ -476,19 +503,61 @@ float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, fl
     return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
 }
 #endif
+#if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
+#endif
 #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-vec4 getActorAlbedo(vec2 uv) {
-    vec4 albedo = getActorAlbedoNoColorChange(uv);
-    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
-    return albedo;
+#ifdef FORWARD_PBR_OPAQUE_PASS
+float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
+    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
+}
+vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
+    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
+    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
+    const float kHeightMapDepth = 4.0f;
+    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
+    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
+    if (fadeForLowerMips > 0.f)
+    {
+        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
+        vec2 pixelCoord = heightmapUV * widthHeight;
+        {
+            const float kNudgePixelCentreDistEpsilon = 0.0625f;
+            const float kNudgeUvEpsilon = 0.25f / 65536.f;
+            vec2 nudgeSampleCoord = fract(pixelCoord);
+            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+        }
+        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
+        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
+        const float kBevelMode = 0.0f;
+        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
+        float axisBevelCentreSampleCoord = subPixelCoord.x;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
+        axisBevelCentreSampleCoord = subPixelCoord.y;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        tangentNormal.z = kRecipHeightMapDepth;
+        tangentNormal = normalize(tangentNormal);
+        tangentNormal.xy *= fadeForLowerMips;
+    }
+    return tangentNormal;
 }
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
@@ -553,19 +622,94 @@ struct ColorTransform {
     float luminance;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef DEPTH_ONLY_PASS
+bool shouldDiscard(const float alpha) {
+    return alpha < 0.5;
+}
+#endif
+#ifdef FORWARD_PBR_OPAQUE_PASS
+void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
+    vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.texcoord0);
+    float alpha = albedo.a;
+    alpha = mix(alpha, alpha * OverlayColor.a, TintedAlphaTestEnabled.x);
+    if (isAlphaTest && shouldDiscard(albedo.rgb, alpha, ActorFPEpsilon.x)) {
+        discard;
+    }
+    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, UseAlphaRewrite.x);
+    vec4 diffuse = applyActorDiffuse(albedo, surfaceInput.Color, surfaceInput.light);
+    surfaceOutput.Albedo = diffuse.rgb;
+    surfaceOutput.Alpha = diffuse.a;
+    int flags = int(PBRTextureFlags.x);
+    float metalness = MetalnessUniform.x;
+    float emissive = EmissiveUniform.x;
+    float roughness = RoughnessUniform.x;
+    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+    const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+    if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
+    {
+        vec3 texel = textureSample(s_MERTexture, surfaceInput.UV).rgb;
+        metalness = texel.r;
+        emissive = texel.g;
+        roughness = texel.b;
+    }
+    surfaceOutput.Metallic = metalness;
+    surfaceOutput.Emissive = emissive;
+    surfaceOutput.Roughness = roughness;
+    if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
+    {
+        vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
+        tangentNormal = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;
+        mat3 tbn = mat3(
+            normalize(surfaceInput.tangent),
+            normalize(surfaceInput.bitangent),
+            normalize(surfaceInput.normal)
+        );
+        tbn = transpose(tbn);
+        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
+    }
+    else if ((flags & kPBRTextureDataFlagHasHeightMapTexture) == kPBRTextureDataFlagHasHeightMapTexture) {
+        vec3 tangentNormal = calculateTangentNormalFromHeightmap(s_NormalTexture, surfaceInput.UV, 1.0f);
+        mat3 tbn = mat3(
+            normalize(surfaceInput.tangent),
+            normalize(surfaceInput.bitangent),
+            normalize(surfaceInput.normal)
+        );
+        tbn = transpose(tbn);
+        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
+    }
+    else {
+        surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+    }
+}
+#endif
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 void ActorApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = surfaceOutput.Albedo;
 }
-bool shouldDiscardTinted(float albedoAlpha, float tintAlpha) {
-    return albedoAlpha + tintAlpha < ActorFPEpsilon.x;
+#endif
+#ifdef FORWARD_PBR_OPAQUE_PASS
+bool shouldDiscard(const float alpha) {
+    return alpha < 0.5;
 }
-vec4 applySecondColorTint(vec4 albedo, vec2 uv, out float tintAlpha) {
-    vec4 tintTex = textureSample(s_MatTexture1, uv);
-    tintAlpha = tintTex.a;
-    tintTex.rgb *= MultiplicativeTintColor.rgb;
-    albedo.rgb = mix(albedo.rgb, tintTex.rgb, tintTex.a);
-    return albedo;
+vec4 getPatternAlbedo(int layer, vec2 texcoord) {
+    vec2 tex = (PatternUVOffsetsAndScales[layer].zw * texcoord) + PatternUVOffsetsAndScales[layer].xy;
+    vec4 color = PatternColors[layer];
+    return textureSample(s_MatTexture2, tex) * color;
+}
+vec4 getBaseAlbedo(vec2 texcoord) {
+    return textureSample(s_MatTexture, texcoord);
+}
+vec4 applyHudOpacity(vec4 diffuse, float hudOpacity) {
+    diffuse.a *= hudOpacity;
+    return diffuse;
+}
+void applyPattern(in StandardSurfaceInput surfaceInput, inout vec4 albedo) {
+    for(int i = 0; i < int(PatternCount.x); i ++ ) {
+        vec4 pattern = getPatternAlbedo(i, surfaceInput.texcoord0);
+        albedo = mix(albedo, pattern, pattern.a);
+    }
+    albedo.a = 1.0;
 }
 #endif
 struct CompositingOutput {
@@ -597,22 +741,11 @@ void ActorSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceO
 void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-void ActorTint_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec4 albedo = getActorAlbedo(surfaceInput.UV);
-    float tintAlpha = 0.0;
-    albedo = applySecondColorTint(albedo, surfaceInput.UV, tintAlpha);
-    if (isAlphaTest && shouldDiscardTinted(albedo.a, tintAlpha)) {
-        discard;
-    }
-    vec4 diffuse = applyActorDiffuse(albedo, surfaceInput.Color, surfaceInput.light);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = 0.5;
-    surfaceOutput.Metallic = 0.0;
-    surfaceOutput.Emissive = 0.0;
-    surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+#ifdef FORWARD_PBR_ALPHA_TEST_PASS
+void ActorSurfAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
+#endif
+#ifdef FORWARD_PBR_OPAQUE_PASS
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -1413,17 +1546,21 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
     fragmentData.skyAmbientContribution = TileLightIntensity.y;
     surfaceOutput.Albedo = evaluateFragmentColor(fragmentData).rgb;
 }
-#endif
-#ifdef FORWARD_PBR_ALPHA_TEST_PASS
-void ActorSurfAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    ActorTint_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+void ItemInHandSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    vec4 albedo = getBaseAlbedo(surfaceInput.texcoord0);
+    applyPattern(surfaceInput, albedo);
+    #ifdef UI_ENTITY__DISABLED
+    albedo = applyEmissiveLighting(albedo, surfaceInput.light);
+    #endif
+    albedo = applyHudOpacity(albedo, HudOpacity.x);
+    surfaceOutput.Albedo = albedo.rgb;
+    surfaceOutput.Alpha = albedo.a;
+    Actor_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
-void ActorTintSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    ActorTint_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
-    ComputePBR(surfaceInput, surfaceOutput);
+void ActorSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
@@ -1441,8 +1578,11 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef FORWARD_PBR_ALPHA_TEST_PASS
     ActorSurfAlphaTest(surfaceInput, surfaceOutput);
     #endif
+    #ifdef FORWARD_PBR_OPAQUE_PASS
+    ItemInHandSurfOpaque(surfaceInput, surfaceOutput);
+    #endif
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    ActorTintSurfOpaque(surfaceInput, surfaceOutput);
+    ActorSurfTransparent(surfaceInput, surfaceOutput);
     #endif
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
@@ -1454,7 +1594,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
     ActorApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
 }

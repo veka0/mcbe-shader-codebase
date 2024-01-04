@@ -126,7 +126,7 @@ float G_Smith(float nDotL, float nDotV, float a) {
     return viewTerm * lightTerm;
 }
 #endif
-float RadicalInverse_VdC(uint bits) {
+float RadicalInverse_VdC(highp uint bits) {
     bits = (bits << 16u)|(bits >> 16u);
     bits = ((bits & 0x55555555u) << 1u)|((bits & 0xAAAAAAAAu) >> 1u);
     bits = ((bits & 0x33333333u) << 2u)|((bits & 0xCCCCCCCCu) >> 2u);
@@ -134,7 +134,7 @@ float RadicalInverse_VdC(uint bits) {
     bits = ((bits & 0x00FF00FFu) << 8u)|((bits & 0xFF00FF00u) >> 8u);
     return float(bits) * 2.3283064365386963e - 10;
 }
-vec2 Hammersley(uint i, uint N) {
+vec2 Hammersley(highp uint i, uint N) {
     float ri = RadicalInverse_VdC(i);
     return vec2(float(i) / float(N), ri);
 }
@@ -154,12 +154,18 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
 }
 #ifdef CONVOLVE_PASS
 vec4 SampleCubemap(vec3 R, float lod) {
+    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
+        R.z *= -1.0;
+    }
+    else {
+        R.y *= -1.0;
+    }
     return textureCubeLod(s_CubeMap, R, lod);
 }
 vec3 ImportanceSample(vec3 V, vec3 N, float roughness, uint sampleCount, float edgeLength) {
     float totalWeight = 0.0;
     vec3 prefilteredColor = vec3(0.0, 0.0, 0.0);
-    for(int i = 0; i < int(sampleCount); ++ i) {
+    for(highp int i = 0; i < int(sampleCount); ++ i) {
         vec2 Xi = Hammersley(uint(i), sampleCount);
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
         vec3 L = 2.0f * dot(V, H) * H - V;
@@ -187,7 +193,7 @@ vec2 IntegrateBrdf(vec3 N, float NdotV, float roughness) {
     V.z = NdotV;
     float A = 0.0f;
     float B = 0.0f;
-    for(int i = 0; i < int(ConvolutionParameters.x); ++ i) {
+    for(highp int i = 0; i < int(ConvolutionParameters.x); ++ i) {
         vec2 Xi = Hammersley(uint(i), uint(ConvolutionParameters.x));
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
         vec3 L = 2.0f * dot(V, H) * H - V;

@@ -36,6 +36,7 @@ uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraFarPlane;
 uniform vec4 LightsPerCluster;
 uniform vec4 ClusterDimensions;
+uniform vec4 CameraClusterWeight;
 uniform vec4 ClusterSize;
 uniform mat4 InvViewMat;
 uniform mat4 ProjMat;
@@ -53,8 +54,8 @@ struct LightCluster {
     int count;
 };
 
-struct LightDistance {
-    float distance;
+struct LightContribution {
+    float contribution;
     int indexInLookUp;
 };
 
@@ -91,12 +92,23 @@ float getViewSpaceCoordByRatio(float clusterIndex, float clusterSize, float scre
     return ((clusterIndex * clusterSize - screenDim / 2.0f) / screenDim) * (farPlaneDim * planeRatio);
 }
 #endif
+#ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
+float clusterIndexToScreenCoord(float index, float clusterSize, float dimension) {
+    return (min(index * clusterSize, dimension) - dimension / 2.0f) / dimension;
+}
+#endif
 float getClusterDepthByIndex(float index, float maxSlices, vec2 clusterNearFar) {
     float zNear = clusterNearFar.x;
     float zFar = clusterNearFar.y;
-    float nearFarLog = log(zFar / zNear);
-    float logDepth = nearFarLog * index / maxSlices + log(zNear);
-    return exp(logDepth);
+    if (index == 0.0f) {
+        return zNear;
+    }
+    if (index == 1.0f) {
+        return 1.0f;
+    }
+    float nearFarLog = log2(zFar / 1.5f);
+    float logDepth = nearFarLog * (index - 2.0f) / (maxSlices - 2.0f);
+    return pow(2.0f, logDepth);
 }
 void ClusterLights() {
     float x = float(GlobalInvocationID.x);
@@ -116,18 +128,36 @@ void ClusterLights() {
     float centerX = getViewSpaceCoordByRatio(x + 0.5f, ClusterSize.x, ClusterNearFarWidthHeight.z, CameraFarPlane.x, planeRatio);
     float centerY = getViewSpaceCoordByRatio(y + 0.5f, ClusterSize.y, ClusterNearFarWidthHeight.w, CameraFarPlane.y, planeRatio);
     vec3 center = vec3(centerX, centerY, - viewDepth);
-    LightDistance distanceToCenter[64];
+    LightContribution distanceToCenter[64];
     #endif
     #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-    LightDistance distanceToCamera[64];
+    LightContribution contribution[64];
     vec2 corners[7];
     corners[0] = vec2(1.0f, 0.0f);
     corners[1] = vec2(0.0f, 1.0f);
     corners[2] = vec2(1.0f, 1.0f);
-    corners[3] = vec2(0.0f, 0.0f);
-    corners[4] = vec2(1.0f, 0.0f);
-    corners[5] = vec2(0.0f, 1.0f);
-    corners[6] = vec2(1.0f, 1.0f);
+    corners[3] = vec2(1.0f, 1.0f);
+    corners[4] = vec2(0.0f, 1.0f);
+    corners[5] = vec2(1.0f, 0.0f);
+    corners[6] = vec2(0.0f, 0.0f);
+    int closestCornerToCameraIndex = 3;
+    float left = x;
+    float right = x + 1.0f;
+    float bottom = y;
+    float top = y + 1.0f;
+    if (right < ClusterDimensions.x / 2.0f && top < ClusterDimensions.y / 2.0f) {
+        closestCornerToCameraIndex = 2;
+    }
+    else if (left > ClusterDimensions.x / 2.0f && top < ClusterDimensions.y / 2.0f) {
+        closestCornerToCameraIndex = 1;
+    }
+    else if (right < ClusterDimensions.x / 2.0f && bottom > ClusterDimensions.y / 2.0f) {
+        closestCornerToCameraIndex = 0;
+    }
+    else if (left > ClusterDimensions.x / 2.0f && bottom > ClusterDimensions.y / 2.0f) {
+        closestCornerToCameraIndex = -1;
+    }
+    int oppositeCornerIndex = 4 + closestCornerToCameraIndex;
     #endif
     int countResult = 0;
     for(int l = 0; l < lightCount; l ++ ) {
@@ -137,7 +167,7 @@ void ClusterLights() {
         if (y < bound.min.y || y > bound.max.y)continue;
         if (x < bound.min.x || x > bound.max.x)continue;
         float curDistance = length(bound.pos.xyz - center);
-        if (countResult >= maxLights && curDistance >= distanceToCenter[countResult - 1].distance) {
+        if (countResult >= maxLights && curDistance >= distanceToCenter[countResult - 1].contribution) {
             #endif
             #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
             if (z < bound.min.z || z > bound.max.z)
@@ -148,42 +178,77 @@ void ClusterLights() {
             continue;
             if (x < bound.min.x || x > bound.max.x)
             continue;
-            float curDistance = length(((ViewMat) * (vec4(bound.pos.xyz, 1.0f))).xyz);
-            if (countResult >= maxLights && curDistance >= distanceToCamera[countResult - 1].distance) {
-                continue;
-                #endif
-            }
-            #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
+            vec3 closestCornerToCameraView = vec3(0.0f, 0.0f, 0.0f);
+            vec3 oppositeCornerView = vec3(0.0f, 0.0f, 0.0f);
             vec3 lightWorldGrid = floor(bound.pos.xyz - WorldOrigin.xyz);
             float cornerViewZ = getClusterDepthByIndex(z, ClusterDimensions.z, ClusterNearFarWidthHeight.xy);
-            float cornerScreenX = (max(x * ClusterSize.x, ClusterNearFarWidthHeight.z) - ClusterNearFarWidthHeight.z / 2.0f) / ClusterNearFarWidthHeight.z;
-            float cornerScreenY = (max(y * ClusterSize.y, ClusterNearFarWidthHeight.w) - ClusterNearFarWidthHeight.w / 2.0f) / ClusterNearFarWidthHeight.w;
+            float cornerScreenX = clusterIndexToScreenCoord(x, ClusterSize.x, ClusterNearFarWidthHeight.z);
+            float cornerScreenY = clusterIndexToScreenCoord(y, ClusterSize.y, ClusterNearFarWidthHeight.w);
             float cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
             float cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
             vec3 clusterWorld = ((InvViewMat) * (vec4(cornerViewX, cornerViewY, - cornerViewZ, 1.0f))).xyz;
             vec3 clusterWorldGrid = floor(clusterWorld - WorldOrigin.xyz);
             vec3 clusterWorldGridMin = clusterWorldGrid;
             vec3 clusterWorldGridMax = clusterWorldGrid;
+            if (closestCornerToCameraIndex == -1) {
+                closestCornerToCameraView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+                #endif
+            }
+            #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
+            if (closestCornerToCameraIndex == 3) {
+                cornerScreenX = clusterIndexToScreenCoord(x + 0.5f, ClusterSize.x, ClusterNearFarWidthHeight.z);
+                cornerScreenY = clusterIndexToScreenCoord(y + 0.5f, ClusterSize.y, ClusterNearFarWidthHeight.w);
+                cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
+                cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
+                closestCornerToCameraView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+            }
             for(int cf = 0; cf < 3; cf ++ ) {
-                cornerScreenX = ((x + corners[cf].x) * ClusterSize.x - ClusterNearFarWidthHeight.z / 2.0f) / ClusterNearFarWidthHeight.z;
-                cornerScreenY = ((y + corners[cf].y) * ClusterSize.y - ClusterNearFarWidthHeight.w / 2.0f) / ClusterNearFarWidthHeight.w;
+                cornerScreenX = clusterIndexToScreenCoord(x + corners[cf].x, ClusterSize.x, ClusterNearFarWidthHeight.z);
+                cornerScreenY = clusterIndexToScreenCoord(y + corners[cf].y, ClusterSize.y, ClusterNearFarWidthHeight.w);
                 cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
                 cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
                 clusterWorld = ((InvViewMat) * (vec4(cornerViewX, cornerViewY, - cornerViewZ, 1.0f))).xyz;
                 clusterWorldGrid = floor(clusterWorld - WorldOrigin.xyz);
                 clusterWorldGridMin = min(clusterWorldGrid, clusterWorldGridMin);
                 clusterWorldGridMax = max(clusterWorldGrid, clusterWorldGridMax);
+                if (closestCornerToCameraIndex == cf) {
+                    closestCornerToCameraView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+                }
             }
             cornerViewZ = getClusterDepthByIndex(z + 1.0f, ClusterDimensions.z, ClusterNearFarWidthHeight.xy);
             for(int cb = 3; cb < 7; cb ++ ) {
-                cornerScreenX = ((x + corners[cb].x) * ClusterSize.x - ClusterNearFarWidthHeight.z / 2.0f) / ClusterNearFarWidthHeight.z;
-                cornerScreenY = ((y + corners[cb].y) * ClusterSize.y - ClusterNearFarWidthHeight.w / 2.0f) / ClusterNearFarWidthHeight.w;
+                cornerScreenX = clusterIndexToScreenCoord(x + corners[cb].x, ClusterSize.x, ClusterNearFarWidthHeight.z);
+                cornerScreenY = clusterIndexToScreenCoord(y + corners[cb].y, ClusterSize.y, ClusterNearFarWidthHeight.w);
                 cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
                 cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
                 clusterWorld = ((InvViewMat) * (vec4(cornerViewX, cornerViewY, - cornerViewZ, 1.0f))).xyz;
                 clusterWorldGrid = floor(clusterWorld - WorldOrigin.xyz);
                 clusterWorldGridMin = min(clusterWorldGrid, clusterWorldGridMin);
                 clusterWorldGridMax = max(clusterWorldGrid, clusterWorldGridMax);
+                if (oppositeCornerIndex == cb) {
+                    oppositeCornerView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+                }
+            }
+            if (oppositeCornerIndex == 7) {
+                cornerScreenX = clusterIndexToScreenCoord(x + 0.5f, ClusterSize.x, ClusterNearFarWidthHeight.z);
+                cornerScreenY = clusterIndexToScreenCoord(y + 0.5f, ClusterSize.y, ClusterNearFarWidthHeight.w);
+                cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
+                cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
+                oppositeCornerView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+            }
+            cornerViewZ = getClusterDepthByIndex(z + 0.5f, ClusterDimensions.z, ClusterNearFarWidthHeight.xy);
+            cornerScreenX = clusterIndexToScreenCoord(x + 0.5f, ClusterSize.x, ClusterNearFarWidthHeight.z);
+            cornerScreenY = clusterIndexToScreenCoord(y + 0.5f, ClusterSize.y, ClusterNearFarWidthHeight.w);
+            cornerViewX = cornerViewZ * cornerScreenX / ProjMat[0][0];
+            cornerViewY = cornerViewZ * cornerScreenY / ProjMat[1][1];
+            vec3 centerView = vec3(cornerViewX, cornerViewY, - cornerViewZ);
+            vec3 lightView = ((ViewMat) * (vec4(bound.pos.xyz, 1.0f))).xyz;
+            float lightDistance = length(lightView);
+            float cameraDistanceContribution = max(1.0f - lightDistance / length(oppositeCornerView), 0.0f);
+            float clusterContribution = max(1.0f - length(lightView - centerView) / (length(oppositeCornerView - closestCornerToCameraView) / 2.0f), 0.0f);
+            float curContribution = CameraClusterWeight.x * cameraDistanceContribution + CameraClusterWeight.y * clusterContribution;
+            if (countResult >= maxLights && curContribution <= contribution[countResult - 1].contribution) {
+                continue;
             }
             bool lightInCluster = true;
             for(int gridX = int(clusterWorldGridMin.x); gridX <= int(clusterWorldGridMax.x); gridX ++ ) {
@@ -211,10 +276,10 @@ void ClusterLights() {
                         #endif
                         int mid = (low + high) / 2;
                         #ifdef CLUSTER_LIGHTS_PASS
-                        if (distanceToCenter[mid].distance < curDistance) {
+                        if (distanceToCenter[mid].contribution < curDistance) {
                             #endif
                             #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                            if (distanceToCamera[mid].distance < curDistance) {
+                            if (contribution[mid].contribution >= curContribution) {
                                 #endif
                                 low = mid + 1;
                             }
@@ -230,16 +295,16 @@ void ClusterLights() {
                                 #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
                                 if (countResult < maxLights) {
                                     for(int j = countResult - 1; j >= low; j -- ) {
-                                        distanceToCamera[j + 1] = distanceToCamera[j];
+                                        contribution[j + 1] = contribution[j];
                                         #endif
                                     }
                                     #ifdef CLUSTER_LIGHTS_PASS
-                                    distanceToCenter[low].distance = curDistance;
+                                    distanceToCenter[low].contribution = curDistance;
                                     distanceToCenter[low].indexInLookUp = countResult;
                                     #endif
                                     #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                    distanceToCamera[low].distance = curDistance;
-                                    distanceToCamera[low].indexInLookUp = countResult;
+                                    contribution[low].contribution = curContribution;
+                                    contribution[low].indexInLookUp = countResult;
                                     #endif
                                     LightLookupArray[idx * maxLights + countResult].lookup = float(bound.index);
                                     countResult ++ ;
@@ -251,18 +316,18 @@ void ClusterLights() {
                                         distanceToCenter[j + 1] = distanceToCenter[j];
                                         #endif
                                         #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                        int insertPos = distanceToCamera[maxLights - 1].indexInLookUp;
+                                        int insertPos = contribution[maxLights - 1].indexInLookUp;
                                         for(int j = maxLights - 2; j >= low; j -- ) {
-                                            distanceToCamera[j + 1] = distanceToCamera[j];
+                                            contribution[j + 1] = contribution[j];
                                             #endif
                                         }
                                         #ifdef CLUSTER_LIGHTS_PASS
-                                        distanceToCenter[low].distance = curDistance;
+                                        distanceToCenter[low].contribution = curDistance;
                                         distanceToCenter[low].indexInLookUp = insertPos;
                                         #endif
                                         #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                        distanceToCamera[low].distance = curDistance;
-                                        distanceToCamera[low].indexInLookUp = insertPos;
+                                        contribution[low].contribution = curContribution;
+                                        contribution[low].indexInLookUp = insertPos;
                                         #endif
                                         LightLookupArray[idx * maxLights + insertPos].lookup = float(bound.index);
                                     }

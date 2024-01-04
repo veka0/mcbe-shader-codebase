@@ -4,14 +4,26 @@
 * Available Macros:
 *
 * Passes:
-* - TRANSFER_PASS (not used)
+* - CUBEMAP_TO_OFFSCREEN_PASS
+* - FALLBACK_PASS
 */
 
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
+#extension GL_EXT_shader_texture_lod : enable
+#define texture2DLod textureLod
+#define texture2DGrad textureGrad
+#define texture2DProjLod textureProjLod
+#define texture2DProjGrad textureProjGrad
+#define textureCubeLod textureLod
+#define textureCubeGrad textureGrad
+#endif
 #define attribute in
 #define varying out
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
 attribute vec4 a_position;
 attribute vec2 a_texcoord0;
 varying vec2 v_texCoord;
+#endif
 struct NoopSampler {
     int noop;
 };
@@ -47,6 +59,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 CurrentFace;
+uniform vec4 CurrentMip;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -64,37 +77,54 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec4 position;
     vec2 texcoord0;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct VertexOutput {
     vec4 position;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec2 texCoord;
+    #endif
 };
 
 struct FragmentInput {
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vec2 texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_SrcTexture;
+uniform lowp samplerCube s_SrcTextureCube;
+#ifdef CUBEMAP_TO_OFFSCREEN_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
-    vec2 uv = vertInput.texcoord0.xy;
-    uv.x /= 6.0;
-    uv.x += (CurrentFace.x / 6.0);
-    vertOutput.texCoord = uv;
+    vertOutput.texCoord = vertInput.texcoord0.xy;
 }
+#endif
+#ifdef FALLBACK_PASS
+void FallbackVert(VertexInput vertInput, inout VertexOutput vertOutput) {
+}
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
     vertexOutput.texCoord = vec2(0, 0);
+    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -117,8 +147,13 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifdef CUBEMAP_TO_OFFSCREEN_PASS
     Vert(vertexInput, vertexOutput);
     v_texCoord = vertexOutput.texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    FallbackVert(vertexInput, vertexOutput);
+    #endif
     gl_Position = vertexOutput.position;
 }
 

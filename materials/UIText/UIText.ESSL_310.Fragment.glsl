@@ -14,7 +14,7 @@
 * - FONT_TYPE__BITMAP (not used)
 * - FONT_TYPE__BITMAP_SMOOTH
 * - FONT_TYPE__MSDF
-* - FONT_TYPE__TRUE_TYPE (not used)
+* - FONT_TYPE__TRUE_TYPE
 */
 
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -145,9 +145,9 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_GlyphTexture;
-#if defined(FONT_TYPE__BITMAP_SMOOTH)|| defined(FONT_TYPE__MSDF)
+#ifndef FONT_TYPE__TRUE_TYPE
 bool NeedsLinearClamp() {
-    #ifdef FONT_TYPE__BITMAP_SMOOTH
+    #ifndef FONT_TYPE__MSDF
     return true;
     #endif
     #ifdef FONT_TYPE__MSDF
@@ -162,7 +162,7 @@ float median(float a, float b, float c) {
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec2 texCoord = fragInput.texcoord0;
-    #if defined(FONT_TYPE__BITMAP_SMOOTH)|| defined(FONT_TYPE__MSDF)
+    #ifndef FONT_TYPE__TRUE_TYPE
     if (NeedsLinearClamp()) {
         texCoord = min(max(fragInput.texcoord0, fragInput.linearClampBounds.xy), fragInput.linearClampBounds.zw);
     }

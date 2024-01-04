@@ -12,7 +12,7 @@
 *
 * FONT_TYPE:
 * - FONT_TYPE__BITMAP (not used)
-* - FONT_TYPE__BITMAP_SMOOTH
+* - FONT_TYPE__BITMAP_SMOOTH (not used)
 * - FONT_TYPE__MSDF
 * - FONT_TYPE__TRUE_TYPE
 */
@@ -109,9 +109,9 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_GlyphTexture;
-#if defined(FONT_TYPE__BITMAP_SMOOTH)|| defined(FONT_TYPE__MSDF)
+#ifndef FONT_TYPE__TRUE_TYPE
 bool NeedsLinearClamp() {
-    #ifdef FONT_TYPE__BITMAP_SMOOTH
+    #ifndef FONT_TYPE__MSDF
     return true;
     #endif
     #ifdef FONT_TYPE__MSDF
@@ -130,7 +130,7 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     texCoord.y += isBottom ? GLYPH_SIZE : 0.0;
     #endif
     vec4 linearClampBounds = vec4(0.0, 0.0, 1.0, 1.0);
-    #if defined(FONT_TYPE__BITMAP_SMOOTH)|| defined(FONT_TYPE__MSDF)
+    #ifndef FONT_TYPE__TRUE_TYPE
     if (NeedsLinearClamp()) {
         linearClampBounds.xy = vertInput.texcoord0 + HalfTexelOffset.x;
         linearClampBounds.zw = vertInput.texcoord0 + GLYPH_SIZE - HalfTexelOffset.x;

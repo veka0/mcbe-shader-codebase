@@ -47,6 +47,7 @@ uniform mat4 u_modelViewProj;
 uniform mat4 InvViewMat;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 CameraClusterWeight;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
@@ -78,8 +79,8 @@ struct LightCluster {
     int count;
 };
 
-struct LightDistance {
-    float distance;
+struct LightContribution {
+    float contribution;
     int indexInLookUp;
 };
 

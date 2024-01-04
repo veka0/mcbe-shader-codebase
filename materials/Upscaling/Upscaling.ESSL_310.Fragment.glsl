@@ -170,9 +170,9 @@ float sampleWeight(vec2 delta, float scale) {
 }
 void UpscalingFrag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec2 coords = DisplayResolution.xy * fragInput.texcoord0;
-    uint x = uint(coords.x);
-    uint y = uint(coords.y);
-    vec2 nearestRenderPos = vec2(float(x) + 0.5f, float(y) + 0.5f) * RenderResolutionDivDisplayResolution.x - SubPixelJitter.xy - 0.5f;
+    highp uint x = uint(coords.x);
+    highp uint y = uint(coords.y);
+    vec2 nearestRenderPos = vec2(float(x) + 0.5f, float(y) + 0.5f) * RenderResolutionDivDisplayResolution.x - vec2(SubPixelJitter.x, - SubPixelJitter.y) - 0.5f;
     ivec2 intRenderPos = ivec2(round(nearestRenderPos.x), round(nearestRenderPos.y));
     vec4 currentColor = texelFetch(s_InputFinalColor, intRenderPos, 0).rgba;
     vec2 motionPixels = texelFetch(s_InputBufferMotionVectors, intRenderPos, 0).ba;

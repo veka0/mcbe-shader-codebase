@@ -591,8 +591,17 @@ vec3 BRDF_Diff_Lambertian(vec3 albedo) {
 float getClusterDepthIndex(float viewSpaceDepth, float maxSlices, vec2 clusterNearFar) {
     float zNear = clusterNearFar.x;
     float zFar = clusterNearFar.y;
-    float nearFarLog = log(zFar / zNear);
-    return viewSpaceDepth > 0.0f ? floor(log(viewSpaceDepth) * (maxSlices / nearFarLog) - ((maxSlices * log(zNear)) / nearFarLog)) : -1.0f;
+    if (viewSpaceDepth < zNear) {
+        return - 1.0f;
+    }
+    if (viewSpaceDepth >= zNear && viewSpaceDepth <= 1.0f) {
+        return 0.0f;
+    }
+    if (viewSpaceDepth > 1.0f && viewSpaceDepth <= 1.5f) {
+        return 1.0f;
+    }
+    float nearFarLog = log2(zFar / 1.5f);
+    return floor(log2(viewSpaceDepth / 1.5f) * ((maxSlices - 2.0f) / nearFarLog) + 2.0f);
 }
 vec3 getClusterIndex(vec2 uv, float viewSpaceDepth, vec3 clusterDimensions, vec2 clusterNearFar, vec2 screenSize, vec2 clusterSize) {
     float viewportX = uv.x * screenSize.x;
@@ -857,83 +866,6 @@ vec3 worldSpaceViewDir(vec3 worldPosition) {
     vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz;
     return normalize(worldPosition - cameraPosition);
 }
-float linearToLogDepth(float linearDepth) {
-    return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
-}
-vec3 ndcToVolume(vec3 ndc, mat4 inverseProj, vec2 nearFar) {
-    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
-    vec4 view = ((inverseProj) * (vec4(ndc, 1.0)));
-    float viewDepth = -view.z / view.w;
-    float wLinear = (viewDepth - nearFar.x) / (nearFar.y - nearFar.x);
-    return vec3(uv, linearToLogDepth(wLinear));
-}
-vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
-    float depth = uvw.z * float(dimensions.z) - 0.5;
-    int index = clamp(int(depth), 0, dimensions.z - 2);
-    float offset = clamp(depth - float(index), 0.0, 1.0);
-    vec4 a = textureSample(volume, vec3(uvw.xy, index), 0.0).rgba;
-    vec4 b = textureSample(volume, vec3(uvw.xy, index + 1), 0.0).rgba;
-    return mix(a, b, offset);
-}
-vec3 applyScattering(vec4 sourceExtinction, vec3 color) {
-    return sourceExtinction.rgb + sourceExtinction.a * color;
-}
-struct TemporalAccumulationParameters {
-    ivec3 dimensions;
-    vec3 previousUvw;
-    vec4 currentValue;
-    float historyWeight;
-    float frustumBoundaryFalloff;
-};
-
-vec3 getFresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    float smoothness = 1.0 - roughness;
-    return F0 + (max(F0, vec3_splat(smoothness)) - F0) * pow(1.0 - cosTheta, 5.0);
-}
-float getIBLMipLevel(float roughness, float numMips) {
-    float x = 1.0 - roughness;
-    return (1.0 - (x * x)) * (numMips - 1.0);
-}
-void BSDF_VanillaMinecraft(vec3 n, vec3 l, float nDotL, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, inout vec3 diffuse, inout vec3 specular) {
-    vec3 h = normalize(l + v);
-    float nDotV = max(dot(n, v), 0.0);
-    float roughness = linearRoughness * linearRoughness;
-    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
-    float g = G_Smith(nDotL, nDotV, roughness);
-    vec3 f = F_Schlick(v, h, rf0);
-    vec3 albedo = (1.0 - f) * (1.0 - metalness) * color;
-    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
-    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
-}
-void BSDF_VanillaMinecraft_DiffuseOnly(vec3 color, float metalness, inout vec3 diffuse) {
-    vec3 albedo = (1.0 - metalness) * color;
-    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
-}
-void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, float nDotL, vec3 v, float metalness, float linearRoughness, vec3 rf0, inout vec3 specular) {
-    vec3 h = normalize(l + v);
-    float nDotV = max(dot(n, v), 0.0);
-    float roughness = linearRoughness * linearRoughness;
-    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
-    float g = G_Smith(nDotL, nDotV, roughness);
-    vec3 f = F_Schlick(v, h, rf0);
-    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
-}
-float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
-    return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
-}
-float smoothDistanceAttenuation(float sqrDistance, float sqrRadius) {
-    float ratio = sqrDistance / sqrRadius;
-    float smoothFactor = clamp(1.0f - ratio * ratio, 0.0, 1.0);
-    return smoothFactor * smoothFactor;
-}
-float getDistanceAttenuation(float sqrDistance, float radius) {
-    float attenuation = 1.0f / max(sqrDistance, 0.01f * 0.01f);
-    attenuation *= smoothDistanceAttenuation(sqrDistance, radius * radius);
-    if (PointLightAttenuationWindowEnabled.x > 0.0f) {
-        attenuation *= smoothWindowAttenuation(sqrDistance, radius * radius, 1.0f - attenuation);
-    }
-    return attenuation;
-}
 vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
     return lineDirection * (1.f / dot(lineDirection, normal));
 }
@@ -1083,6 +1015,83 @@ vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
         }
     }
     return outCoordinate;
+}
+float linearToLogDepth(float linearDepth) {
+    return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
+}
+vec3 ndcToVolume(vec3 ndc, mat4 inverseProj, vec2 nearFar) {
+    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
+    vec4 view = ((inverseProj) * (vec4(ndc, 1.0)));
+    float viewDepth = -view.z / view.w;
+    float wLinear = (viewDepth - nearFar.x) / (nearFar.y - nearFar.x);
+    return vec3(uv, linearToLogDepth(wLinear));
+}
+vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
+    float depth = uvw.z * float(dimensions.z) - 0.5;
+    int index = clamp(int(depth), 0, dimensions.z - 2);
+    float offset = clamp(depth - float(index), 0.0, 1.0);
+    vec4 a = textureSample(volume, vec3(uvw.xy, index), 0.0).rgba;
+    vec4 b = textureSample(volume, vec3(uvw.xy, index + 1), 0.0).rgba;
+    return mix(a, b, offset);
+}
+vec3 applyScattering(vec4 sourceExtinction, vec3 color) {
+    return sourceExtinction.rgb + sourceExtinction.a * color;
+}
+struct TemporalAccumulationParameters {
+    ivec3 dimensions;
+    vec3 previousUvw;
+    vec4 currentValue;
+    float historyWeight;
+    float frustumBoundaryFalloff;
+};
+
+vec3 getFresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+    float smoothness = 1.0 - roughness;
+    return F0 + (max(F0, vec3_splat(smoothness)) - F0) * pow(1.0 - cosTheta, 5.0);
+}
+float getIBLMipLevel(float roughness, float numMips) {
+    float x = 1.0 - roughness;
+    return (1.0 - (x * x)) * (numMips - 1.0);
+}
+void BSDF_VanillaMinecraft(vec3 n, vec3 l, float nDotL, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, inout vec3 diffuse, inout vec3 specular) {
+    vec3 h = normalize(l + v);
+    float nDotV = max(dot(n, v), 0.0);
+    float roughness = linearRoughness * linearRoughness;
+    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
+    float g = G_Smith(nDotL, nDotV, roughness);
+    vec3 f = F_Schlick(v, h, rf0);
+    vec3 albedo = (1.0 - f) * (1.0 - metalness) * color;
+    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
+    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
+}
+void BSDF_VanillaMinecraft_DiffuseOnly(vec3 color, float metalness, inout vec3 diffuse) {
+    vec3 albedo = (1.0 - metalness) * color;
+    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
+}
+void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, float nDotL, vec3 v, float metalness, float linearRoughness, vec3 rf0, inout vec3 specular) {
+    vec3 h = normalize(l + v);
+    float nDotV = max(dot(n, v), 0.0);
+    float roughness = linearRoughness * linearRoughness;
+    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
+    float g = G_Smith(nDotL, nDotV, roughness);
+    vec3 f = F_Schlick(v, h, rf0);
+    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
+}
+float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
+    return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
+}
+float smoothDistanceAttenuation(float sqrDistance, float sqrRadius) {
+    float ratio = sqrDistance / sqrRadius;
+    float smoothFactor = clamp(1.0f - ratio * ratio, 0.0, 1.0);
+    return smoothFactor * smoothFactor;
+}
+float getDistanceAttenuation(float sqrDistance, float radius) {
+    float attenuation = 1.0f / max(sqrDistance, 0.01f * 0.01f);
+    attenuation *= smoothDistanceAttenuation(sqrDistance, radius * radius);
+    if (PointLightAttenuationWindowEnabled.x > 0.0f) {
+        attenuation *= smoothWindowAttenuation(sqrDistance, radius * radius, 1.0f - attenuation);
+    }
+    return attenuation;
 }
 float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal) {
     Light lightInfo = Lights[lightIndex];
