@@ -48,6 +48,9 @@ vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
+vec3 vec3_splat(float _x) {
+    return vec3(_x, _x, _x);
+}
 struct NoopImage2D {
     int noop;
 };
@@ -89,15 +92,16 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 JitterOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
+uniform vec4 VolumeDimensions;
 uniform vec4 AlbedoExtinction;
+uniform vec4 SkyZenithColor;
+uniform vec4 AtmosphericScatteringToggles;
+uniform vec4 AmbientContribution;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
-uniform vec4 SkyZenithColor;
-uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
@@ -244,7 +248,8 @@ uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBL;
+uniform lowp samplerCube s_SpecularIBLCurrent;
+uniform lowp samplerCube s_SpecularIBLPrevious;
 layout(std430, binding = 2)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
 layout(std430, binding = 5)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 6)buffer s_Lights { Light Lights[]; };
@@ -509,9 +514,10 @@ void Populate() {
     vec3 scattering = density * AlbedoExtinction.rgb * AlbedoExtinction.a;
     float extinction = density * AlbedoExtinction.a;
     vec3 source = vec3(0.0, 0.0, 0.0);
-    vec3 blockAmbient = BlockBaseAmbientLightColorIntensity.rgb * BlockBaseAmbientLightColorIntensity.a;
-    vec3 skyAmbient = SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
+    vec3 blockAmbient = AmbientContribution.x * BlockBaseAmbientLightColorIntensity.rgb * BlockBaseAmbientLightColorIntensity.a;
+    vec3 skyAmbient = AmbientContribution.y * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
     vec3 ambient = blockAmbient + skyAmbient;
+    ambient = max(ambient, vec3_splat(AmbientContribution.z));
     source += scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {

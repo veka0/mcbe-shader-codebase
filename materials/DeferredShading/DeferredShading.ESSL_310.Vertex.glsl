@@ -225,7 +225,8 @@ uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SceneDepth;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBL;
+uniform lowp samplerCube s_SpecularIBLCurrent;
+uniform lowp samplerCube s_SpecularIBLPrevious;
 struct ColorTransform {
     float hue;
     float saturation;
