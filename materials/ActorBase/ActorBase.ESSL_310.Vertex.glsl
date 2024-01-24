@@ -18,8 +18,8 @@
 * - EMISSIVE__OFF (not used)
 *
 * Fancy:
-* - FANCY__OFF
-* - FANCY__ON
+* - FANCY__OFF (not used)
+* - FANCY__ON (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -43,9 +43,8 @@ attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 centroid varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -144,16 +143,14 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -166,8 +163,6 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec4 fog;
-    vec4 light;
     vec2 texcoord0;
 };
 
@@ -197,46 +192,23 @@ vec2 applyUvAnimation(vec2 uv, const vec4 uvAnimation) {
     uv = uvAnimation.xy + (uv * uvAnimation.zw);
     return uv;
 }
-float calculateLightIntensity(const mat4 world, const vec4 normal, const vec4 tileLightColor) {
-    #ifdef FANCY__OFF
-    return 1.0;
-    #endif
-    #ifdef FANCY__ON
-    const float AMBIENT = 0.45;
-    const float XFAC = -0.1;
-    const float ZFAC = 0.1;
-    vec3 N = normalize(((world) * (normal))).xyz;
-    N.y *= tileLightColor.a;
-    float yLight = (1.0 + N.y) * 0.5;
-    return yLight * (1.0 - AMBIENT) + N.x * N.x * XFAC + N.z * N.z * ZFAC + AMBIENT;
-    #endif
-}
-float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
-    float distance = cameraDepth / maxDistance;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
-void ActorVert(inout VertexInput vertInput, inout VertexOutput vertOutput) {
+void ActorVertPreprocessBase(inout VertexInput vertInput, inout VertexOutput vertOutput) {
     World = ((World) * (Bones[vertInput.boneId]));
     WorldView = ((View) * (World));
     WorldViewProj = ((Proj) * (WorldView));
     vec2 texcoord = vertInput.texcoord0;
     texcoord = applyUvAnimation(texcoord, UVAnimation);
     vertInput.texcoord0 = texcoord;
-    float lightIntensity = calculateLightIntensity(World, vec4(vertInput.normal.xyz, 0.0), TileLightColor);
-    lightIntensity += OverlayColor.a * 0.35;
-    vertOutput.light = vec4(lightIntensity * TileLightColor.rgb, 1.0);
 }
-void ActorVertFog(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+void ActorVertOverrideBase(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
-    float cameraDepth = vertOutput.position.z;
-    float fogIntensity = calculateFogIntensityVanilla(cameraDepth, FogControl.z, FogControl.x, FogControl.y);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
 }
 struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -249,7 +221,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
@@ -266,17 +239,17 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
     StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
 }
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
-    ActorVert(vertInput, vertOutput);
+    ActorVertPreprocessBase(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    ActorVertFog(vertInput, vertOutput);
+    ActorVertOverrideBase(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
     StandardTemplate_LightingVertexFunctionIdentity(vertInput, vertOutput, worldPosition);
@@ -298,9 +271,8 @@ void main() {
     vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -325,9 +297,8 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_color0 = vertexOutput.color0;
-    v_fog = vertexOutput.fog;
-    v_light = vertexOutput.light;
     v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

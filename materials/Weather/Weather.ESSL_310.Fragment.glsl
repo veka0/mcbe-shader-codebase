@@ -36,6 +36,7 @@ varying vec4 v_fog;
 varying float v_occlusionHeight;
 varying vec2 v_occlusionUV;
 varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -148,6 +149,7 @@ struct VertexOutput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
@@ -156,6 +158,7 @@ struct FragmentInput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -258,6 +261,8 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
@@ -281,6 +286,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
     WeatherSurface(surfaceInput, surfaceOutput);
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -298,6 +304,7 @@ void main() {
     fragmentInput.occlusionHeight = v_occlusionHeight;
     fragmentInput.occlusionUV = v_occlusionUV;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

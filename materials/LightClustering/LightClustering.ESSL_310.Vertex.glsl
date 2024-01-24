@@ -7,6 +7,11 @@
 * - CLUSTER_LIGHTS_PASS (not used)
 * - CLUSTER_LIGHTS_MANHATTAN_PASS (not used)
 * - FALLBACK_PASS (not used)
+*
+* ChangeMaxLightPerCluster:
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__HIGHER (not used)
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__LOWER (not used)
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__OFF (not used)
 */
 
 #define attribute in

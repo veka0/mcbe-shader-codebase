@@ -153,7 +153,7 @@ uvec3 WorkGroupID;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -519,19 +519,21 @@ void Populate() {
     vec3 ambient = blockAmbient + skyAmbient;
     ambient = max(ambient, vec3_splat(AmbientContribution.z));
     source += scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
-    int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
-    for(int i = 0; i < lightCount; i ++ ) {
-        float directOcclusion = 1.0;
-        if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
-            directOcclusion = GetShadowAmount(
-                i,
-                worldPosition,
-                1.0,
-            0.0);
+    if (abs(AmbientContribution.y) > 0.0001) {
+        int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
+        for(int i = 0; i < lightCount; i ++ ) {
+            float directOcclusion = 1.0;
+            if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
+                directOcclusion = GetShadowAmount(
+                    i,
+                    worldPosition,
+                    1.0,
+                0.0);
+            }
+            vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
+            vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
+            source += scattering * directOcclusion * illuminance;
         }
-        vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
-        vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
-        source += scattering * directOcclusion * illuminance;
     }
     if (TemporalSettings.x > 0.0) {
         vec3 uvwUnjittered = (vec3(x, y, z) + vec3(0.5, 0.5, 0.5)) / VolumeDimensions.xyz;

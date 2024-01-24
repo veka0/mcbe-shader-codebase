@@ -7,10 +7,6 @@
 * - ALPHA_TEST_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
-* Fancy:
-* - FANCY__OFF (not used)
-* - FANCY__ON (not used)
-*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -29,6 +25,7 @@ attribute vec4 i_data3;
 varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -113,12 +110,14 @@ struct VertexOutput {
     vec4 color0;
     vec4 fog;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
     vec4 color0;
     vec4 fog;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -165,7 +164,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -178,7 +178,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
@@ -195,7 +196,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -227,6 +228,7 @@ void main() {
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -253,6 +255,7 @@ void main() {
     v_color0 = vertexOutput.color0;
     v_fog = vertexOutput.fog;
     v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

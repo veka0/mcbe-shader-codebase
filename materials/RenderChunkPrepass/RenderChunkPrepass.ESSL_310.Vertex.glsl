@@ -4,14 +4,10 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - GEOMETRY_PREPASS_PASS
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
-* - TRANSPARENT_PBR_PASS
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -47,14 +43,13 @@ attribute float a_texcoord4;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 flat varying int v_pbrTextureId;
 #endif
 varying vec3 v_tangent;
-centroid varying vec2 v_texcoord0;
+varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
@@ -104,12 +99,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 FogAndDistanceControl;
-uniform vec4 FogColor;
 uniform vec4 GlobalRoughness;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
@@ -168,7 +160,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -182,7 +173,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -206,13 +196,11 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
-    vec4 fog;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
-    vec2 texcoord0;
     vec3 worldPos;
 };
 
@@ -232,17 +220,20 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 vec4 jitterVertexPosition(vec3 worldPosition) {
     mat4 offsetProj = Proj;
     offsetProj[2][0] += SubPixelOffset.x;
     offsetProj[2][1] -= SubPixelOffset.y;
     return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
 }
-float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
+#endif
+struct ColorTransform {
+    float hue;
+    float saturation;
+    float luminance;
+};
+
 #ifdef RENDER_AS_BILLBOARDS__ON
 void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     stdInput.worldPos += vec3(0.5, 0.5, 0.5);
@@ -254,36 +245,16 @@ void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout Vertex
     vertOutput.position = ((ViewProj) * (vec4(stdInput.worldPos, 1.0)));
 }
 #endif
-#if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 float RenderChunkVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     #ifdef RENDER_AS_BILLBOARDS__ON
     vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
     transformAsBillboardVertex(stdInput, vertOutput);
     #endif
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    float fogIntensity = calculateFogIntensityFadedVanilla(cameraDepth, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
-    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
     return cameraDepth;
 }
 #endif
-#if defined(TRANSPARENT_PASS)|| defined(TRANSPARENT_PBR_PASS)
-void RenderChunkVertTransparent(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    float cameraDepth = RenderChunkVert(stdInput, vertOutput);
-    bool shouldBecomeOpaqueInTheDistance = stdInput.vertInput.color0.a < 0.95;
-    if (shouldBecomeOpaqueInTheDistance) {
-        float cameraDistance = cameraDepth / FogAndDistanceControl.w;
-        float alphaFadeOut = clamp(cameraDistance, 0.0, 1.0);
-        vertOutput.color0.a = mix(stdInput.vertInput.color0.a, 1.0, alphaFadeOut);
-    }
-}
-#endif
-struct ColorTransform {
-    float hue;
-    float saturation;
-    float luminance;
-};
-
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 void calculateVertexPosition(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     #ifdef RENDER_AS_BILLBOARDS__ON
@@ -297,7 +268,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -310,7 +282,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
@@ -329,8 +302,6 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    float fogIntensity = calculateFogIntensityFadedVanilla(cameraDepth, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;
     vec3 n = stdInput.vertInput.normal.xyz;
     vec3 t = stdInput.vertInput.tangent.xyz;
@@ -350,7 +321,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -360,14 +331,11 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)|| defined(OPAQUE_PASS)
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     RenderChunkVert(vertInput, vertOutput);
     #endif
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     RenderChunkPrepassVert(vertInput, vertOutput);
-    #endif
-    #if defined(TRANSPARENT_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    RenderChunkVertTransparent(vertInput, vertOutput);
     #endif
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
@@ -395,7 +363,6 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.lightmapUV = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -429,7 +396,6 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
-    v_fog = vertexOutput.fog;
     v_lightmapUV = vertexOutput.lightmapUV;
     v_normal = vertexOutput.normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)

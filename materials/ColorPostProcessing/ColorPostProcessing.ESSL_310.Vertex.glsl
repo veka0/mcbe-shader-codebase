@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - TONEMAP_PASS (not used)
+* - COLOR_POST_PROCESS_PASS (not used)
 */
 
 #define attribute in

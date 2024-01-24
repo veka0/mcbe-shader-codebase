@@ -11,9 +11,7 @@ vec4 i_data3 : TEXCOORD5;
 
 vec3          v_bitangent    : BITANGENT;
 vec4          v_color0       : COLOR0;
-vec4          v_fog          : COLOR2;
 vec4          v_layerUv      : TEXCOORD2;
-vec4          v_light        : COLOR3;
 vec3          v_normal       : NORMAL;
 vec3          v_prevWorldPos : TEXCOORD4;
 vec3          v_tangent      : TANGENT;

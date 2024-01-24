@@ -26,8 +26,8 @@ varying vec2 v_texcoord0;
 varying vec3 v_viewSpaceNormal;
 #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
 varying vec4 v_viewSpacePosition;
-varying vec4 v_worldSpacePosition;
 #endif
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -144,8 +144,8 @@ struct VertexOutput {
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
     vec4 viewSpacePosition;
-    vec4 worldSpacePosition;
     #endif
+    vec3 worldPos;
 };
 
 struct FragmentInput {
@@ -154,8 +154,8 @@ struct FragmentInput {
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
     vec4 viewSpacePosition;
-    vec4 worldSpacePosition;
     #endif
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -171,7 +171,6 @@ struct StandardSurfaceInput {
     vec3 viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
     vec4 viewSpacePosition;
-    vec4 worldSpacePosition;
     #endif
 };
 
@@ -189,7 +188,6 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.viewSpaceNormal = fragInput.viewSpaceNormal;
     #ifdef OPAQUE_PASS
     result.viewSpacePosition = fragInput.viewSpacePosition;
-    result.worldSpacePosition = fragInput.worldSpacePosition;
     #endif
     return result;
 }
@@ -229,6 +227,8 @@ vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compos
 }
 void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 #endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -254,7 +254,8 @@ vec3 computeLighting_BlinnPhong(FragmentInput fragInput, StandardSurfaceInput st
     float specularExponent = 2.0 / pow(roughness, 4.0) - 2.0;
     float normalizationFactor = (specularExponent + 2.0) / (4.0 * 3.1415926535897932384626433832795 * (2.0 - pow(2.0, - specularExponent / 2.0)));
     vec3 specularIntensity = clamp(normalizationFactor * pow(clamp(dot(N, H), 0.0, 1.0), specularExponent), 0.0, 1.0) * primaryLight.Intensity;
-    vec4 shadowPos = ((ShadowTransform) * (fragInput.worldSpacePosition));
+    vec4 worldSpacePosition = vec4(fragInput.worldPos.xyz, 1.0);
+    vec4 shadowPos = ((ShadowTransform) * (worldSpacePosition));
     shadowPos.z = shadowPos.z * 0.5 + 0.5;
     float projectedDepth = shadowPos.z / shadowPos.w - 0.00025;
     vec2 shadowCoord = (shadowPos.xy / shadowPos.w) * 0.5 + vec2_splat(0.5);
@@ -294,6 +295,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
     Surf(surfaceInput, surfaceOutput);
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -321,8 +323,8 @@ void main() {
     fragmentInput.viewSpaceNormal = v_viewSpaceNormal;
     #ifndef CUSTOM_PASS_BASED_ON_OPAQUE_PASS
     fragmentInput.viewSpacePosition = v_viewSpacePosition;
-    fragmentInput.worldSpacePosition = v_worldSpacePosition;
     #endif
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - TONEMAP_PASS (not used)
+* - COLOR_POST_PROCESS_PASS (not used)
 */
 
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -151,6 +151,9 @@ struct ColorTransform {
 float luminanceToEV100(float luminance) {
     return log2(luminance) + 3.0f;
 }
+vec3 ApplyColorGrading(vec3 inColor) {
+    return inColor;
+}
 vec3 TonemapReinhard(vec3 rgb, float W) {
     vec3 color = rgb / (1.0 + rgb);
     return color;
@@ -250,6 +253,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
             vec2 uv = vec2(LuminanceMinMax.x == LuminanceMinMax.y ? 0.5f : (luminanceToEV100(averageLuminance) - luminanceToEV100(LuminanceMinMax.x)) / (luminanceToEV100(LuminanceMinMax.y) - luminanceToEV100(LuminanceMinMax.x)), 0.5f);
             compensation = textureSample(s_CustomExposureCompensation, uv).r;
         }
+        sceneColor = ApplyColorGrading(sceneColor);
         float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
         whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;
         finalColor.rgb = ApplyTonemap(

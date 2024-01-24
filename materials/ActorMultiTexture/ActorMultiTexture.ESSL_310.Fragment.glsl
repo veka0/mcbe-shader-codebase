@@ -47,6 +47,7 @@ varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec4 v_light;
 centroid varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -169,6 +170,7 @@ struct VertexOutput {
     vec4 fog;
     vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
@@ -176,6 +178,7 @@ struct FragmentInput {
     vec4 fog;
     vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -286,20 +289,16 @@ vec4 applyActorDiffuse(vec4 albedo, vec3 color, vec4 light) {
     albedo = applyEmissiveLighting(albedo, light);
     return albedo;
 }
-#endif
-#ifndef DEPTH_ONLY_PASS
+vec4 getActorAlbedo(vec2 uv) {
+    vec4 albedo = getActorAlbedoNoColorChange(uv);
+    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
+    return albedo;
+}
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
 void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 getActorAlbedo(vec2 uv) {
-    vec4 albedo = getActorAlbedoNoColorChange(uv);
-    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
-    return albedo;
 }
 #endif
 #ifdef ALPHA_TEST_PASS
@@ -320,7 +319,7 @@ vec4 applySecondTextureColor(vec4 albedo, vec2 uv) {
     #endif
     return albedo;
 }
-vec4 applyMultitextureAlbedo(vec4 albedo, vec2 uv, vec4 light, out float tex1Alpha) {
+vec4 applyMultitextureAlbedo(vec4 albedo, vec2 uv, out float tex1Alpha) {
     vec4 tex1 = textureSample(s_MatTexture1, uv);
     tex1Alpha = tex1.a;
     albedo.rgb = mix(albedo.rgb, tex1.rgb, tex1.a);
@@ -328,11 +327,15 @@ vec4 applyMultitextureAlbedo(vec4 albedo, vec2 uv, vec4 light, out float tex1Alp
     return albedo;
 }
 #endif
+#ifdef DEPTH_ONLY_OPAQUE_PASS
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+}
+#endif
 #ifdef TRANSPARENT_PASS
 void ActorMultiTexture_getTransparentColor(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 albedo = getActorAlbedo(surfaceInput.UV);
     float tex1Alpha = 0.0;
-    albedo = applyMultitextureAlbedo(albedo, surfaceInput.UV, surfaceInput.light, tex1Alpha);
+    albedo = applyMultitextureAlbedo(albedo, surfaceInput.UV, tex1Alpha);
     vec4 diffuse = applyActorDiffuse(albedo, surfaceInput.Color, surfaceInput.light);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
@@ -345,6 +348,8 @@ struct CompositingOutput {
 #ifndef DEPTH_ONLY_PASS
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
 struct DirectionalLight {
@@ -361,7 +366,7 @@ vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInpu
 void ActorSurfMultiTexture(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 albedo = getActorAlbedo(surfaceInput.UV);
     float tex1Alpha = 0.0;
-    albedo = applyMultitextureAlbedo(albedo, surfaceInput.UV, surfaceInput.light, tex1Alpha);
+    albedo = applyMultitextureAlbedo(albedo, surfaceInput.UV, tex1Alpha);
     vec4 diffuse = applyActorDiffuse(albedo, surfaceInput.Color, surfaceInput.light);
     #ifdef ALPHA_TEST_PASS
     if (shouldDiscardMultiTexture(diffuse.a, tex1Alpha)) {
@@ -392,6 +397,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ActorMultiTexture_getTransparentColor(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -399,7 +405,12 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
     ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
 }
 #endif
 #ifdef DEPTH_ONLY_PASS
@@ -413,6 +424,7 @@ void main() {
     fragmentInput.fog = v_fog;
     fragmentInput.light = v_light;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

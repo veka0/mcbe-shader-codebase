@@ -8,10 +8,6 @@
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
 * - TRANSPARENT_PASS
 *
-* Fancy:
-* - FANCY__OFF (not used)
-* - FANCY__ON (not used)
-*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON
@@ -287,6 +283,8 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
@@ -352,6 +350,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ParticleTransparent(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;

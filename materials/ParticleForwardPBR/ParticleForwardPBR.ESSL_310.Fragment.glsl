@@ -8,10 +8,6 @@
 * - FORWARD_PBR_TRANSPARENT_PASS
 * - TRANSPARENT_PASS
 *
-* Fancy:
-* - FANCY__OFF (not used)
-* - FANCY__ON (not used)
-*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON
@@ -31,6 +27,7 @@ out vec4 bgfx_FragColor;
 varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -151,7 +148,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -239,12 +236,14 @@ struct VertexOutput {
     vec4 color0;
     vec4 fog;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
     vec4 color0;
     vec4 fog;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -320,6 +319,8 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
@@ -377,6 +378,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ParticleTransparent(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -392,6 +394,7 @@ void main() {
     fragmentInput.color0 = v_color0;
     fragmentInput.fog = v_fog;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

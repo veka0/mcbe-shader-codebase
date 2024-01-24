@@ -59,7 +59,6 @@ attribute float a_texcoord4;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -147,6 +146,8 @@ uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
+uniform vec4 SkyHorizonColor;
+uniform vec4 GlobalRoughness;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
@@ -158,7 +159,7 @@ uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
-uniform vec4 SkyHorizonColor;
+uniform vec4 SubPixelOffset;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -180,7 +181,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -273,7 +274,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -287,7 +287,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -318,7 +317,6 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
-    vec4 fog;
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
     int pbrTextureId;
@@ -344,11 +342,6 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
-float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
 #if defined(RENDER_AS_BILLBOARDS__ON)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
 void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     stdInput.worldPos += vec3(0.5, 0.5, 0.5);
@@ -367,8 +360,6 @@ float RenderChunkVert(StandardVertexInput stdInput, inout VertexOutput vertOutpu
     transformAsBillboardVertex(stdInput, vertOutput);
     #endif
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    float fogIntensity = calculateFogIntensityFadedVanilla(cameraDepth, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
     return cameraDepth;
 }
 #endif
@@ -376,7 +367,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -389,7 +381,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
@@ -459,8 +452,6 @@ struct TemporalAccumulationParameters {
 
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    float fogIntensity = calculateFogIntensityFadedVanilla(cameraDepth, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;
     vec3 n = stdInput.vertInput.normal.xyz;
     vec3 t = stdInput.vertInput.tangent.xyz;
@@ -479,7 +470,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -521,7 +512,6 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.lightmapUV = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -555,7 +545,6 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
-    v_fog = vertexOutput.fog;
     v_lightmapUV = vertexOutput.lightmapUV;
     v_normal = vertexOutput.normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)

@@ -57,9 +57,7 @@ varying vec3 v_ndcPosition;
 varying float v_occlusionHeight;
 varying vec2 v_occlusionUV;
 varying vec2 v_texcoord0;
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 varying vec3 v_worldPos;
-#endif
 struct NoopSampler {
     int noop;
 };
@@ -190,7 +188,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -283,9 +281,7 @@ struct VertexOutput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentInput {
@@ -297,9 +293,7 @@ struct FragmentInput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentOutput {
@@ -390,7 +384,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -403,7 +398,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
@@ -480,7 +476,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -522,9 +518,7 @@ void main() {
     vertexOutput.occlusionHeight = 0.0;
     vertexOutput.occlusionUV = vec2(0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vertexOutput.worldPos = vec3(0, 0, 0);
-    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -556,9 +550,7 @@ void main() {
     v_occlusionHeight = vertexOutput.occlusionHeight;
     v_occlusionUV = vertexOutput.occlusionUV;
     v_texcoord0 = vertexOutput.texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     v_worldPos = vertexOutput.worldPos;
-    #endif
     gl_Position = vertexOutput.position;
 }
 

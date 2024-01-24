@@ -7,6 +7,11 @@
 * - CLUSTER_LIGHTS_PASS
 * - CLUSTER_LIGHTS_MANHATTAN_PASS
 * - FALLBACK_PASS (not used)
+*
+* ChangeMaxLightPerCluster:
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__HIGHER
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__LOWER
+* - CHANGE_MAX_LIGHT_PER_CLUSTER__OFF
 */
 
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
@@ -110,6 +115,18 @@ float getClusterDepthByIndex(float index, float maxSlices, vec2 clusterNearFar) 
     float logDepth = nearFarLog * (index - 2.0f) / (maxSlices - 2.0f);
     return pow(2.0f, logDepth);
 }
+#ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
+
+#endif
+#if defined(CHANGE_MAX_LIGHT_PER_CLUSTER__HIGHER)&& defined(CLUSTER_LIGHTS_MANHATTAN_PASS)
+shared LightContribution contributionArray[64][64];
+#endif
+#if defined(CHANGE_MAX_LIGHT_PER_CLUSTER__LOWER)&& defined(CLUSTER_LIGHTS_MANHATTAN_PASS)
+shared LightContribution contributionArray[64][16];
+#endif
+#if defined(CHANGE_MAX_LIGHT_PER_CLUSTER__OFF)&& defined(CLUSTER_LIGHTS_MANHATTAN_PASS)
+shared LightContribution contributionArray[64][32];
+#endif
 void ClusterLights() {
     float x = float(GlobalInvocationID.x);
     float y = float(GlobalInvocationID.y);
@@ -128,10 +145,9 @@ void ClusterLights() {
     float centerX = getViewSpaceCoordByRatio(x + 0.5f, ClusterSize.x, ClusterNearFarWidthHeight.z, CameraFarPlane.x, planeRatio);
     float centerY = getViewSpaceCoordByRatio(y + 0.5f, ClusterSize.y, ClusterNearFarWidthHeight.w, CameraFarPlane.y, planeRatio);
     vec3 center = vec3(centerX, centerY, - viewDepth);
-    LightContribution distanceToCenter[64];
+    LightContribution distanceToCenter[32];
     #endif
     #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-    LightContribution contribution[64];
     vec2 corners[7];
     corners[0] = vec2(1.0f, 0.0f);
     corners[1] = vec2(0.0f, 1.0f);
@@ -247,7 +263,7 @@ void ClusterLights() {
             float cameraDistanceContribution = max(1.0f - lightDistance / length(oppositeCornerView), 0.0f);
             float clusterContribution = max(1.0f - length(lightView - centerView) / (length(oppositeCornerView - closestCornerToCameraView) / 2.0f), 0.0f);
             float curContribution = CameraClusterWeight.x * cameraDistanceContribution + CameraClusterWeight.y * clusterContribution;
-            if (countResult >= maxLights && curContribution <= contribution[countResult - 1].contribution) {
+            if (countResult >= maxLights && curContribution <= contributionArray[LocalInvocationIndex][countResult - 1].contribution) {
                 continue;
             }
             bool lightInCluster = true;
@@ -279,7 +295,7 @@ void ClusterLights() {
                         if (distanceToCenter[mid].contribution < curDistance) {
                             #endif
                             #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                            if (contribution[mid].contribution >= curContribution) {
+                            if (contributionArray[LocalInvocationIndex][mid].contribution >= curContribution) {
                                 #endif
                                 low = mid + 1;
                             }
@@ -295,7 +311,7 @@ void ClusterLights() {
                                 #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
                                 if (countResult < maxLights) {
                                     for(int j = countResult - 1; j >= low; j -- ) {
-                                        contribution[j + 1] = contribution[j];
+                                        contributionArray[LocalInvocationIndex][j + 1] = contributionArray[LocalInvocationIndex][j];
                                         #endif
                                     }
                                     #ifdef CLUSTER_LIGHTS_PASS
@@ -303,8 +319,8 @@ void ClusterLights() {
                                     distanceToCenter[low].indexInLookUp = countResult;
                                     #endif
                                     #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                    contribution[low].contribution = curContribution;
-                                    contribution[low].indexInLookUp = countResult;
+                                    contributionArray[LocalInvocationIndex][low].contribution = curContribution;
+                                    contributionArray[LocalInvocationIndex][low].indexInLookUp = countResult;
                                     #endif
                                     LightLookupArray[idx * maxLights + countResult].lookup = float(bound.index);
                                     countResult ++ ;
@@ -316,9 +332,9 @@ void ClusterLights() {
                                         distanceToCenter[j + 1] = distanceToCenter[j];
                                         #endif
                                         #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                        int insertPos = contribution[maxLights - 1].indexInLookUp;
+                                        int insertPos = contributionArray[LocalInvocationIndex][maxLights - 1].indexInLookUp;
                                         for(int j = maxLights - 2; j >= low; j -- ) {
-                                            contribution[j + 1] = contribution[j];
+                                            contributionArray[LocalInvocationIndex][j + 1] = contributionArray[LocalInvocationIndex][j];
                                             #endif
                                         }
                                         #ifdef CLUSTER_LIGHTS_PASS
@@ -326,8 +342,8 @@ void ClusterLights() {
                                         distanceToCenter[low].indexInLookUp = insertPos;
                                         #endif
                                         #ifdef CLUSTER_LIGHTS_MANHATTAN_PASS
-                                        contribution[low].contribution = curContribution;
-                                        contribution[low].indexInLookUp = insertPos;
+                                        contributionArray[LocalInvocationIndex][low].contribution = curContribution;
+                                        contributionArray[LocalInvocationIndex][low].indexInLookUp = insertPos;
                                         #endif
                                         LightLookupArray[idx * maxLights + insertPos].lookup = float(bound.index);
                                     }

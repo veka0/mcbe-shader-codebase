@@ -4,13 +4,9 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
-* - DEPTH_ONLY_PASS
 * - FORWARD_PBR_ALPHA_TEST_PASS
 * - FORWARD_PBR_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
 *
 * Fancy:
 * - FANCY__OFF (not used)
@@ -25,7 +21,6 @@
 * - MULTI_COLOR_TINT__ON
 */
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -33,13 +28,10 @@
 #define texture2DProjGrad textureProjGrad
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
-#endif
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 #extension GL_EXT_texture_array : enable
-#endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -49,8 +41,6 @@ precision mediump float;
 #define varying in
 out vec4 bgfx_FragColor;
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec2 v_texcoord0;
@@ -59,7 +49,6 @@ struct NoopSampler {
     int noop;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -96,7 +85,6 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
-#endif
 struct NoopImage2D {
     int noop;
 };
@@ -121,7 +109,6 @@ uniform vec4 PointLightShadowParams1;
 uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
-uniform vec4 FogControl;
 uniform vec4 ChangeColor;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
@@ -157,6 +144,7 @@ uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
+uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
@@ -176,7 +164,6 @@ uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
 uniform vec4 TileLightIntensity;
-uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -198,7 +185,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -285,8 +272,6 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -295,8 +280,6 @@ struct VertexOutput {
 
 struct FragmentInput {
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -321,8 +304,6 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -333,20 +314,16 @@ struct StandardVertexInput {
     vec3 worldPos;
 };
 
-#ifndef DEPTH_ONLY_PASS
 StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     StandardSurfaceInput result;
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.worldPos = fragInput.worldPos;
     return result;
 }
-#endif
 struct StandardSurfaceOutput {
     vec3 Albedo;
     float Alpha;
@@ -358,7 +335,6 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
-#ifndef DEPTH_ONLY_PASS
 StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     StandardSurfaceOutput result;
     result.Albedo = vec3(1, 1, 1);
@@ -371,30 +347,17 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
-#endif
-#ifndef DEPTH_ONLY_PASS
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
 }
-#endif
-#if defined(MULTI_COLOR_TINT__OFF)&& ! defined(DEPTH_ONLY_PASS)
+#ifdef MULTI_COLOR_TINT__OFF
 vec4 applyColorChange(vec4 originalColor, vec4 changeColor, float alpha) {
     originalColor.rgb = mix(originalColor, originalColor * changeColor, alpha).rgb;
     return originalColor;
 }
 #endif
-#if defined(MULTI_COLOR_TINT__ON)&& ! defined(DEPTH_ONLY_PASS)
+#ifdef MULTI_COLOR_TINT__ON
 vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTintColor) {
     vec2 colorMask = diffuse.rg;
     diffuse.rgb = colorMask.rrr * changeColor;
@@ -402,37 +365,9 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
-vec4 applyLighting(vec4 diffuse, const vec4 light) {
-    diffuse.rgb *= light.rgb;
-    return diffuse;
-}
-#endif
-#if ! defined(DEPTH_ONLY_PASS)&& ! defined(OPAQUE_PASS)&& ! defined(TRANSPARENT_PASS)
 bool shouldDiscard(const float alpha) {
     return alpha < 0.5;
 }
-#endif
-#ifndef DEPTH_ONLY_PASS
-vec4 applyItemInHandDiffuse(vec4 albedo, const vec3 color, const vec4 light, float colorChangeAlpha) {
-    albedo.rgb *= mix(vec3(1.0, 1.0, 1.0), color, ColorBased.x).rgb;
-    #ifdef MULTI_COLOR_TINT__OFF
-    albedo = applyColorChange(albedo, ChangeColor, colorChangeAlpha);
-    #endif
-    #ifdef MULTI_COLOR_TINT__ON
-    albedo = applyMultiColorChange(albedo, ChangeColor.rgb, MultiplicativeTintColor.rgb);
-    #endif
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    albedo = applyLighting(albedo, light);
-    return albedo;
-}
-#endif
-#if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-void ItemInHandApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
-}
-#endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -488,59 +423,58 @@ vec4 color_degamma(vec4 clr) {
 float luminance(vec3 clr) {
     return dot(clr, vec3(0.2126, 0.7152, 0.0722));
 }
-float lumaPerceptual(vec3 color) {
-    vec3 perceptualLuminance = vec3(0.299, 0.587, 0.114);
-    return dot(perceptualLuminance, color);
-}
 vec3 desaturate(vec3 color, float amount) {
     float lum = luminance(color);
     return mix(color, vec3(lum, lum, lum), amount);
 }
-#endif
 struct ColorTransform {
     float hue;
     float saturation;
     float luminance;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
+    float distance = cameraDepth / maxDistance;
+    distance += fogAlpha;
+    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+}
+vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
+    return mix(diffuse, fogColor, fogIntensity);
+}
 void ItemInHandApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = surfaceOutput.Albedo;
 }
-#endif
 struct CompositingOutput {
     vec3 mLitColor;
 };
 
-#ifndef DEPTH_ONLY_PASS
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
-#endif
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
 };
 
-#ifndef DEPTH_ONLY_PASS
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
 }
-#endif
-#ifdef ALPHA_TEST_PASS
-void ItemInHandAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    if (shouldDiscard(diffuse.a)) {
-        discard;
-    }
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
+vec4 applyItemInHandDiffusePBR(vec4 albedo, const vec3 color, float colorChangeAlpha) {
+    albedo.rgb *= mix(vec3(1.0, 1.0, 1.0), color, ColorBased.x).rgb;
+    #ifdef MULTI_COLOR_TINT__OFF
+    albedo = applyColorChange(albedo, ChangeColor, colorChangeAlpha);
+    #endif
+    #ifdef MULTI_COLOR_TINT__ON
+    albedo = applyMultiColorChange(albedo, ChangeColor.rgb, MultiplicativeTintColor.rgb);
+    #endif
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
 }
-#endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 void ItemInHand_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
     vec3 surfaceColor = color_degamma(surfaceInput.Color);
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceColor, surfaceInput.light, surfaceInput.Alpha);
+    vec4 diffuse = applyItemInHandDiffusePBR(vec4(1.0, 1.0, 1.0, 1.0), surfaceColor, surfaceInput.Alpha);
     if (isAlphaTest && shouldDiscard(diffuse.a)) {
         discard;
     }
@@ -1082,13 +1016,13 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
     DiscreteLightingContributions lightContrib;
     lightContrib.diffuse = vec3_splat(0.0);
     lightContrib.specular = vec3_splat(0.0);
-    lightContrib.ambientTint = vec3_splat(0.0);
+    lightContrib.ambientTint = vec4(0.0, 0.0, 0.0, 0.0);
     if (!(calculateSpecular || calculateDiffuse))
     {
         return lightContrib;
     }
     vec3 clusterId = getClusterIndex(lightClusterUV, - surfacePos.z, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
-    if (clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
+    if (clusterId.x < 0.0 || clusterId.y < 0.0 || clusterId.z < 0.0 || clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
         return lightContrib;
     }
     highp int clusterIdx = int(clusterId.x + clusterId.y * ClusterDimensions.x + clusterId.z * ClusterDimensions.x * ClusterDimensions.y);
@@ -1154,17 +1088,22 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
             }
         }
         usedLightCount ++ ;
-        lightContrib.ambientTint += mix(BlockBaseAmbientLightColorIntensity.rgb, lightColor, clamp(attenuation, 0.0f, 0.95f));
+        lightContrib.ambientTint.rgb += lightColor * attenuation;
+        lightContrib.ambientTint.a += 1.0f - squaredDistanceToLight / (r * r);
         lightContrib.diffuse += diffuse * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
         lightContrib.specular += specular * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
     }
     if (usedLightCount > 0) {
-        lightContrib.ambientTint = lightContrib.ambientTint / float(usedLightCount);
+        lightContrib.ambientTint.rgb = lightContrib.ambientTint.rgb / float(usedLightCount);
+        lightContrib.ambientTint.a = lightContrib.ambientTint.a / float(usedLightCount);
         noDiscreteLight = false;
     }
     return lightContrib;
 }
-void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 worldPosition, vec3 worldNormal) {
+void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 worldPosition, vec3 worldNormal, float skyAmbient) {
+    if (abs(skyAmbient) < 0.0001) {
+        return;
+    }
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {
         float directOcclusion = 1.0;
@@ -1189,12 +1128,13 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
         lightContrib.directSpecular += specular * directOcclusion * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
     }
 }
-vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
-    if (blockAmbientTint.x <= 0.0f && blockAmbientTint.y <= 0.0f && blockAmbientTint.z <= 0.0f) {
-        blockAmbientTint = vec3(1.0f, 1.0f, 1.0f);
-    }
-    blockAmbientTint = clamp(blockAmbientTint, vec3(0.1f, 0.1f, 0.1f), vec3(1.0f, 1.0f, 1.0f));
-    vec3 sampledBlockAmbient = (blockAmbientContribution * blockAmbientContribution) * blockAmbientTint * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier * lumaPerceptual(BlockBaseAmbientLightColorIntensity.rgb) / lumaPerceptual(blockAmbientTint);
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
+    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
+    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
+    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
+    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
+    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
+    vec3 sampledBlockAmbient = blockAmbientLightFinal * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier;
     float skyFalloffPow = mix(5.0, 3.0, CameraLightIntensity.y);
     float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
     vec3 sampledSkyAmbient = skyFalloff * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
@@ -1202,7 +1142,7 @@ vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTin
     sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
     return sampledAmbient;
 }
-void evaluateIndirectLightingContribution(inout PBRLightingContributions lightContrib, vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, float linearRoughness, vec3 v, vec3 n, vec3 f0, vec3 ambientTint) {
+void evaluateIndirectLightingContribution(inout PBRLightingContributions lightContrib, vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, float linearRoughness, vec3 v, vec3 n, vec3 f0, vec4 ambientTint) {
     vec3 sampledAmbient = evaluateSampledAmbient(blockAmbientContribution, ambientTint, skyAmbientContribution, ambientFadeInMultiplier);
     lightContrib.indirectDiffuse += albedo * sampledAmbient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     vec3 R = reflect(v, n);
@@ -1289,13 +1229,13 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
-    vec3 ambientTint = vec3(1.0, 1.0, 1.0);
+    vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
         evaluateDirectionalLightsDirectContribution(
             lightContrib,
             fragmentInfo.viewPosition.z, fragmentInfo.viewNormal, viewDir, fragmentInfo.albedo,
-        fragmentInfo.metalness, fragmentInfo.roughness, rf0, fragmentInfo.worldPosition, fragmentInfo.worldNormal);
+        fragmentInfo.metalness, fragmentInfo.roughness, rf0, fragmentInfo.worldPosition, fragmentInfo.worldNormal, fragmentInfo.skyAmbientContribution);
         bool shouldCalculateSpecularTerm = (!enablePointLightSpecularFade)||(enablePointLightSpecularFade && dist < distPointLightSpecularFadeOut_End);
         bool shouldCalculateDiffuseTerm = (!enablePointLightDiffuseFade)||(enablePointLightDiffuseFade && dist < distPointLightDiffuseFadeOut_End);
         DiscreteLightingContributions discreteLightContrib = evaluateDiscreteLightsDirectContribution(
@@ -1354,7 +1294,6 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
     fragmentData.skyAmbientContribution = TileLightIntensity.y;
     surfaceOutput.Albedo = evaluateFragmentColor(fragmentData).rgb;
 }
-#endif
 #ifdef FORWARD_PBR_ALPHA_TEST_PASS
 void ItemInHandSurfAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ItemInHand_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
@@ -1373,30 +1312,12 @@ void ItemInHandSurfTransparent(in StandardSurfaceInput surfaceInput, inout Stand
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
-#ifdef OPAQUE_PASS
-void ItemInHandOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-}
-#endif
-#ifdef TRANSPARENT_PASS
-void ItemInHandTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-}
-#endif
-#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
     StandardSurfaceOutput surfaceOutput = StandardTemplate_DefaultOutput();
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
-    #ifdef ALPHA_TEST_PASS
-    ItemInHandAlpha(surfaceInput, surfaceOutput);
-    #endif
     #ifdef FORWARD_PBR_ALPHA_TEST_PASS
     ItemInHandSurfAlphaTest(surfaceInput, surfaceOutput);
     #endif
@@ -1406,12 +1327,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     ItemInHandSurfTransparent(surfaceInput, surfaceOutput);
     #endif
-    #ifdef OPAQUE_PASS
-    ItemInHandOpaque(surfaceInput, surfaceOutput);
-    #endif
-    #ifdef TRANSPARENT_PASS
-    ItemInHandTransparent(surfaceInput, surfaceOutput);
-    #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -1419,24 +1335,12 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-    ItemInHandApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
-    #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
     ItemInHandApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
 }
-#endif
-#ifdef DEPTH_ONLY_PASS
-void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-}
-#endif
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
-    fragmentInput.light = v_light;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.texcoord0 = v_texcoord0;
@@ -1463,12 +1367,7 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    #ifndef DEPTH_ONLY_PASS
     StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
-    #endif
-    #ifdef DEPTH_ONLY_PASS
-    StandardTemplate_DepthOnly_Frag(fragmentInput, fragmentOutput);
-    #endif
     bgfx_FragColor = fragmentOutput.Color0;
 }
 

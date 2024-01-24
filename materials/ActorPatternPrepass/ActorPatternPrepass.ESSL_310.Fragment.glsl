@@ -38,10 +38,6 @@
 * Tinting:
 * - TINTING__DISABLED (not used)
 * - TINTING__ENABLED
-*
-* UIEntity:
-* - UI_ENTITY__DISABLED
-* - UI_ENTITY__ENABLED (not used)
 */
 
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -54,8 +50,6 @@ precision mediump float;
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec3 v_tangent;
@@ -177,7 +171,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -267,8 +261,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -279,8 +271,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -302,8 +292,6 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec3 bitangent;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -322,8 +310,6 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.bitangent = fragInput.bitangent;
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.tangent = fragInput.tangent;
@@ -383,24 +369,7 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 }
 #endif
 #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
-}
-#endif
-#if defined(UI_ENTITY__DISABLED)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
-vec4 applyLighting(vec4 diffuse, const vec4 light) {
-    diffuse.rgb *= light.rgb;
-    return diffuse;
-}
-vec4 applyEmissiveLighting(vec4 diffuse, vec4 light) {
-    #ifndef EMISSIVE__OFF
-    light = mix(vec4(1.0, 1.0, 1.0, 1.0), light, diffuse.a);
-    #endif
-    diffuse = applyLighting(diffuse, light);
-    return diffuse;
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
 struct ColorTransform {
@@ -479,13 +448,10 @@ void applyPattern(in StandardSurfaceInput surfaceInput, inout vec4 albedo) {
 }
 #endif
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-void ActorSurfPattern(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+void ActorSurfPatternPBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 albedo = getBaseAlbedo(surfaceInput.texcoord0);
     #ifdef TINTING__ENABLED
     applyPattern(surfaceInput, albedo);
-    #endif
-    #ifdef UI_ENTITY__DISABLED
-    albedo = applyEmissiveLighting(albedo, surfaceInput.light);
     #endif
     albedo = applyHudOpacity(albedo, HudOpacity.x);
     surfaceOutput.Albedo = albedo.rgb;
@@ -498,6 +464,8 @@ struct CompositingOutput {
 
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -523,7 +491,7 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 #endif
 #ifdef GEOMETRY_PREPASS_PASS
 void ActorSurfBannerGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    ActorSurfPattern(surfaceInput, surfaceOutput);
+    ActorSurfPatternPBR(surfaceInput, surfaceOutput);
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 #endif
@@ -543,8 +511,9 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     ActorSurfBannerGeometryPrepass(surfaceInput, surfaceOutput);
     #endif
     #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
-    ActorSurfPattern(surfaceInput, surfaceOutput);
+    ActorSurfPatternPBR(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -553,7 +522,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     ActorSurfGeometryPrepass(fragInput, surfaceInput, surfaceOutput, fragOutput);
@@ -564,8 +533,6 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
-    fragmentInput.light = v_light;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.tangent = v_tangent;

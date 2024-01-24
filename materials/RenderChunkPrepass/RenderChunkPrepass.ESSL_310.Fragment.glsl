@@ -4,14 +4,10 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - GEOMETRY_PREPASS_PASS
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
-* - TRANSPARENT_PBR_PASS
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
@@ -36,14 +32,13 @@ precision mediump float;
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 flat varying int v_pbrTextureId;
 #endif
 varying vec3 v_tangent;
-centroid varying vec2 v_texcoord0;
+varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
@@ -84,7 +79,6 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
-// Approximation, matches 40 cases out of 48
 #if defined(SEASONS__ON)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
@@ -128,12 +122,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
-uniform vec4 FogAndDistanceControl;
-uniform vec4 FogColor;
 uniform vec4 GlobalRoughness;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
@@ -192,7 +183,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -206,7 +196,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -231,13 +220,11 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
-    vec4 fog;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
-    vec2 texcoord0;
     vec3 worldPos;
 };
 
@@ -253,13 +240,11 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Alpha = 1.0;
     result.lightmapUV = fragInput.lightmapUV;
     result.bitangent = fragInput.bitangent;
-    result.fog = fragInput.fog;
     result.normal = fragInput.normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     result.pbrTextureId = fragInput.pbrTextureId;
     #endif
     result.tangent = fragInput.tangent;
-    result.texcoord0 = fragInput.texcoord0;
     result.worldPos = fragInput.worldPos;
     return result;
 }
@@ -286,12 +271,45 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
+struct ColorTransform {
+    float hue;
+    float saturation;
+    float luminance;
+};
+
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+void RenderChunkFinalColorFallback(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
-// Approximation, matches 40 cases out of 48
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+vec2 octWrap(vec2 v) {
+    return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0);
+}
+vec2 ndirToOctSnorm(vec3 n) {
+    vec2 p = n.xy * (1.0 / (abs(n.x) + abs(n.y) + abs(n.z)));
+    p = (n.z < 0.0) ? octWrap(p) : p;
+    return p;
+}
+void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+    fragOutput.Color0.rgb = fragOutput.Color0.rgb;
+    fragOutput.Color0.a = surfaceOutput.Metallic;
+    vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
+    fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0)));
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color2 = vec4(
+        surfaceOutput.Emissive,
+        ambientBlockLight,
+        ambientSkyLight,
+        surfaceOutput.Roughness
+    );
+}
+#endif
 #if defined(SEASONS__ON)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
     vec2 uv = vertexColor.xy;
@@ -301,9 +319,46 @@ vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
     return diffuse;
 }
 #endif
-#if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
-void RenderChunkApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, FogColor.rgb, surfaceInput.fog.a);
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+void RenderChunkGeometryPrepass(FragmentInput fragInput, inout StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+    applyPrepassSurfaceToGBuffer(
+        fragInput.worldPos.xyz,
+        fragInput.worldPos.xyz - PrevWorldPosOffset.xyz,
+        surfaceInput.lightmapUV.x,
+        surfaceInput.lightmapUV.y,
+        surfaceOutput,
+        fragOutput
+    );
+}
+#endif
+struct CompositingOutput {
+    vec3 mLitColor;
+};
+
+vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
+    return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
+struct DirectionalLight {
+    vec3 ViewSpaceDirection;
+    vec3 Intensity;
+};
+
+vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
+    return stdOutput.Albedo;
+}
+#ifdef DEPTH_ONLY_PASS
+void RenderChunkSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
+    const float ALPHA_THRESHOLD = 0.5;
+    if (diffuse.a < ALPHA_THRESHOLD) {
+        discard;
+    }
+}
+#endif
+#ifdef DEPTH_ONLY_OPAQUE_PASS
+void RenderChunkSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -355,14 +410,19 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
 vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
     return (((surfaceUV) * (uvScale)) + uvBias);
 }
-void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, PBRTextureData pbrTextureData) {
+void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, int pbrTextureId) {
+    const int kInvalidPBRTextureHandle = 0xffff;
+    if (pbrTextureId == kInvalidPBRTextureHandle) {
+        return;
+    }
+    PBRTextureData pbrTextureData = PBRData[pbrTextureId];
     vec2 normalUVScale = vec2(pbrTextureData.colourToNormalUvScale0, pbrTextureData.colourToNormalUvScale1);
     vec2 normalUVBias = vec2(pbrTextureData.colourToNormalUvBias0, pbrTextureData.colourToNormalUvBias1);
     vec2 materialUVScale = vec2(pbrTextureData.colourToMaterialUvScale0, pbrTextureData.colourToMaterialUvScale1);
     vec2 materialUVBias = vec2(pbrTextureData.colourToMaterialUvBias0, pbrTextureData.colourToMaterialUvBias1);
-    int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-    int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+    const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
     vec3 tangentNormal = vec3(0, 0, 1);
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {
@@ -397,119 +457,6 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     surfaceOutput.Emissive = emissive;
     surfaceOutput.ViewSpaceNormal = ((tbn) * (tangentNormal)).xyz;
 }
-#endif
-#if defined(TRANSPARENT_PASS)|| defined(TRANSPARENT_PBR_PASS)
-void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
-    diffuse.a *= surfaceInput.Alpha;
-    diffuse.rgb *= surfaceInput.Color.rgb;
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = GlobalRoughness.x;
-}
-#endif
-struct ColorTransform {
-    float hue;
-    float saturation;
-    float luminance;
-};
-
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-vec2 octWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0);
-}
-vec2 ndirToOctSnorm(vec3 n) {
-    vec2 p = n.xy * (1.0 / (abs(n.x) + abs(n.y) + abs(n.z)));
-    p = (n.z < 0.0) ? octWrap(p) : p;
-    return p;
-}
-void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = fragOutput.Color0.rgb;
-    fragOutput.Color0.a = surfaceOutput.Metallic;
-    vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
-    fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0)));
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
-    fragOutput.Color2 = vec4(
-        surfaceOutput.Emissive,
-        ambientBlockLight,
-        ambientSkyLight,
-        surfaceOutput.Roughness
-    );
-}
-void RenderChunkGeometryPrepass(FragmentInput fragInput, inout StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    applyPrepassSurfaceToGBuffer(
-        fragInput.worldPos.xyz,
-        fragInput.worldPos.xyz - PrevWorldPosOffset.xyz,
-        surfaceInput.lightmapUV.x,
-        surfaceInput.lightmapUV.y,
-        surfaceOutput,
-        fragOutput
-    );
-}
-#endif
-struct CompositingOutput {
-    vec3 mLitColor;
-};
-
-vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
-    return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
-}
-struct DirectionalLight {
-    vec3 ViewSpaceDirection;
-    vec3 Intensity;
-};
-
-#ifndef TRANSPARENT_PBR_PASS
-vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
-    return stdOutput.Albedo;
-}
-#endif
-#if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_PASS)
-void RenderChunkSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
-    const float ALPHA_THRESHOLD = 0.5;
-    if (diffuse.a < ALPHA_THRESHOLD) {
-        discard;
-    }
-    #if defined(ALPHA_TEST_PASS)&& defined(SEASONS__OFF)
-    diffuse.rgb *= surfaceInput.Color.rgb;
-    #endif
-    #if defined(ALPHA_TEST_PASS)&& defined(SEASONS__ON)
-    diffuse = applySeasons(surfaceInput.Color, surfaceInput.Alpha, diffuse);
-    #endif
-    #ifdef ALPHA_TEST_PASS
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = GlobalRoughness.x;
-    #endif
-}
-#endif
-#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(OPAQUE_PASS)
-void RenderChunkSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    #ifdef OPAQUE_PASS
-    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
-    #endif
-    #if defined(OPAQUE_PASS)&& defined(SEASONS__OFF)
-    diffuse.rgb *= surfaceInput.Color.rgb;
-    diffuse.a = surfaceInput.Alpha;
-    #endif
-    #if defined(OPAQUE_PASS)&& defined(SEASONS__ON)
-    diffuse = applySeasons(surfaceInput.Color, surfaceInput.Alpha, diffuse);
-    #endif
-    #ifdef OPAQUE_PASS
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = GlobalRoughness.x;
-    #endif
-}
-#endif
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 void RenderChunk_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
     vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
     if (isAlphaTest) {
@@ -535,19 +482,7 @@ void RenderChunkSurfGeometryPrepass(inout StandardSurfaceInput surfaceInput, ino
     #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
     #endif
-    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, PBRData[surfaceInput.pbrTextureId]);
-}
-#endif
-#ifdef TRANSPARENT_PBR_PASS
-void computeLighting_RenderChunk_SplitLightMapValues(vec2 lightmapUV, inout vec3 blockLight, inout vec3 skyLight) {
-    blockLight = textureSample(s_LightMapTexture, min(vec2(lightmapUV.x, 1.5f * 1.0f / 16.0f), vec2(1.0, 1.0))).rgb;
-    skyLight = textureSample(s_LightMapTexture, min(vec2(lightmapUV.y, 0.5f * 1.0f / 16.0f), vec2(1.0, 1.0))).rgb;
-}
-vec3 computeLighting_RenderChunk_Split(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
-    vec3 blockLight;
-    vec3 skyLight;
-    computeLighting_RenderChunk_SplitLightMapValues(stdInput.lightmapUV.xy, blockLight, skyLight);
-    return clamp(blockLight + skyLight, 0.0f, 1.0f) * stdOutput.Albedo;
+    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
 }
 #endif
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
@@ -556,32 +491,25 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_PASS)
+    #ifdef DEPTH_ONLY_PASS
     RenderChunkSurfAlpha(surfaceInput, surfaceOutput);
     #endif
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(OPAQUE_PASS)
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
     RenderChunkSurfOpaque(surfaceInput, surfaceOutput);
     #endif
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     RenderChunkSurfGeometryPrepass(surfaceInput, surfaceOutput);
     #endif
-    #if defined(TRANSPARENT_PASS)|| defined(TRANSPARENT_PBR_PASS)
-    RenderChunkSurfTransparent(surfaceInput, surfaceOutput);
-    #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
     primaryLight.Intensity = LightDiffuseColorAndIlluminance.rgb * LightDiffuseColorAndIlluminance.w;
     CompositingOutput compositingOutput;
-    #ifndef TRANSPARENT_PBR_PASS
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
-    #endif
-    #ifdef TRANSPARENT_PBR_PASS
-    compositingOutput.mLitColor = computeLighting_RenderChunk_Split(fragInput, surfaceInput, surfaceOutput, primaryLight);
-    #endif
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if ! defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)&& ! defined(GEOMETRY_PREPASS_PASS)
-    RenderChunkApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+    RenderChunkFinalColorFallback(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     RenderChunkGeometryPrepass(fragInput, surfaceInput, surfaceOutput, fragOutput);
@@ -592,7 +520,6 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
     fragmentInput.lightmapUV = v_lightmapUV;
     fragmentInput.normal = v_normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)

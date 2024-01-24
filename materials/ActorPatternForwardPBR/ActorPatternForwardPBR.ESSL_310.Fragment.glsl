@@ -39,10 +39,6 @@
 * Tinting:
 * - TINTING__DISABLED (not used)
 * - TINTING__ENABLED (not used)
-*
-* UIEntity:
-* - UI_ENTITY__DISABLED
-* - UI_ENTITY__ENABLED (not used)
 */
 
 #ifdef FORWARD_PBR_OPAQUE_PASS
@@ -70,8 +66,6 @@ precision mediump float;
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec3 v_tangent;
@@ -238,7 +232,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -328,8 +322,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -340,8 +332,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -373,8 +363,6 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec3 bitangent;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -393,8 +381,6 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.bitangent = fragInput.bitangent;
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.tangent = fragInput.tangent;
@@ -440,10 +426,6 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
 }
 #endif
 #ifdef FORWARD_PBR_OPAQUE_PASS
-vec4 applyLighting(vec4 diffuse, const vec4 light) {
-    diffuse.rgb *= light.rgb;
-    return diffuse;
-}
 vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintColor, float shouldChangeAlpha) {
     #ifdef CHANGE_COLOR__MULTI
     diffuse = applyMultiColorChange(diffuse, changeColor.rgb, multiplicativeTintColor);
@@ -453,13 +435,6 @@ vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintCol
     diffuse.a *= changeColor.a;
     #endif
     diffuse.a = max(shouldChangeAlpha, diffuse.a);
-    return diffuse;
-}
-vec4 applyEmissiveLighting(vec4 diffuse, vec4 light) {
-    #ifndef EMISSIVE__OFF
-    light = mix(vec4(1.0, 1.0, 1.0, 1.0), light, diffuse.a);
-    #endif
-    diffuse = applyLighting(diffuse, light);
     return diffuse;
 }
 #endif
@@ -491,75 +466,11 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
     return albedo;
 }
 #endif
-#ifdef FORWARD_PBR_OPAQUE_PASS
-vec4 applyActorDiffuse(vec4 albedo, vec3 color, vec4 light) {
-    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    albedo = applyEmissiveLighting(albedo, light);
-    return albedo;
-}
-float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
-#endif
-#if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-#endif
 #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
 #ifdef FORWARD_PBR_OPAQUE_PASS
-float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
-    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
-}
-vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
-    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
-    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
-    const float kHeightMapDepth = 4.0f;
-    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
-    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
-    if (fadeForLowerMips > 0.f)
-    {
-        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
-        vec2 pixelCoord = heightmapUV * widthHeight;
-        {
-            const float kNudgePixelCentreDistEpsilon = 0.0625f;
-            const float kNudgeUvEpsilon = 0.25f / 65536.f;
-            vec2 nudgeSampleCoord = fract(pixelCoord);
-            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-        }
-        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
-        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
-        const float kBevelMode = 0.0f;
-        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
-        float axisBevelCentreSampleCoord = subPixelCoord.x;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
-        axisBevelCentreSampleCoord = subPixelCoord.y;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        tangentNormal.z = kRecipHeightMapDepth;
-        tangentNormal = normalize(tangentNormal);
-        tangentNormal.xy *= fadeForLowerMips;
-    }
-    return tangentNormal;
-}
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -608,10 +519,6 @@ vec3 getClusterIndex(vec2 uv, float viewSpaceDepth, vec3 clusterDimensions, vec2
 float luminance(vec3 clr) {
     return dot(clr, vec3(0.2126, 0.7152, 0.0722));
 }
-float lumaPerceptual(vec3 color) {
-    vec3 perceptualLuminance = vec3(0.299, 0.587, 0.114);
-    return dot(perceptualLuminance, color);
-}
 vec3 desaturate(vec3 color, float amount) {
     float lum = luminance(color);
     return mix(color, vec3(lum, lum, lum), amount);
@@ -629,6 +536,64 @@ bool shouldDiscard(const float alpha) {
 }
 #endif
 #ifdef FORWARD_PBR_OPAQUE_PASS
+float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
+    float distance = cameraDepth / maxDistance;
+    distance += fogAlpha;
+    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+}
+vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
+    return mix(diffuse, fogColor, fogIntensity);
+}
+float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
+    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
+}
+vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
+    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
+    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
+    const float kHeightMapDepth = 4.0f;
+    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
+    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
+    if (fadeForLowerMips > 0.f)
+    {
+        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
+        vec2 pixelCoord = heightmapUV * widthHeight;
+        {
+            const float kNudgePixelCentreDistEpsilon = 0.0625f;
+            const float kNudgeUvEpsilon = 0.25f / 65536.f;
+            vec2 nudgeSampleCoord = fract(pixelCoord);
+            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+        }
+        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
+        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
+        const float kBevelMode = 0.0f;
+        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
+        float axisBevelCentreSampleCoord = subPixelCoord.x;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
+        axisBevelCentreSampleCoord = subPixelCoord.y;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        tangentNormal.z = kRecipHeightMapDepth;
+        tangentNormal = normalize(tangentNormal);
+        tangentNormal.xy *= fadeForLowerMips;
+    }
+    return tangentNormal;
+}
+vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
+    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
+}
 void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
     vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.texcoord0);
     float alpha = albedo.a;
@@ -637,7 +602,7 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
         discard;
     }
     albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, UseAlphaRewrite.x);
-    vec4 diffuse = applyActorDiffuse(albedo, surfaceInput.Color, surfaceInput.light);
+    vec4 diffuse = applyActorDiffusePBR(albedo, surfaceInput.Color);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
     int flags = int(PBRTextureFlags.x);
@@ -719,6 +684,8 @@ struct CompositingOutput {
 
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -1278,13 +1245,13 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
     DiscreteLightingContributions lightContrib;
     lightContrib.diffuse = vec3_splat(0.0);
     lightContrib.specular = vec3_splat(0.0);
-    lightContrib.ambientTint = vec3_splat(0.0);
+    lightContrib.ambientTint = vec4(0.0, 0.0, 0.0, 0.0);
     if (!(calculateSpecular || calculateDiffuse))
     {
         return lightContrib;
     }
     vec3 clusterId = getClusterIndex(lightClusterUV, - surfacePos.z, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
-    if (clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
+    if (clusterId.x < 0.0 || clusterId.y < 0.0 || clusterId.z < 0.0 || clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
         return lightContrib;
     }
     highp int clusterIdx = int(clusterId.x + clusterId.y * ClusterDimensions.x + clusterId.z * ClusterDimensions.x * ClusterDimensions.y);
@@ -1350,17 +1317,22 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
             }
         }
         usedLightCount ++ ;
-        lightContrib.ambientTint += mix(BlockBaseAmbientLightColorIntensity.rgb, lightColor, clamp(attenuation, 0.0f, 0.95f));
+        lightContrib.ambientTint.rgb += lightColor * attenuation;
+        lightContrib.ambientTint.a += 1.0f - squaredDistanceToLight / (r * r);
         lightContrib.diffuse += diffuse * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
         lightContrib.specular += specular * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
     }
     if (usedLightCount > 0) {
-        lightContrib.ambientTint = lightContrib.ambientTint / float(usedLightCount);
+        lightContrib.ambientTint.rgb = lightContrib.ambientTint.rgb / float(usedLightCount);
+        lightContrib.ambientTint.a = lightContrib.ambientTint.a / float(usedLightCount);
         noDiscreteLight = false;
     }
     return lightContrib;
 }
-void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 worldPosition, vec3 worldNormal) {
+void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 worldPosition, vec3 worldNormal, float skyAmbient) {
+    if (abs(skyAmbient) < 0.0001) {
+        return;
+    }
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {
         float directOcclusion = 1.0;
@@ -1385,12 +1357,13 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
         lightContrib.directSpecular += specular * directOcclusion * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
     }
 }
-vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
-    if (blockAmbientTint.x <= 0.0f && blockAmbientTint.y <= 0.0f && blockAmbientTint.z <= 0.0f) {
-        blockAmbientTint = vec3(1.0f, 1.0f, 1.0f);
-    }
-    blockAmbientTint = clamp(blockAmbientTint, vec3(0.1f, 0.1f, 0.1f), vec3(1.0f, 1.0f, 1.0f));
-    vec3 sampledBlockAmbient = (blockAmbientContribution * blockAmbientContribution) * blockAmbientTint * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier * lumaPerceptual(BlockBaseAmbientLightColorIntensity.rgb) / lumaPerceptual(blockAmbientTint);
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
+    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
+    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
+    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
+    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
+    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
+    vec3 sampledBlockAmbient = blockAmbientLightFinal * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier;
     float skyFalloffPow = mix(5.0, 3.0, CameraLightIntensity.y);
     float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
     vec3 sampledSkyAmbient = skyFalloff * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
@@ -1398,7 +1371,7 @@ vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTin
     sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
     return sampledAmbient;
 }
-void evaluateIndirectLightingContribution(inout PBRLightingContributions lightContrib, vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, float linearRoughness, vec3 v, vec3 n, vec3 f0, vec3 ambientTint) {
+void evaluateIndirectLightingContribution(inout PBRLightingContributions lightContrib, vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, float linearRoughness, vec3 v, vec3 n, vec3 f0, vec4 ambientTint) {
     vec3 sampledAmbient = evaluateSampledAmbient(blockAmbientContribution, ambientTint, skyAmbientContribution, ambientFadeInMultiplier);
     lightContrib.indirectDiffuse += albedo * sampledAmbient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     vec3 R = reflect(v, n);
@@ -1485,13 +1458,13 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
-    vec3 ambientTint = vec3(1.0, 1.0, 1.0);
+    vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
         evaluateDirectionalLightsDirectContribution(
             lightContrib,
             fragmentInfo.viewPosition.z, fragmentInfo.viewNormal, viewDir, fragmentInfo.albedo,
-        fragmentInfo.metalness, fragmentInfo.roughness, rf0, fragmentInfo.worldPosition, fragmentInfo.worldNormal);
+        fragmentInfo.metalness, fragmentInfo.roughness, rf0, fragmentInfo.worldPosition, fragmentInfo.worldNormal, fragmentInfo.skyAmbientContribution);
         bool shouldCalculateSpecularTerm = (!enablePointLightSpecularFade)||(enablePointLightSpecularFade && dist < distPointLightSpecularFadeOut_End);
         bool shouldCalculateDiffuseTerm = (!enablePointLightDiffuseFade)||(enablePointLightDiffuseFade && dist < distPointLightDiffuseFadeOut_End);
         DiscreteLightingContributions discreteLightContrib = evaluateDiscreteLightsDirectContribution(
@@ -1553,9 +1526,6 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
 void ItemInHandSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 albedo = getBaseAlbedo(surfaceInput.texcoord0);
     applyPattern(surfaceInput, albedo);
-    #ifdef UI_ENTITY__DISABLED
-    albedo = applyEmissiveLighting(albedo, surfaceInput.light);
-    #endif
     albedo = applyHudOpacity(albedo, HudOpacity.x);
     surfaceOutput.Albedo = albedo.rgb;
     surfaceOutput.Alpha = albedo.a;
@@ -1588,6 +1558,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     ActorSurfTransparent(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -1596,7 +1567,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
     ActorApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
@@ -1607,8 +1578,6 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
-    fragmentInput.light = v_light;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.tangent = v_tangent;

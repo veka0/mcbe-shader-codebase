@@ -11,3 +11,4 @@ vec4  v_fog             : COLOR1;
 float v_occlusionHeight : TEXCOORD2;
 vec2  v_occlusionUV     : TEXCOORD1;
 vec2  v_texcoord0       : TEXCOORD0;
+vec3  v_worldPos        : TEXCOORD3;

@@ -52,6 +52,7 @@ varying vec4 v_layerUv;
 varying vec4 v_light;
 centroid varying vec2 v_texcoord0;
 centroid varying vec4 v_texcoords;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -181,6 +182,7 @@ struct VertexOutput {
     vec4 light;
     vec2 texcoord0;
     vec4 texcoords;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
@@ -190,6 +192,7 @@ struct FragmentInput {
     vec4 light;
     vec2 texcoord0;
     vec4 texcoords;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -319,12 +322,16 @@ vec4 applyActorDiffuse(vec4 albedo, vec3 color, vec4 light) {
     return albedo;
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
 void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
+}
+#endif
+#ifdef DEPTH_ONLY_OPAQUE_PASS
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
 #if defined(TINTING__ENABLED)&&(defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS))
@@ -402,6 +409,8 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 #endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -450,6 +459,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ActorSurfPattern(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -457,7 +467,12 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
     ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
 }
 #endif
 #ifdef DEPTH_ONLY_PASS
@@ -473,6 +488,7 @@ void main() {
     fragmentInput.light = v_light;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.texcoords = v_texcoords;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
