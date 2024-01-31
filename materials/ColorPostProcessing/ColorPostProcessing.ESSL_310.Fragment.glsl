@@ -88,6 +88,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 ColorGrading_Contrast;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
 uniform vec4 TonemapCorrection;
@@ -151,8 +152,14 @@ struct ColorTransform {
 float luminanceToEV100(float luminance) {
     return log2(luminance) + 3.0f;
 }
-vec3 ApplyColorGrading(vec3 inColor) {
-    return inColor;
+vec3 ApplyContrast(vec3 inColor, vec3 contrast, float contrastPivot) {
+    vec3 pivotVec = vec3_splat(contrastPivot);
+    vec3 colorClamp = max(inColor, vec3(0.0, 0.0, 0.0));
+    return (pivotVec * pow(colorClamp / pivotVec, contrast));
+}
+vec3 ApplyColorGrading(vec3 inColor, vec3 contrast, float contrastPivotMultiplier, float averageLuminance) {
+    vec3 outColor = ApplyContrast(inColor, contrast, contrastPivotMultiplier * averageLuminance);
+    return outColor;
 }
 vec3 TonemapReinhard(vec3 rgb, float W) {
     vec3 color = rgb / (1.0 + rgb);
@@ -253,7 +260,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
             vec2 uv = vec2(LuminanceMinMax.x == LuminanceMinMax.y ? 0.5f : (luminanceToEV100(averageLuminance) - luminanceToEV100(LuminanceMinMax.x)) / (luminanceToEV100(LuminanceMinMax.y) - luminanceToEV100(LuminanceMinMax.x)), 0.5f);
             compensation = textureSample(s_CustomExposureCompensation, uv).r;
         }
-        sceneColor = ApplyColorGrading(sceneColor);
+        sceneColor = ApplyColorGrading(sceneColor, ColorGrading_Contrast.xyz, ColorGrading_Contrast.w, averageLuminance);
         float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
         whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;
         finalColor.rgb = ApplyTonemap(

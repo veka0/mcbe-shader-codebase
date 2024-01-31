@@ -118,6 +118,7 @@ uniform vec4 FogAndDistanceControl;
 uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
 uniform vec4 SkyZenithColor;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
@@ -195,10 +196,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -1026,16 +1027,24 @@ vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTin
 void evaluateIndirectLightingContribution(inout PBRLightingContributions lightContrib, vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, float linearRoughness, vec3 v, vec3 n, vec3 f0, vec4 ambientTint) {
     vec3 sampledAmbient = evaluateSampledAmbient(blockAmbientContribution, ambientTint, skyAmbientContribution, ambientFadeInMultiplier);
     lightContrib.indirectDiffuse += albedo * sampledAmbient * DiffuseSpecularEmissiveAmbientTermToggles.w;
-    vec3 R = reflect(v, n);
-    float nDotv = clamp(dot(n, v), 0.0, 1.0);
-    float roughness = linearRoughness * linearRoughness;
-    float iblMipLevel = getIBLMipLevel(roughness, IBLParameters.y);
-    vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
-    vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
-    vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
-    vec2 envDFG = textureSample(s_BrdfLUT, vec2(nDotv, 1.0 - roughness)).rg;
-    vec3 F = getFresnelSchlickRoughness(nDotv, f0, roughness);
-    lightContrib.indirectSpecular += preFilteredColor * (F * envDFG.x + envDFG.y) * IBLParameters.x * IBLParameters.z;
+    if (IBLParameters.x != 0.0) {
+        vec3 R = reflect(v, n);
+        float nDotv = clamp(dot(n, v), 0.0, 1.0);
+        float roughness = linearRoughness * linearRoughness;
+        float iblMipLevel = getIBLMipLevel(roughness, IBLParameters.y);
+        vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
+        vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
+        vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        vec2 envDFG = textureSample(s_BrdfLUT, vec2(nDotv, 1.0 - roughness)).rg;
+        vec3 F = getFresnelSchlickRoughness(nDotv, f0, roughness);
+        vec3 indSpec = preFilteredColor * (F * envDFG.x + envDFG.y) * IBLParameters.x;
+        float fadeStart = IBLSkyFadeParameters.x;
+        float fadeEnd = IBLSkyFadeParameters.y;
+        float skyProbeVisRange = max(fadeStart - fadeEnd, 1.0);
+        float skyProbeVisibility = clamp((skyAmbientContribution * 16.0f - fadeEnd) / skyProbeVisRange, 0.0, 1.0);
+        float skyProbeScaling = pow(skyProbeVisibility, 3.0f);
+        lightContrib.indirectSpecular += indSpec * skyProbeScaling * IBLParameters.z;
+    }
 }
 vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition) {
     vec3 fogAppliedColor;

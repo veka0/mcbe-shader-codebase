@@ -4,9 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - FALLBACK_PASS
-* - GEOMETRY_PREPASS_PASS
-* - OPAQUE_PASS
+* - OPAQUE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -17,21 +15,15 @@
 #define varying out
 attribute vec4 a_color0;
 attribute vec3 a_position;
-#ifdef GEOMETRY_PREPASS_PASS
 attribute vec2 a_texcoord0;
-#endif
 #ifdef INSTANCING__ON
 attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
-#ifdef GEOMETRY_PREPASS_PASS
-varying vec3 v_normal;
-varying vec3 v_prevWorldPos;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
-#endif
 struct NoopSampler {
     int noop;
 };
@@ -103,9 +95,7 @@ float AlphaRef;
 struct VertexInput {
     vec4 color0;
     vec3 position;
-    #ifdef GEOMETRY_PREPASS_PASS
     vec2 texcoord0;
-    #endif
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
@@ -116,46 +106,24 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
-    #ifdef GEOMETRY_PREPASS_PASS
-    vec3 normal;
-    vec3 prevWorldPos;
     vec2 texcoord0;
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentInput {
     vec4 color0;
-    #ifdef GEOMETRY_PREPASS_PASS
-    vec3 normal;
-    vec3 prevWorldPos;
     vec2 texcoord0;
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentOutput {
-    #ifndef GEOMETRY_PREPASS_PASS
     vec4 Color0;
-    #endif
-    #ifdef GEOMETRY_PREPASS_PASS
-    vec4 Color0; vec4 Color1; vec4 Color2;
-    #endif
 };
 
-#ifdef FALLBACK_PASS
-void FallbackVert(VertexInput vertInput, inout VertexOutput vertOutput) {
-}
-#endif
-#ifdef GEOMETRY_PREPASS_PASS
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec4 color0;
-    vec3 normal;
-    vec3 prevWorldPos;
-    vec3 worldPos;
 };
 
 struct StandardVertexInput {
@@ -174,6 +142,9 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
+void SkyVertOverride(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+    vertOutput.color0 = mix(SkyColor, FogColor, vertInput.vertInput.color0.r);
+}
 struct CompositingOutput {
     vec3 mLitColor;
 };
@@ -208,17 +179,6 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 
-struct ColorTransform {
-    float hue;
-    float saturation;
-    float luminance;
-};
-
-void SkyVertGeometryPrepassOverride(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    vertOutput.position = ((WorldViewProj) * (vec4(stdInput.vertInput.position, 1.0)));
-    vertOutput.color0 = mix(SkyColor, FogColor, stdInput.vertInput.color0.r);
-    vertOutput.prevWorldPos = ((World) * (vec4(stdInput.vertInput.position, 1.0))).xyz;
-}
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
@@ -233,7 +193,7 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    SkyVertGeometryPrepassOverride(vertInput, vertOutput);
+    SkyVertOverride(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
     StandardTemplate_LightingVertexFunctionIdentity(vertInput, vertOutput, worldPosition);
@@ -241,33 +201,20 @@ void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout 
 void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_VertShared(vertInput, vertOutput);
 }
-#endif
-#ifdef OPAQUE_PASS
-void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.position = ((WorldViewProj) * (vec4(vertInput.position, 1.0)));
-    vertOutput.color0 = mix(SkyColor, FogColor, vertInput.color0.r);
-}
-#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
     vertexInput.position = (a_position);
-    #ifdef GEOMETRY_PREPASS_PASS
     vertexInput.texcoord0 = (a_texcoord0);
-    #endif
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    #ifdef GEOMETRY_PREPASS_PASS
-    vertexOutput.normal = vec3(0, 0, 0);
-    vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
-    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -290,22 +237,10 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    #ifdef FALLBACK_PASS
-    FallbackVert(vertexInput, vertexOutput);
-    #endif
-    #ifdef GEOMETRY_PREPASS_PASS
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    #endif
-    #ifdef OPAQUE_PASS
-    Vert(vertexInput, vertexOutput);
-    #endif
     v_color0 = vertexOutput.color0;
-    #ifdef GEOMETRY_PREPASS_PASS
-    v_normal = vertexOutput.normal;
-    v_prevWorldPos = vertexOutput.prevWorldPos;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;
-    #endif
     gl_Position = vertexOutput.position;
 }
 

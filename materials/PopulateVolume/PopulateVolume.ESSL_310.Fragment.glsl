@@ -53,7 +53,6 @@ uniform mat4 u_invView;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
-uniform vec4 VolumeShadowSettings;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -66,6 +65,7 @@ uniform vec4 JitterOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 AlbedoExtinction;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 AmbientContribution;
@@ -102,6 +102,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 VolumeShadowSettings;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -150,10 +151,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {

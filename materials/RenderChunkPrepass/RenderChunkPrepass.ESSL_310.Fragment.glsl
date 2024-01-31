@@ -143,6 +143,25 @@ mat4 WorldViewProj;
 vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
+struct DiscreteLightingContributions {
+    vec3 diffuse;
+    vec3 specular;
+    vec4 ambientTint;
+};
+
+struct LightData {
+    float lookup;
+};
+
+struct Light {
+    vec4 position;
+    vec4 color;
+    int shadowProbeIndex;
+    int pad0;
+    int pad1;
+    int pad2;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -156,10 +175,47 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
+};
+
+struct LightSourceWorldInfo {
+    vec4 worldSpaceDirection;
+    vec4 diffuseColorAndIlluminance;
+    vec4 shadowDirection;
+    mat4 shadowProj0;
+    mat4 shadowProj1;
+    mat4 shadowProj2;
+    mat4 shadowProj3;
+    int isSun;
+    int shadowCascadeNumber;
+    int pad0;
+    int pad1;
+};
+
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
 };
 
 struct VertexInput {
