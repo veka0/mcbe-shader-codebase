@@ -149,13 +149,13 @@ void ShadeGeometry(in FragmentInput fragInput, inout vec4 outColor, inout float 
     } else if (int(ShaderType.x) == 17) {
         float dfValue = textureSample(s_Texture1, fragInput.additional.xy).r;
         float lum = GetLuminance(fragInput.color.xyz);
-        outColor = fragInput.color * pow(dfValue, 1.45 - lum);
+        outColor = fragInput.color * pow(abs(dfValue), 1.45 - lum);
     } else if (int(ShaderType.x) == 18) {
         float dfValue = textureSample(s_Texture2, fragInput.additional.xy).r;
         dfValue = (dfValue * 7.96875) - 3.984375;
         dfValue = smoothstep(-0.50196078431 / PrimProps0.x, 0.50196078431 / PrimProps0.x, dfValue);
         float lum = GetLuminance(fragInput.color.xyz);
-        outColor = fragInput.color * pow(dfValue, 1.45 - lum);
+        outColor = fragInput.color * pow(abs(dfValue), 1.45 - lum);
     }
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

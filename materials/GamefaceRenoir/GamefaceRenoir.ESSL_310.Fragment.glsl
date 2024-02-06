@@ -151,28 +151,30 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         tVal = fragInput.varyingParam0.x;
     } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x4)) * 2)))) >= (int(0x4)))) {
         tVal = length(fragInput.varyingParam0.xy);
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x8)) * 2)))) >= (int(0x8)))) {
+        tVal = (3.14 + atan(fragInput.varyingParam0.y, fragInput.varyingParam0.x)) / (2.0 * 3.14);
     }
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x80)) * 2)))) >= (int(0x80)))) {
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x100)) * 2)))) >= (int(0x100)))) {
         tVal = fract(tVal);
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x100)) * 2)))) >= (int(0x100)))) {
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x200)) * 2)))) >= (int(0x200)))) {
         tVal = Mirror(tVal);
     }
     vec4 colorTemp = vec4(0, 0, 0, 0);
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x8)) * 2)))) >= (int(0x8)))) {
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x10)) * 2)))) >= (int(0x10)))) {
         colorTemp = mix(GradientStartColor, GradientEndColor, clamp(tVal, 0.0, 1.0));
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x10)) * 2)))) >= (int(0x10)))) {
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x20)) * 2)))) >= (int(0x20)))) {
         float oneMinus2t = 1.0 - (2.0 * tVal);
         colorTemp = clamp(oneMinus2t, 0.0, 1.0) * GradientStartColor;
         colorTemp += (1.0 - min(abs(oneMinus2t), 1.0)) * GradientMidColor;
         colorTemp += clamp(-oneMinus2t, 0.0, 1.0) * GradientEndColor;
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x20)) * 2)))) >= (int(0x20)))) {
+    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x40)) * 2)))) >= (int(0x40)))) {
         vec2 coord = vec2(tVal, GradientYCoord.x);
         colorTemp = textureSample(s_Texture2, coord);
     } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x1)) * 2)))) >= (int(0x1)))) {
         vec2 uvCoords = (vec2((vec2(fragInput.additional.xy)).x, 1.0 - (vec2(fragInput.additional.xy)).y));
         colorTemp = textureSample(s_Texture0, uvCoords);
     }
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x40)) * 2)))) >= (int(0x40)))) {
+    if ((int(mod(float(int(ShaderType.x)), float(((int(0x80)) * 2)))) >= (int(0x80)))) {
         float mask = textureSample(s_Texture1, fragInput.varyingParam1.xy).a;
         colorTemp *= mask;
     }

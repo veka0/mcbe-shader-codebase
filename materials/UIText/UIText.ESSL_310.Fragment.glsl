@@ -10,13 +10,11 @@
 * - ALPHA_TEST__OFF (not used)
 * - ALPHA_TEST__ON
 *
-* MSDF:
-* - MSDF__OFF
-* - MSDF__ON
-*
-* SMOOTH:
-* - SMOOTH__OFF (not used)
-* - SMOOTH__ON
+* FONT_TYPE:
+* - FONT_TYPE__BITMAP (not used)
+* - FONT_TYPE__BITMAP_SMOOTH
+* - FONT_TYPE__MSDF
+* - FONT_TYPE__TRUE_TYPE
 */
 
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -28,6 +26,7 @@ precision mediump float;
 #define varying in
 out vec4 bgfx_FragColor;
 varying vec4 v_color0;
+varying vec4 v_linearClampBounds;
 varying vec2 v_texcoord0;
 struct NoopSampler {
     int noop;
@@ -99,6 +98,7 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 GlyphCutoff;
 uniform vec4 GlyphSmoothRadius;
+uniform vec4 HalfTexelOffset;
 uniform vec4 HudOpacity;
 uniform vec4 OutlineColor;
 uniform vec4 OutlineCutoff;
@@ -130,11 +130,13 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
+    vec4 linearClampBounds;
     vec2 texcoord0;
 };
 
 struct FragmentInput {
     vec4 color0;
+    vec4 linearClampBounds;
     vec2 texcoord0;
 };
 
@@ -143,14 +145,30 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_GlyphTexture;
-#ifdef MSDF__ON
+#ifndef FONT_TYPE__TRUE_TYPE
+bool NeedsLinearClamp() {
+    #ifndef FONT_TYPE__MSDF
+    return true;
+    #endif
+    #ifdef FONT_TYPE__MSDF
+    return GlyphSmoothRadius.x > 0.00095f;
+    #endif
+}
+#endif
+#ifdef FONT_TYPE__MSDF
 float median(float a, float b, float c) {
     return max(min(a, b), min(max(a, b), c));
 }
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    vec4 glyphColor = textureSample(s_GlyphTexture, fragInput.texcoord0);
-    #ifdef SMOOTH__ON
+    vec2 texCoord = fragInput.texcoord0;
+    #ifndef FONT_TYPE__TRUE_TYPE
+    if (NeedsLinearClamp()) {
+        texCoord = min(max(fragInput.texcoord0, fragInput.linearClampBounds.xy), fragInput.linearClampBounds.zw);
+    }
+    #endif
+    vec4 glyphColor = textureSample(s_GlyphTexture, texCoord);
+    #ifdef FONT_TYPE__BITMAP_SMOOTH
     const float center = 0.4;
     const float radius = 0.1;
     glyphColor = smoothstep(center - radius, center + radius, glyphColor);
@@ -160,10 +178,10 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         discard;
     }
     #endif
-    #ifdef MSDF__OFF
+    #ifndef FONT_TYPE__MSDF
     vec4 diffuse = fragInput.color0 * glyphColor * TintColor;
     #endif
-    #ifdef MSDF__ON
+    #ifdef FONT_TYPE__MSDF
     vec4 resultColor = fragInput.color0;
     vec2 uv = fragInput.texcoord0;
     float sampleDistance = median(glyphColor.r, glyphColor.g, glyphColor.b);
@@ -185,6 +203,7 @@ void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.color0 = v_color0;
+    fragmentInput.linearClampBounds = v_linearClampBounds;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;

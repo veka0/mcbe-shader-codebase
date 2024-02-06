@@ -4,12 +4,15 @@
 * Available Macros:
 *
 * Passes:
-* - FALLBACK_PASS (not used)
-* - TAAU_PASS (not used)
+* - FALLBACK_PASS
+* - TAAU_PASS
 */
 
 #define attribute in
 #define varying out
+attribute vec3 a_position;
+attribute vec2 a_texcoord0;
+varying vec2 v_texcoord0;
 struct NoopSampler {
     int noop;
 };
@@ -71,15 +74,17 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    float dummy;
+    vec3 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    float dummy;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
@@ -89,12 +94,23 @@ struct FragmentOutput {
 uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
-layout(rgba16f, binding = 3)writeonly uniform highp image2D s_OutputBuffer;
+#ifdef FALLBACK_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
+#endif
+#ifdef TAAU_PASS
+void UpscalingVert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    vertOutput.position = vec4(vertInput.position, 1.0);
+    vertOutput.position.xy = vertOutput.position.xy * 2.0 - 1.0;
+    vertOutput.texcoord0 = vertInput.texcoord0;
+}
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -117,7 +133,13 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifdef FALLBACK_PASS
     Vert(vertexInput, vertexOutput);
+    #endif
+    #ifdef TAAU_PASS
+    UpscalingVert(vertexInput, vertexOutput);
+    #endif
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

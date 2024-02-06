@@ -4,13 +4,20 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_PASS
-* - FORWARD_PBR_ALPHA_TEST_PASS
-* - FORWARD_PBR_OPAQUE_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS
-* - OPAQUE_PASS (not used)
-* - TRANSPARENT_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS
+* - GEOMETRY_PREPASS_PASS
+* - GEOMETRY_PREPASS_ALPHA_TEST_PASS
+*
+* Change_Color:
+* - CHANGE_COLOR__MULTI (not used)
+* - CHANGE_COLOR__OFF (not used)
+* - CHANGE_COLOR__ON (not used)
+*
+* Emissive:
+* - EMISSIVE__EMISSIVE (not used)
+* - EMISSIVE__EMISSIVE_ONLY (not used)
+* - EMISSIVE__OFF (not used)
 *
 * Fancy:
 * - FANCY__OFF (not used)
@@ -20,43 +27,44 @@
 * - INSTANCING__OFF
 * - INSTANCING__ON
 *
+* MaskedMultitexture:
+* - MASKED_MULTITEXTURE__OFF (not used)
+* - MASKED_MULTITEXTURE__ON (not used)
+*
 * MultiColorTint:
 * - MULTI_COLOR_TINT__OFF (not used)
 * - MULTI_COLOR_TINT__ON (not used)
+*
+* Tinting:
+* - TINTING__DISABLED (not used)
+* - TINTING__ENABLED (not used)
+*
+* UIEntity:
+* - UI_ENTITY__DISABLED (not used)
+* - UI_ENTITY__ENABLED (not used)
 */
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-#extension GL_EXT_shader_texture_lod : enable
-#define texture2DLod textureLod
-#define texture2DGrad textureGrad
-#define texture2DProjLod textureProjLod
-#define texture2DProjGrad textureProjGrad
-#define textureCubeLod textureLod
-#define textureCubeGrad textureGrad
-#endif
-#define shadow2D(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-#extension GL_EXT_texture_array : enable
-#endif
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
+attribute float a_indices;
 attribute vec4 a_normal;
 attribute vec3 a_position;
+attribute vec4 a_tangent;
 attribute vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
+varying vec3 v_bitangent;
 varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
-varying vec2 v_texcoord0;
+varying vec3 v_tangent;
+centroid varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
@@ -76,7 +84,7 @@ vec4 instMul(mat4 _mtx, vec4 _vec) {
     return ((_mtx) * (_vec));
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#ifdef GEOMETRY_PREPASS_PASS
 vec4 vec4_splat(float _x) {
     return vec4(_x, _x, _x, _x);
 }
@@ -99,78 +107,53 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform mat4 PointLightProj;
+uniform vec4 UseAlphaRewrite;
 uniform mat4 u_view;
-uniform vec4 PointLightShadowParams1;
-uniform vec4 SunDir;
-uniform vec4 u_viewTexel;
-uniform vec4 ShadowBias;
+uniform vec4 PatternCount;
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
-uniform vec4 ShadowSlopeBias;
+uniform vec4 u_viewTexel;
+uniform vec4 PBRTextureFlags;
 uniform mat4 u_invView;
-uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
+uniform mat4 u_viewProj;
 uniform vec4 OverlayColor;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PointLightAttenuationWindowEnabled;
-uniform vec4 ManhattanDistAttenuationEnabled;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
-uniform vec4 FogAndDistanceControl;
-uniform vec4 AtmosphericScattering;
-uniform vec4 ClusterSize;
-uniform vec4 SkyZenithColor;
-uniform vec4 AtmosphericScatteringToggles;
-uniform vec4 ClusterNearFarWidthHeight;
-uniform vec4 CameraLightIntensity;
-uniform vec4 WorldOrigin;
-uniform mat4 CloudShadowProj;
-uniform vec4 ClusterDimensions;
-uniform vec4 ColorBased;
-uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
-uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
-uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 ShadowPCFWidth;
+uniform mat4 PrevWorld;
 uniform vec4 FogColor;
-uniform vec4 FogSkyBlend;
-uniform vec4 IBLParameters;
+uniform vec4 ActorFPEpsilon;
+uniform mat4 Bones[8];
+uniform vec4 ColorBased;
+uniform vec4 EmissiveUniform;
+uniform vec4 HudOpacity;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
-uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 MoonDir;
 uniform vec4 MultiplicativeTintColor;
-uniform mat4 PlayerShadowProj;
-uniform vec4 PointLightAttenuationWindow;
-uniform vec4 SunColor;
-uniform vec4 PointLightSpecularFadeOutParameters;
-uniform vec4 RenderChunkFogAlpha;
-uniform vec4 SkyAmbientLightColorIntensity;
-uniform vec4 SkyHorizonColor;
+uniform vec4 MetalnessUniform;
+uniform vec4 PatternColors[7];
+uniform vec4 PatternUVOffsetsAndScales[7];
+uniform mat4 PrevBones[8];
+uniform vec4 RoughnessUniform;
+uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
-uniform vec4 TileLightIntensity;
-uniform vec4 VolumeDimensions;
-uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
+uniform vec4 UVAnimation;
+uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 ViewProj;
 mat4 InvProj;
+mat4 ViewProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -256,9 +239,11 @@ struct PBRLightingContributions {
 };
 
 struct VertexInput {
+    int boneId;
     vec4 color0;
     vec4 normal;
     vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -269,45 +254,49 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
+    vec3 bitangent;
     vec4 color0;
     vec4 fog;
     vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec3 bitangent;
     vec4 color0;
     vec4 fog;
     vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentOutput {
-    vec4 Color0;
+    vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
-uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_MERTexture;
 uniform lowp sampler2D s_MatTexture;
-uniform highp sampler2DShadow s_PlayerShadowMap;
-uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
-uniform highp sampler2DArray s_ScatteringBuffer;
-uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform lowp sampler2D s_MatTexture1;
+uniform lowp sampler2D s_MatTexture2;
+uniform lowp sampler2D s_NormalTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec3 bitangent;
     vec4 fog;
     vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
+    vec2 texcoord0;
     vec3 worldPos;
 };
 
@@ -333,12 +322,10 @@ vec4 jitterVertexPosition(vec3 worldPosition) {
     offsetProj[2][1] -= SubPixelOffset.y;
     return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
 }
-#if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
-    float distance = cameraDepth / maxDistance;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+vec2 applyUvAnimation(vec2 uv, const vec4 uvAnimation) {
+    uv = uvAnimation.xy + (uv * uvAnimation.zw);
+    return uv;
 }
-#endif
 float calculateLightIntensity(const mat4 world, const vec4 normal, const vec4 tileLightColor) {
     const float AMBIENT = 0.45;
     const float XFAC = -0.1;
@@ -348,33 +335,54 @@ float calculateLightIntensity(const mat4 world, const vec4 normal, const vec4 ti
     float yLight = (1.0 + N.y) * 0.5;
     return yLight * (1.0 - AMBIENT) + N.x * N.x * XFAC + N.z * N.z * ZFAC + AMBIENT;
 }
-void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.texcoord0 = vertInput.texcoord0;
+float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
+    float distance = cameraDepth / maxDistance;
+    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+}
+void ActorVert(inout VertexInput vertInput, inout VertexOutput vertOutput) {
+    World = ((World) * (Bones[vertInput.boneId]));
+    WorldView = ((View) * (World));
+    WorldViewProj = ((Proj) * (WorldView));
+    vec2 texcoord = vertInput.texcoord0;
+    texcoord = applyUvAnimation(texcoord, UVAnimation);
+    vertInput.texcoord0 = texcoord;
     float lightIntensity = calculateLightIntensity(World, vec4(vertInput.normal.xyz, 0.0), TileLightColor);
     lightIntensity += OverlayColor.a * 0.35;
     vertOutput.light = vec4(lightIntensity * TileLightColor.rgb, 1.0);
 }
-#if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-void ItemInHandFogVert(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+void ActorVertFog(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     float cameraDepth = vertOutput.position.z;
     float fogIntensity = calculateFogIntensityVanilla(cameraDepth, FogControl.z, FogControl.x, FogControl.y);
     vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
 }
-#endif
 struct ColorTransform {
     float hue;
     float saturation;
     float luminance;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-void ItemInHandVertPBR(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.position = jitterVertexPosition(vertInput.worldPos);
-    vertOutput.worldPos = vertInput.worldPos;
-    vertOutput.normal = ((World) * (vec4(vertInput.vertInput.normal.xyz, 1.0))).xyz;
-    vertOutput.prevWorldPos = vertInput.worldPos;
+#ifdef GEOMETRY_PREPASS_PASS
+void packPrepassVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    vertOutput.worldPos = stdInput.worldPos;
+    mat4 prevWorldBones = ((PrevWorld) * (PrevBones[stdInput.vertInput.boneId]));
+    vertOutput.prevWorldPos = ((prevWorldBones) * (vec4(stdInput.vertInput.position, 1.0))).xyz;
+    vec3 n = stdInput.vertInput.normal.xyz;
+    vec3 t = stdInput.vertInput.tangent.xyz;
+    vec3 b = cross(n, t) * stdInput.vertInput.tangent.w;
+    vertOutput.normal = ((World) * (vec4(n, 0.0))).xyz;
+    vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
+    vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
+}
+void ActorVertGeometryPrepass(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    ActorVertFog(stdInput, vertOutput);
+    packPrepassVertOutput(stdInput, vertOutput);
     vertOutput.light = vec4_splat(1.0);
+}
+#endif
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+void ActorVertPattern(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    ActorVertFog(stdInput, vertOutput);
 }
 #endif
 struct CompositingOutput {
@@ -396,69 +404,17 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
     worldPosition = wpos;
 }
-#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
-#endif
 
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput);
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput);
-#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition);
-#endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-struct ShadowParameters {
-    vec4 cascadeShadowResolutions;
-    vec4 shadowBias;
-    vec4 shadowSlopeBias;
-    vec4 shadowPCFWidth;
-    int cloudshadowsEnabled;
-    float cloudshadowContribution;
-    float cloudshadowPCFWidth;
-    vec4 shadowParams;
-    mat4 cloudShadowProj;
-};
-
-struct DirectionalLightParams {
-    mat4 shadowProj[4];
-    int cascadeCount;
-    int isSun;
-    int index;
-};
-
-struct AtmosphereParams {
-    vec3 sunDir;
-    vec3 moonDir;
-    vec4 sunColor;
-    vec4 moonColor;
-    vec3 skyZenithColor;
-    vec3 skyHorizonColor;
-    vec4 fogColor;
-    float horizonBlendMin;
-    float horizonBlendStart;
-    float mieStart;
-    float horizonBlendMax;
-    float rayleighStrength;
-    float sunMieStrength;
-    float moonMieStrength;
-    float sunGlareShape;
-};
-
-struct TemporalAccumulationParameters {
-    ivec3 dimensions;
-    vec3 previousUvw;
-    vec4 currentValue;
-    float historyWeight;
-    float frustumBoundaryFalloff;
-};
-
-#endif
-#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
@@ -469,52 +425,47 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
     StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
 }
-#endif
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
-    ItemInHandVert(vertInput, vertOutput);
+    ActorVert(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    #if ! defined(FORWARD_PBR_ALPHA_TEST_PASS)&& ! defined(FORWARD_PBR_OPAQUE_PASS)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
-    ItemInHandFogVert(vertInput, vertOutput);
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+    ActorVertFog(vertInput, vertOutput);
     #endif
-    #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
-    ItemInHandVertPBR(vertInput, vertOutput);
+    #ifdef GEOMETRY_PREPASS_PASS
+    ActorVertGeometryPrepass(vertInput, vertOutput);
+    #endif
+    #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+    ActorVertPattern(vertInput, vertOutput);
     #endif
 }
-#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
     StandardTemplate_LightingVertexFunctionIdentity(vertInput, vertOutput, worldPosition);
 }
 void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_VertShared(vertInput, vertOutput);
 }
-#endif
-#ifdef DEPTH_ONLY_PASS
-void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
-    StandardVertexInput stdInput;
-    stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
-    StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
-}
-#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    vertexInput.boneId = int(a_indices);
     vertexInput.color0 = (a_color0);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
+    vertexInput.tangent = (a_tangent);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
+    vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
     vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.tangent = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
@@ -523,8 +474,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    ViewProj = u_viewProj;
     InvProj = u_invProj;
+    ViewProj = u_viewProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {
@@ -539,17 +490,14 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    #ifndef DEPTH_ONLY_PASS
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
-    #endif
-    #ifdef DEPTH_ONLY_PASS
-    StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
-    #endif
+    v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
     v_fog = vertexOutput.fog;
     v_light = vertexOutput.light;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_tangent = vertexOutput.tangent;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;

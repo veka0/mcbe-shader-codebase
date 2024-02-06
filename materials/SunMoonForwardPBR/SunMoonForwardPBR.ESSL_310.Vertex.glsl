@@ -51,8 +51,9 @@ uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 PrepassUVOffset;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
+uniform vec4 PointLightAttenuationWindowEnabled;
+uniform vec4 ManhattanDistAttenuationEnabled;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
@@ -60,18 +61,22 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 DirectionalLightToggleAndCountAndMaxDistance;
+uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+uniform vec4 ShadowParams;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
+uniform mat4 PlayerShadowProj;
+uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
-uniform vec4 ShadowParams;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SunMoonColor;
 uniform vec4 VolumeNearFar;
@@ -95,6 +100,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
+    vec3 ambientTint;
 };
 
 struct LightData {
@@ -105,9 +111,9 @@ struct Light {
     vec4 position;
     vec4 color;
     int shadowProbeIndex;
-    float gridLevelRadius;
-    float higherGridLevelRadius;
-    float lowerGridLevelRadius;
+    int pad0;
+    int pad1;
+    int pad2;
 };
 
 struct PBRTextureData {
@@ -186,11 +192,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform highp sampler2DShadow s_CloudShadow;
+uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_ScatteringBuffer;
-uniform highp sampler2DArrayShadow s_ShadowCascades0;
-uniform highp sampler2DArrayShadow s_ShadowCascades1;
+uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp sampler2D s_SunMoonTexture;
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 struct TemporalAccumulationParameters {

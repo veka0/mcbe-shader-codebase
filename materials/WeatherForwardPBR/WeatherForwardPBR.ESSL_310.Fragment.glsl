@@ -120,21 +120,22 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 SunDir;
-uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
-uniform vec4 Dimensions;
+uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
+uniform vec4 ShadowBias;
+uniform vec4 Dimensions;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
 uniform vec4 ViewPosition;
-uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
+uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 PrepassUVOffset;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
+uniform vec4 PointLightAttenuationWindowEnabled;
+uniform vec4 ManhattanDistAttenuationEnabled;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
@@ -142,31 +143,35 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 UVOffsetAndScale;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 DirectionalLightToggleAndCountAndMaxDistance;
+uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+uniform vec4 ShadowParams;
+uniform vec4 MoonColor;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
-uniform vec4 OcclusionHeightOffset;
 uniform vec4 FogColor;
+uniform vec4 OcclusionHeightOffset;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 Velocity;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
+uniform mat4 PlayerShadowProj;
+uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyHorizonColor;
@@ -181,8 +186,8 @@ mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -195,6 +200,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
+    vec3 ambientTint;
 };
 
 struct LightData {
@@ -205,9 +211,9 @@ struct Light {
     vec4 position;
     vec4 color;
     int shadowProbeIndex;
-    float gridLevelRadius;
-    float higherGridLevelRadius;
-    float lowerGridLevelRadius;
+    int pad0;
+    int pad1;
+    int pad2;
 };
 
 struct PBRTextureData {
@@ -311,18 +317,18 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform highp sampler2DShadow s_CloudShadow;
 uniform lowp sampler2D s_LightingTexture;
 uniform lowp sampler2D s_OcclusionTexture;
+uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform highp sampler2DArray s_ScatteringBuffer;
-uniform highp sampler2DArrayShadow s_ShadowCascades0;
-uniform highp sampler2DArrayShadow s_ShadowCascades1;
-uniform lowp samplerCube s_SpecularIBL;
+uniform highp sampler2DArrayShadow s_ShadowCascades;
+uniform lowp samplerCube s_SpecularIBLCurrent;
+uniform lowp samplerCube s_SpecularIBLPrevious;
 uniform lowp sampler2D s_WeatherTexture;
-layout(std430, binding = 2)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
-layout(std430, binding = 3)buffer s_LightLookupArray { LightData LightLookupArray[]; };
-layout(std430, binding = 5)buffer s_Lights { Light Lights[]; };
+layout(std430, binding = 1)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
+layout(std430, binding = 2)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 4)buffer s_Lights { Light Lights[]; };
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -468,6 +474,10 @@ struct DirectionalLightParams {
     int index;
 };
 
+float lumaPerceptual(vec3 color) {
+    vec3 perceptualLuminance = vec3(0.299, 0.587, 0.114);
+    return dot(perceptualLuminance, color);
+}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -595,8 +605,12 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-vec3 evaluateSampledAmbient(float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier) {
-    vec3 sampledBlockAmbient = (blockAmbientContribution * blockAmbientContribution) * BlockBaseAmbientLightColorIntensity.rgb * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier;
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
+    if (blockAmbientTint.x <= 0.0f && blockAmbientTint.y <= 0.0f && blockAmbientTint.z <= 0.0f) {
+        blockAmbientTint = vec3(1.0f, 1.0f, 1.0f);
+    }
+    blockAmbientTint = clamp(blockAmbientTint, vec3(0.1f, 0.1f, 0.1f), vec3(1.0f, 1.0f, 1.0f));
+    vec3 sampledBlockAmbient = (blockAmbientContribution * blockAmbientContribution) * blockAmbientTint * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier * lumaPerceptual(BlockBaseAmbientLightColorIntensity.rgb) / lumaPerceptual(blockAmbientTint);
     float skyFalloffPow = mix(5.0, 3.0, CameraLightIntensity.y);
     float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
     vec3 sampledSkyAmbient = skyFalloff * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
@@ -638,18 +652,18 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     return outColor;
 }
 vec3 getAmbientDiffuseColor(vec2 lightingUV, vec3 albedo) {
-    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, lightingUV.y, 1.0);
+    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec3(1.0, 1.0, 1.0), lightingUV.y, 1.0);
     return lightColor * albedo;
 }
 vec3 getDirectionalDiffuseColor(vec3 albedo) {
-    int lightCount = int(DirectionalLightToggleAndCountAndMaxDistance.y);
+    int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     vec3 directDiffuse = vec3_splat(0.0);
     for(int i = 0; i < lightCount; i ++ ) {
         float nDotl = 1.0;
         vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
         vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a * nDotl;
         vec3 diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
-        directDiffuse += (diffuse * illuminance * DirectionalLightToggleAndCountAndMaxDistance.x);
+        directDiffuse += (diffuse * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x);
     }
     return directDiffuse * albedo;
 }
@@ -724,8 +738,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {

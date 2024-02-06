@@ -5,6 +5,7 @@
 *
 * Passes:
 * - CLUSTER_LIGHTS_PASS (not used)
+* - CLUSTER_LIGHTS_MANHATTAN_PASS (not used)
 * - FALLBACK_PASS (not used)
 */
 
@@ -43,12 +44,17 @@ uniform mat4 u_model[4];
 uniform vec4 CameraFarPlane;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
+uniform mat4 InvViewMat;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 CameraClusterWeight;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
 uniform vec4 LightsPerCluster;
+uniform mat4 ProjMat;
+uniform mat4 ViewMat;
+uniform vec4 WorldOrigin;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -73,17 +79,17 @@ struct LightCluster {
     int count;
 };
 
-struct LightDistance {
-    float distance;
+struct LightContribution {
+    float contribution;
     int indexInLookUp;
 };
 
 struct LightExtends {
     vec4 min;
     vec4 max;
-    vec4 viewPos;
+    vec4 pos;
     int index;
-    int pad0;
+    float radius;
     int pad1;
     int pad2;
 };
