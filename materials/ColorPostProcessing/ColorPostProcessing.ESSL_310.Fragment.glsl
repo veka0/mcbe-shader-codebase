@@ -76,6 +76,7 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
+uniform vec4 ColorGrading_Saturation;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
@@ -89,6 +90,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 ColorGrading_Contrast;
+uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
 uniform vec4 TonemapCorrection;
@@ -131,6 +133,7 @@ uniform lowp sampler2D s_AverageLuminance;
 uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
 uniform lowp sampler2D s_MaxLuminance;
+uniform lowp sampler2D s_PreExposureLuminance;
 uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_RasterizedColor;
 vec3 color_gamma(vec3 clr) {
@@ -155,10 +158,40 @@ float luminanceToEV100(float luminance) {
 vec3 ApplyContrast(vec3 inColor, vec3 contrast, float contrastPivot) {
     vec3 pivotVec = vec3_splat(contrastPivot);
     vec3 colorClamp = max(inColor, vec3(0.0, 0.0, 0.0));
-    return (pivotVec * pow(colorClamp / pivotVec, contrast));
+    vec3 outColor = (pivotVec * pow(colorClamp / pivotVec, contrast));
+    return clamp(outColor, vec3_splat(0.0f), vec3_splat(OutputTextureMaxValue.x));
 }
-vec3 ApplyColorGrading(vec3 inColor, vec3 contrast, float contrastPivotMultiplier, float averageLuminance) {
+float CalculateMaxSaturation(float luminance, float channelValue, float currentSaturation) {
+    float maxSaturation = currentSaturation;
+    if (channelValue < luminance) {
+        maxSaturation = 1.f + (channelValue / (luminance - channelValue));
+    } else if (channelValue > luminance) {
+        maxSaturation = 1.f + ((OutputTextureMaxValue.x - channelValue) / (channelValue - luminance));
+    }
+    return maxSaturation;
+}
+vec3 ApplySaturation(vec3 inColor, vec3 saturation) {
+    float lumi = luminance(inColor);
+    vec3 outColor = inColor;
+    vec3 maxSaturation = vec3(
+        CalculateMaxSaturation(lumi, inColor.x, saturation.x),
+        CalculateMaxSaturation(lumi, inColor.y, saturation.y),
+        CalculateMaxSaturation(lumi, inColor.z, saturation.z)
+    );
+    if (saturation.x > maxSaturation.x) {
+        saturation = saturation * (maxSaturation.x / saturation.x);
+    }
+    if (saturation.y > maxSaturation.y) {
+        saturation = saturation * (maxSaturation.y / saturation.y);
+    }
+    if (saturation.z > maxSaturation.z) {
+        saturation = saturation * (maxSaturation.z / saturation.z);
+    }
+    return mix(vec3_splat(lumi), inColor, saturation);
+}
+vec3 ApplyColorGrading(vec3 inColor, vec3 contrast, float contrastPivotMultiplier, float averageLuminance, vec3 saturation) {
     vec3 outColor = ApplyContrast(inColor, contrast, contrastPivotMultiplier * averageLuminance);
+    outColor = ApplySaturation(outColor, saturation);
     return outColor;
 }
 vec3 TonemapReinhard(vec3 rgb, float W) {
@@ -260,7 +293,13 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
             vec2 uv = vec2(LuminanceMinMax.x == LuminanceMinMax.y ? 0.5f : (luminanceToEV100(averageLuminance) - luminanceToEV100(LuminanceMinMax.x)) / (luminanceToEV100(LuminanceMinMax.y) - luminanceToEV100(LuminanceMinMax.x)), 0.5f);
             compensation = textureSample(s_CustomExposureCompensation, uv).r;
         }
-        sceneColor = ApplyColorGrading(sceneColor, ColorGrading_Contrast.xyz, ColorGrading_Contrast.w, averageLuminance);
+        sceneColor = ApplyColorGrading(
+            sceneColor,
+            ColorGrading_Contrast.xyz,
+            ColorGrading_Contrast.w,
+            averageLuminance,
+            ColorGrading_Saturation.xyz
+        );
         float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
         whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;
         finalColor.rgb = ApplyTonemap(

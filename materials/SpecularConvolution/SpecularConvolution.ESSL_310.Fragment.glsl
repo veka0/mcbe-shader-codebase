@@ -25,16 +25,16 @@ precision mediump float;
 #define attribute in
 #define varying in
 out vec4 bgfx_FragColor;
-#ifdef CONVOLVE_PASS
-varying vec3 v_viewVec;
-#endif
-#ifdef GENERATE_BRDF_PASS
 varying vec2 v_texCoord;
-#endif
 struct NoopSampler {
     int noop;
 };
 
+#ifdef CONVOLVE_PASS
+vec3 vec3_splat(float _x) {
+    return vec3(_x, _x, _x);
+}
+#endif
 struct NoopImage2D {
     int noop;
 };
@@ -66,6 +66,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 ConvolutionParameters;
+uniform vec4 CurrentFace;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -88,21 +89,11 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    #ifdef CONVOLVE_PASS
-    vec3 viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vec2 texCoord;
-    #endif
 };
 
 struct FragmentInput {
-    #ifdef CONVOLVE_PASS
-    vec3 viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vec2 texCoord;
-    #endif
 };
 
 struct FragmentOutput {
@@ -147,12 +138,38 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
     H.x = cos(phi) * sinTheta;
     H.y = sin(phi) * sinTheta;
     H.z = cosTheta;
-    vec3 tangentUp = abs(N.z) < 0.999f ? vec3(0, 0, 1) : vec3(1, 0, 0);
+    vec3 tangentUp = vec3(0, 0, 1);
+    if (abs(N.z) > abs(N.x)&& abs(N.z) > abs(N.y)) {
+        tangentUp = vec3(1, 0, 0);
+    }
     vec3 tangentX = normalize(cross(tangentUp, N));
     vec3 tangentY = cross(N, tangentX);
     return tangentX * H.x + tangentY * H.y + N * H.z;
 }
 #ifdef CONVOLVE_PASS
+vec3 convertQuadToCube(vec2 inCoords, int face) {
+    inCoords = inCoords * 2.0 - 1.0;
+    vec3 uv = vec3_splat(0.0);
+    if (face == 0) {
+        uv = vec3(1.0, inCoords.y, - inCoords.x);
+    }
+    else if (face == 1) {
+        uv = vec3(-1.0, inCoords.y, inCoords.x);
+    }
+    else if (face == 2) {
+        uv = vec3(inCoords.x, 1.0, - inCoords.y);
+    }
+    else if (face == 3) {
+        uv = vec3(inCoords.x, - 1.0, inCoords.y);
+    }
+    else if (face == 4) {
+        uv = vec3(inCoords.x, inCoords.y, 1.0);
+    }
+    else if (face == 5) {
+        uv = vec3(-inCoords.x, inCoords.y, - 1.0);
+    }
+    return uv;
+}
 vec4 SampleCubemap(vec3 R, float lod) {
     if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
         R.z *= -1.0;
@@ -162,7 +179,9 @@ vec4 SampleCubemap(vec3 R, float lod) {
     }
     return textureCubeLod(s_CubeMap, R, lod);
 }
-vec3 ImportanceSample(vec3 V, vec3 N, float roughness, uint sampleCount, float edgeLength) {
+vec3 ImportanceSample(vec3 R, float roughness, uint sampleCount, float edgeLength) {
+    vec3 V = R;
+    vec3 N = R;
     float totalWeight = 0.0;
     vec3 prefilteredColor = vec3(0.0, 0.0, 0.0);
     for(highp int i = 0; i < int(sampleCount); ++ i) {
@@ -171,10 +190,8 @@ vec3 ImportanceSample(vec3 V, vec3 N, float roughness, uint sampleCount, float e
         vec3 L = 2.0f * dot(V, H) * H - V;
         float NdotL = clamp(dot(N, L), 0.0, 1.0);
         if (NdotL > 0.0f) {
-            float NdotH = clamp(dot(N, H), 0.0, 1.0);
-            float LdotH = clamp(dot(L, H), 0.0, 1.0);
-            float pdf = D_GGX_TrowbridgeReitz(N, H, roughness * roughness) * NdotH / ((4.0f * LdotH) + 0.0001f);
-            float omegaS = 1.0f / (float(sampleCount) * (pdf + 0.0001f));
+            float pdf = D_GGX_TrowbridgeReitz(N, H, roughness * roughness) / (4.0f + 0.0001f);
+            float omegaS = 1.0f / (float(sampleCount) * pdf);
             float omegaP = 4.0f * 3.1415926535897932384626433832795 / (6.0f * edgeLength * edgeLength);
             float mipLevel = max(0.5f * log2(omegaS / omegaP), 0.0f);
             prefilteredColor += SampleCubemap(L, mipLevel).rgb * NdotL;
@@ -215,41 +232,18 @@ vec2 IntegrateBrdf(vec3 N, float NdotV, float roughness) {
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     #ifdef CONVOLVE_PASS
+    vec3 R = normalize(convertQuadToCube(fragInput.texCoord, int(CurrentFace.x)));
     vec3 importanceSampled;
-    vec3 V = normalize(fragInput.viewVec.xyz);
     if (int(ConvolutionParameters.y) == 0) {
-        if (abs(V.x) > abs(V.y)&& abs(V.x) > abs(V.z)) {
-            V.z *= -1.0f;
-            V.y *= -1.0f;
-        }
-        else if (abs(V.z) > abs(V.x)&& abs(V.z) > abs(V.y)) {
-            V.x *= -1.0f;
-            V.y *= -1.0f;
-        }
-        else {
-            V.x *= -1.0f;
-            V.z *= -1.0f;
-        }
-        importanceSampled = SampleCubemap(V, 0.0).rgb;
+        importanceSampled = SampleCubemap(R, 0.0).rgb;
     }
     else {
-        #endif
-        vec3 N = vec3(0, 0, 1);
-        #ifdef CONVOLVE_PASS
-        if (abs(V.x) > abs(V.y)&& abs(V.x) > abs(V.z)) {
-            N = vec3(sign(V.x), 0, 0);
-        }
-        else if (abs(V.z) > abs(V.x)&& abs(V.z) > abs(V.y)) {
-            N = vec3(0, 0, sign(V.z));
-        }
-        else {
-            N = vec3(0, sign(V.y), 0);
-        }
-        importanceSampled = ImportanceSample(V, N, (ConvolutionParameters.y / (ConvolutionParameters.w - 1.0)), uint(ConvolutionParameters.x), float(int(ConvolutionParameters.z)));
+        importanceSampled = ImportanceSample(R, (ConvolutionParameters.y / (ConvolutionParameters.w - 1.0)), uint(ConvolutionParameters.x), float(int(ConvolutionParameters.z)));
     }
     fragOutput.Color0 = vec4(importanceSampled, 1.0);
     #endif
     #ifdef GENERATE_BRDF_PASS
+    vec3 N = vec3(0, 0, 1);
     float NdotV = fragInput.texCoord.x;
     float roughness = fragInput.texCoord.y;
     vec2 brdf = IntegrateBrdf(N, NdotV, roughness);
@@ -259,12 +253,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
-    #ifdef CONVOLVE_PASS
-    fragmentInput.viewVec = v_viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     fragmentInput.texCoord = v_texCoord;
-    #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

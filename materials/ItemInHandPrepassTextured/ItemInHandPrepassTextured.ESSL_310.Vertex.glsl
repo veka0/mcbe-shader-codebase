@@ -4,6 +4,7 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
@@ -173,18 +174,21 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
+#ifndef DEPTH_ONLY_PASS
 vec4 jitterVertexPosition(vec3 worldPosition) {
     mat4 offsetProj = Proj;
     offsetProj[2][0] += SubPixelOffset.x;
     offsetProj[2][1] -= SubPixelOffset.y;
     return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
 }
+#endif
 struct ColorTransform {
     float hue;
     float saturation;
     float luminance;
 };
 
+#ifndef DEPTH_ONLY_PASS
 void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
 }
@@ -193,6 +197,7 @@ void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOu
     vertOutput.normal = vertInput.vertInput.normal.xyz;
     vertOutput.prevWorldPos = vertInput.worldPos;
 }
+#endif
 struct CompositingOutput {
     vec3 mLitColor;
 };
@@ -214,17 +219,30 @@ void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, in
     stdInput.worldPos = wpos;
     vertOutput.worldPos = wpos;
 }
+#ifdef DEPTH_ONLY_PASS
+void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
+}
+#endif
+#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
+#endif
 
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput);
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput);
+#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition);
+#endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
 };
 
+#ifdef DEPTH_ONLY_PASS
+void VertDepthOnly(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+}
+#endif
+#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
@@ -235,18 +253,40 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
     StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
 }
+#endif
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifdef DEPTH_ONLY_PASS
+    StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
+    #endif
+    #ifndef DEPTH_ONLY_PASS
     ItemInHandVert(vertInput, vertOutput);
+    #endif
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifdef DEPTH_ONLY_PASS
+    VertDepthOnly(vertInput, vertOutput);
+    #endif
+    #ifndef DEPTH_ONLY_PASS
     ItemInHandVertGeometryPrepass(vertInput, vertOutput);
+    #endif
 }
+#ifdef DEPTH_ONLY_PASS
+void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
+    StandardVertexInput stdInput;
+    stdInput.vertInput = vertInput;
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
+    StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
+}
+#endif
+#ifndef DEPTH_ONLY_PASS
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
     StandardTemplate_LightingVertexFunctionIdentity(vertInput, vertOutput, worldPosition);
 }
 void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_VertShared(vertInput, vertOutput);
 }
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
@@ -286,7 +326,12 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifdef DEPTH_ONLY_PASS
+    StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
+    #endif
+    #ifndef DEPTH_ONLY_PASS
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
+    #endif
     v_color0 = vertexOutput.color0;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;

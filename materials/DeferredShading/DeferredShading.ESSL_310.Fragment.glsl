@@ -125,6 +125,7 @@ uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
@@ -265,6 +266,7 @@ uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 uniform lowp sampler2D s_Normal;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SceneDepth;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
@@ -784,12 +786,8 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-vec3 getFresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    float smoothness = 1.0 - roughness;
-    return F0 + (max(F0, vec3_splat(smoothness)) - F0) * pow(1.0 - cosTheta, 5.0);
-}
-float getIBLMipLevel(float roughness, float numMips) {
-    float x = 1.0 - roughness;
+float getIBLMipLevel(float linearRoughness, float numMips) {
+    float x = 1.0 - linearRoughness;
     return (1.0 - (x * x)) * (numMips - 1.0);
 }
 void BSDF_VanillaMinecraft(vec3 n, vec3 l, float nDotL, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, inout vec3 diffuse, inout vec3 specular) {
@@ -1030,14 +1028,13 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
     if (IBLParameters.x != 0.0) {
         vec3 R = reflect(v, n);
         float nDotv = clamp(dot(n, v), 0.0, 1.0);
-        float roughness = linearRoughness * linearRoughness;
-        float iblMipLevel = getIBLMipLevel(roughness, IBLParameters.y);
+        float iblMipLevel = getIBLMipLevel(linearRoughness, IBLParameters.y);
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
-        vec2 envDFG = textureSample(s_BrdfLUT, vec2(nDotv, 1.0 - roughness)).rg;
-        vec3 F = getFresnelSchlickRoughness(nDotv, f0, roughness);
-        vec3 indSpec = preFilteredColor * (F * envDFG.x + envDFG.y) * IBLParameters.x;
+        vec2 envDFGUV = vec2(nDotv, linearRoughness);
+        vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
+        vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y) * IBLParameters.x;
         float fadeStart = IBLSkyFadeParameters.x;
         float fadeEnd = IBLSkyFadeParameters.y;
         float skyProbeVisRange = max(fadeStart - fadeEnd, 1.0);
