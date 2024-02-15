@@ -166,6 +166,7 @@ uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -271,6 +272,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -389,6 +391,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -401,6 +404,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -542,6 +546,7 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     float emissive = pbrTextureData.uniformEmissive;
     float metalness = pbrTextureData.uniformMetalness;
     float linearRoughness = pbrTextureData.uniformRoughness;
+    float subsurface = pbrTextureData.uniformSubsurface;
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
         vec2 uv = getPBRDataUV(surfaceInput.UV, materialUVScale, materialUVBias);
@@ -559,6 +564,7 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     surfaceOutput.Roughness = linearRoughness;
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
+    surfaceOutput.Subsurface = subsurface;
     surfaceOutput.ViewSpaceNormal = ((tbn) * (tangentNormal)).xyz;
 }
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
@@ -1048,29 +1054,36 @@ float getIBLMipLevel(float linearRoughness, float numMips) {
     float x = 1.0 - linearRoughness;
     return (1.0 - (x * x)) * (numMips - 1.0);
 }
-void BSDF_VanillaMinecraft(vec3 n, vec3 l, float nDotL, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, inout vec3 diffuse, inout vec3 specular) {
-    vec3 h = normalize(l + v);
+float wrappedDiffuse(vec3 n, vec3 l, float w) {
+    return max((dot(n, l) + w) / ((1.0 + w) * (1.0 + w)), 0.0);
+}
+void BSDF_VanillaMinecraft(vec3 n, vec3 l, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, inout vec3 diffuse, inout vec3 specular) {
+    float nDotL = max(dot(n, l), 0.0);
     float nDotV = max(dot(n, v), 0.0);
+    float nDotLWrapped = wrappedDiffuse(n, l, subsurface);
+    vec3 h = normalize(l + v);
     float roughness = linearRoughness * linearRoughness;
     float d = D_GGX_TrowbridgeReitz(n, h, roughness);
     float g = G_Smith(nDotL, nDotV, roughness);
     vec3 f = F_Schlick(v, h, rf0);
     vec3 albedo = (1.0 - f) * (1.0 - metalness) * color;
-    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
-    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
+    diffuse = nDotLWrapped * BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
 }
-void BSDF_VanillaMinecraft_DiffuseOnly(vec3 color, float metalness, inout vec3 diffuse) {
+void BSDF_VanillaMinecraft_DiffuseOnly(vec3 n, vec3 l, vec3 color, float metalness, float subsurface, inout vec3 diffuse) {
+    float nDotLWrapped = wrappedDiffuse(n, l, subsurface);
     vec3 albedo = (1.0 - metalness) * color;
-    diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
+    diffuse = nDotLWrapped * BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
 }
-void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, float nDotL, vec3 v, float metalness, float linearRoughness, vec3 rf0, inout vec3 specular) {
-    vec3 h = normalize(l + v);
+void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, vec3 v, float metalness, float linearRoughness, vec3 rf0, inout vec3 specular) {
+    float nDotL = max(dot(n, l), 0.0);
     float nDotV = max(dot(n, v), 0.0);
+    vec3 h = normalize(l + v);
     float roughness = linearRoughness * linearRoughness;
     float d = D_GGX_TrowbridgeReitz(n, h, roughness);
     float g = G_Smith(nDotL, nDotV, roughness);
     vec3 f = F_Schlick(v, h, rf0);
-    specular = BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * DiffuseSpecularEmissiveAmbientTermToggles.y;
 }
 float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
     return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
@@ -1150,7 +1163,7 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
     }
     return directOcclusion / float(filterWidth * filterWidth);
 }
-DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfacePos, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool calculateDiffuse, bool calculateSpecular, out bool noDiscreteLight) {
+DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfacePos, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool calculateDiffuse, bool calculateSpecular, out bool noDiscreteLight) {
     DiscreteLightingContributions lightContrib;
     lightContrib.diffuse = vec3_splat(0.0);
     lightContrib.specular = vec3_splat(0.0);
@@ -1205,24 +1218,23 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
         vec3 lightPos = ((View) * (vec4(Lights[lightIndex].position.xyz, 1.0))).xyz;
         vec3 lightDir = lightPos - surfacePos;
         vec3 l = normalize(lightDir);
-        float nDotl = max(dot(n, l), 0.0);
         float lightIntensity = Lights[lightIndex].color.a;
         float attenuation = getDistanceAttenuation(squaredDistanceToLight, r);
         vec3 lightColor = Lights[lightIndex].color.rgb;
-        vec3 illuminance = lightColor * lightIntensity * attenuation * nDotl;
+        vec3 illuminance = lightColor * lightIntensity * attenuation;
         vec3 diffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
         if (calculateDiffuse) {
             if (calculateSpecular) {
-                BSDF_VanillaMinecraft(n, l, nDotl, v, color, metalness, linearRoughness, rf0, diffuse, specular);
+                BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, diffuse, specular);
             }
             else {
-                BSDF_VanillaMinecraft_DiffuseOnly(color, metalness, diffuse);
+                BSDF_VanillaMinecraft_DiffuseOnly(n, l, color, metalness, subsurface, diffuse);
             }
         }
         else {
             if (calculateSpecular) {
-                BSDF_VanillaMinecraft_SpecularOnly(n, l, nDotl, v, metalness, linearRoughness, rf0, specular);
+                BSDF_VanillaMinecraft_SpecularOnly(n, l, v, metalness, linearRoughness, rf0, specular);
             }
         }
         usedLightCount ++ ;
@@ -1238,7 +1250,7 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
     }
     return lightContrib;
 }
-void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, vec3 rf0, vec3 worldPosition, vec3 worldNormal, float skyAmbient) {
+void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 worldPosition, vec3 worldNormal, float skyAmbient) {
     if (abs(skyAmbient) < 0.0001) {
         return;
     }
@@ -1256,12 +1268,11 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
             );
         }
         vec3 l = normalize(((View) * (DirectionalLightSources[i].worldSpaceDirection)).xyz);
-        float nDotl = max(dot(n, l), 0.0);
         vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
-        vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a * nDotl;
+        vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
         vec3 diffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
-        BSDF_VanillaMinecraft(n, l, nDotl, v, color, metalness, linearRoughness, rf0, diffuse, specular);
+        BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, diffuse, specular);
         lightContrib.directDiffuse += diffuse * directOcclusion * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
         lightContrib.directSpecular += specular * directOcclusion * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
     }
@@ -1374,13 +1385,23 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
+    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContribution.x;
     vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
         evaluateDirectionalLightsDirectContribution(
             lightContrib,
-            fragmentInfo.viewPosition.z, fragmentInfo.viewNormal, viewDir, fragmentInfo.albedo,
-        fragmentInfo.metalness, fragmentInfo.roughness, rf0, fragmentInfo.worldPosition, fragmentInfo.worldNormal, fragmentInfo.skyAmbientContribution);
+            fragmentInfo.viewPosition.z,
+            fragmentInfo.viewNormal,
+            viewDir,
+            fragmentInfo.albedo,
+            fragmentInfo.metalness,
+            fragmentInfo.roughness,
+            subsurface,
+            rf0,
+            fragmentInfo.worldPosition,
+            fragmentInfo.worldNormal,
+        fragmentInfo.skyAmbientContribution);
         bool shouldCalculateSpecularTerm = (!enablePointLightSpecularFade)||(enablePointLightSpecularFade && dist < distPointLightSpecularFadeOut_End);
         bool shouldCalculateDiffuseTerm = (!enablePointLightDiffuseFade)||(enablePointLightDiffuseFade && dist < distPointLightDiffuseFadeOut_End);
         DiscreteLightingContributions discreteLightContrib = evaluateDiscreteLightsDirectContribution(
@@ -1388,6 +1409,7 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
             fragmentInfo.albedo,
             fragmentInfo.metalness,
             fragmentInfo.roughness,
+            subsurface,
             rf0,
             fragmentInfo.worldPosition,
             fragmentInfo.worldNormal,
@@ -1455,9 +1477,10 @@ void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout Stan
     fragmentData.worldNormal = worldNormal.xyz;
     fragmentData.viewNormal = viewNormal.xyz;
     fragmentData.albedo = surfaceOutput.Albedo;
-    fragmentData.roughness = surfaceOutput.Roughness;
     fragmentData.metalness = surfaceOutput.Metallic;
+    fragmentData.roughness = surfaceOutput.Roughness;
     fragmentData.emissive = surfaceOutput.Emissive;
+    fragmentData.subsurface = surfaceOutput.Subsurface;
     fragmentData.blockAmbientContribution = surfaceInput.lightmapUV.x;
     fragmentData.skyAmbientContribution = surfaceInput.lightmapUV.y;
     surfaceOutput.Albedo = evaluateFragmentColor(fragmentData).rgb;

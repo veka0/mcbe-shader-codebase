@@ -4,63 +4,35 @@
 * Available Macros:
 *
 * Passes:
-* - FALLBACK_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+* - DO_DEFERRED_SHADING_PASS
+* - FALLBACK_PASS (not used)
 */
 
+#ifdef DO_DEFERRED_SHADING_PASS
+#extension GL_EXT_shader_texture_lod : enable
+#define texture2DLod textureLod
+#define texture2DGrad textureGrad
+#define texture2DProjLod textureProjLod
+#define texture2DProjGrad textureProjGrad
+#define textureCubeLod textureLod
+#define textureCubeGrad textureGrad
+#endif
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#if GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
+#ifdef DO_DEFERRED_SHADING_PASS
+#extension GL_EXT_texture_array : enable
 #endif
 #define attribute in
-#define varying in
-out vec4 bgfx_FragColor;
-varying vec4 v_color0;
-varying vec3 v_ndcPosition;
+#define varying out
+attribute vec3 a_position;
+attribute vec2 a_texcoord0;
+varying vec3 v_projPosition;
+varying vec2 v_texcoord0;
 struct NoopSampler {
     int noop;
 };
 
-#ifndef FALLBACK_PASS
-vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler3D _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump samplerCube _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler2D _sampler, vec2 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(mediump sampler3D _sampler, vec3 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
-    return texture(_sampler, _coord);
-}
-vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
-    return vec4(0, 0, 0, 0);
-}
-vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
-    return vec4(0, 0, 0, 0);
-}
-#endif
 struct NoopImage2D {
     int noop;
 };
@@ -81,6 +53,7 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
+uniform vec4 SunDir;
 uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 u_viewTexel;
@@ -99,12 +72,18 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 FogAndDistanceControl;
+uniform vec4 ClusterSize;
+uniform vec4 AtmosphericScattering;
+uniform vec4 SkyZenithColor;
+uniform vec4 IBLSkyFadeParameters;
+uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 ClusterSize;
+uniform vec4 CurrentFace;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 SubsurfaceScatteringContribution;
@@ -112,16 +91,23 @@ uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
+uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform mat4 PlayerShadowProj;
-uniform vec4 PointLightAttenuationWindow;
-uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 FogColor;
+uniform vec4 FogSkyBlend;
+uniform vec4 IBLParameters;
+uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 MoonDir;
+uniform mat4 PlayerShadowProj;
+uniform vec4 PointLightAttenuationWindow;
+uniform vec4 SunColor;
+uniform vec4 PointLightSpecularFadeOutParameters;
+uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
-uniform vec4 StarsColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -217,53 +203,88 @@ struct PBRLightingContributions {
 };
 
 struct VertexInput {
-    vec4 color0;
     vec3 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec4 color0;
-    vec3 ndcPosition;
+    vec3 projPosition;
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec4 color0;
-    vec3 ndcPosition;
+    vec3 projPosition;
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_ColorMetalnessSubsurface;
+uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+uniform lowp sampler2D s_Normal;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
+uniform lowp sampler2D s_SceneDepth;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-layout(std430, binding = 0)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
-layout(std430, binding = 3)buffer s_LightLookupArray { LightData LightLookupArray[]; };
-layout(std430, binding = 4)buffer s_Lights { Light Lights[]; };
-#ifndef FALLBACK_PASS
-float linearToLogDepth(float linearDepth) {
-    return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
+uniform lowp samplerCube s_SpecularIBLCurrent;
+uniform lowp samplerCube s_SpecularIBLPrevious;
+struct ColorTransform {
+    float hue;
+    float saturation;
+    float luminance;
+};
+
+void DeferredVert(VertexInput vInput, inout VertexOutput vOutput) {
+    vOutput.position = vec4(vInput.position, 1.0);
+    vOutput.position.xy = vOutput.position.xy * 2.0 - 1.0;
+    vOutput.projPosition = vInput.position.xyz;
+    vOutput.projPosition.xy = vOutput.projPosition.xy * 2.0 - 1.0;
+    vOutput.texcoord0 = vInput.texcoord0;
 }
-vec3 ndcToVolume(vec3 ndc, mat4 inverseProj, vec2 nearFar) {
-    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
-    vec4 view = ((inverseProj) * (vec4(ndc, 1.0)));
-    float viewDepth = -view.z / view.w;
-    float wLinear = (viewDepth - nearFar.x) / (nearFar.y - nearFar.x);
-    return vec3(uv, linearToLogDepth(wLinear));
-}
-vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
-    float depth = uvw.z * float(dimensions.z) - 0.5;
-    int index = clamp(int(depth), 0, dimensions.z - 2);
-    float offset = clamp(depth - float(index), 0.0, 1.0);
-    vec4 a = textureSample(volume, vec3(uvw.xy, index), 0.0).rgba;
-    vec4 b = textureSample(volume, vec3(uvw.xy, index + 1), 0.0).rgba;
-    return mix(a, b, offset);
-}
-#endif
+#ifdef DO_DEFERRED_SHADING_PASS
+struct ShadowParameters {
+    vec4 cascadeShadowResolutions;
+    vec4 shadowBias;
+    vec4 shadowSlopeBias;
+    vec4 shadowPCFWidth;
+    int cloudshadowsEnabled;
+    float cloudshadowContribution;
+    float cloudshadowPCFWidth;
+    vec4 shadowParams;
+    mat4 cloudShadowProj;
+};
+
+struct DirectionalLightParams {
+    mat4 shadowProj[4];
+    int cascadeCount;
+    int isSun;
+    int index;
+};
+
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
+};
+
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -272,45 +293,15 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#ifndef FALLBACK_PASS
-void FragForwardPBRTransparent(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    vec3 starColor = fragInput.color0.rgb;
-    starColor.rgb *= StarsColor.rgb * fragInput.color0.a;
-    vec3 outColor;
-    if (VolumeScatteringEnabled.x != 0.0) {
-        vec3 uvw = ndcToVolume(fragInput.ndcPosition, InvProj, VolumeNearFar.xy);
-        vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
-        outColor = sourceExtinction.a * starColor.rgb;
-    }
-    else {
-        outColor = starColor.rgb;
-    }
-    fragOutput.Color0 = vec4(outColor.r, outColor.g, outColor.b, fragInput.color0.a);
-}
 #endif
-void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    #ifdef FALLBACK_PASS
-    fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
-    #endif
-    #ifndef FALLBACK_PASS
-    FragForwardPBRTransparent(fragInput, fragOutput);
-    #endif
-    #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
-    vec2 uv = (fragInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
-    float fadeStart = SkyProbeUVFadeParameters.x;
-    float fadeEnd = SkyProbeUVFadeParameters.y;
-    float fadeRange = fadeStart - fadeEnd;
-    float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
-    fragOutput.Color0 *= fade;
-    fragOutput.Color0.a = max(fragOutput.Color0.a, SkyProbeUVFadeParameters.z);
-    #endif
-}
 void main() {
-    FragmentInput fragmentInput;
-    FragmentOutput fragmentOutput;
-    fragmentInput.color0 = v_color0;
-    fragmentInput.ndcPosition = v_ndcPosition;
-    fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+    VertexInput vertexInput;
+    VertexOutput vertexOutput;
+    vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
+    vertexOutput.projPosition = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
     View = u_view;
@@ -332,7 +323,9 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    Frag(fragmentInput, fragmentOutput);
-    bgfx_FragColor = fragmentOutput.Color0;
+    DeferredVert(vertexInput, vertexOutput);
+    v_projPosition = vertexOutput.projPosition;
+    v_texcoord0 = vertexOutput.texcoord0;
+    gl_Position = vertexOutput.position;
 }
 

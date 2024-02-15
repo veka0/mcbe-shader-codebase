@@ -4,7 +4,8 @@
 * Available Macros:
 *
 * Passes:
-* - DO_WATER_SHADING_PASS (not used)
+* - DEPTH_ONLY_PASS
+* - DO_WATER_SHADING_PASS
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -80,14 +81,14 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 SunDir;
-uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
+uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
+uniform vec4 ShadowBias;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
+uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
@@ -97,34 +98,38 @@ uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 DefaultWaterCoefficient;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
+uniform vec4 RedCentralWaterCoefficient;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
+uniform vec4 RenderChunkFogAlpha;
+uniform vec4 BlueCentralWaterCoefficient;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
-uniform vec4 WorldOrigin;
 uniform vec4 ViewPositionAndTime;
+uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
-uniform vec4 SkyHorizonColor;
 uniform vec4 GlobalRoughness;
+uniform vec4 SkyHorizonColor;
+uniform vec4 GreenCentralWaterCoefficient;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 PointLightDiffuseFadeOutParameters;
@@ -133,9 +138,9 @@ uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
-uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -143,8 +148,8 @@ mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -217,6 +222,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -278,7 +284,7 @@ uniform lowp sampler2D s_SceneColor;
 uniform lowp sampler2D s_SceneDepth;
 uniform lowp sampler2D s_SeasonsTexture;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp sampler2D s_WaterSurfaceDepthTexture;
+uniform lowp sampler2DArrayShadow s_WaterSurfaceDepthTextures;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -303,8 +309,33 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
+};
+
+struct ColorTransform {
+    float hue;
+    float saturation;
+    float luminance;
+};
+
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
 };
 
 struct CompositingOutput {
@@ -342,8 +373,14 @@ struct DirectionalLight {
 void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput vOutput, vec3 worldPosition) {
     vOutput.lightmapUV = vInput.lightmapUV;
 }
+#ifdef DEPTH_ONLY_PASS
+void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+}
+#endif
+#ifdef DO_WATER_SHADING_PASS
 float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
+    vertOutput.normal = ((World) * (vec4(stdInput.vertInput.normal.xyz, 0.0))).xyz;
     bool shouldBecomeOpaqueInTheDistance = stdInput.vertInput.color0.a < 0.95;
     if (shouldBecomeOpaqueInTheDistance) {
         float cameraDistance = cameraDepth / FogAndDistanceControl.w;
@@ -352,6 +389,7 @@ float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     }
     return cameraDepth;
 }
+#endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
@@ -366,7 +404,12 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifdef DEPTH_ONLY_PASS
+    WaterVertDepthOnly(vertInput, vertOutput);
+    #endif
+    #ifdef DO_WATER_SHADING_PASS
     WaterVert(vertInput, vertOutput);
+    #endif
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
     computeLighting_RenderChunk_Vertex(vertInput, vertOutput, worldPosition);
@@ -401,8 +444,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {

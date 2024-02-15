@@ -245,6 +245,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -257,6 +258,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -302,9 +304,17 @@ vec2 ndirToOctSnorm(vec3 n) {
     p = (n.z < 0.0) ? octWrap(p) : p;
     return p;
 }
+float packMetalnessSubsurface(float metalness, float subsurface) {
+    if (metalness > subsurface) {
+        return (128.0 / 255.0) + (127.0 / 255.0) * metalness;
+    }
+    else {
+        return (127.0 / 255.0) - (127.0 / 255.0) * subsurface;
+    }
+}
 void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = fragOutput.Color0.rgb;
-    fragOutput.Color0.a = surfaceOutput.Metallic;
+    fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
     vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
@@ -389,6 +399,7 @@ void ActorSurfBannerGeometryPrepass(in StandardSurfaceInput surfaceInput, inout 
     surfaceOutput.Roughness = 0.5;
     surfaceOutput.Metallic = 0.0;
     surfaceOutput.Emissive = 0.0;
+    surfaceOutput.Subsurface = 0.0;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 #endif

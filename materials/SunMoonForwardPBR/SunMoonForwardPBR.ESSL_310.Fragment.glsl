@@ -5,7 +5,8 @@
 *
 * Passes:
 * - FALLBACK_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
 */
 
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
@@ -25,7 +26,7 @@ struct NoopSampler {
     int noop;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -106,6 +107,7 @@ uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -118,6 +120,7 @@ uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SunMoonColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
@@ -200,6 +203,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -241,7 +245,7 @@ uniform lowp sampler2D s_SunMoonTexture;
 layout(std430, binding = 1)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
 layout(std430, binding = 4)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 5)buffer s_Lights { Light Lights[]; };
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 float linearToLogDepth(float linearDepth) {
     return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
 }
@@ -260,6 +264,7 @@ vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
     vec4 b = textureSample(volume, vec3(uvw.xy, index + 1), 0.0).rgba;
     return mix(a, b, offset);
 }
+#endif
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -268,12 +273,8 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#endif
-void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    #ifdef FALLBACK_PASS
-    fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
-    #endif
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
+void FragForwardPBRTransparent(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 spriteColor = textureSample(s_SunMoonTexture, fragInput.texcoord0);
     vec3 sunMoonColor = SunMoonColor.rgb * spriteColor.rgb * SunMoonColor.a;
     vec3 outColor;
@@ -286,6 +287,23 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         outColor = sunMoonColor;
     }
     fragOutput.Color0 = vec4(outColor.r, outColor.g, outColor.b, 1.0);
+}
+#endif
+void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    #ifdef FALLBACK_PASS
+    fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
+    #endif
+    #ifndef FALLBACK_PASS
+    FragForwardPBRTransparent(fragInput, fragOutput);
+    #endif
+    #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+    vec2 uv = (fragInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
+    float fadeStart = SkyProbeUVFadeParameters.x;
+    float fadeEnd = SkyProbeUVFadeParameters.y;
+    float fadeRange = fadeStart - fadeEnd;
+    float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
+    fragOutput.Color0 *= fade;
+    fragOutput.Color0.a = max(fragOutput.Color0.a, SkyProbeUVFadeParameters.z);
     #endif
 }
 void main() {
