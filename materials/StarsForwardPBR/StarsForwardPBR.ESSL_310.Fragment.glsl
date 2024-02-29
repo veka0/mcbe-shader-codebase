@@ -273,6 +273,9 @@ struct TemporalAccumulationParameters {
 };
 
 #ifndef FALLBACK_PASS
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
 void FragForwardPBRTransparent(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 starColor = fragInput.color0.rgb;
     starColor.rgb *= StarsColor.rgb * fragInput.color0.a;
@@ -285,7 +288,11 @@ void FragForwardPBRTransparent(FragmentInput fragInput, inout FragmentOutput fra
     else {
         outColor = starColor.rgb;
     }
-    fragOutput.Color0 = vec4(outColor.r, outColor.g, outColor.b, fragInput.color0.a);
+    if (PreExposureEnabled.x > 0.0) {
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        outColor = PreExposeLighting(outColor, exposure);
+    }
+    fragOutput.Color0 = vec4(outColor, fragInput.color0.a);
 }
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

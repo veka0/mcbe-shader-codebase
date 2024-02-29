@@ -60,6 +60,7 @@ uniform vec4 CloudColor;
 uniform vec4 DistanceControl;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 vec4 ViewRect;
 mat4 Proj;

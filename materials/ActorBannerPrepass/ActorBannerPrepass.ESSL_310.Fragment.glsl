@@ -136,6 +136,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];
@@ -289,6 +290,23 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+float removeGammaCorrection(float v) {
+    if (v <= 0.04045) {
+        return (v / 12.92);
+    }
+    else {
+        return pow((v + 0.055) / 1.055, 2.4);
+    }
+}
+vec3 convertRGBTosRGB(vec3 rgb) {
+    return vec3(
+        removeGammaCorrection(rgb.r),
+        removeGammaCorrection(rgb.g),
+        removeGammaCorrection(rgb.b)
+    );
+}
+#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -357,6 +375,7 @@ vec4 applyHudOpacity(vec4 diffuse, float hudOpacity) {
 void ActorSurfBannerPBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 color = vec4(surfaceInput.Color, surfaceInput.Alpha);
     vec4 albedo = getBannerAlbedo(color, surfaceInput.texcoords.zw, surfaceInput.texcoords.xy);
+    albedo.rgb = convertRGBTosRGB(albedo.rgb);
     vec4 diffuse = applyHudOpacity(albedo, HudOpacity.x);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;

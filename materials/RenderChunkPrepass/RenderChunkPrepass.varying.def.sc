@@ -14,6 +14,9 @@ vec4 i_data3 : TEXCOORD5;
 
 vec3     v_bitangent    : BITANGENT;
 vec4     v_color0       : COLOR0;
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS) || defined(GEOMETRY_PREPASS_PASS)
+flat int v_frontFacing  : FRONTFACING;
+#endif
 vec2     v_lightmapUV   : TEXCOORD1;
 vec3     v_normal       : NORMAL;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS) || defined(GEOMETRY_PREPASS_PASS)

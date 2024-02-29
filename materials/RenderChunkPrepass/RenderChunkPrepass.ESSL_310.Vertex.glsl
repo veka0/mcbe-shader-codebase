@@ -43,6 +43,9 @@ attribute float a_texcoord4;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+flat varying int v_frontFacing;
+#endif
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -102,6 +105,7 @@ uniform vec4 u_alphaRef4;
 uniform vec4 GlobalRoughness;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
@@ -217,6 +221,9 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -230,6 +237,9 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -253,6 +263,9 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
@@ -421,6 +434,9 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    vertexOutput.frontFacing = 0;
+    #endif
     vertexOutput.lightmapUV = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -454,6 +470,9 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    v_frontFacing = vertexOutput.frontFacing;
+    #endif
     v_lightmapUV = vertexOutput.lightmapUV;
     v_normal = vertexOutput.normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)

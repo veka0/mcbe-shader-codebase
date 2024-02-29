@@ -5,10 +5,8 @@
 *
 * Passes:
 * - DEPTH_ONLY_PASS
-* - DEPTH_ONLY_FALLBACK_PASS
-* - FALLBACK_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS
-* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -22,20 +20,21 @@
 #define varying out
 attribute vec4 a_color0;
 attribute vec3 a_position;
+attribute vec2 a_texcoord0;
 #ifdef INSTANCING__ON
-attribute vec4 i_data0;
 attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
 varying vec3 v_ndcPosition;
-varying vec3 v_worldPosition;
+varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
 
-#if defined(INSTANCING__ON)&& ! defined(DEPTH_ONLY_FALLBACK_PASS)&& ! defined(FALLBACK_PASS)
+#ifdef INSTANCING__ON
 vec3 instMul(vec3 _vec, mat3 _mtx) {
     return ((_vec) * (_mtx));
 }
@@ -110,11 +109,13 @@ uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
@@ -126,6 +127,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SubPixelOffset;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -223,11 +225,11 @@ struct PBRLightingContributions {
 struct VertexInput {
     vec4 color0;
     vec3 position;
+    vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
     vec4 instanceData1;
     vec4 instanceData2;
-    vec4 instanceData3;
     #endif
 };
 
@@ -235,13 +237,15 @@ struct VertexOutput {
     vec4 position;
     vec4 color0;
     vec3 ndcPosition;
-    vec3 worldPosition;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
     vec4 color0;
     vec3 ndcPosition;
-    vec3 worldPosition;
+    vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -256,6 +260,32 @@ uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
 uniform lowp samplerCube s_SpecularIBLPrevious;
+struct StandardSurfaceInput {
+    vec2 UV;
+    vec3 Color;
+    float Alpha;
+    vec4 color0;
+    vec3 ndcPosition;
+    vec3 worldPos;
+};
+
+struct StandardVertexInput {
+    VertexInput vertInput;
+    vec3 worldPos;
+};
+
+struct StandardSurfaceOutput {
+    vec3 Albedo;
+    float Alpha;
+    float Metallic;
+    float Roughness;
+    float Occlusion;
+    float Emissive;
+    float Subsurface;
+    vec3 AmbientLight;
+    vec3 ViewSpaceNormal;
+};
+
 struct ColorTransform {
     float hue;
     float saturation;
@@ -288,68 +318,119 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS)
+#ifndef DEPTH_ONLY_PASS
 vec4 jitterVertexPosition(vec3 worldPosition) {
     mat4 offsetProj = Proj;
     offsetProj[2][0] += SubPixelOffset.x;
     offsetProj[2][1] -= SubPixelOffset.y;
     return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
 }
-void VertForwardPBRTransparent(VertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifdef INSTANCING__OFF
-    vec3 worldPosition = ((World) * (vec4(vertInput.position, 1.0))).xyz;
-    #endif
-    #ifdef INSTANCING__ON
-    mat4 model;
-    model[0] = vertInput.instanceData0;
-    model[1] = vertInput.instanceData1;
-    model[2] = vertInput.instanceData2;
-    model[3] = vertInput.instanceData3;
-    vec3 worldPosition = instMul(model, vec4(vertInput.position, 1.0)).xyz;
-    #endif
-    vec4 clipPosition = ((ViewProj) * (vec4(worldPosition, 1.0)));
-    vec3 ndcPosition = clipPosition.xyz / clipPosition.w;
-    vertOutput.position = jitterVertexPosition(worldPosition);
-    vertOutput.worldPosition = worldPosition;
-    vertOutput.ndcPosition = ndcPosition;
-    vec3 cloudColor = clamp(CloudColor.rgb * vertInput.color0.rgb, 0.0, 1.0);
+void VertForwardPBRTransparent(in StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    vec4 clipPosition = vertOutput.position;
+    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
+    vertOutput.ndcPosition = clipPosition.xyz / clipPosition.w;
+    vec3 cloudColor = clamp(CloudColor.rgb * stdInput.vertInput.color0.rgb, 0.0, 1.0);
     vertOutput.color0 = vec4(cloudColor.r, cloudColor.g, cloudColor.b, CloudColor.a);
 }
 #endif
-void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    #if defined(DEPTH_ONLY_PASS)&& defined(INSTANCING__OFF)
-    vec3 worldPosition = ((World) * (vec4(vertInput.position, 1.0))).xyz;
+struct CompositingOutput {
+    vec3 mLitColor;
+};
+
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
+    #ifdef INSTANCING__OFF
+    vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
-    #if defined(DEPTH_ONLY_PASS)&& defined(INSTANCING__ON)
+    #ifdef INSTANCING__ON
     mat4 model;
-    model[0] = vertInput.instanceData0;
-    model[1] = vertInput.instanceData1;
-    model[2] = vertInput.instanceData2;
-    model[3] = vertInput.instanceData3;
-    vec3 worldPosition = instMul(model, vec4(vertInput.position, 1.0)).xyz;
+    model[0] = vec4(vertInput.instanceData0.x, vertInput.instanceData1.x, vertInput.instanceData2.x, 0);
+    model[1] = vec4(vertInput.instanceData0.y, vertInput.instanceData1.y, vertInput.instanceData2.y, 0);
+    model[2] = vec4(vertInput.instanceData0.z, vertInput.instanceData1.z, vertInput.instanceData2.z, 0);
+    model[3] = vec4(vertInput.instanceData0.w, vertInput.instanceData1.w, vertInput.instanceData2.w, 1);
+    vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
-    #ifdef DEPTH_ONLY_PASS
-    vertOutput.position = ((ViewProj) * (vec4(worldPosition, 1.0)));
+    vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
+}
+void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
+}
+#ifndef DEPTH_ONLY_PASS
+void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
+}
+#endif
+
+void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput);
+void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput);
+#ifndef DEPTH_ONLY_PASS
+void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition);
+#endif
+struct DirectionalLight {
+    vec3 ViewSpaceDirection;
+    vec3 Intensity;
+};
+
+#ifdef DEPTH_ONLY_PASS
+void DepthOnlyVertex(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position.z = clamp(vertOutput.position.z, 0.0, 1.0);
+}
+#endif
+#ifndef DEPTH_ONLY_PASS
+void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
+    StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
+    StandardVertexInput stdInput;
+    stdInput.vertInput = vertInput;
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
+    vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.color0 = vertInput.color0;
+    StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
+    StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
+}
+#endif
+void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
+    StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
+}
+void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifdef DEPTH_ONLY_PASS
+    DepthOnlyVertex(vertInput, vertOutput);
     #endif
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS)
+    #ifndef DEPTH_ONLY_PASS
     VertForwardPBRTransparent(vertInput, vertOutput);
     #endif
 }
+#ifdef DEPTH_ONLY_PASS
+void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
+    StandardVertexInput stdInput;
+    stdInput.vertInput = vertInput;
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
+    StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
+}
+#endif
+#ifndef DEPTH_ONLY_PASS
+void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
+    StandardTemplate_LightingVertexFunctionIdentity(vertInput, vertOutput, worldPosition);
+}
+void StandardTemplate_Opaque_Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    StandardTemplate_VertShared(vertInput, vertOutput);
+}
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
     vertexInput.position = (a_position);
+    vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
-    vertexInput.instanceData0 = i_data0;
-    vertexInput.instanceData1 = i_data1;
-    vertexInput.instanceData2 = i_data2;
-    vertexInput.instanceData3 = i_data3;
+    vertexInput.instanceData0 = i_data1;
+    vertexInput.instanceData1 = i_data2;
+    vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.ndcPosition = vec3(0, 0, 0);
-    vertexOutput.worldPosition = vec3(0, 0, 0);
+    vertexOutput.texcoord0 = vec2(0, 0);
+    vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -372,10 +453,16 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    Vert(vertexInput, vertexOutput);
+    #ifdef DEPTH_ONLY_PASS
+    StandardTemplate_DepthOnly_Vert(vertexInput, vertexOutput);
+    #endif
+    #ifndef DEPTH_ONLY_PASS
+    StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
+    #endif
     v_color0 = vertexOutput.color0;
     v_ndcPosition = vertexOutput.ndcPosition;
-    v_worldPosition = vertexOutput.worldPosition;
+    v_texcoord0 = vertexOutput.texcoord0;
+    v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;
 }
 

@@ -31,15 +31,27 @@ attribute vec3 a_position;
 attribute vec4 a_tangent;
 attribute vec2 a_texcoord0;
 attribute vec2 a_texcoord1;
+#if defined(DO_WATER_SHADING_PASS)&& defined(INSTANCING__ON)
+attribute float a_texcoord4;
+#endif
 #ifdef INSTANCING__ON
 attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
+#if defined(DO_WATER_SHADING_PASS)&& defined(INSTANCING__OFF)
+attribute float a_texcoord4;
+#endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
+#ifdef DO_WATER_SHADING_PASS
+flat varying int v_frontFacing;
+#endif
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
+#ifdef DO_WATER_SHADING_PASS
+flat varying int v_pbrTextureId;
+#endif
 varying vec3 v_tangent;
 centroid varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
@@ -81,10 +93,10 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 PointLightShadowParams1;
-uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
+uniform vec4 SunDir;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
 uniform mat4 u_viewProj;
@@ -111,7 +123,6 @@ uniform vec4 RenderChunkFogAlpha;
 uniform vec4 BlueCentralWaterCoefficient;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
-uniform vec4 ViewPositionAndTime;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
@@ -121,6 +132,8 @@ uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+uniform vec4 VolumeNearFar;
+uniform vec4 EnabledWaterLightingFeatures;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
@@ -132,6 +145,7 @@ uniform vec4 SkyHorizonColor;
 uniform vec4 GreenCentralWaterCoefficient;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
@@ -140,8 +154,8 @@ uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
+uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
-uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
@@ -239,6 +253,9 @@ struct VertexInput {
     vec4 color0;
     vec2 lightmapUV;
     vec4 normal;
+    #ifdef DO_WATER_SHADING_PASS
+    int pbrTextureId;
+    #endif
     vec3 position;
     vec4 tangent;
     vec2 texcoord0;
@@ -253,8 +270,14 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
+    #ifdef DO_WATER_SHADING_PASS
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
+    #ifdef DO_WATER_SHADING_PASS
+    int pbrTextureId;
+    #endif
     vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
@@ -263,8 +286,14 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
+    #ifdef DO_WATER_SHADING_PASS
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
+    #ifdef DO_WATER_SHADING_PASS
+    int pbrTextureId;
+    #endif
     vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
@@ -284,14 +313,20 @@ uniform lowp sampler2D s_SceneColor;
 uniform lowp sampler2D s_SceneDepth;
 uniform lowp sampler2D s_SeasonsTexture;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp sampler2DArrayShadow s_WaterSurfaceDepthTextures;
+uniform lowp sampler2DArray s_WaterSurfaceDepthTextures;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
+    #ifdef DO_WATER_SHADING_PASS
+    int frontFacing;
+    #endif
     vec3 normal;
+    #ifdef DO_WATER_SHADING_PASS
+    int pbrTextureId;
+    #endif
     vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
@@ -378,16 +413,28 @@ void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOut
 }
 #endif
 #ifdef DO_WATER_SHADING_PASS
-float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    vertOutput.normal = ((World) * (vec4(stdInput.vertInput.normal.xyz, 0.0))).xyz;
-    bool shouldBecomeOpaqueInTheDistance = stdInput.vertInput.color0.a < 0.95;
-    if (shouldBecomeOpaqueInTheDistance) {
-        float cameraDistance = cameraDepth / FogAndDistanceControl.w;
-        float alphaFadeOut = clamp(cameraDistance, 0.0, 1.0);
-        vertOutput.color0.a = mix(stdInput.vertInput.color0.a, 1.0, alphaFadeOut);
-    }
+    vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;
+    vec3 n = stdInput.vertInput.normal.xyz;
+    vec3 t = stdInput.vertInput.tangent.xyz;
+    vec3 b = cross(n, t) * stdInput.vertInput.tangent.w;
+    vertOutput.normal = ((World) * (vec4(n, 0.0))).xyz;
+    vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
+    vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
+    vertOutput.worldPos = stdInput.worldPos;
     return cameraDepth;
+}
+struct TemporalAccumulationParameters {
+    ivec3 dimensions;
+    vec3 previousUvw;
+    vec4 currentValue;
+    float historyWeight;
+    float frustumBoundaryFalloff;
+};
+
+float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    return applyPBRValuesToVertexOutput(stdInput, vertOutput);
 }
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
@@ -423,6 +470,9 @@ void main() {
     vertexInput.color0 = (a_color0);
     vertexInput.lightmapUV = (a_texcoord1);
     vertexInput.normal = (a_normal);
+    #ifdef DO_WATER_SHADING_PASS
+    vertexInput.pbrTextureId = int(a_texcoord4);
+    #endif
     vertexInput.position = (a_position);
     vertexInput.tangent = (a_tangent);
     vertexInput.texcoord0 = (a_texcoord0);
@@ -433,8 +483,14 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    #ifdef DO_WATER_SHADING_PASS
+    vertexOutput.frontFacing = 0;
+    #endif
     vertexOutput.lightmapUV = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
+    #ifdef DO_WATER_SHADING_PASS
+    vertexOutput.pbrTextureId = 0;
+    #endif
     vertexOutput.tangent = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
@@ -463,8 +519,14 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
+    #ifdef DO_WATER_SHADING_PASS
+    v_frontFacing = vertexOutput.frontFacing;
+    #endif
     v_lightmapUV = vertexOutput.lightmapUV;
     v_normal = vertexOutput.normal;
+    #ifdef DO_WATER_SHADING_PASS
+    v_pbrTextureId = vertexOutput.pbrTextureId;
+    #endif
     v_tangent = vertexOutput.tangent;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;

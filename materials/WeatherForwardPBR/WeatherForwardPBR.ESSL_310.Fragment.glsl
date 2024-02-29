@@ -138,7 +138,6 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
-uniform vec4 UVOffsetAndScale;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
@@ -166,6 +165,7 @@ uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
@@ -177,6 +177,7 @@ uniform vec4 PositionBaseOffset;
 uniform vec4 PositionForwardOffset;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 UVOffsetAndScale;
 uniform vec4 Velocity;
 uniform vec4 ViewPosition;
 uniform vec4 VolumeDimensions;
@@ -477,6 +478,20 @@ struct DirectionalLightParams {
     int index;
 };
 
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float blockBaseIntensity, float skyAmbientContribution, vec4 skyBaseColorIntensity, float cameraLightSkyIntensity, float ambientFadeInMultiplier) {
+    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
+    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
+    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
+    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
+    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
+    vec3 sampledBlockAmbient = blockAmbientLightFinal * blockBaseIntensity * ambientFadeInMultiplier;
+    float skyFalloffPow = mix(5.0, 3.0, cameraLightSkyIntensity);
+    float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
+    vec3 sampledSkyAmbient = skyFalloff * skyBaseColorIntensity.rgb * skyBaseColorIntensity.a;
+    vec3 sampledAmbient = sampledBlockAmbient + sampledSkyAmbient;
+    sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
+    return sampledAmbient;
+}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -604,27 +619,13 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
-    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
-    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
-    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
-    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
-    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
-    vec3 sampledBlockAmbient = blockAmbientLightFinal * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier;
-    float skyFalloffPow = mix(5.0, 3.0, CameraLightIntensity.y);
-    float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
-    vec3 sampledSkyAmbient = skyFalloff * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
-    vec3 sampledAmbient = sampledBlockAmbient + sampledSkyAmbient;
-    sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
-    return sampledAmbient;
-}
-vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition) {
+vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition, bool enableAtmosphericScattering, bool enableVolumeScattering, bool enableBlendWithSky) {
     vec3 fogAppliedColor;
-    if (AtmosphericScatteringToggles.x != 0.0) {
+    if (enableAtmosphericScattering) {
         float fogIntensity = calculateFogIntensityFaded(viewDistance, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
         if (fogIntensity > 0.0) {
             vec3 fogColor = vec3(0.0, 0.0, 0.0);
-            if (AtmosphericScatteringToggles.y == 0.0) {
+            if (!enableBlendWithSky) {
                 fogColor = FogColor.rgb;
             }
             else {
@@ -641,7 +642,7 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
         fogAppliedColor = applyFogVanilla(surfaceRadiance, FogColor.rgb, fogIntensity);
     }
     vec3 outColor;
-    if (VolumeScatteringEnabled.x != 0.0) {
+    if (enableVolumeScattering) {
         vec3 uvw = ndcToVolume(ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
         outColor = applyScattering(sourceExtinction, fogAppliedColor);
@@ -651,8 +652,11 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     }
     return outColor;
 }
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
 vec3 getAmbientDiffuseColor(vec2 lightingUV, vec3 albedo) {
-    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec4(1.0, 1.0, 1.0, 1.0), lightingUV.y, 1.0);
+    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec4(1.0, 1.0, 1.0, 1.0), BlockBaseAmbientLightColorIntensity.a, lightingUV.y, SkyAmbientLightColorIntensity, CameraLightIntensity.y, 1.0);
     return lightColor * albedo;
 }
 vec3 getDirectionalDiffuseColor(vec3 albedo) {
@@ -678,7 +682,11 @@ void WeatherApplyFogForwardPBRSurface(FragmentInput fragInput, StandardSurfaceIn
     vec3 shadedColor = surfaceOutput.Albedo;
     vec4 viewPosition = ((View) * (((World) * (vec4(surfaceInput.worldPos, 1.0)))));
     float viewDistance = length(viewPosition);
-    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(shadedColor, worldSpaceViewDir(surfaceInput.worldPos.xyz), viewDistance, fragInput.ndcPosition);
+    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(shadedColor, worldSpaceViewDir(surfaceInput.worldPos.xyz), viewDistance, fragInput.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
+    if (PreExposureEnabled.x > 0.0) {
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        fogAppliedColor = PreExposeLighting(fogAppliedColor, exposure);
+    }
     fragOutput.Color0.rgb = fogAppliedColor;
 }
 #endif

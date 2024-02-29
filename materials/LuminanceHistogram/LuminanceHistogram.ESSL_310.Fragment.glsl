@@ -57,6 +57,7 @@ uniform vec4 u_alphaRef4;
 uniform vec4 AdaptiveParameters;
 uniform vec4 LogLuminanceRange;
 uniform vec4 MinLogLuminance;
+uniform vec4 PreExposureEnabled;
 uniform vec4 ScreenSize;
 vec4 ViewRect;
 mat4 Proj;
@@ -98,6 +99,7 @@ layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
 uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_GameColor;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);

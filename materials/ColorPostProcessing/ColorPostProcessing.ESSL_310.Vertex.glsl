@@ -50,6 +50,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 ColorGrading_Contrast;
+uniform vec4 ColorGrading_Gain;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;

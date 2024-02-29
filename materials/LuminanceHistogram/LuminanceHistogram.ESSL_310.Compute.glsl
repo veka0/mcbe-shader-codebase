@@ -73,6 +73,7 @@ uniform vec4 LogLuminanceRange;
 uniform vec4 EnableCustomWeight;
 uniform vec4 DeltaTime;
 uniform vec4 MinLogLuminance;
+uniform vec4 PreExposureEnabled;
 uniform vec4 ScreenSize;
 uvec3 LocalInvocationID;
 uint LocalInvocationIndex;
@@ -102,31 +103,11 @@ layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
 uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_GameColor;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 #ifdef BUILD_HISTOGRAM_PASS
-shared uint curFrameLuminanceHistogramShared[256];
-uint luminanceToHistogramBin(float luminance) {
-    if (luminance < 0.00095f) {
-        return 0u;
-    }
-    float logLuminance = clamp((log2(luminance) - MinLogLuminance.x) * 1.0f / LogLuminanceRange.x, 0.0f, 1.0f);
-    return uint(logLuminance * 254.0 + 1.0);
-}
-void Build() {
-    uint x = GlobalInvocationID.x;
-    uint y = GlobalInvocationID.y;
-    curFrameLuminanceHistogramShared[LocalInvocationIndex] = 0u;
-    barrier();
-    if (x < uint(ScreenSize.x)&& y < uint(ScreenSize.y)) {
-        ivec2 pixel = ivec2(x, y);
-        vec2 uv = vec2(pixel) / ScreenSize.xy;
-        vec3 color = textureSample(s_GameColor, uv, 0.0f).rgb;
-        float luminance = dot(color.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
-        uint index = luminanceToHistogramBin(luminance);
-        atomicAdd(curFrameLuminanceHistogramShared[index], 1u);
-    }
-    barrier();
-    atomicAdd(CurFrameLuminanceHistogram[LocalInvocationIndex].count, curFrameLuminanceHistogramShared[LocalInvocationIndex]);
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f * averageLuminance);
 }
 #endif
 #ifdef CALCULATE_AVERAGE_PASS
@@ -190,6 +171,37 @@ void Clean() {
 }
 #endif
 
+#ifdef BUILD_HISTOGRAM_PASS
+shared uint curFrameLuminanceHistogramShared[256];
+uint luminanceToHistogramBin(float luminance) {
+    if (luminance < 0.00095f) {
+        return 0u;
+    }
+    float logLuminance = clamp((log2(luminance) - MinLogLuminance.x) * 1.0f / LogLuminanceRange.x, 0.0f, 1.0f);
+    return uint(logLuminance * 254.0 + 1.0);
+}
+void Build() {
+    uint x = GlobalInvocationID.x;
+    uint y = GlobalInvocationID.y;
+    curFrameLuminanceHistogramShared[LocalInvocationIndex] = 0u;
+    barrier();
+    if (x < uint(ScreenSize.x)&& y < uint(ScreenSize.y)) {
+        ivec2 pixel = ivec2(x, y);
+        vec2 uv = vec2(pixel) / ScreenSize.xy;
+        vec3 color = textureSample(s_GameColor, uv, 0.0f).rgb;
+        if (PreExposureEnabled.x > 0.0) {
+            float preExposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5), 0.0).r;
+            color.rgb = UnExposeLighting(color.rgb, preExposure);
+        }
+        float luminance = dot(color.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
+        uint index = luminanceToHistogramBin(luminance);
+        atomicAdd(curFrameLuminanceHistogramShared[index], 1u);
+    }
+    barrier();
+    atomicAdd(CurFrameLuminanceHistogram[LocalInvocationIndex].count, curFrameLuminanceHistogramShared[LocalInvocationIndex]);
+}
+
+#endif
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1)in;
 void main() {
     LocalInvocationID = gl_LocalInvocationID;

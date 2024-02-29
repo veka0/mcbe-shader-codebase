@@ -32,6 +32,9 @@ precision mediump float;
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec3 v_bitangent;
 varying vec4 v_color0;
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+flat varying int v_frontFacing;
+#endif
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -125,6 +128,7 @@ uniform vec4 u_alphaRef4;
 uniform vec4 GlobalRoughness;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
 vec4 ViewRect;
@@ -240,6 +244,9 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -253,6 +260,9 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -277,6 +287,9 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    int frontFacing;
+    #endif
     vec3 normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     int pbrTextureId;
@@ -297,6 +310,9 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Alpha = 1.0;
     result.lightmapUV = fragInput.lightmapUV;
     result.bitangent = fragInput.bitangent;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    result.frontFacing = fragInput.frontFacing;
+    #endif
     result.normal = fragInput.normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
     result.pbrTextureId = fragInput.pbrTextureId;
@@ -514,10 +530,14 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
         emissive = texel.g;
         linearRoughness = texel.b;
     }
+    vec3 vertexNormal = surfaceInput.normal;
+    if (surfaceInput.frontFacing != 0) {
+        vertexNormal = -vertexNormal;
+    }
     mat3 tbn = mtxFromRows(
         normalize(surfaceInput.tangent),
         normalize(surfaceInput.bitangent),
-        normalize(surfaceInput.normal)
+        normalize(vertexNormal)
     );
     tbn = transpose(tbn);
     surfaceOutput.Roughness = linearRoughness;
@@ -589,6 +609,9 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
+    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    fragmentInput.frontFacing = int(gl_FrontFacing);
+    #endif
     fragmentInput.lightmapUV = v_lightmapUV;
     fragmentInput.normal = v_normal;
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)

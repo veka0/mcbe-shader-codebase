@@ -113,6 +113,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];

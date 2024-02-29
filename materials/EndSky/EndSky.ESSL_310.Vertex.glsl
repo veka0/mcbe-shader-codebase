@@ -74,6 +74,7 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 SkyColor;
 uniform mat4 UV0Transform;
 vec4 ViewRect;

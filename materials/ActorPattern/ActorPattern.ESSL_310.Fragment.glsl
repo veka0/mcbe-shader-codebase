@@ -135,6 +135,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 PatternColors[7];
 uniform vec4 PatternUVOffsetsAndScales[7];

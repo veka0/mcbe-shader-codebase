@@ -108,6 +108,7 @@ uniform vec4 IBLParameters;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightDiffuseFadeOutParameters;

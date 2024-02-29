@@ -90,6 +90,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 ColorGrading_Contrast;
+uniform vec4 ColorGrading_Gain;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
@@ -189,9 +190,13 @@ vec3 ApplySaturation(vec3 inColor, vec3 saturation) {
     }
     return mix(vec3_splat(lumi), inColor, saturation);
 }
-vec3 ApplyColorGrading(vec3 inColor, vec3 contrast, float contrastPivotMultiplier, float averageLuminance, vec3 saturation) {
+vec3 ApplyGain(vec3 inColor, vec3 gain) {
+    return clamp(inColor * gain, vec3_splat(0.0f), vec3_splat(OutputTextureMaxValue.x));
+}
+vec3 ApplyColorGrading(vec3 inColor, vec3 contrast, float contrastPivotMultiplier, float averageLuminance, vec3 saturation, vec3 gain) {
     vec3 outColor = ApplyContrast(inColor, contrast, contrastPivotMultiplier * averageLuminance);
     outColor = ApplySaturation(outColor, saturation);
+    outColor = ApplyGain(outColor, gain);
     return outColor;
 }
 vec3 TonemapReinhard(vec3 rgb, float W) {
@@ -276,8 +281,15 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, flo
     sceneColor = color_gamma(sceneColor);
     return TonemapColorCorrection(sceneColor, finalLuminance, brightness, contrast, saturation);
 }
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f * averageLuminance);
+}
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 sceneColor = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;
+    if (TonemapParams0.z > 0.0) {
+        float unexposeValue = textureSample(s_PreExposureLuminance, vec2(0.5, 0.5)).r;
+        sceneColor.rgb = UnExposeLighting(sceneColor.rgb, unexposeValue);
+    }
     vec3 finalColor = sceneColor;
     if (TonemapParams0.y <= 0.5f) {
         finalColor.rgb = color_gamma(sceneColor.rgb);
@@ -298,7 +310,8 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
             ColorGrading_Contrast.xyz,
             ColorGrading_Contrast.w,
             averageLuminance,
-            ColorGrading_Saturation.xyz
+            ColorGrading_Saturation.xyz,
+            ColorGrading_Gain.xyz
         );
         float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
         whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;

@@ -101,6 +101,7 @@ uniform mat4 PrevWorld;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
 uniform vec4 ZShiftValue;
