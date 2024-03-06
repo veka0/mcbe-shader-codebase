@@ -151,22 +151,22 @@ vec3 convertQuadToCube(vec2 inCoords, int face) {
     inCoords = inCoords * 2.0 - 1.0;
     vec3 uv = vec3_splat(0.0);
     if (face == 0) {
-        uv = vec3(1.0, inCoords.y, - inCoords.x);
+        uv = vec3(1.0, - inCoords.y, - inCoords.x);
     }
     else if (face == 1) {
-        uv = vec3(-1.0, inCoords.y, inCoords.x);
+        uv = vec3(-1.0, - inCoords.y, inCoords.x);
     }
     else if (face == 2) {
-        uv = vec3(inCoords.x, 1.0, - inCoords.y);
+        uv = vec3(inCoords.x, 1.0, inCoords.y);
     }
     else if (face == 3) {
-        uv = vec3(inCoords.x, - 1.0, inCoords.y);
+        uv = vec3(inCoords.x, - 1.0, - inCoords.y);
     }
     else if (face == 4) {
-        uv = vec3(inCoords.x, inCoords.y, 1.0);
+        uv = vec3(inCoords.x, - inCoords.y, 1.0);
     }
     else if (face == 5) {
-        uv = vec3(-inCoords.x, inCoords.y, - 1.0);
+        uv = vec3(-inCoords.x, - inCoords.y, - 1.0);
     }
     return uv;
 }

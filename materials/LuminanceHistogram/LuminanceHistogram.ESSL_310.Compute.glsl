@@ -71,7 +71,7 @@ struct accelerationStructureKHR {
 uniform vec4 AdaptiveParameters;
 uniform vec4 LogLuminanceRange;
 uniform vec4 EnableCustomWeight;
-uniform vec4 DeltaTime;
+uniform vec4 Adaptation;
 uniform vec4 MinLogLuminance;
 uniform vec4 PreExposureEnabled;
 uniform vec4 ScreenSize;
@@ -135,15 +135,19 @@ void Average() {
             weightedLogAverage = 0.0f;
         }
         float weightedAverageLuminance = exp2(((weightedLogAverage * LogLuminanceRange.x) / 254.0f) + MinLogLuminance.x);
-        float prevLuminance = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0, 0)).r;
-        bool isBrighter = (prevLuminance < weightedAverageLuminance);
-        float speedParam = isBrighter ? AdaptiveParameters.y : AdaptiveParameters.z;
-        float adaptedLuminance = prevLuminance + (weightedAverageLuminance - prevLuminance) * (1.0f - exp(-DeltaTime.x * AdaptiveParameters.x * speedParam));
-        if (isBrighter) {
-            adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? weightedAverageLuminance : adaptedLuminance;
-        }
-        else {
-            adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? adaptedLuminance : weightedAverageLuminance;
+        float adaptedLuminance = weightedAverageLuminance;
+        if (Adaptation.x > 0.5) {
+            float prevLuminance = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0, 0)).r;
+            bool isBrighter = (weightedAverageLuminance > prevLuminance);
+            float speedParam = isBrighter ? AdaptiveParameters.y : AdaptiveParameters.z;
+            float adjustment = (weightedAverageLuminance - prevLuminance) * (1.0f - exp(-Adaptation.y * AdaptiveParameters.x * speedParam));
+            adaptedLuminance = prevLuminance + adjustment;
+            if (isBrighter) {
+                adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? weightedAverageLuminance : adaptedLuminance;
+            }
+            else {
+                adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? adaptedLuminance : weightedAverageLuminance;
+            }
         }
         imageStore(s_AdaptedFrameAverageLuminance, ivec2(0, 0), vec4(adaptedLuminance, adaptedLuminance, adaptedLuminance, adaptedLuminance));
         int maxLuminanceBin = 0;

@@ -40,7 +40,6 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform vec4 DeltaTime;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
 uniform vec4 EnableCustomWeight;
@@ -54,6 +53,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 Adaptation;
 uniform vec4 AdaptiveParameters;
 uniform vec4 LogLuminanceRange;
 uniform vec4 MinLogLuminance;
