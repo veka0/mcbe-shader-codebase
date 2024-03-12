@@ -53,7 +53,6 @@ uniform mat4 u_invView;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
-uniform vec4 VolumeShadowSettings;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -66,6 +65,7 @@ uniform vec4 JitterOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 AlbedoExtinction;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 AmbientContribution;
@@ -77,7 +77,9 @@ uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 TemporalSettings;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
@@ -102,6 +104,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 VolumeShadowSettings;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -121,7 +124,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -150,10 +153,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -181,6 +184,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -213,6 +217,7 @@ uniform lowp sampler2D s_BrdfLUT;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;

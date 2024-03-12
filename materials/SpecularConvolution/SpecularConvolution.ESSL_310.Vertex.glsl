@@ -5,7 +5,7 @@
 *
 * Passes:
 * - CONVOLVE_PASS
-* - GENERATE_BRDF_PASS
+* - GENERATE_BRDF_PASS (not used)
 */
 
 #ifdef CONVOLVE_PASS
@@ -20,12 +20,7 @@
 #define attribute in
 #define varying out
 attribute vec4 a_position;
-#ifdef CONVOLVE_PASS
-varying vec3 v_viewVec;
-#endif
-#ifdef GENERATE_BRDF_PASS
 varying vec2 v_texCoord;
-#endif
 struct NoopSampler {
     int noop;
 };
@@ -61,6 +56,7 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
 uniform vec4 ConvolutionParameters;
+uniform vec4 CurrentFace;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -83,21 +79,11 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    #ifdef CONVOLVE_PASS
-    vec3 viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vec2 texCoord;
-    #endif
 };
 
 struct FragmentInput {
-    #ifdef CONVOLVE_PASS
-    vec3 viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vec2 texCoord;
-    #endif
 };
 
 struct FragmentOutput {
@@ -106,25 +92,17 @@ struct FragmentOutput {
 
 uniform lowp samplerCube s_CubeMap;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifdef CONVOLVE_PASS
-    vertOutput.position = ((ViewProj) * (vec4(vertInput.position.xyz, 1.0)));
-    vertOutput.viewVec = vertInput.position.xyz;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
     vertOutput.texCoord = vertInput.position.xy;
+    #ifdef CONVOLVE_PASS
+    vertOutput.texCoord.x = 1.0 - vertOutput.texCoord.x;
     #endif
 }
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.position = (a_position);
-    #ifdef CONVOLVE_PASS
-    vertexOutput.viewVec = vec3(0, 0, 0);
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     vertexOutput.texCoord = vec2(0, 0);
-    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -148,12 +126,7 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     Vert(vertexInput, vertexOutput);
-    #ifdef CONVOLVE_PASS
-    v_viewVec = vertexOutput.viewVec;
-    #endif
-    #ifdef GENERATE_BRDF_PASS
     v_texCoord = vertexOutput.texCoord;
-    #endif
     gl_Position = vertexOutput.position;
 }
 

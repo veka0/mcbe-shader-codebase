@@ -14,6 +14,4 @@ vec3  v_ndcPosition     : COLOR2;
 float v_occlusionHeight : TEXCOORD2;
 vec2  v_occlusionUV     : TEXCOORD1;
 vec2  v_texcoord0       : TEXCOORD0;
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 vec3  v_worldPos        : TEXCOORD3;
-#endif

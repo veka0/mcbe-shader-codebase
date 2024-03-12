@@ -43,7 +43,6 @@ attribute vec4 i_data3;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec3 v_tangent;
@@ -139,7 +138,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -150,7 +148,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -168,7 +165,6 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec3 bitangent;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -187,6 +183,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -199,7 +196,6 @@ struct ColorTransform {
 
 #ifndef DEPTH_ONLY_PASS
 void packPrepassVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    vertOutput.worldPos = stdInput.worldPos;
     vertOutput.prevWorldPos = ((World) * (vec4(stdInput.vertInput.position, 1.0))).xyz;
     vec3 n = stdInput.vertInput.normal.xyz;
     vec3 t = stdInput.vertInput.tangent.xyz;
@@ -216,7 +212,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -229,7 +226,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
@@ -257,7 +255,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -280,7 +278,7 @@ void StandardTemplate_DepthOnly_Vert(VertexInput vertInput, inout VertexOutput v
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
 }
 #endif
@@ -307,7 +305,6 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.tangent = vec3(0, 0, 0);
@@ -343,7 +340,6 @@ void main() {
     #endif
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
-    v_light = vertexOutput.light;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
     v_tangent = vertexOutput.tangent;

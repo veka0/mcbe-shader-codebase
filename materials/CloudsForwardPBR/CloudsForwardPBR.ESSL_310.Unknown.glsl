@@ -8,6 +8,7 @@
 * - DEPTH_ONLY_FALLBACK_PASS (not used)
 * - FALLBACK_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF (not used)

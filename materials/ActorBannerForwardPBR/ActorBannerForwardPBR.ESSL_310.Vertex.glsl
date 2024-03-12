@@ -6,7 +6,8 @@
 * Passes:
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
-* - FORWARD_PBR_ALPHA_TEST_PASS
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS
 *
 * Change_Color:
@@ -62,8 +63,6 @@ attribute vec4 i_data3;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec3 v_tangent;
@@ -86,11 +85,6 @@ vec4 instMul(vec4 _vec, mat4 _mtx) {
 }
 vec4 instMul(mat4 _mtx, vec4 _vec) {
     return ((_mtx) * (_vec));
-}
-#endif
-#ifdef FORWARD_PBR_ALPHA_TEST_PASS
-vec4 vec4_splat(float _x) {
-    return vec4(_x, _x, _x, _x);
 }
 #endif
 struct NoopImage2D {
@@ -144,11 +138,14 @@ uniform vec4 ActorFPEpsilon;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
+uniform vec4 SkyZenithColor;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
 uniform vec4 BannerColors[7];
 uniform vec4 BannerUVOffsetsAndScales[7];
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 Bones[8];
 uniform vec4 ClusterNearFarWidthHeight;
@@ -181,8 +178,8 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowParams;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
-uniform vec4 SkyZenithColor;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 TileLightIntensity;
@@ -209,7 +206,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -238,10 +235,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -269,6 +266,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -299,8 +297,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -312,8 +308,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -333,6 +327,7 @@ uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_NormalTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
@@ -342,8 +337,6 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec3 bitangent;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -364,6 +357,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -378,35 +372,16 @@ vec2 applyUvAnimation(vec2 uv, const vec4 uvAnimation) {
     uv = uvAnimation.xy + (uv * uvAnimation.zw);
     return uv;
 }
-float calculateLightIntensity(const mat4 world, const vec4 normal, const vec4 tileLightColor) {
-    const float AMBIENT = 0.45;
-    const float XFAC = -0.1;
-    const float ZFAC = 0.1;
-    vec3 N = normalize(((world) * (normal))).xyz;
-    N.y *= tileLightColor.a;
-    float yLight = (1.0 + N.y) * 0.5;
-    return yLight * (1.0 - AMBIENT) + N.x * N.x * XFAC + N.z * N.z * ZFAC + AMBIENT;
-}
-float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
-    float distance = cameraDepth / maxDistance;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
-void ActorVert(inout VertexInput vertInput, inout VertexOutput vertOutput) {
+void ActorVertPreprocessBase(inout VertexInput vertInput, inout VertexOutput vertOutput) {
     World = ((World) * (Bones[vertInput.boneId]));
     WorldView = ((View) * (World));
     WorldViewProj = ((Proj) * (WorldView));
     vec2 texcoord = vertInput.texcoord0;
     texcoord = applyUvAnimation(texcoord, UVAnimation);
     vertInput.texcoord0 = texcoord;
-    float lightIntensity = calculateLightIntensity(World, vec4(vertInput.normal.xyz, 0.0), TileLightColor);
-    lightIntensity += OverlayColor.a * 0.35;
-    vertOutput.light = vec4(lightIntensity * TileLightColor.rgb, 1.0);
 }
-void ActorVertFog(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+void ActorVertOverrideBase(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
-    float cameraDepth = vertOutput.position.z;
-    float fogIntensity = calculateFogIntensityVanilla(cameraDepth, FogControl.z, FogControl.x, FogControl.y);
-    vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
 }
 struct ColorTransform {
     float hue;
@@ -414,9 +389,8 @@ struct ColorTransform {
     float luminance;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 void packPBRVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    vertOutput.worldPos = stdInput.worldPos;
     mat4 prevWorldBones = ((PrevWorld) * (PrevBones[stdInput.vertInput.boneId]));
     vertOutput.prevWorldPos = ((prevWorldBones) * (vec4(stdInput.vertInput.position, 1.0))).xyz;
     vec3 n = stdInput.vertInput.normal.xyz;
@@ -426,18 +400,8 @@ void packPBRVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutp
     vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
     vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
 }
-#endif
-#ifdef FORWARD_PBR_ALPHA_TEST_PASS
-void ActorVertPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
-    ActorVertFog(stdInput, vertOutput);
-    packPBRVertOutput(stdInput, vertOutput);
-    vertOutput.light = vec4_splat(1.0);
-}
-#endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-void ActorVertBanner(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    ActorVertFog(stdInput, vertOutput);
+void ActorVertBannerPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    ActorVertOverrideBase(stdInput, vertOutput);
     int frameIndex = int(stdInput.vertInput.color0.a * 255.0);
     vertOutput.texcoords.xy = (BannerUVOffsetsAndScales[frameIndex].zw * stdInput.vertInput.texcoord0) + BannerUVOffsetsAndScales[frameIndex].xy;
     vertOutput.texcoords.zw = (BannerUVOffsetsAndScales[0].zw * stdInput.vertInput.texcoord0) + BannerUVOffsetsAndScales[0].xy;
@@ -449,8 +413,8 @@ void ActorVertBanner(StandardVertexInput stdInput, inout VertexOutput vertOutput
     }
     #endif
 }
-void ActorVertBannerPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    ActorVertBanner(stdInput, vertOutput);
+void ActorVertBannerForwardPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    ActorVertBannerPBR(stdInput, vertOutput);
     packPBRVertOutput(stdInput, vertOutput);
 }
 #endif
@@ -458,7 +422,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -471,7 +436,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
@@ -535,24 +501,21 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
     StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
 }
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
-    ActorVert(vertInput, vertOutput);
+    ActorVertPreprocessBase(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    ActorVertFog(vertInput, vertOutput);
+    ActorVertOverrideBase(vertInput, vertOutput);
     #endif
-    #ifdef FORWARD_PBR_ALPHA_TEST_PASS
-    ActorVertPBR(vertInput, vertOutput);
-    #endif
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    ActorVertBannerPBR(vertInput, vertOutput);
+    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+    ActorVertBannerForwardPBR(vertInput, vertOutput);
     #endif
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
@@ -577,8 +540,6 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
-    vertexOutput.fog = vec4(0, 0, 0, 0);
-    vertexOutput.light = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.tangent = vec3(0, 0, 0);
@@ -610,8 +571,6 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
-    v_fog = vertexOutput.fog;
-    v_light = vertexOutput.light;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
     v_tangent = vertexOutput.tangent;

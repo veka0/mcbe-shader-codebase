@@ -8,10 +8,6 @@
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
 * - TRANSPARENT_PASS
 *
-* Fancy:
-* - FANCY__OFF (not used)
-* - FANCY__ON (not used)
-*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON
@@ -193,6 +189,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -205,6 +202,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -234,9 +232,17 @@ vec2 ndirToOctSnorm(vec3 n) {
     p = (n.z < 0.0) ? octWrap(p) : p;
     return p;
 }
+float packMetalnessSubsurface(float metalness, float subsurface) {
+    if (metalness > subsurface) {
+        return (128.0 / 255.0) + (127.0 / 255.0) * metalness;
+    }
+    else {
+        return (127.0 / 255.0) - (127.0 / 255.0) * subsurface;
+    }
+}
 void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = fragOutput.Color0.rgb;
-    fragOutput.Color0.a = surfaceOutput.Metallic;
+    fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
     vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
@@ -286,6 +292,8 @@ struct CompositingOutput {
 
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -352,6 +360,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ParticleTransparent(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;

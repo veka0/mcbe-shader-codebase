@@ -5,9 +5,10 @@
 *
 * Passes:
 * - DEPTH_ONLY_PASS
-* - DEPTH_ONLY_FALLBACK_PASS (not used)
-* - FALLBACK_PASS (not used)
+* - DEPTH_ONLY_FALLBACK_PASS
+* - FALLBACK_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -34,7 +35,7 @@ struct NoopSampler {
     int noop;
 };
 
-#if defined(INSTANCING__ON)&&(defined(DEPTH_ONLY_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS))
+#if defined(INSTANCING__ON)&& ! defined(DEPTH_ONLY_FALLBACK_PASS)&& ! defined(FALLBACK_PASS)
 vec3 instMul(vec3 _vec, mat3 _mtx) {
     return ((_vec) * (_mtx));
 }
@@ -68,14 +69,14 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 SunDir;
-uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
+uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
+uniform vec4 ShadowBias;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
+uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
@@ -88,8 +89,9 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
@@ -98,13 +100,15 @@ uniform vec4 CloudColor;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform vec4 DistanceControl;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 DistanceControl;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
@@ -120,6 +124,7 @@ uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
+uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SubPixelOffset;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
@@ -128,8 +133,8 @@ mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -142,7 +147,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -171,10 +176,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -202,6 +207,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -245,6 +251,7 @@ struct FragmentOutput {
 uniform lowp sampler2D s_BrdfLUT;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
@@ -281,7 +288,7 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS)
 vec4 jitterVertexPosition(vec3 worldPosition) {
     mat4 offsetProj = Proj;
     offsetProj[2][0] += SubPixelOffset.x;
@@ -325,7 +332,7 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = ((ViewProj) * (vec4(worldPosition, 1.0)));
     vertOutput.position.z = clamp(vertOutput.position.z, 0.0, 1.0);
     #endif
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS)
     VertForwardPBRTransparent(vertInput, vertOutput);
     #endif
 }
@@ -349,8 +356,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {

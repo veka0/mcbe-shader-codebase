@@ -5,6 +5,10 @@
 *
 * Passes:
 * - TRANSPARENT_PASS (not used)
+*
+* Instancing:
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON
 */
 
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -15,7 +19,9 @@ precision mediump float;
 #define attribute in
 #define varying in
 out vec4 bgfx_FragColor;
+varying vec4 v_color0;
 varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -83,6 +89,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform vec4 LightWorldSpaceDirection;
 uniform vec4 SunMoonColor;
 vec4 ViewRect;
 mat4 Proj;
@@ -101,17 +109,27 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    vec4 color0;
     vec3 position;
     vec2 texcoord0;
+    #ifdef INSTANCING__ON
+    vec4 instanceData0;
+    vec4 instanceData1;
+    vec4 instanceData2;
+    #endif
 };
 
 struct VertexOutput {
     vec4 position;
+    vec4 color0;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec4 color0;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -119,15 +137,99 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_SunMoonTexture;
-void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+struct StandardSurfaceInput {
+    vec2 UV;
+    vec3 Color;
+    float Alpha;
+    vec2 texcoord0;
+};
+
+struct StandardVertexInput {
+    VertexInput vertInput;
+    vec3 worldPos;
+};
+
+StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
+    StandardSurfaceInput result;
+    result.UV = vec2(0, 0);
+    result.Color = vec3(1, 1, 1);
+    result.Alpha = 1.0;
+    result.texcoord0 = fragInput.texcoord0;
+    return result;
+}
+struct StandardSurfaceOutput {
+    vec3 Albedo;
+    float Alpha;
+    float Metallic;
+    float Roughness;
+    float Occlusion;
+    float Emissive;
+    float Subsurface;
+    vec3 AmbientLight;
+    vec3 ViewSpaceNormal;
+};
+
+StandardSurfaceOutput StandardTemplate_DefaultOutput() {
+    StandardSurfaceOutput result;
+    result.Albedo = vec3(1, 1, 1);
+    result.Alpha = 1.0;
+    result.Metallic = 0.0;
+    result.Roughness = 1.0;
+    result.Occlusion = 0.0;
+    result.Emissive = 0.0;
+    result.Subsurface = 0.0;
+    result.AmbientLight = vec3(0.0, 0.0, 0.0);
+    result.ViewSpaceNormal = vec3(0, 1, 0);
+    return result;
+}
+struct CompositingOutput {
+    vec3 mLitColor;
+};
+
+vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
+    return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
+struct DirectionalLight {
+    vec3 ViewSpaceDirection;
+    vec3 Intensity;
+};
+
+vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
+    return stdOutput.Albedo;
+}
+void SunMoonSurface(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 diffuse = SunMoonColor;
-    diffuse *= textureSample(s_SunMoonTexture, fragInput.texcoord0);
-    fragOutput.Color0 = diffuse;
+    diffuse *= textureSample(s_SunMoonTexture, surfaceInput.texcoord0);
+    surfaceOutput.Albedo = diffuse.rgb;
+    surfaceOutput.Alpha = diffuse.a;
+}
+void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
+    StandardSurfaceOutput surfaceOutput = StandardTemplate_DefaultOutput();
+    surfaceInput.UV = fragInput.texcoord0;
+    surfaceInput.Color = fragInput.color0.xyz;
+    surfaceInput.Alpha = fragInput.color0.a;
+    SunMoonSurface(surfaceInput, surfaceOutput);
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
+    DirectionalLight primaryLight;
+    vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
+    primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
+    primaryLight.Intensity = LightDiffuseColorAndIlluminance.rgb * LightDiffuseColorAndIlluminance.w;
+    CompositingOutput compositingOutput;
+    compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
+    fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
+    StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
 }
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
+    fragmentInput.color0 = v_color0;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -150,7 +252,7 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    Frag(fragmentInput, fragmentOutput);
+    StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
     bgfx_FragColor = fragmentOutput.Color0;
 }
 

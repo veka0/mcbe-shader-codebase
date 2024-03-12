@@ -43,8 +43,6 @@ precision mediump float;
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec3 v_bitangent;
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec3 v_tangent;
@@ -181,8 +179,6 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -194,8 +190,6 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -217,8 +211,6 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec3 bitangent;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 tangent;
@@ -238,8 +230,6 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.bitangent = fragInput.bitangent;
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.tangent = fragInput.tangent;
@@ -255,6 +245,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -267,6 +258,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -294,29 +286,7 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 }
 #endif
 #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 applyLighting(vec4 diffuse, const vec4 light) {
-    diffuse.rgb *= light.rgb;
-    return diffuse;
-}
-vec4 applyEmissiveLighting(vec4 diffuse, vec4 light) {
-    diffuse = applyLighting(diffuse, light);
-    return diffuse;
-}
-#endif
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
 struct ColorTransform {
@@ -325,7 +295,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef GEOMETRY_PREPASS_PASS
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec2 octWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0);
 }
@@ -334,9 +304,17 @@ vec2 ndirToOctSnorm(vec3 n) {
     p = (n.z < 0.0) ? octWrap(p) : p;
     return p;
 }
+float packMetalnessSubsurface(float metalness, float subsurface) {
+    if (metalness > subsurface) {
+        return (128.0 / 255.0) + (127.0 / 255.0) * metalness;
+    }
+    else {
+        return (127.0 / 255.0) - (127.0 / 255.0) * subsurface;
+    }
+}
 void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = fragOutput.Color0.rgb;
-    fragOutput.Color0.a = surfaceOutput.Metallic;
+    fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
     vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
@@ -363,8 +341,6 @@ void ActorSurfGeometryPrepass(FragmentInput fragInput, StandardSurfaceInput surf
         fragOutput
     );
 }
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec4 getBannerAlbedo(vec4 color, vec2 texcoord0, vec2 texcoord1) {
     vec4 base = textureSample(s_MatTexture, texcoord0);
     #ifdef TINTING__ENABLED
@@ -378,11 +354,10 @@ vec4 applyHudOpacity(vec4 diffuse, float hudOpacity) {
     diffuse.a *= hudOpacity;
     return diffuse;
 }
-void ActorSurfBanner(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+void ActorSurfBannerPBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 color = vec4(surfaceInput.Color, surfaceInput.Alpha);
     vec4 albedo = getBannerAlbedo(color, surfaceInput.texcoords.zw, surfaceInput.texcoords.xy);
-    vec4 diffuse = applyEmissiveLighting(albedo, surfaceInput.light);
-    diffuse = applyHudOpacity(diffuse, HudOpacity.x);
+    vec4 diffuse = applyHudOpacity(albedo, HudOpacity.x);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
 }
@@ -393,6 +368,8 @@ struct CompositingOutput {
 
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
@@ -418,10 +395,11 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 #endif
 #ifdef GEOMETRY_PREPASS_PASS
 void ActorSurfBannerGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    ActorSurfBanner(surfaceInput, surfaceOutput);
+    ActorSurfBannerPBR(surfaceInput, surfaceOutput);
     surfaceOutput.Roughness = 0.5;
     surfaceOutput.Metallic = 0.0;
     surfaceOutput.Emissive = 0.0;
+    surfaceOutput.Subsurface = 0.0;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 #endif
@@ -441,8 +419,9 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     ActorSurfBannerGeometryPrepass(surfaceInput, surfaceOutput);
     #endif
     #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(TRANSPARENT_PASS)
-    ActorSurfBanner(surfaceInput, surfaceOutput);
+    ActorSurfBannerPBR(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -450,10 +429,10 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #ifndef GEOMETRY_PREPASS_PASS
-    ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #ifdef GEOMETRY_PREPASS_PASS
+    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
     ActorSurfGeometryPrepass(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
 }
@@ -462,8 +441,6 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
-    fragmentInput.light = v_light;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.tangent = v_tangent;

@@ -55,9 +55,7 @@ varying vec3 v_ndcPosition;
 varying float v_occlusionHeight;
 varying vec2 v_occlusionUV;
 varying vec2 v_texcoord0;
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 varying vec3 v_worldPos;
-#endif
 struct NoopSampler {
     int noop;
 };
@@ -127,7 +125,6 @@ uniform vec4 ShadowBias;
 uniform vec4 Dimensions;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform vec4 ViewPosition;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
@@ -145,6 +142,7 @@ uniform vec4 UVOffsetAndScale;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
@@ -152,21 +150,21 @@ uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 OcclusionHeightOffset;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 Velocity;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
@@ -179,6 +177,9 @@ uniform vec4 PositionBaseOffset;
 uniform vec4 PositionForwardOffset;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 Velocity;
+uniform vec4 ViewPosition;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -200,7 +201,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -229,10 +230,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -260,6 +261,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -293,9 +295,7 @@ struct VertexOutput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentInput {
@@ -307,9 +307,7 @@ struct FragmentInput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentOutput {
@@ -321,6 +319,7 @@ uniform lowp sampler2D s_LightingTexture;
 uniform lowp sampler2D s_OcclusionTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
@@ -372,6 +371,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -384,6 +384,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -443,6 +444,8 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
@@ -474,10 +477,6 @@ struct DirectionalLightParams {
     int index;
 };
 
-float lumaPerceptual(vec3 color) {
-    vec3 perceptualLuminance = vec3(0.299, 0.587, 0.114);
-    return dot(perceptualLuminance, color);
-}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -605,12 +604,13 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-vec3 evaluateSampledAmbient(float blockAmbientContribution, vec3 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
-    if (blockAmbientTint.x <= 0.0f && blockAmbientTint.y <= 0.0f && blockAmbientTint.z <= 0.0f) {
-        blockAmbientTint = vec3(1.0f, 1.0f, 1.0f);
-    }
-    blockAmbientTint = clamp(blockAmbientTint, vec3(0.1f, 0.1f, 0.1f), vec3(1.0f, 1.0f, 1.0f));
-    vec3 sampledBlockAmbient = (blockAmbientContribution * blockAmbientContribution) * blockAmbientTint * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier * lumaPerceptual(BlockBaseAmbientLightColorIntensity.rgb) / lumaPerceptual(blockAmbientTint);
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float skyAmbientContribution, float ambientFadeInMultiplier) {
+    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
+    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
+    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
+    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
+    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
+    vec3 sampledBlockAmbient = blockAmbientLightFinal * BlockBaseAmbientLightColorIntensity.a * ambientFadeInMultiplier;
     float skyFalloffPow = mix(5.0, 3.0, CameraLightIntensity.y);
     float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
     vec3 sampledSkyAmbient = skyFalloff * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
@@ -652,7 +652,7 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     return outColor;
 }
 vec3 getAmbientDiffuseColor(vec2 lightingUV, vec3 albedo) {
-    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec3(1.0, 1.0, 1.0), lightingUV.y, 1.0);
+    vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec4(1.0, 1.0, 1.0, 1.0), lightingUV.y, 1.0);
     return lightColor * albedo;
 }
 vec3 getDirectionalDiffuseColor(vec3 albedo) {
@@ -704,6 +704,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     WeatherSurface(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -729,9 +730,7 @@ void main() {
     fragmentInput.occlusionHeight = v_occlusionHeight;
     fragmentInput.occlusionUV = v_occlusionUV;
     fragmentInput.texcoord0 = v_texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     fragmentInput.worldPos = v_worldPos;
-    #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

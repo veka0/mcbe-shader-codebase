@@ -72,10 +72,10 @@ uniform mat4 u_proj;
 uniform mat4 PrevInvProj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 PointLightShadowParams1;
-uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
+uniform vec4 SunDir;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
 uniform mat4 u_viewProj;
@@ -96,6 +96,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
 uniform vec4 AlbedoExtinction;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 AmbientContribution;
@@ -107,9 +108,10 @@ uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-uniform vec4 TemporalSettings;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
@@ -122,11 +124,12 @@ uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
-uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
+uniform vec4 SunColor;
+uniform vec4 TemporalSettings;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 uniform vec4 VolumeShadowSettings;
@@ -153,7 +156,7 @@ uvec3 WorkGroupID;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -182,10 +185,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -213,6 +216,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -245,6 +249,7 @@ uniform lowp sampler2D s_BrdfLUT;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
@@ -519,19 +524,21 @@ void Populate() {
     vec3 ambient = blockAmbient + skyAmbient;
     ambient = max(ambient, vec3_splat(AmbientContribution.z));
     source += scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
-    int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
-    for(int i = 0; i < lightCount; i ++ ) {
-        float directOcclusion = 1.0;
-        if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
-            directOcclusion = GetShadowAmount(
-                i,
-                worldPosition,
-                1.0,
-            0.0);
+    if (abs(AmbientContribution.y) > 0.0001) {
+        int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
+        for(int i = 0; i < lightCount; i ++ ) {
+            float directOcclusion = 1.0;
+            if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
+                directOcclusion = GetShadowAmount(
+                    i,
+                    worldPosition,
+                    1.0,
+                0.0);
+            }
+            vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
+            vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
+            source += scattering * directOcclusion * illuminance;
         }
-        vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
-        vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
-        source += scattering * directOcclusion * illuminance;
     }
     if (TemporalSettings.x > 0.0) {
         vec3 uvwUnjittered = (vec3(x, y, z) + vec3(0.5, 0.5, 0.5)) / VolumeDimensions.xyz;

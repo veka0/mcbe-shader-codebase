@@ -23,6 +23,7 @@ out vec4 bgfx_FragColor;
 varying vec4 v_color0;
 varying vec2 v_texcoord0;
 varying vec3 v_viewSpaceNormal;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -94,12 +95,14 @@ struct VertexOutput {
     vec4 color0;
     vec2 texcoord0;
     vec3 viewSpaceNormal;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
     vec4 color0;
     vec2 texcoord0;
     vec3 viewSpaceNormal;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -135,6 +138,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -148,6 +152,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -162,6 +167,8 @@ vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compos
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
 void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
 struct DirectionalLight {
@@ -189,6 +196,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
     EntitySurfOpaque(surfaceInput, surfaceOutput);
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -205,6 +213,7 @@ void main() {
     fragmentInput.color0 = v_color0;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.viewSpaceNormal = v_viewSpaceNormal;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

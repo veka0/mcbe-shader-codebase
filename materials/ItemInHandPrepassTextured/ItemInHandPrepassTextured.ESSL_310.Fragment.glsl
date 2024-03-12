@@ -4,13 +4,10 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - GEOMETRY_PREPASS_PASS
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
-* - OPAQUE_PASS
-* - TRANSPARENT_PASS
 *
 * Fancy:
 * - FANCY__OFF (not used)
@@ -34,8 +31,6 @@ precision mediump float;
 #define varying in
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec4 v_color0;
-varying vec4 v_fog;
-varying vec4 v_light;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec2 v_texcoord0;
@@ -44,7 +39,7 @@ struct NoopSampler {
     int noop;
 };
 
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PASS)
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -153,8 +148,6 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -163,8 +156,6 @@ struct VertexOutput {
 
 struct FragmentInput {
     vec4 color0;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -180,8 +171,6 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec4 fog;
-    vec4 light;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -198,8 +187,6 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    result.fog = fragInput.fog;
-    result.light = fragInput.light;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.worldPos = fragInput.worldPos;
@@ -213,6 +200,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -226,64 +214,30 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
 #endif
-#if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
 }
 #endif
-#if defined(MULTI_COLOR_TINT__OFF)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+#if defined(MULTI_COLOR_TINT__OFF)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
 vec4 applyColorChange(vec4 originalColor, vec4 changeColor, float alpha) {
     originalColor.rgb = mix(originalColor, originalColor * changeColor, alpha).rgb;
     return originalColor;
 }
 #endif
-#if defined(MULTI_COLOR_TINT__ON)&& ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+#if defined(MULTI_COLOR_TINT__ON)&&(defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS))
 vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTintColor) {
     vec2 colorMask = diffuse.rg;
     diffuse.rgb = colorMask.rrr * changeColor;
     diffuse.rgb = mix(diffuse.rgb, colorMask.ggg * multiplicativeTintColor.rgb, ceil(colorMask.g));
     return diffuse;
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 applyLighting(vec4 diffuse, const vec4 light) {
-    diffuse.rgb *= light.rgb;
-    return diffuse;
-}
-#endif
-#ifdef ALPHA_TEST_PASS
-bool shouldDiscard(const float alpha) {
-    return alpha < 0.5;
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 applyItemInHandDiffuse(vec4 albedo, const vec3 color, const vec4 light, float colorChangeAlpha) {
-    albedo.rgb *= mix(vec3(1.0, 1.0, 1.0), color, ColorBased.x).rgb;
-    #ifdef MULTI_COLOR_TINT__OFF
-    albedo = applyColorChange(albedo, ChangeColor, colorChangeAlpha);
-    #endif
-    #ifdef MULTI_COLOR_TINT__ON
-    albedo = applyMultiColorChange(albedo, ChangeColor.rgb, MultiplicativeTintColor.rgb);
-    #endif
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    albedo = applyLighting(albedo, light);
-    return albedo;
-}
-#endif
-#if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-void ItemInHandApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
 }
 #endif
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
@@ -310,9 +264,17 @@ vec2 ndirToOctSnorm(vec3 n) {
     p = (n.z < 0.0) ? octWrap(p) : p;
     return p;
 }
+float packMetalnessSubsurface(float metalness, float subsurface) {
+    if (metalness > subsurface) {
+        return (128.0 / 255.0) + (127.0 / 255.0) * metalness;
+    }
+    else {
+        return (127.0 / 255.0) - (127.0 / 255.0) * subsurface;
+    }
+}
 void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = fragOutput.Color0.rgb;
-    fragOutput.Color0.a = surfaceOutput.Metallic;
+    fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
     vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
@@ -339,20 +301,10 @@ void ItemInHandSurfGeometryPrepass(FragmentInput fragInput, StandardSurfaceInput
         fragOutput
     );
 }
-#endif
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)|| defined(TRANSPARENT_PASS)
 vec4 getItemInHandAlbedo(in StandardSurfaceInput surfaceInput) {
     vec4 albedo = MatColor;
     albedo *= textureSample(s_MatTexture, surfaceInput.UV);
     return albedo;
-}
-#endif
-#ifdef TRANSPARENT_PASS
-void ItemInHandTextured_getTransparentColor(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 albedo = getItemInHandAlbedo(surfaceInput);
-    vec4 diffuse = applyItemInHandDiffuse(albedo, surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
 }
 #endif
 struct CompositingOutput {
@@ -368,24 +320,22 @@ vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compos
 void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
+#ifndef DEPTH_ONLY_PASS
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
+#endif
 struct DirectionalLight {
     vec3 ViewSpaceDirection;
     vec3 Intensity;
 };
 
+#ifdef DEPTH_ONLY_PASS
+void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+}
+#endif
 #ifndef DEPTH_ONLY_PASS
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
-}
-#endif
-#ifdef ALPHA_TEST_PASS
-void ItemInHandAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    if (shouldDiscard(diffuse.a)) {
-        discard;
-    }
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
 }
 #endif
 #ifdef DEPTH_ONLY_OPAQUE_PASS
@@ -393,10 +343,21 @@ void ItemInHandSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceO
 }
 #endif
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+vec4 applyItemInHandDiffusePBR(vec4 albedo, const vec3 color, float colorChangeAlpha) {
+    albedo.rgb *= mix(vec3(1.0, 1.0, 1.0), color, ColorBased.x).rgb;
+    #ifdef MULTI_COLOR_TINT__OFF
+    albedo = applyColorChange(albedo, ChangeColor, colorChangeAlpha);
+    #endif
+    #ifdef MULTI_COLOR_TINT__ON
+    albedo = applyMultiColorChange(albedo, ChangeColor.rgb, MultiplicativeTintColor.rgb);
+    #endif
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
+}
 void ItemInHandTextured_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
     vec4 albedo = color_degamma(getItemInHandAlbedo(surfaceInput));
     vec3 surfaceColor = color_degamma(surfaceInput.Color);
-    vec4 diffuse = applyItemInHandDiffuse(albedo, surfaceColor, surfaceInput.light, surfaceInput.Alpha);
+    vec4 diffuse = applyItemInHandDiffusePBR(albedo, surfaceColor, surfaceInput.Alpha);
     if (isAlphaTest && diffuse.a < 0.5) {
         discard;
     }
@@ -416,13 +377,6 @@ void ItemInHandGeometryPrepass(in StandardSurfaceInput surfaceInput, inout Stand
     #endif
 }
 #endif
-#ifdef OPAQUE_PASS
-void ItemInHandOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = applyItemInHandDiffuse(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.light, surfaceInput.Alpha);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-}
-#endif
 #ifndef DEPTH_ONLY_PASS
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
@@ -430,21 +384,13 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
-    #ifdef ALPHA_TEST_PASS
-    ItemInHandAlpha(surfaceInput, surfaceOutput);
-    #endif
     #ifdef DEPTH_ONLY_OPAQUE_PASS
     ItemInHandSurf(surfaceInput, surfaceOutput);
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
     ItemInHandGeometryPrepass(surfaceInput, surfaceOutput);
     #endif
-    #ifdef OPAQUE_PASS
-    ItemInHandOpaque(surfaceInput, surfaceOutput);
-    #endif
-    #ifdef TRANSPARENT_PASS
-    ItemInHandTextured_getTransparentColor(surfaceInput, surfaceOutput);
-    #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -452,27 +398,18 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)|| defined(TRANSPARENT_PASS)
-    ItemInHandApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
     #ifdef DEPTH_ONLY_OPAQUE_PASS
     StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
     ItemInHandSurfGeometryPrepass(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-}
-#endif
-#ifdef DEPTH_ONLY_PASS
-void StandardTemplate_DepthOnly_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
 }
 #endif
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.color0 = v_color0;
-    fragmentInput.fog = v_fog;
-    fragmentInput.light = v_light;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.texcoord0 = v_texcoord0;
@@ -499,11 +436,11 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    #ifndef DEPTH_ONLY_PASS
-    StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
-    #endif
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_DepthOnly_Frag(fragmentInput, fragmentOutput);
+    #endif
+    #ifndef DEPTH_ONLY_PASS
+    StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
     #endif
     bgfx_FragData[0] = fragmentOutput.Color0; bgfx_FragData[1] = fragmentOutput.Color1; bgfx_FragData[2] = fragmentOutput.Color2; ;
 }

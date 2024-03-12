@@ -4,8 +4,9 @@
 * Available Macros:
 *
 * Passes:
-* - FALLBACK_PASS (not used)
-* - FORWARD_PBR_TRANSPARENT_PASS
+* - FALLBACK_PASS
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 */
 
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
@@ -65,7 +66,9 @@ uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -78,6 +81,7 @@ uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 StarsColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
@@ -100,7 +104,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -129,10 +133,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -160,6 +164,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -194,9 +199,9 @@ struct FragmentOutput {
 
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -205,14 +210,18 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#endif
-void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
+void VertForwardPBRTransparent(VertexInput vertInput, inout VertexOutput vertOutput) {
     vec4 clipPosition = ((WorldViewProj) * (vec4(vertInput.position, 1.0)));
     vec3 ndcPosition = clipPosition.xyz / clipPosition.w;
     vertOutput.position = clipPosition;
     vertOutput.ndcPosition = ndcPosition;
     vertOutput.color0 = vertInput.color0;
+}
+#endif
+void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifndef FALLBACK_PASS
+    VertForwardPBRTransparent(vertInput, vertOutput);
     #endif
 }
 void main() {

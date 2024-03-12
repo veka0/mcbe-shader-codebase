@@ -4,6 +4,7 @@
 * Available Macros:
 *
 * Passes:
+* - ALPHA_TEST_PASS
 * - TRANSPARENT_PASS (not used)
 *
 * MultiColorTint:
@@ -142,6 +143,12 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     if (fragInput.color0.a > 0.0) {
         diffuse.a = ceil(diffuse.a);
     }
+    #ifdef ALPHA_TEST_PASS
+    const float ALPHA_THRESHOLD = 0.5;
+    if (diffuse.a < ALPHA_THRESHOLD) {
+        discard;
+    }
+    #endif
     diffuse *= TintColor;
     diffuse.a = diffuse.a * HudOpacity.x;
     fragOutput.Color0 = diffuse;

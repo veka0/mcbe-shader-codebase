@@ -43,6 +43,7 @@ varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec4 v_light;
 centroid varying vec2 v_texcoord0;
+varying vec3 v_worldPos;
 struct NoopSampler {
     int noop;
 };
@@ -165,6 +166,7 @@ struct VertexOutput {
     vec4 fog;
     vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentInput {
@@ -172,6 +174,7 @@ struct FragmentInput {
     vec4 fog;
     vec4 light;
     vec2 texcoord0;
+    vec3 worldPos;
 };
 
 struct FragmentOutput {
@@ -213,6 +216,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -226,6 +230,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.Roughness = 1.0;
     result.Occlusion = 0.0;
     result.Emissive = 0.0;
+    result.Subsurface = 0.0;
     result.AmbientLight = vec3(0.0, 0.0, 0.0);
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
@@ -281,20 +286,16 @@ vec4 applyActorDiffuse(vec4 albedo, vec3 color, vec4 light) {
     albedo = applyEmissiveLighting(albedo, light);
     return albedo;
 }
-#endif
-#ifndef DEPTH_ONLY_PASS
+vec4 getActorAlbedo(vec2 uv) {
+    vec4 albedo = getActorAlbedoNoColorChange(uv);
+    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
+    return albedo;
+}
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
 void ActorApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     fragOutput.Color0.rgb = applyFogVanilla(fragOutput.Color0.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
-}
-#endif
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 getActorAlbedo(vec2 uv) {
-    vec4 albedo = getActorAlbedoNoColorChange(uv);
-    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
-    return albedo;
 }
 #endif
 #ifdef ALPHA_TEST_PASS
@@ -311,6 +312,10 @@ vec4 applySecondColorTint(vec4 albedo, vec2 uv, out float tintAlpha) {
     return albedo;
 }
 #endif
+#ifdef DEPTH_ONLY_OPAQUE_PASS
+void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+}
+#endif
 struct CompositingOutput {
     vec3 mLitColor;
 };
@@ -318,6 +323,8 @@ struct CompositingOutput {
 #ifndef DEPTH_ONLY_PASS
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
 struct DirectionalLight {
@@ -373,6 +380,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef TRANSPARENT_PASS
     ActorSurfTransparent(surfaceInput, surfaceOutput);
     #endif
+    StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
@@ -380,7 +388,12 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
+    #ifndef DEPTH_ONLY_OPAQUE_PASS
     ActorApplyFog(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
+    #ifdef DEPTH_ONLY_OPAQUE_PASS
+    SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
 }
 #endif
 #ifdef DEPTH_ONLY_PASS
@@ -394,6 +407,7 @@ void main() {
     fragmentInput.fog = v_fog;
     fragmentInput.light = v_light;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

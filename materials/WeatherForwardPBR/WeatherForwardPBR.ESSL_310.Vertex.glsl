@@ -57,9 +57,7 @@ varying vec3 v_ndcPosition;
 varying float v_occlusionHeight;
 varying vec2 v_occlusionUV;
 varying vec2 v_texcoord0;
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 varying vec3 v_worldPos;
-#endif
 struct NoopSampler {
     int noop;
 };
@@ -117,7 +115,6 @@ uniform vec4 ShadowBias;
 uniform vec4 Dimensions;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform vec4 ViewPosition;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
@@ -135,6 +132,7 @@ uniform vec4 UVOffsetAndScale;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
@@ -142,21 +140,21 @@ uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 OcclusionHeightOffset;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
-uniform vec4 Velocity;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
@@ -169,6 +167,9 @@ uniform vec4 PositionBaseOffset;
 uniform vec4 PositionForwardOffset;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 Velocity;
+uniform vec4 ViewPosition;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
@@ -190,7 +191,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -219,10 +220,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -250,6 +251,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -283,9 +285,7 @@ struct VertexOutput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentInput {
@@ -297,9 +297,7 @@ struct FragmentInput {
     float occlusionHeight;
     vec2 occlusionUV;
     vec2 texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vec3 worldPos;
-    #endif
 };
 
 struct FragmentOutput {
@@ -311,6 +309,7 @@ uniform lowp sampler2D s_LightingTexture;
 uniform lowp sampler2D s_OcclusionTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
@@ -343,6 +342,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -390,7 +390,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -403,7 +404,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
@@ -480,7 +482,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);
@@ -522,9 +524,7 @@ void main() {
     vertexOutput.occlusionHeight = 0.0;
     vertexOutput.occlusionUV = vec2(0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     vertexOutput.worldPos = vec3(0, 0, 0);
-    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -556,9 +556,7 @@ void main() {
     v_occlusionHeight = vertexOutput.occlusionHeight;
     v_occlusionUV = vertexOutput.occlusionUV;
     v_texcoord0 = vertexOutput.texcoord0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
     v_worldPos = vertexOutput.worldPos;
-    #endif
     gl_Position = vertexOutput.position;
 }
 

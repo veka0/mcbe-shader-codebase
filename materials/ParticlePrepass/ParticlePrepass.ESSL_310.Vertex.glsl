@@ -8,10 +8,6 @@
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS
 * - TRANSPARENT_PASS (not used)
 *
-* Fancy:
-* - FANCY__OFF (not used)
-* - FANCY__ON (not used)
-*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -166,6 +162,7 @@ struct StandardSurfaceOutput {
     float Roughness;
     float Occlusion;
     float Emissive;
+    float Subsurface;
     vec3 AmbientLight;
     vec3 ViewSpaceNormal;
 };
@@ -199,7 +196,6 @@ void ParticleGeometryAlphaTestVert(VertexInput vertInput, inout VertexOutput ver
     vertOutput.ambientLight = vertInput.ambientLight;
 }
 void ParticleVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.worldPos = vertInput.worldPos;
     vertOutput.normal = vertInput.vertInput.normal.xyz;
     vertOutput.prevWorldPos = vertInput.worldPos;
 }
@@ -208,7 +204,8 @@ struct CompositingOutput {
     vec3 mLitColor;
 };
 
-void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOutput vertOutput, out vec3 worldPosition) {
+void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    VertexInput vertInput = stdInput.vertInput;
     #ifdef INSTANCING__OFF
     vec3 wpos = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -221,7 +218,8 @@ void StandardTemplate_VertSharedTransform(VertexInput vertInput, inout VertexOut
     vec3 wpos = instMul(model, vec4(vertInput.position, 1.0)).xyz;
     #endif
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0)));
-    worldPosition = wpos;
+    stdInput.worldPos = wpos;
+    vertOutput.worldPos = wpos;
 }
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
@@ -238,7 +236,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
     stdInput.vertInput = vertInput;
-    StandardTemplate_VertSharedTransform(vertInput, vertOutput, stdInput.worldPos);
+    StandardTemplate_VertSharedTransform(stdInput, vertOutput);
     vertOutput.texcoord0 = vertInput.texcoord0;
     vertOutput.color0 = vertInput.color0;
     StandardTemplate_InvokeVertexOverrideFunction(stdInput, vertOutput);

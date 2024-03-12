@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - TONEMAP_PASS (not used)
+* - COLOR_POST_PROCESS_PASS (not used)
 */
 
 #define attribute in
@@ -36,6 +36,7 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
+uniform vec4 ColorGrading_Saturation;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
@@ -48,6 +49,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 ColorGrading_Contrast;
+uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
 uniform vec4 ScreenSize;
 uniform vec4 TonemapCorrection;
@@ -90,6 +93,7 @@ uniform lowp sampler2D s_AverageLuminance;
 uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
 uniform lowp sampler2D s_MaxLuminance;
+uniform lowp sampler2D s_PreExposureLuminance;
 uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_RasterizedColor;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {

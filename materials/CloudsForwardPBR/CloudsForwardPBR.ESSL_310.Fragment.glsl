@@ -7,7 +7,8 @@
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_FALLBACK_PASS (not used)
 * - FALLBACK_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
@@ -32,7 +33,7 @@ struct NoopSampler {
     int noop;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -87,14 +88,14 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 SunDir;
-uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
+uniform vec4 SunDir;
 uniform vec4 u_viewTexel;
+uniform vec4 ShadowBias;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
+uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
@@ -107,8 +108,9 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
@@ -117,13 +119,15 @@ uniform vec4 CloudColor;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform vec4 DistanceControl;
 uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 DistanceControl;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
@@ -139,6 +143,7 @@ uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
+uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SubPixelOffset;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
@@ -147,8 +152,8 @@ mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -161,7 +166,7 @@ float AlphaRef;
 struct DiscreteLightingContributions {
     vec3 diffuse;
     vec3 specular;
-    vec3 ambientTint;
+    vec4 ambientTint;
 };
 
 struct LightData {
@@ -190,10 +195,10 @@ struct PBRTextureData {
     float uniformRoughness;
     float uniformEmissive;
     float uniformMetalness;
+    float uniformSubsurface;
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-    float pad;
 };
 
 struct LightSourceWorldInfo {
@@ -221,6 +226,7 @@ struct PBRFragmentInfo {
     float metalness;
     float roughness;
     float emissive;
+    float subsurface;
     float blockAmbientContribution;
     float skyAmbientContribution;
 };
@@ -264,6 +270,7 @@ struct FragmentOutput {
 uniform lowp sampler2D s_BrdfLUT;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
@@ -277,7 +284,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 vec3 applyFog(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
@@ -309,7 +316,7 @@ struct AtmosphereParams {
     float sunGlareShape;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 vec3 calculateSkyColor(AtmosphereParams params, vec3 V) {
     float startHorizon = params.horizonBlendStart;
     float endHorizon = params.horizonBlendMin - params.horizonBlendMax;
@@ -397,7 +404,7 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#ifndef FALLBACK_PASS
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
@@ -438,8 +445,17 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     #ifdef FALLBACK_PASS
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
     #endif
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    #ifndef FALLBACK_PASS
     FragForwardPBRTransparent(fragInput, fragOutput);
+    #endif
+    #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+    vec2 uv = (fragInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
+    float fadeStart = SkyProbeUVFadeParameters.x;
+    float fadeEnd = SkyProbeUVFadeParameters.y;
+    float fadeRange = fadeStart - fadeEnd;
+    float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
+    fragOutput.Color0 *= fade;
+    fragOutput.Color0.a = max(fragOutput.Color0.a, SkyProbeUVFadeParameters.z);
     #endif
 }
 void main() {
@@ -454,8 +470,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {
