@@ -138,6 +138,7 @@ uniform mat4 PrevBones[8];
 uniform vec4 RoughnessUniform;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
 uniform vec4 ViewPositionAndTime;
@@ -464,6 +465,7 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     float metalness = MetalnessUniform.x;
     float emissive = EmissiveUniform.x;
     float roughness = RoughnessUniform.x;
+    float subsurface = SubsurfaceUniform.x;
     const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
     const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
     const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
@@ -477,7 +479,7 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
     surfaceOutput.Roughness = roughness;
-    surfaceOutput.Subsurface = 0.0;
+    surfaceOutput.Subsurface = subsurface;
     if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {
         vec3 tangentNormal = vec3(0.f, 0.f, 1.f);

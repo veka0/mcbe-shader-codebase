@@ -143,6 +143,7 @@ uniform mat4 PrevBones[8];
 uniform vec4 RoughnessUniform;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
 uniform vec4 ViewPositionAndTime;

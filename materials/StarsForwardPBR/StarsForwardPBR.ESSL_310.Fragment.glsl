@@ -306,7 +306,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec2 uv = (fragInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
     float fadeStart = SkyProbeUVFadeParameters.x;
     float fadeEnd = SkyProbeUVFadeParameters.y;
-    float fadeRange = fadeStart - fadeEnd;
+    float fadeRange = fadeStart - fadeEnd + 1e - 5;
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
     fragOutput.Color0 *= fade;
     fragOutput.Color0.a = max(fragOutput.Color0.a, SkyProbeUVFadeParameters.z);

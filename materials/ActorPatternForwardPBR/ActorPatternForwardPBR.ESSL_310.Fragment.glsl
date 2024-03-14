@@ -210,6 +210,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 TileLightIntensity;
@@ -617,6 +618,7 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     float metalness = MetalnessUniform.x;
     float emissive = EmissiveUniform.x;
     float roughness = RoughnessUniform.x;
+    float subsurface = SubsurfaceUniform.x;
     const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
     const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
     const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
@@ -630,7 +632,7 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
     surfaceOutput.Roughness = roughness;
-    surfaceOutput.Subsurface = 0.0;
+    surfaceOutput.Subsurface = subsurface;
     if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {
         vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
@@ -1014,6 +1016,15 @@ AtmosphereParams getAtmosphereParams() {
 vec3 worldSpaceViewDir(vec3 worldPosition) {
     vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz;
     return normalize(worldPosition - cameraPosition);
+}
+vec3 transformCubemapDirectionForScreen(vec3 R) {
+    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
+        R.z *= -1.0;
+    }
+    else {
+        R.y *= -1.0;
+    }
+    return R;
 }
 vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
     return lineDirection * (1.f / dot(lineDirection, normal));
@@ -1427,7 +1438,7 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
     vec3 sampledAmbient = evaluateSampledAmbient(blockAmbientContribution, ambientTint, BlockBaseAmbientLightColorIntensity.a, skyAmbientContribution, SkyAmbientLightColorIntensity, CameraLightIntensity.y, ambientFadeInMultiplier);
     lightContrib.indirectDiffuse += albedo * sampledAmbient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     if (IBLParameters.x != 0.0) {
-        vec3 R = reflect(v, n);
+        vec3 R = transformCubemapDirectionForScreen(reflect(v, n));
         float iblMipLevel = getIBLMipLevel(linearRoughness, IBLParameters.y);
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;

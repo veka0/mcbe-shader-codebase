@@ -5,6 +5,7 @@
 *
 * Passes:
 * - CONVOLVE_PASS
+* - FALLBACK_PASS
 * - GENERATE_BRDF_PASS
 */
 
@@ -25,7 +26,9 @@ precision mediump float;
 #define attribute in
 #define varying in
 out vec4 bgfx_FragColor;
+#ifndef FALLBACK_PASS
 varying vec2 v_texCoord;
+#endif
 struct NoopSampler {
     int noop;
 };
@@ -84,16 +87,31 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    #ifndef FALLBACK_PASS
     vec4 position;
+    #endif
+    #ifdef CONVOLVE_PASS
+    vec2 texcoord0;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct VertexOutput {
     vec4 position;
+    #ifndef FALLBACK_PASS
     vec2 texCoord;
+    #endif
 };
 
 struct FragmentInput {
+    #ifndef FALLBACK_PASS
     vec2 texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct FragmentOutput {
@@ -117,6 +135,7 @@ float G_Smith(float nDotL, float nDotV, float a) {
     return viewTerm * lightTerm;
 }
 #endif
+#ifndef FALLBACK_PASS
 float RadicalInverse_VdC(highp uint bits) {
     bits = (bits << 16u)|(bits >> 16u);
     bits = ((bits & 0x55555555u) << 1u)|((bits & 0xAAAAAAAAu) >> 1u);
@@ -146,6 +165,7 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
     vec3 tangentY = cross(N, tangentX);
     return tangentX * H.x + tangentY * H.y + N * H.z;
 }
+#endif
 #ifdef CONVOLVE_PASS
 vec3 convertQuadToCube(vec2 inCoords, int face) {
     inCoords = inCoords * 2.0 - 1.0;
@@ -171,13 +191,11 @@ vec3 convertQuadToCube(vec2 inCoords, int face) {
     return uv;
 }
 vec4 SampleCubemap(vec3 R, float lod) {
-    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
-        R.z *= -1.0;
-    }
-    else {
-        R.y *= -1.0;
-    }
-    return textureCubeLod(s_CubeMap, R, lod);
+    vec4 color = textureCubeLod(s_CubeMap, R, lod);
+    color.r = isnan(color.r)|| isinf(color.r) ? 65503.0 : color.r;
+    color.g = isnan(color.r)|| isinf(color.g) ? 65503.0 : color.g;
+    color.b = isnan(color.r)|| isinf(color.b) ? 65503.0 : color.b;
+    return color;
 }
 vec3 ImportanceSample(vec3 R, float roughness, uint sampleCount, float edgeLength) {
     vec3 V = R;
@@ -230,6 +248,7 @@ vec2 IntegrateBrdf(vec3 N, float NdotV, float roughness) {
     return vec2(A, B);
 }
 #endif
+#ifndef FALLBACK_PASS
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     #ifdef CONVOLVE_PASS
     vec3 R = normalize(convertQuadToCube(fragInput.texCoord, int(CurrentFace.x)));
@@ -250,10 +269,18 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(brdf.x, brdf.y, 0, 1);
     #endif
 }
+#endif
+#ifdef FALLBACK_PASS
+void FallbackFrag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
+}
+#endif
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
+    #ifndef FALLBACK_PASS
     fragmentInput.texCoord = v_texCoord;
+    #endif
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -276,7 +303,12 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifndef FALLBACK_PASS
     Frag(fragmentInput, fragmentOutput);
+    #endif
+    #ifdef FALLBACK_PASS
+    FallbackFrag(fragmentInput, fragmentOutput);
+    #endif
     bgfx_FragColor = fragmentOutput.Color0;
 }
 

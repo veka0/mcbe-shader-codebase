@@ -5,7 +5,8 @@
 *
 * Passes:
 * - CONVOLVE_PASS
-* - GENERATE_BRDF_PASS (not used)
+* - FALLBACK_PASS
+* - GENERATE_BRDF_PASS
 */
 
 #ifdef CONVOLVE_PASS
@@ -19,8 +20,15 @@
 #endif
 #define attribute in
 #define varying out
+#ifndef FALLBACK_PASS
 attribute vec4 a_position;
+#endif
+#ifdef CONVOLVE_PASS
+attribute vec2 a_texcoord0;
+#endif
+#ifndef FALLBACK_PASS
 varying vec2 v_texCoord;
+#endif
 struct NoopSampler {
     int noop;
 };
@@ -74,16 +82,31 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
+    #ifndef FALLBACK_PASS
     vec4 position;
+    #endif
+    #ifdef CONVOLVE_PASS
+    vec2 texcoord0;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct VertexOutput {
     vec4 position;
+    #ifndef FALLBACK_PASS
     vec2 texCoord;
+    #endif
 };
 
 struct FragmentInput {
+    #ifndef FALLBACK_PASS
     vec2 texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    float dummy;
+    #endif
 };
 
 struct FragmentOutput {
@@ -91,18 +114,34 @@ struct FragmentOutput {
 };
 
 uniform lowp samplerCube s_CubeMap;
+#ifndef FALLBACK_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
-    vertOutput.texCoord = vertInput.position.xy;
     #ifdef CONVOLVE_PASS
+    vertOutput.texCoord = vertInput.texcoord0;
     vertOutput.texCoord.x = 1.0 - vertOutput.texCoord.x;
     #endif
+    #ifdef GENERATE_BRDF_PASS
+    vertOutput.texCoord = vertInput.position.xy;
+    #endif
 }
+#endif
+#ifdef FALLBACK_PASS
+void FallbackVert(VertexInput vertInput, inout VertexOutput vertOutput) {
+}
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
+    #ifndef FALLBACK_PASS
     vertexInput.position = (a_position);
+    #endif
+    #ifdef CONVOLVE_PASS
+    vertexInput.texcoord0 = (a_texcoord0);
+    #endif
+    #ifndef FALLBACK_PASS
     vertexOutput.texCoord = vec2(0, 0);
+    #endif
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -125,8 +164,13 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifndef FALLBACK_PASS
     Vert(vertexInput, vertexOutput);
     v_texCoord = vertexOutput.texCoord;
+    #endif
+    #ifdef FALLBACK_PASS
+    FallbackVert(vertexInput, vertexOutput);
+    #endif
     gl_Position = vertexOutput.position;
 }
 

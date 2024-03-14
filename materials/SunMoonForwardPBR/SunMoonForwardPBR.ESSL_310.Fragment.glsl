@@ -381,10 +381,11 @@ void SunMoonSurface(in StandardSurfaceInput surfaceInput, inout StandardSurfaceO
 #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
 void SunMoonSkyProbeSurface(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     FragForwardPBRTransparent(surfaceInput.texcoord0, surfaceInput.ndcPosition, surfaceOutput.Albedo);
+    surfaceOutput.Alpha = 1.0;
     vec2 uv = (surfaceInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
     float fadeStart = SkyProbeUVFadeParameters.x;
     float fadeEnd = SkyProbeUVFadeParameters.y;
-    float fadeRange = fadeStart - fadeEnd;
+    float fadeRange = fadeStart - fadeEnd + 1e - 5;
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
     surfaceOutput.Albedo *= fade;
     surfaceOutput.Alpha = max(fade, SkyProbeUVFadeParameters.z);

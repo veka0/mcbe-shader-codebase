@@ -26,6 +26,7 @@ precision mediump float;
 out vec4 bgfx_FragColor;
 varying vec4 v_color0;
 varying vec4 v_fog;
+varying vec3 v_normal;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
@@ -125,6 +126,8 @@ uniform vec4 IBLParameters;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 VolumeScatteringEnabled;
+uniform vec4 MERUniforms;
 uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
@@ -132,7 +135,6 @@ uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -240,6 +242,7 @@ struct VertexOutput {
     vec4 position;
     vec4 color0;
     vec4 fog;
+    vec3 normal;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -247,6 +250,7 @@ struct VertexOutput {
 struct FragmentInput {
     vec4 color0;
     vec4 fog;
+    vec3 normal;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -256,6 +260,8 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_NormalTexture;
 uniform lowp sampler2D s_ParticleTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
@@ -272,6 +278,7 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec4 fog;
+    vec3 normal;
 };
 
 struct StandardVertexInput {
@@ -285,6 +292,7 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.fog = fragInput.fog;
+    result.normal = fragInput.normal;
     return result;
 }
 struct StandardSurfaceOutput {
@@ -358,6 +366,29 @@ void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout S
     vec3 skyAmbient = SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
     vec3 ambient = blockAmbient + skyAmbient;
     vec4 shadedColor = vec4(diffuse.rgb * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w, diffuse.a);
+    float metalness = MERUniforms.r;
+    float emissive = MERUniforms.g;
+    float roughness = MERUniforms.b;
+    int flags = int(MERUniforms.a);
+    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+    if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
+        vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
+        metalness = merTexture.r;
+        emissive = merTexture.g;
+        roughness = merTexture.b;
+    }
+    surfaceOutput.Metallic = metalness;
+    surfaceOutput.Emissive = emissive;
+    surfaceOutput.Roughness = roughness;
+    if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
+    {
+        vec3 normalTexture = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;
+        surfaceOutput.ViewSpaceNormal = ((World) * (vec4(normalTexture, 0.0))).xyz;
+    }
+    else {
+        surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+    }
     surfaceOutput.Albedo = shadedColor.rgb;
     surfaceOutput.Alpha = shadedColor.a;
 }
@@ -401,6 +432,7 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.color0 = v_color0;
     fragmentInput.fog = v_fog;
+    fragmentInput.normal = v_normal;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);

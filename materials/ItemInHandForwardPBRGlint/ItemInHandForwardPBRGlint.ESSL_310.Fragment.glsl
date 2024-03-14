@@ -809,6 +809,15 @@ vec3 worldSpaceViewDir(vec3 worldPosition) {
     vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz;
     return normalize(worldPosition - cameraPosition);
 }
+vec3 transformCubemapDirectionForScreen(vec3 R) {
+    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
+        R.z *= -1.0;
+    }
+    else {
+        R.y *= -1.0;
+    }
+    return R;
+}
 vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
     return lineDirection * (1.f / dot(lineDirection, normal));
 }
@@ -1221,7 +1230,7 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
     vec3 sampledAmbient = evaluateSampledAmbient(blockAmbientContribution, ambientTint, BlockBaseAmbientLightColorIntensity.a, skyAmbientContribution, SkyAmbientLightColorIntensity, CameraLightIntensity.y, ambientFadeInMultiplier);
     lightContrib.indirectDiffuse += albedo * sampledAmbient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     if (IBLParameters.x != 0.0) {
-        vec3 R = reflect(v, n);
+        vec3 R = transformCubemapDirectionForScreen(reflect(v, n));
         float iblMipLevel = getIBLMipLevel(linearRoughness, IBLParameters.y);
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;

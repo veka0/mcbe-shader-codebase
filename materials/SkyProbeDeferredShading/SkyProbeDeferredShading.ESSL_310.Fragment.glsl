@@ -563,7 +563,7 @@ void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutpu
         vec2 uv = (fragmentInfo.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
         float fadeStart = SkyProbeUVFadeParameters.x;
         float fadeEnd = SkyProbeUVFadeParameters.y;
-        float fadeRange = fadeStart - fadeEnd;
+        float fadeRange = fadeStart - fadeEnd + 1e - 5;
         float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
         fade = max(fade, SkyProbeUVFadeParameters.w);
         fragOutput.Color0.rgb *= fade;

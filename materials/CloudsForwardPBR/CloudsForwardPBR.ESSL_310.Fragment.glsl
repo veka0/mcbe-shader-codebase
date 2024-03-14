@@ -544,7 +544,7 @@ void CloudsSurfaceSkyProbe(in StandardSurfaceInput surfaceInput, inout StandardS
     vec2 uv = (surfaceInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
     float fadeStart = SkyProbeUVFadeParameters.x;
     float fadeEnd = SkyProbeUVFadeParameters.y;
-    float fadeRange = fadeStart - fadeEnd;
+    float fadeRange = fadeStart - fadeEnd + 1e - 5;
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
     surfaceOutput.Albedo *= fade;
     surfaceOutput.Alpha = max(surfaceOutput.Alpha, SkyProbeUVFadeParameters.z);
