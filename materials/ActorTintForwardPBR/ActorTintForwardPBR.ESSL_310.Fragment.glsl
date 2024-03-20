@@ -533,11 +533,6 @@ float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, fl
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
-vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
-    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    return albedo;
-}
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
@@ -592,6 +587,16 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 }
 #endif
 #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
+    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
+}
 void ActorTint_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
     vec4 albedo = getActorAlbedo(surfaceInput.UV);
     float tintAlpha = 0.0;

@@ -359,6 +359,11 @@ void ParticleAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfa
 }
 #endif
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 diffuse = textureSample(s_ParticleTexture, surfaceInput.UV);
     diffuse = diffuse * vec4(surfaceInput.Color, surfaceInput.Alpha);
@@ -370,8 +375,6 @@ void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout S
     float emissive = MERUniforms.g;
     float roughness = MERUniforms.b;
     int flags = int(MERUniforms.a);
-    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
         vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
         metalness = merTexture.r;

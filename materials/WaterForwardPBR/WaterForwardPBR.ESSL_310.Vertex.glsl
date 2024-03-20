@@ -477,6 +477,11 @@ void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOut
 }
 #endif
 #ifdef DO_WATER_SHADING_PASS
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;

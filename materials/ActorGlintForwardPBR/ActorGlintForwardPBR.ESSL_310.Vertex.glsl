@@ -403,23 +403,6 @@ void ActorVertPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     packPBRVertOutput(stdInput, vertOutput);
 }
 #endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotation, const vec2 scale) {
-    vec2 uv = origUV;
-    uv -= 0.5;
-    float rsin = sin(rotation);
-    float rcos = cos(rotation);
-    uv = ((uv) * (mat2(rcos, - rsin, rsin, rcos)));
-    uv.x += offset;
-    uv += 0.5;
-    return uv * scale;
-}
-void ActorVertGlintPBR(VertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.layerUv.xy = calculateLayerUV(vertInput.texcoord0, UVAnimation.x, UVAnimation.z, UVScale.xy);
-    vertOutput.layerUv.zw = calculateLayerUV(vertInput.texcoord0, UVAnimation.y, UVAnimation.w, UVScale.xy);
-    ActorVertPreprocessBase(vertInput, vertOutput);
-}
-#endif
 struct CompositingOutput {
     vec3 mLitColor;
 };
@@ -498,6 +481,27 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+#endif
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
+vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotation, const vec2 scale) {
+    vec2 uv = origUV;
+    uv -= 0.5;
+    float rsin = sin(rotation);
+    float rcos = cos(rotation);
+    uv = ((uv) * (mat2(rcos, - rsin, rsin, rcos)));
+    uv.x += offset;
+    uv += 0.5;
+    return uv * scale;
+}
+void ActorVertGlintPBR(VertexInput vertInput, inout VertexOutput vertOutput) {
+    vertOutput.layerUv.xy = calculateLayerUV(vertInput.texcoord0, UVAnimation.x, UVAnimation.z, UVScale.xy);
+    vertOutput.layerUv.zw = calculateLayerUV(vertInput.texcoord0, UVAnimation.y, UVAnimation.w, UVScale.xy);
+    ActorVertPreprocessBase(vertInput, vertOutput);
+}
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);

@@ -294,6 +294,10 @@ struct DirectionalLight {
 };
 
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotation, const vec2 scale) {
     vec2 uv = origUV;
     uv -= 0.5;

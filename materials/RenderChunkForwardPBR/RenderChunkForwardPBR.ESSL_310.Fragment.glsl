@@ -531,11 +531,15 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
     }
     return tangentNormal;
 }
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
     return (((surfaceUV) * (uvScale)) + uvBias);
 }
 void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, int pbrTextureId) {
-    const int kInvalidPBRTextureHandle = 0xffff;
     if (pbrTextureId == kInvalidPBRTextureHandle) {
         return;
     }
@@ -544,9 +548,6 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     vec2 normalUVBias = vec2(pbrTextureData.colourToNormalUvBias0, pbrTextureData.colourToNormalUvBias1);
     vec2 materialUVScale = vec2(pbrTextureData.colourToMaterialUvScale0, pbrTextureData.colourToMaterialUvScale1);
     vec2 materialUVBias = vec2(pbrTextureData.colourToMaterialUvBias0, pbrTextureData.colourToMaterialUvBias1);
-    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-    const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
     vec3 tangentNormal = vec3(0, 0, 1);
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {

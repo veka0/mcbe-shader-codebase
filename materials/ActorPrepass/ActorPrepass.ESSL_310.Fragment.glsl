@@ -445,6 +445,11 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
     }
     return tangentNormal;
 }
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);
@@ -466,9 +471,6 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     float emissive = EmissiveUniform.x;
     float roughness = RoughnessUniform.x;
     float subsurface = SubsurfaceUniform.x;
-    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-    const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
         vec3 texel = textureSample(s_MERTexture, surfaceInput.UV).rgb;

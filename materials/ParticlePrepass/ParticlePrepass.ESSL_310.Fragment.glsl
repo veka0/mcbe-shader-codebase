@@ -346,14 +346,17 @@ void Particle_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, in
     float roughness = MERUniforms.b;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 void ParticleGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     Particle_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
     float metalness = MERUniforms.r;
     float emissive = MERUniforms.g;
     float roughness = MERUniforms.b;
     int flags = int(MERUniforms.a);
-    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
         vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
         metalness = merTexture.r;

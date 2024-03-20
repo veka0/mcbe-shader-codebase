@@ -418,6 +418,11 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
     vOutput.lightmapUV = vInput.lightmapUV;
 }
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 struct ColorTransform {
     float hue;
     float saturation;

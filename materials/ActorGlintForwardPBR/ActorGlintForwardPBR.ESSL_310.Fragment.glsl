@@ -533,11 +533,6 @@ float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, fl
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
-vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
-    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    return albedo;
-}
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
@@ -548,37 +543,6 @@ void ActorApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, S
         color = PreExposeLighting(color, exposure);
     }
     fragOutput.Color0.rgb = color;
-}
-vec4 glintBlend(const vec4 dest, const vec4 source) {
-    return vec4(source.rgb * source.rgb, abs(source.a)) + vec4(dest.rgb, 0.0);
-}
-vec4 applyGlint(const vec4 diffuse, const vec4 layerUV, const sampler2D glintTexture, const vec4 glintColor, const vec4 tileLightColor) {
-    vec4 tex1 = textureSample(glintTexture, fract(layerUV.xy)).rgbr * glintColor;
-    vec4 tex2 = textureSample(glintTexture, fract(layerUV.zw)).rgbr * glintColor;
-    vec4 glint = (tex1 + tex2) * tileLightColor;
-    glint = glintBlend(diffuse, glint);
-    glint.a = diffuse.a;
-    return glint;
-}
-vec4 applyActorGlintDiffusePBR(StandardSurfaceInput surfaceInput, vec4 albedo) {
-    vec4 diffuse = applyActorDiffusePBR(albedo, surfaceInput.Color);
-    diffuse = applyGlint(diffuse, surfaceInput.layerUv, s_MatTexture1, GlintColor, TileLightColor);
-    return diffuse;
-}
-void ActorGlint_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.UV);
-    if (isAlphaTest && shouldDiscard(albedo.rgb, albedo.a, ActorFPEpsilon.x)) {
-        discard;
-    }
-    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
-    vec4 diffuse = applyActorGlintDiffusePBR(surfaceInput, albedo);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = 0.5;
-    surfaceOutput.Metallic = 0.0;
-    surfaceOutput.Emissive = 0.0;
-    surfaceOutput.Subsurface = 0.0;
-    surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 #endif
 struct CompositingOutput {
@@ -1454,6 +1418,47 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
     fragmentData.blockAmbientContribution = TileLightIntensity.x;
     fragmentData.skyAmbientContribution = TileLightIntensity.y;
     surfaceOutput.Albedo = evaluateFragmentColor(fragmentData).rgb;
+}
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
+    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
+}
+vec4 glintBlend(const vec4 dest, const vec4 source) {
+    return vec4(source.rgb * source.rgb, abs(source.a)) + vec4(dest.rgb, 0.0);
+}
+vec4 applyGlint(const vec4 diffuse, const vec4 layerUV, const sampler2D glintTexture, const vec4 glintColor, const vec4 tileLightColor) {
+    vec4 tex1 = textureSample(glintTexture, fract(layerUV.xy)).rgbr * glintColor;
+    vec4 tex2 = textureSample(glintTexture, fract(layerUV.zw)).rgbr * glintColor;
+    vec4 glint = (tex1 + tex2) * tileLightColor;
+    glint = glintBlend(diffuse, glint);
+    glint.a = diffuse.a;
+    return glint;
+}
+vec4 applyActorGlintDiffusePBR(StandardSurfaceInput surfaceInput, vec4 albedo) {
+    vec4 diffuse = applyActorDiffusePBR(albedo, surfaceInput.Color);
+    diffuse = applyGlint(diffuse, surfaceInput.layerUv, s_MatTexture1, GlintColor, TileLightColor);
+    return diffuse;
+}
+void ActorGlint_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
+    vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.UV);
+    if (isAlphaTest && shouldDiscard(albedo.rgb, albedo.a, ActorFPEpsilon.x)) {
+        discard;
+    }
+    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, 0.0);
+    vec4 diffuse = applyActorGlintDiffusePBR(surfaceInput, albedo);
+    surfaceOutput.Albedo = diffuse.rgb;
+    surfaceOutput.Alpha = diffuse.a;
+    surfaceOutput.Roughness = 0.5;
+    surfaceOutput.Metallic = 0.0;
+    surfaceOutput.Emissive = 0.0;
+    surfaceOutput.Subsurface = 0.0;
+    surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 #endif
 #ifdef FORWARD_PBR_ALPHA_TEST_PASS

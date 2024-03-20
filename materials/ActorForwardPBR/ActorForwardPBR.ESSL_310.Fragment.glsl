@@ -534,112 +534,6 @@ float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, fl
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
 }
-float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
-    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
-}
-vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
-    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
-    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
-    const float kHeightMapDepth = 4.0f;
-    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
-    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
-    if (fadeForLowerMips > 0.f)
-    {
-        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
-        vec2 pixelCoord = heightmapUV * widthHeight;
-        {
-            const float kNudgePixelCentreDistEpsilon = 0.0625f;
-            const float kNudgeUvEpsilon = 0.25f / 65536.f;
-            vec2 nudgeSampleCoord = fract(pixelCoord);
-            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-        }
-        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
-        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
-        const float kBevelMode = 0.0f;
-        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
-        float axisBevelCentreSampleCoord = subPixelCoord.x;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
-        axisBevelCentreSampleCoord = subPixelCoord.y;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        tangentNormal.z = kRecipHeightMapDepth;
-        tangentNormal = normalize(tangentNormal);
-        tangentNormal.xy *= fadeForLowerMips;
-    }
-    return tangentNormal;
-}
-vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
-    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
-    albedo = applyOverlayColor(albedo, OverlayColor);
-    return albedo;
-}
-void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.texcoord0);
-    float alpha = albedo.a;
-    alpha = mix(alpha, alpha * OverlayColor.a, TintedAlphaTestEnabled.x);
-    if (isAlphaTest && shouldDiscard(albedo.rgb, alpha, ActorFPEpsilon.x)) {
-        discard;
-    }
-    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, UseAlphaRewrite.x);
-    vec4 diffuse = applyActorDiffusePBR(albedo, surfaceInput.Color);
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    int flags = int(PBRTextureFlags.x);
-    float metalness = MetalnessUniform.x;
-    float emissive = EmissiveUniform.x;
-    float roughness = RoughnessUniform.x;
-    float subsurface = SubsurfaceUniform.x;
-    const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-    const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-    const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
-    if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
-    {
-        vec3 texel = textureSample(s_MERTexture, surfaceInput.UV).rgb;
-        metalness = texel.r;
-        emissive = texel.g;
-        roughness = texel.b;
-    }
-    surfaceOutput.Metallic = metalness;
-    surfaceOutput.Emissive = emissive;
-    surfaceOutput.Roughness = roughness;
-    surfaceOutput.Subsurface = subsurface;
-    if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
-    {
-        vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
-        tangentNormal = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;
-        mat3 tbn = mat3(
-            normalize(surfaceInput.tangent),
-            normalize(surfaceInput.bitangent),
-            normalize(surfaceInput.normal)
-        );
-        tbn = transpose(tbn);
-        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
-    }
-    else if ((flags & kPBRTextureDataFlagHasHeightMapTexture) == kPBRTextureDataFlagHasHeightMapTexture) {
-        vec3 tangentNormal = calculateTangentNormalFromHeightmap(s_NormalTexture, surfaceInput.UV, 1.0f);
-        mat3 tbn = mat3(
-            normalize(surfaceInput.tangent),
-            normalize(surfaceInput.bitangent),
-            normalize(surfaceInput.normal)
-        );
-        tbn = transpose(tbn);
-        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
-    }
-    else {
-        surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
-    }
-}
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
@@ -1525,6 +1419,114 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
     fragmentData.blockAmbientContribution = TileLightIntensity.x;
     fragmentData.skyAmbientContribution = TileLightIntensity.y;
     surfaceOutput.Albedo = evaluateFragmentColor(fragmentData).rgb;
+}
+float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
+    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
+}
+vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
+    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
+    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
+    const float kHeightMapDepth = 4.0f;
+    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
+    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
+    if (fadeForLowerMips > 0.f)
+    {
+        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
+        vec2 pixelCoord = heightmapUV * widthHeight;
+        {
+            const float kNudgePixelCentreDistEpsilon = 0.0625f;
+            const float kNudgeUvEpsilon = 0.25f / 65536.f;
+            vec2 nudgeSampleCoord = fract(pixelCoord);
+            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
+            {
+                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
+            }
+        }
+        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
+        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
+        const float kBevelMode = 0.0f;
+        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
+        float axisBevelCentreSampleCoord = subPixelCoord.x;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
+        axisBevelCentreSampleCoord = subPixelCoord.y;
+        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
+        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
+        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
+        tangentNormal.z = kRecipHeightMapDepth;
+        tangentNormal = normalize(tangentNormal);
+        tangentNormal.xy *= fadeForLowerMips;
+    }
+    return tangentNormal;
+}
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
+    albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
+    albedo = applyOverlayColor(albedo, OverlayColor);
+    return albedo;
+}
+void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
+    vec4 albedo = getActorAlbedoNoColorChange(surfaceInput.texcoord0);
+    float alpha = albedo.a;
+    alpha = mix(alpha, alpha * OverlayColor.a, TintedAlphaTestEnabled.x);
+    if (isAlphaTest && shouldDiscard(albedo.rgb, alpha, ActorFPEpsilon.x)) {
+        discard;
+    }
+    albedo = applyChangeColor(albedo, ChangeColor, MultiplicativeTintColor.rgb, UseAlphaRewrite.x);
+    vec4 diffuse = applyActorDiffusePBR(albedo, surfaceInput.Color);
+    surfaceOutput.Albedo = diffuse.rgb;
+    surfaceOutput.Alpha = diffuse.a;
+    int flags = int(PBRTextureFlags.x);
+    float metalness = MetalnessUniform.x;
+    float emissive = EmissiveUniform.x;
+    float roughness = RoughnessUniform.x;
+    float subsurface = SubsurfaceUniform.x;
+    if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
+    {
+        vec3 texel = textureSample(s_MERTexture, surfaceInput.UV).rgb;
+        metalness = texel.r;
+        emissive = texel.g;
+        roughness = texel.b;
+    }
+    surfaceOutput.Metallic = metalness;
+    surfaceOutput.Emissive = emissive;
+    surfaceOutput.Roughness = roughness;
+    surfaceOutput.Subsurface = subsurface;
+    if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
+    {
+        vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
+        tangentNormal = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;
+        mat3 tbn = mat3(
+            normalize(surfaceInput.tangent),
+            normalize(surfaceInput.bitangent),
+            normalize(surfaceInput.normal)
+        );
+        tbn = transpose(tbn);
+        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
+    }
+    else if ((flags & kPBRTextureDataFlagHasHeightMapTexture) == kPBRTextureDataFlagHasHeightMapTexture) {
+        vec3 tangentNormal = calculateTangentNormalFromHeightmap(s_NormalTexture, surfaceInput.UV, 1.0f);
+        mat3 tbn = mat3(
+            normalize(surfaceInput.tangent),
+            normalize(surfaceInput.bitangent),
+            normalize(surfaceInput.normal)
+        );
+        tbn = transpose(tbn);
+        surfaceOutput.ViewSpaceNormal = normalize(((tbn) * (tangentNormal)).xyz);
+    }
+    else {
+        surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+    }
 }
 #endif
 #ifdef FORWARD_PBR_ALPHA_TEST_PASS

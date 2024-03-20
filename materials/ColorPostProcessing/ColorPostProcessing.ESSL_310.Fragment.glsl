@@ -85,7 +85,6 @@ uniform vec4 ColorGrading_Offset_Highlights;
 uniform vec4 ColorGrading_Gamma_Highlights;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
-uniform vec4 LuminanceMinMax;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
@@ -105,6 +104,7 @@ uniform vec4 ColorGrading_Gamma_Midtones;
 uniform vec4 TonemapParams0;
 uniform vec4 ColorGrading_Saturation_Midtones;
 uniform vec4 ColorGrading_Saturation_Shadows;
+uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
 uniform vec4 TonemapCorrection;
@@ -234,21 +234,19 @@ vec3 ApplyColorGrading(vec3 inColor, float averageLuminance) {
     outColor = ApplyOffset(outColor, vec3_splat(averageLuminance) * getGradingVector(ColorGrading_Offset_Highlights.xyz, ColorGrading_Offset_Shadows.xyz, ColorGrading_Offset_Midtones.xyz, averageLuminance, finalLuminance));
     return outColor;
 }
-vec3 TonemapReinhard(vec3 rgb, float W) {
+vec3 TonemapReinhard(vec3 rgb) {
     vec3 color = rgb / (1.0 + rgb);
     return color;
+}
+vec3 TonemapReinhardLuma(vec3 rgb, float W) {
+    return (rgb * (vec3_splat(1.0) + (rgb / vec3_splat(W)))) / (vec3_splat(1.0) + rgb);
 }
 vec3 TonemapReinhardLuminance(vec3 rgb, float W) {
     float l_old = luminance(rgb);
     float l_new = (l_old * (1.0 + (l_old / W))) / (1.0 + l_old);
     return rgb * (l_new / l_old);
 }
-vec3 TonemapReinhardJodie(vec3 rgb) {
-    float l = luminance(rgb);
-    vec3 tc = rgb / (1.0 + rgb);
-    return mix(rgb / (1.0 + l), tc, tc);
-}
-vec3 Uncharted2Tonemap(vec3 x) {
+vec3 HableTonemap(vec3 x) {
     float A = 0.15;
     float B = 0.50;
     float C = 0.10;
@@ -257,10 +255,10 @@ vec3 Uncharted2Tonemap(vec3 x) {
     float F = 0.30;
     return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
 }
-vec3 TonemapUncharted2(vec3 rgb, float W) {
+vec3 TonemapHable(vec3 rgb, float W) {
     const float ExposureBias = 2.0;
-    vec3 curr = Uncharted2Tonemap(ExposureBias * rgb);
-    vec3 whiteScale = 1.0 / Uncharted2Tonemap(vec3_splat(W));
+    vec3 curr = HableTonemap(ExposureBias * rgb);
+    vec3 whiteScale = 1.0 / HableTonemap(vec3_splat(W));
     return curr * whiteScale;
 }
 vec3 RRTAndODTFit(vec3 v) {
@@ -299,19 +297,19 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, flo
     float scaledWhitePoint = exposure * whitePoint;
     float whitePointSquared = scaledWhitePoint * scaledWhitePoint;
     if (tonemapper == 1) {
-        sceneColor = TonemapReinhardLuminance(sceneColor, whitePointSquared);
+        sceneColor = TonemapReinhardLuma(sceneColor, whitePointSquared);
     }
     else if (tonemapper == 2) {
-        sceneColor = TonemapReinhardJodie(sceneColor);
+        sceneColor = TonemapReinhardLuminance(sceneColor, whitePointSquared);
     }
     else if (tonemapper == 3) {
-        sceneColor = TonemapUncharted2(sceneColor, whitePointSquared);
+        sceneColor = TonemapHable(sceneColor, whitePointSquared);
     }
     else if (tonemapper == 4) {
         sceneColor = TonemapACES(sceneColor);
     }
     else {
-        sceneColor = TonemapReinhard(sceneColor, whitePointSquared);
+        sceneColor = TonemapReinhard(sceneColor);
     }
     float finalLuminance = luminance(sceneColor);
     vec3 e = vec3_splat(1.0) / getGradingVector(ColorGrading_Gamma_Highlights.xyz, ColorGrading_Gamma_Shadows.xyz, ColorGrading_Gamma_Midtones.xyz, toneMappedAverageLuminance, finalLuminance);
@@ -332,22 +330,22 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         finalColor.rgb = color_gamma(sceneColor.rgb);
     }
     else {
-        float averageLuminance = clamp(textureSample(s_AverageLuminance, vec2(0.5f, 0.5f)).r, LuminanceMinMax.x, LuminanceMinMax.y);
+        float averageLuminance = clamp(textureSample(s_AverageLuminance, vec2(0.5f, 0.5f)).r, LuminanceMinMaxAndWhitePointAndMinWhitePoint.x, LuminanceMinMaxAndWhitePointAndMinWhitePoint.y);
         float compensation = ExposureCompensation.y;
         int exposureCurveType = int(ExposureCompensation.x);
         if (exposureCurveType > 0 && exposureCurveType < 2) {
             compensation = 1.03f - 2.0f / ((1.0f / log(10.0f)) * log(averageLuminance + 1.0f) + 2.0f);
         }
         else if (exposureCurveType > 1) {
-            vec2 uv = vec2(LuminanceMinMax.x == LuminanceMinMax.y ? 0.5f : (luminanceToEV100(averageLuminance) - luminanceToEV100(LuminanceMinMax.x)) / (luminanceToEV100(LuminanceMinMax.y) - luminanceToEV100(LuminanceMinMax.x)), 0.5f);
+            vec2 uv = vec2(LuminanceMinMaxAndWhitePointAndMinWhitePoint.x == LuminanceMinMaxAndWhitePointAndMinWhitePoint.y ? 0.5f : (luminanceToEV100(averageLuminance) - luminanceToEV100(LuminanceMinMaxAndWhitePointAndMinWhitePoint.x)) / (luminanceToEV100(LuminanceMinMaxAndWhitePointAndMinWhitePoint.y) - luminanceToEV100(LuminanceMinMaxAndWhitePointAndMinWhitePoint.x)), 0.5f);
             compensation = textureSample(s_CustomExposureCompensation, uv).r;
         }
         sceneColor = ApplyColorGrading(
             sceneColor,
             averageLuminance
         );
-        float whitePoint = textureSample(s_MaxLuminance, vec2(0.5f, 0.5f)).r;
-        whitePoint = whitePoint < TonemapCorrection.w ? TonemapCorrection.w : whitePoint;
+        float whitePoint = LuminanceMinMaxAndWhitePointAndMinWhitePoint.z;
+        whitePoint = whitePoint < LuminanceMinMaxAndWhitePointAndMinWhitePoint.w ? LuminanceMinMaxAndWhitePointAndMinWhitePoint.w : whitePoint;
         finalColor.rgb = ApplyTonemap(
             sceneColor,
             averageLuminance,
