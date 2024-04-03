@@ -107,7 +107,7 @@ uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 #ifdef BUILD_HISTOGRAM_PASS
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f * averageLuminance);
+    return color / (0.18f / averageLuminance);
 }
 #endif
 #ifdef CALCULATE_AVERAGE_PASS

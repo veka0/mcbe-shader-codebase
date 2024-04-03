@@ -7,6 +7,7 @@
 * - DEPTH_ONLY_PASS
 * - DO_WATER_FULL_SCREEN_DRAW_PASS
 * - DO_WATER_SHADING_PASS
+* - DO_WATER_SURFACE_BUFFER_PASS
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
@@ -24,7 +25,7 @@
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 #extension GL_EXT_texture_array : enable
 #endif
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -44,7 +45,7 @@ varying vec3 v_bitangent;
 #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
 varying vec4 v_color0;
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 flat varying int v_frontFacing;
 #endif
 #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -54,7 +55,7 @@ varying vec3 v_normal;
 #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
 varying vec3 v_projPosition;
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 flat varying int v_pbrTextureId;
 #endif
 varying vec3 v_tangent;
@@ -98,11 +99,13 @@ vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
+#endif
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 mat4 mtxFromRows(vec4 _0, vec4 _1, vec4 _2, vec4 _3) {
     return transpose(mat4(_0, _1, _2, _3));
 }
@@ -159,6 +162,7 @@ uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 BlueCentralWaterCoefficient;
 uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 WaterSurfaceParameters;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
@@ -195,6 +199,9 @@ uniform vec4 SunColor;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterSurfaceEnabled;
+uniform vec4 WaterSurfaceOctaveParameters;
+uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -293,7 +300,7 @@ struct VertexInput {
     vec2 lightmapUV;
     #endif
     vec4 normal;
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 position;
@@ -312,7 +319,7 @@ struct VertexOutput {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec4 color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int frontFacing;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -322,7 +329,7 @@ struct VertexOutput {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec3 projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -335,7 +342,7 @@ struct FragmentInput {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec4 color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int frontFacing;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -345,7 +352,7 @@ struct FragmentInput {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec3 projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -354,7 +361,12 @@ struct FragmentInput {
 };
 
 struct FragmentOutput {
+    #ifndef DO_WATER_SURFACE_BUFFER_PASS
     vec4 Color0;
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    vec4 Color0; vec4 Color1; vec4 Color2;
+    #endif
 };
 
 uniform lowp sampler2D s_LightMapTexture;
@@ -379,11 +391,11 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     int frontFacing;
     #endif
     vec3 normal;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -403,11 +415,11 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Alpha = 1.0;
     result.lightmapUV = fragInput.lightmapUV;
     result.bitangent = fragInput.bitangent;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     result.frontFacing = fragInput.frontFacing;
     #endif
     result.normal = fragInput.normal;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     result.pbrTextureId = fragInput.pbrTextureId;
     #endif
     result.tangent = fragInput.tangent;
@@ -447,12 +459,12 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef DEPTH_ONLY_PASS
+#if defined(DEPTH_ONLY_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 struct CompositingOutput {
     vec3 mLitColor;
 };
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 mat3 getCIEXYZToRGBTransform() {
     return mat3(
         3.2404542, - 1.5371385, - 0.4985314,
@@ -533,11 +545,50 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
 }
+#endif
+#ifdef DO_WATER_SURFACE_BUFFER_PASS
+vec2 octWrap(vec2 v) {
+    return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0);
+}
+vec2 ndirToOctSnorm(vec3 n) {
+    vec2 p = n.xy * (1.0 / (abs(n.x) + abs(n.y) + abs(n.z)));
+    p = (n.z < 0.0) ? octWrap(p) : p;
+    return p;
+}
+float packMetalnessSubsurface(float metalness, float subsurface) {
+    if (metalness > subsurface) {
+        return (128.0 / 255.0) + (127.0 / 255.0) * metalness;
+    }
+    else {
+        return (127.0 / 255.0) - (127.0 / 255.0) * subsurface;
+    }
+}
+void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, float ambientBlockLight, float ambientSkyLight, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+    fragOutput.Color0.rgb = fragOutput.Color0.rgb;
+    fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
+    vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
+    fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0)));
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color2 = vec4(
+        surfaceOutput.Emissive,
+        ambientBlockLight,
+        ambientSkyLight,
+        surfaceOutput.Roughness
+    );
+}
+#endif
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
     return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0);
 }
@@ -586,8 +637,9 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
     return (((surfaceUV) * (uvScale)) + uvBias);
 }
@@ -619,10 +671,13 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
         vec2 uv = getPBRDataUV(surfaceInput.UV, materialUVScale, materialUVBias);
-        vec3 texel = textureSample(s_MatTexture, uv).rgb;
+        vec4 texel = textureSample(s_MatTexture, uv).rgba;
         metalness = texel.r;
         emissive = texel.g;
         linearRoughness = texel.b;
+        if ((pbrTextureData.flags & kPBRTextureDataFlagHasSubsurfaceChannel) == kPBRTextureDataFlagHasSubsurfaceChannel) {
+            subsurface = texel.a;
+        }
     }
     vec3 vertexNormal = surfaceInput.normal;
     if (surfaceInput.frontFacing != 0) {
@@ -758,7 +813,7 @@ AtmosphereParams getAtmosphereParams() {
     return params;
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 vec3 worldSpaceViewDir(vec3 worldPosition) {
     vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz;
     return normalize(worldPosition - cameraPosition);
@@ -836,7 +891,7 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     return outColor;
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 float calculateCosRefractedAngle(float cosIncidentAngle, float index1, float index2) {
     float ratioSqr = (index1 / index2) * (index1 / index2);
     float cosRefractedAngleSqr = 1.0 - ratioSqr + ratioSqr * cosIncidentAngle * cosIncidentAngle;
@@ -922,7 +977,7 @@ vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTin
     return sampledAmbient;
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -935,7 +990,9 @@ struct ShadowParameters {
     mat4 cloudShadowProj;
 };
 #endif
+#ifndef DO_WATER_SURFACE_BUFFER_PASS
 
+#endif
 #ifdef DEPTH_ONLY_PASS
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
@@ -951,7 +1008,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef DEPTH_ONLY_PASS
     WaterSurfDepthOnly(surfaceInput, surfaceOutput);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     WaterSurf(surfaceInput, surfaceOutput);
     #endif
     StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
@@ -965,12 +1022,12 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     WaterFinal(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
 }
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 struct DirectionalLightParams {
     mat4 shadowProj[4];
     int cascadeCount;
@@ -1278,15 +1335,67 @@ void evaluateDirectionalLightsDirectContribution(vec3 waterSurfaceWorldPos, vec3
 }
 #endif
 #ifdef DO_WATER_SHADING_PASS
+vec2 GenerateWave(vec2 position, vec2 direction, float frequency, float time) {
+    float x = dot(direction, position) * frequency + time;
+    float wave = pow((sin(x) + 1.0) / 2.0, WaterSurfaceWaveParameters.y);
+    float d = (wave * cos(x)) * -1.0;
+    return vec2(wave, d);
+}
+float fBm_ocean(vec2 position, float currentTime) {
+    float currentFrequency = WaterSurfaceParameters.x;
+    vec2 currentPosition = position;
+    float currentSpeed = WaterSurfaceWaveParameters.x;
+    float randomValue = 0.0;
+    float currentWeight = 1.0;
+    float totalHeight = 0.0;
+    float totalWeights = 0.0;
+    for(uint octave = uint(0); octave < uint(WaterSurfaceParameters.y); octave ++ ) {
+        vec2 randomWaveDirection = vec2(sin(randomValue), cos(randomValue));
+        vec2 wave = GenerateWave(currentPosition, randomWaveDirection, currentFrequency, currentTime * currentSpeed);
+        totalHeight += wave.x * currentWeight;
+        totalWeights += currentWeight;
+        currentPosition += randomWaveDirection * wave.y * currentWeight * WaterSurfaceOctaveParameters.x;
+        currentWeight = mix(currentWeight, 0.0, WaterSurfaceOctaveParameters.y);
+        currentFrequency *= WaterSurfaceOctaveParameters.z;
+        currentSpeed *= WaterSurfaceOctaveParameters.w;
+        randomValue += 1.399;
+    }
+    return totalHeight / totalWeights;
+}
+vec3 GetOceanSurfaceNormal(vec2 pos, float time) {
+    float height_a = fBm_ocean(pos, time) * WaterSurfaceParameters.z;
+    vec3 point_a = vec3(pos.x, height_a, pos.y);
+    float sampleWidth = WaterSurfaceParameters.w;
+    float height_b = fBm_ocean(pos.xy - vec2(sampleWidth, 0.0), time) * WaterSurfaceParameters.z;
+    vec3 point_b = vec3(pos.x - sampleWidth, height_b, pos.y);
+    float height_c = fBm_ocean(pos.xy + vec2(0.0, sampleWidth), time) * WaterSurfaceParameters.z;
+    vec3 point_c = vec3(pos.x, height_c, pos.y + sampleWidth);
+    return normalize(cross(point_a - point_b, point_a - point_c));
+}
+#endif
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    #ifdef DO_WATER_SHADING_PASS
     vec3 viewDirWorld = normalize(-worldSpaceViewDir(surfaceInput.worldPos));
     vec3 refractedColor = vec3_splat(0.0);
     vec3 waterSurfaceReflection = vec3_splat(0.0);
-    vec3 waterSurfaceNormal = normalize(surfaceOutput.ViewSpaceNormal);
+    vec3 surfaceNormal = surfaceOutput.ViewSpaceNormal;
+    if (WaterSurfaceEnabled.x > 0.0) {
+        vec3 worldSpaceWaterPosition = surfaceInput.worldPos.xyz - WorldOrigin.xyz;
+        vec3 waterNormal = GetOceanSurfaceNormal(
+            worldSpaceWaterPosition.xz,
+            ViewPositionAndTime.w * 0.5
+        );
+        float surfaceFactor = dot(surfaceOutput.ViewSpaceNormal, vec3(0.0, 1.0, 0.0));
+        surfaceNormal = mix(surfaceNormal, waterNormal, surfaceFactor);
+    }
+    vec3 waterSurfaceNormal = normalize(surfaceNormal);
     vec3 viewUnderWaterDir = -getRefractedDir(-viewDirWorld, waterSurfaceNormal, 1.000, 1.333);
     vec4 waterSurfaceColor = textureSample(s_MatTexture, surfaceInput.UV);
     RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+    #endif
     applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
+    #ifdef DO_WATER_SHADING_PASS
     vec3 waterSurfaceWorldPos = surfaceInput.worldPos;
     vec2 sceneUv = worldToUv(waterSurfaceWorldPos, ViewProj);
     vec3 objectWorldPos = getWorldPosFromDepthTexture(s_SceneDepth, sceneUv, InvView, InvProj);
@@ -1299,14 +1408,30 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
     float viewDistance = length(waterSurfaceWorldPos);
     vec3 ndcPos = vec3(worldToNdc(waterSurfaceWorldPos, ViewProj), 0.0);
     surfaceOutput.Albedo.xyz = evaluateAtmosphericAndVolumetricScattering(baseWaterColor, - viewDirWorld, viewDistance, ndcPos, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    surfaceOutput.Albedo = textureSample(s_MatTexture, surfaceInput.UV).rgb;
+    #endif
 }
 void WaterFinal(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+    #ifdef DO_WATER_SHADING_PASS
     if (IsCameraUnderwater.x > 0.0) {
         fragOutput.Color0.rgb = surfaceOutput.Albedo;
     }
     else {
         fragOutput.Color0 = vec4(surfaceOutput.Albedo, 1.0);
     }
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    applyPrepassSurfaceToGBuffer(
+        surfaceInput.worldPos.xyz,
+        surfaceInput.worldPos.xyz - PrevWorldPosOffset.xyz,
+        surfaceInput.lightmapUV.x,
+        surfaceInput.lightmapUV.y,
+        surfaceOutput,
+        fragOutput
+    );
+    #endif
 }
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
@@ -1317,7 +1442,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef DEPTH_ONLY_PASS
     WaterSurfDepthOnly(surfaceInput, surfaceOutput);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     WaterSurf(surfaceInput, surfaceOutput);
     #endif
     StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
@@ -1331,7 +1456,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef DEPTH_ONLY_PASS
     StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     WaterFinal(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
 }
@@ -1343,7 +1468,7 @@ void main() {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     fragmentInput.color0 = v_color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     fragmentInput.frontFacing = int(gl_FrontFacing);
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -1353,13 +1478,18 @@ void main() {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     fragmentInput.projPosition = v_projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     fragmentInput.pbrTextureId = v_pbrTextureId;
     #endif
     fragmentInput.tangent = v_tangent;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.worldPos = v_worldPos;
+    #ifndef DO_WATER_SURFACE_BUFFER_PASS
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);
+    #endif
     ViewRect = u_viewRect;
     Proj = u_proj;
     View = u_view;
@@ -1390,8 +1520,11 @@ void main() {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     WaterFullScreenFrag(fragmentInput, fragmentOutput);
     #endif
-    #ifndef DEPTH_ONLY_PASS
+    #if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
     bgfx_FragData[0] = fragmentOutput.Color0; ;
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    bgfx_FragData[0] = fragmentOutput.Color0; bgfx_FragData[1] = fragmentOutput.Color1; bgfx_FragData[2] = fragmentOutput.Color2; ;
     #endif
 }
 

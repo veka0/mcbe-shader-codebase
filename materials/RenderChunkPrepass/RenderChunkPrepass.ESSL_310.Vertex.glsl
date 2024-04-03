@@ -374,8 +374,9 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;

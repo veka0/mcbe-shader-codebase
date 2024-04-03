@@ -33,7 +33,7 @@
 * - TINTING__ENABLED
 */
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -45,7 +45,7 @@
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 #extension GL_EXT_texture_array : enable
 #endif
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -103,7 +103,7 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
@@ -344,7 +344,7 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_MERSTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_NormalTexture;
@@ -415,13 +415,13 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
 }
 #endif
-#if defined(CHANGE_COLOR__MULTI)&& defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if defined(CHANGE_COLOR__MULTI)&&(defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS))
 vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTintColor) {
     vec2 colorMask = diffuse.rg;
     diffuse.rgb = colorMask.rrr * changeColor;
@@ -429,7 +429,7 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintColor, float shouldChangeAlpha) {
     #ifdef CHANGE_COLOR__MULTI
     diffuse = applyMultiColorChange(diffuse, changeColor.rgb, multiplicativeTintColor);
@@ -438,7 +438,7 @@ vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintCol
     return diffuse;
 }
 #endif
-#if defined(DEPTH_ONLY_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(FORWARD_PBR_ALPHA_TEST_PASS)
 bool shouldDiscard(vec3 diffuse, float alpha, float epsilon) {
     bool result = false;
     #ifdef CHANGE_COLOR__MULTI
@@ -464,7 +464,7 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -541,7 +541,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
     float distance = cameraDepth / maxDistance;
     distance += fogAlpha;
@@ -555,6 +555,13 @@ vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
+#endif
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
+}
+#endif
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 void ActorApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     vec3 color = surfaceOutput.Albedo;
     if (PreExposureEnabled.x > 0.0) {
@@ -616,7 +623,7 @@ void ActorSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceO
 void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -1327,6 +1334,9 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        if (PreExposureEnabled.x > 0.0) {
+            preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+        }
         vec2 envDFGUV = vec2(nDotv, linearRoughness);
         vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
         vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y);
@@ -1507,8 +1517,9 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);
@@ -1532,10 +1543,13 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
     float subsurface = SubsurfaceUniform.x;
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
-        vec3 texel = textureSample(s_MERTexture, surfaceInput.UV).rgb;
+        vec4 texel = textureSample(s_MERSTexture, surfaceInput.UV).rgba;
         metalness = texel.r;
         emissive = texel.g;
         roughness = texel.b;
+        if ((flags & kPBRTextureDataFlagHasSubsurfaceChannel) == kPBRTextureDataFlagHasSubsurfaceChannel) {
+            subsurface = texel.a;
+        }
     }
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
@@ -1567,6 +1581,15 @@ void Actor_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout
         surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
     }
 }
+#endif
+#ifdef FORWARD_PBR_OPAQUE_PASS
+void ActorBannerSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    Actor_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
+    ActorSurfBannerPBR(surfaceInput, surfaceOutput);
+    ComputePBR(surfaceInput, surfaceOutput);
+}
+#endif
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
 void ActorBannerSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     Actor_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
     ActorSurfBannerPBR(surfaceInput, surfaceOutput);
@@ -1585,8 +1608,11 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef DEPTH_ONLY_OPAQUE_PASS
     ActorSurfOpaque(surfaceInput, surfaceOutput);
     #endif
-    #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_OPAQUE_PASS)
+    #ifdef FORWARD_PBR_ALPHA_TEST_PASS
     ActorSurfBannerPBR(surfaceInput, surfaceOutput);
+    #endif
+    #ifdef FORWARD_PBR_OPAQUE_PASS
+    ActorBannerSurfOpaque(surfaceInput, surfaceOutput);
     #endif
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     ActorBannerSurfTransparent(surfaceInput, surfaceOutput);

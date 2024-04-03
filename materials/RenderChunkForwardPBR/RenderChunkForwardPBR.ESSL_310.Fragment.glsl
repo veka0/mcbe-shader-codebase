@@ -425,7 +425,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#if defined(SEASONS__ON)&&(defined(ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS))
+#if defined(ALPHA_TEST_PASS)&& defined(SEASONS__ON)
 vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
     vec2 uv = vertexColor.xy;
     diffuse.rgb *= mix(vec3(1.0, 1.0, 1.0), textureSample(s_SeasonsTexture, uv).rgb * 2.0, vertexColor.b);
@@ -436,6 +436,23 @@ vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
 #endif
 #if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
 void RenderChunkFallback(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+}
+#endif
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
+}
+#endif
+#if defined(FORWARD_PBR_TRANSPARENT_PASS)&& defined(SEASONS__ON)
+vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
+    vec2 uv = vertexColor.xy;
+    diffuse.rgb *= mix(vec3(1.0, 1.0, 1.0), textureSample(s_SeasonsTexture, uv).rgb * 2.0, vertexColor.b);
+    diffuse.rgb *= vec3_splat(vertexAlpha);
+    diffuse.a = 1.0;
+    return diffuse;
 }
 #endif
 struct CompositingOutput {
@@ -534,8 +551,9 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
     return (((surfaceUV) * (uvScale)) + uvBias);
 }
@@ -567,10 +585,13 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
         vec2 uv = getPBRDataUV(surfaceInput.UV, materialUVScale, materialUVBias);
-        vec3 texel = textureSample(s_MatTexture, uv).rgb;
+        vec4 texel = textureSample(s_MatTexture, uv).rgba;
         metalness = texel.r;
         emissive = texel.g;
         linearRoughness = texel.b;
+        if ((pbrTextureData.flags & kPBRTextureDataFlagHasSubsurfaceChannel) == kPBRTextureDataFlagHasSubsurfaceChannel) {
+            subsurface = texel.a;
+        }
     }
     vec3 vertexNormal = surfaceInput.normal;
     if (surfaceInput.frontFacing != 0) {
@@ -1364,6 +1385,9 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        if (PreExposureEnabled.x > 0.0) {
+            preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+        }
         vec2 envDFGUV = vec2(nDotv, linearRoughness);
         vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
         vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y);
@@ -1490,9 +1514,6 @@ void RenderChunk_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput,
     #endif
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
-}
-vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
 }
 #endif
 #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)

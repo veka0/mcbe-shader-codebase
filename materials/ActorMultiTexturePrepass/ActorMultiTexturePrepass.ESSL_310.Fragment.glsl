@@ -199,7 +199,7 @@ struct FragmentOutput {
     vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
-uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_MERSTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_MatTexture2;
@@ -431,8 +431,9 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);

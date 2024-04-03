@@ -7,6 +7,7 @@
 * - DEPTH_ONLY_PASS
 * - DO_WATER_FULL_SCREEN_DRAW_PASS
 * - DO_WATER_SHADING_PASS
+* - DO_WATER_SURFACE_BUFFER_PASS
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -24,7 +25,7 @@
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#ifndef DEPTH_ONLY_PASS
+#if defined(DO_WATER_FULL_SCREEN_DRAW_PASS)|| defined(DO_WATER_SHADING_PASS)
 #extension GL_EXT_texture_array : enable
 #endif
 #define attribute in
@@ -39,7 +40,7 @@ attribute vec2 a_texcoord0;
 #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
 attribute vec2 a_texcoord1;
 #endif
-#if defined(DO_WATER_SHADING_PASS)&& defined(INSTANCING__ON)
+#if defined(DO_WATER_SURFACE_BUFFER_PASS)||(defined(DO_WATER_SHADING_PASS)&& defined(INSTANCING__ON))
 attribute float a_texcoord4;
 #endif
 #if defined(INSTANCING__ON)&& ! defined(DO_WATER_FULL_SCREEN_DRAW_PASS)
@@ -54,7 +55,7 @@ varying vec3 v_bitangent;
 #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
 varying vec4 v_color0;
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 flat varying int v_frontFacing;
 #endif
 #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -64,7 +65,7 @@ varying vec3 v_normal;
 #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
 varying vec3 v_projPosition;
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 flat varying int v_pbrTextureId;
 #endif
 varying vec3 v_tangent;
@@ -137,6 +138,7 @@ uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 BlueCentralWaterCoefficient;
 uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 WaterSurfaceParameters;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
@@ -173,6 +175,9 @@ uniform vec4 SunColor;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterSurfaceEnabled;
+uniform vec4 WaterSurfaceOctaveParameters;
+uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -271,7 +276,7 @@ struct VertexInput {
     vec2 lightmapUV;
     #endif
     vec4 normal;
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 position;
@@ -290,7 +295,7 @@ struct VertexOutput {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec4 color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int frontFacing;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -300,7 +305,7 @@ struct VertexOutput {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec3 projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -313,7 +318,7 @@ struct FragmentInput {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec4 color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int frontFacing;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -323,7 +328,7 @@ struct FragmentInput {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     vec3 projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -332,7 +337,12 @@ struct FragmentInput {
 };
 
 struct FragmentOutput {
+    #ifndef DO_WATER_SURFACE_BUFFER_PASS
     vec4 Color0;
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    vec4 Color0; vec4 Color1; vec4 Color2;
+    #endif
 };
 
 uniform lowp sampler2D s_LightMapTexture;
@@ -353,11 +363,11 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     int frontFacing;
     #endif
     vec3 normal;
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     int pbrTextureId;
     #endif
     vec3 tangent;
@@ -476,12 +486,13 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
 void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
 }
 #endif
-#ifdef DO_WATER_SHADING_PASS
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;
@@ -494,6 +505,8 @@ float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOut
     vertOutput.worldPos = stdInput.worldPos;
     return cameraDepth;
 }
+#endif
+#ifdef DO_WATER_SHADING_PASS
 struct AtmosphereParams {
     vec3 sunDir;
     vec3 moonDir;
@@ -539,6 +552,8 @@ struct DirectionalLightParams {
     int index;
 };
 
+#endif
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     return applyPBRValuesToVertexOutput(stdInput, vertOutput);
 }
@@ -561,7 +576,7 @@ void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput
     #ifdef DEPTH_ONLY_PASS
     WaterVertDepthOnly(vertInput, vertOutput);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #ifndef DEPTH_ONLY_PASS
     WaterVert(vertInput, vertOutput);
     #endif
 }
@@ -589,7 +604,7 @@ void main() {
     vertexInput.lightmapUV = (a_texcoord1);
     #endif
     vertexInput.normal = (a_normal);
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     vertexInput.pbrTextureId = int(a_texcoord4);
     #endif
     vertexInput.position = (a_position);
@@ -604,7 +619,7 @@ void main() {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     vertexOutput.frontFacing = 0;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -614,7 +629,7 @@ void main() {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     vertexOutput.projPosition = vec3(0, 0, 0);
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     vertexOutput.pbrTextureId = 0;
     #endif
     vertexOutput.tangent = vec3(0, 0, 0);
@@ -652,7 +667,7 @@ void main() {
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
     v_color0 = vertexOutput.color0;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     v_frontFacing = vertexOutput.frontFacing;
     #endif
     #ifndef DO_WATER_FULL_SCREEN_DRAW_PASS
@@ -662,7 +677,7 @@ void main() {
     #ifdef DO_WATER_FULL_SCREEN_DRAW_PASS
     v_projPosition = vertexOutput.projPosition;
     #endif
-    #ifdef DO_WATER_SHADING_PASS
+    #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     v_pbrTextureId = vertexOutput.pbrTextureId;
     #endif
     v_tangent = vertexOutput.tangent;

@@ -7,6 +7,7 @@
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - FORWARD_PBR_ALPHA_TEST_PASS
+* - FORWARD_PBR_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
 *
 * Change_Color:
@@ -29,7 +30,7 @@
 * - MASKED_MULTITEXTURE__ON
 */
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -41,7 +42,7 @@
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 #extension GL_EXT_texture_array : enable
 #endif
 #if GL_FRAGMENT_PRECISION_HIGH
@@ -99,7 +100,7 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
@@ -340,7 +341,7 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_MERSTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_NormalTexture;
@@ -411,7 +412,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
@@ -425,7 +426,7 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec4 applyChangeColor(vec4 diffuse, vec4 changeColor, vec3 multiplicativeTintColor, float shouldChangeAlpha) {
     #ifdef CHANGE_COLOR__MULTI
     diffuse = applyMultiColorChange(diffuse, changeColor.rgb, multiplicativeTintColor);
@@ -464,7 +465,7 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -524,7 +525,7 @@ struct ColorTransform {
     float luminance;
 };
 
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
     float distance = cameraDepth / maxDistance;
     distance += fogAlpha;
@@ -535,6 +536,9 @@ vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
 }
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
+}
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
 }
 void ActorApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     vec3 color = surfaceOutput.Albedo;
@@ -576,7 +580,7 @@ void ActorSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceO
 void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
 }
 #endif
-#if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -1287,6 +1291,9 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        if (PreExposureEnabled.x > 0.0) {
+            preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+        }
         vec2 envDFGUV = vec2(nDotv, linearRoughness);
         vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
         vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y);
@@ -1422,8 +1429,9 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);
@@ -1467,6 +1475,12 @@ void ActorGlintSurfAlphaTest(in StandardSurfaceInput surfaceInput, inout Standar
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
+#ifdef FORWARD_PBR_OPAQUE_PASS
+void ActorGlintSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    ActorGlint_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
+    ComputePBR(surfaceInput, surfaceOutput);
+}
+#endif
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 void ActorGlintSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ActorGlint_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
@@ -1488,6 +1502,9 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #ifdef FORWARD_PBR_ALPHA_TEST_PASS
     ActorGlintSurfAlphaTest(surfaceInput, surfaceOutput);
     #endif
+    #ifdef FORWARD_PBR_OPAQUE_PASS
+    ActorGlintSurfOpaque(surfaceInput, surfaceOutput);
+    #endif
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     ActorGlintSurfTransparent(surfaceInput, surfaceOutput);
     #endif
@@ -1502,7 +1519,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     SurfaceFinalColorOverrideBase(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
-    #if defined(FORWARD_PBR_ALPHA_TEST_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
+    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
     ActorApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
 }

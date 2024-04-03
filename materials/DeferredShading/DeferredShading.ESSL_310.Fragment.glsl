@@ -347,6 +347,9 @@ void unpackMetalnessSubsurface(float metalnessSubsurface, out float metalness, o
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
+}
 PBRFragmentInfo getPBRFragmentInfo(FragmentInput fragInput) {
     vec2 uv = fragInput.texcoord0;
     float z = textureSample(s_SceneDepth, uv).r;
@@ -1121,6 +1124,9 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        if (PreExposureEnabled.x > 0.0) {
+            preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+        }
         vec2 envDFGUV = vec2(nDotv, linearRoughness);
         vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
         vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y);

@@ -317,7 +317,7 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, flo
     return TonemapColorCorrection(sceneColor, finalLuminance, brightness, contrast, saturation);
 }
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f * averageLuminance);
+    return color / (0.18f / averageLuminance);
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 sceneColor = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;

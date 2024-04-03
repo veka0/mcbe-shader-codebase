@@ -324,6 +324,9 @@ void unpackMetalnessSubsurface(float metalnessSubsurface, out float metalness, o
     metalness = clamp((255.0 / 127.0) * (metalnessSubsurface - (128.0 / 255.0)), 0.0, 1.0);
     subsurface = clamp((255.0 / 127.0) * ((127.0 / 255.0) - metalnessSubsurface), 0.0, 1.0);
 }
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
 PBRFragmentInfo getPBRFragmentInfo(FragmentInput fragInput) {
     vec2 uv = fragInput.texcoord0;
     float z = textureSample(s_SceneDepth, uv).r;
@@ -553,11 +556,9 @@ void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutpu
         viewDirWorld = normalize(viewDirWorld);
     }
     vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
-    fragOutput.Color0.rgb = fogAppliedColor;
-    fragOutput.Color0.a = 1.0f;
     if (CurrentFace.x == float(3)) {
         float fade = SkyProbeUVFadeParameters.w;
-        fragOutput.Color0.rgb *= fade;
+        fogAppliedColor *= fade;
     }
     else if (CurrentFace.x != float(2)) {
         vec2 uv = (fragmentInfo.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
@@ -566,8 +567,13 @@ void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutpu
         float fadeRange = fadeStart - fadeEnd + 1e - 5;
         float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
         fade = max(fade, SkyProbeUVFadeParameters.w);
-        fragOutput.Color0.rgb *= fade;
+        fogAppliedColor *= fade;
     }
+    if (PreExposureEnabled.x > 0.0) {
+        fogAppliedColor = PreExposeLighting(fogAppliedColor, 1.0);
+    }
+    fragOutput.Color0.rgb = fogAppliedColor;
+    fragOutput.Color0.a = 1.0f;
     #endif
     #ifdef FALLBACK_PASS
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);

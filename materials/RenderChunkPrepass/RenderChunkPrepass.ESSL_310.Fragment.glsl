@@ -493,8 +493,9 @@ vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 height
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
     return (((surfaceUV) * (uvScale)) + uvBias);
 }
@@ -526,10 +527,13 @@ void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout S
     if ((pbrTextureData.flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
     {
         vec2 uv = getPBRDataUV(surfaceInput.UV, materialUVScale, materialUVBias);
-        vec3 texel = textureSample(s_MatTexture, uv).rgb;
+        vec4 texel = textureSample(s_MatTexture, uv).rgba;
         metalness = texel.r;
         emissive = texel.g;
         linearRoughness = texel.b;
+        if ((pbrTextureData.flags & kPBRTextureDataFlagHasSubsurfaceChannel) == kPBRTextureDataFlagHasSubsurfaceChannel) {
+            subsurface = texel.a;
+        }
     }
     vec3 vertexNormal = surfaceInput.normal;
     if (surfaceInput.frontFacing != 0) {

@@ -452,6 +452,9 @@ vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
+}
 void ItemInHandApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     vec3 color = surfaceOutput.Albedo;
     if (PreExposureEnabled.x > 0.0) {
@@ -1211,6 +1214,9 @@ void evaluateIndirectLightingContribution(inout PBRLightingContributions lightCo
         vec3 preFilteredColorCurrent = textureCubeLod(s_SpecularIBLCurrent, R, iblMipLevel).rgb;
         vec3 preFilteredColorPrevious = textureCubeLod(s_SpecularIBLPrevious, R, iblMipLevel).rgb;
         vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, IBLParameters.w);
+        if (PreExposureEnabled.x > 0.0) {
+            preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+        }
         vec2 envDFGUV = vec2(nDotv, linearRoughness);
         vec2 envDFG = textureSample(s_BrdfLUT, envDFGUV).rg;
         vec3 indSpec = preFilteredColor * (f0 * envDFG.x + envDFG.y);
