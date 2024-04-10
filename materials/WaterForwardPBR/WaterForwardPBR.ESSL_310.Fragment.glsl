@@ -503,11 +503,10 @@ struct AtmosphereParams {
 };
 #endif
 #ifdef DO_WATER_SHADING_PASS
-vec2 worldToNdc(vec3 worldPos, mat4 viewProj) {
+vec3 worldToNdc(vec3 worldPos, mat4 viewProj) {
     vec4 clipSpacePos = ((viewProj) * (vec4(worldPos, 1.0)));
-    vec2 ndc = clipSpacePos.xy / clipSpacePos.w;
-    ndc.y *= -1.0;
-    return (vec2((ndc).x, 1.0 - (ndc).y));
+    vec3 ndc = clipSpacePos.xyz / clipSpacePos.w;
+    return ndc;
 }
 vec3 getWorldPosFromDepthTexture(sampler2D depthTexture, vec2 uv, mat4 inverseView, mat4 inverseProj) {
     float depth = textureSample(depthTexture, uv).r;
@@ -519,8 +518,10 @@ vec3 getWorldPosFromDepthTexture(sampler2D depthTexture, vec2 uv, mat4 inverseVi
     return ((inverseView) * (vec4(viewPosition.xyz, 1.0))).xyz;
 }
 vec2 worldToUv(vec3 worldPos, mat4 viewProj) {
-    vec2 ndc = worldToNdc(worldPos, viewProj);
-    vec2 uv = 0.5 * (ndc + vec2(1.0, 1.0));
+    vec3 ndc = worldToNdc(worldPos, viewProj);
+    ndc.y *= -1.0;
+    vec2 platformNdc = (vec2((ndc.xy).x, 1.0 - (ndc.xy).y));
+    vec2 uv = 0.5 * (platformNdc + vec2(1.0, 1.0));
     return uv;
 }
 struct CompositingOutput {
@@ -1406,7 +1407,7 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
     vec3 baseWaterColor = refractedColor + waterSurfaceReflection + waterSurfaceColor.rgb * DiffuseSpecularEmissiveAmbientTermToggles.w *
     evaluateSampledAmbient(surfaceInput.lightmapUV.x, vec4(1.0, 1.0, 1.0, 1.0), BlockBaseAmbientLightColorIntensity.a, surfaceInput.lightmapUV.y, SkyAmbientLightColorIntensity, CameraLightIntensity.y, 1.0);
     float viewDistance = length(waterSurfaceWorldPos);
-    vec3 ndcPos = vec3(worldToNdc(waterSurfaceWorldPos, ViewProj), 0.0);
+    vec3 ndcPos = worldToNdc(waterSurfaceWorldPos, ViewProj);
     surfaceOutput.Albedo.xyz = evaluateAtmosphericAndVolumetricScattering(baseWaterColor, - viewDirWorld, viewDistance, ndcPos, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     #endif
     #ifdef DO_WATER_SURFACE_BUFFER_PASS

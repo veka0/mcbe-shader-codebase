@@ -234,13 +234,6 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-vec3 color_degamma(vec3 clr) {
-    float e = 2.2;
-    return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
-}
-vec4 color_degamma(vec4 clr) {
-    return vec4(color_degamma(clr.rgb), clr.a);
-}
 #endif
 struct ColorTransform {
     float hue;
@@ -292,7 +285,6 @@ void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSur
     vec4 albedo = MatColor;
     albedo *= textureSample(s_MatTexture, surfaceInput.UV);
     #endif
-    vec3 surfaceColor = color_degamma(surfaceInput.Color);
     if (albedo.a < 0.5) {
         discard;
     }

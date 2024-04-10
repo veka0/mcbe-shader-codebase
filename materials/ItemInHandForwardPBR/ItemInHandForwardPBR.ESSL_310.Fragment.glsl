@@ -492,8 +492,7 @@ vec4 applyItemInHandDiffusePBR(vec4 albedo, const vec3 color, float colorChangeA
     return albedo;
 }
 void ItemInHand_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec3 surfaceColor = color_degamma(surfaceInput.Color);
-    vec4 diffuse = applyItemInHandDiffusePBR(vec4(1.0, 1.0, 1.0, 1.0), surfaceColor, surfaceInput.Alpha);
+    vec4 diffuse = applyItemInHandDiffusePBR(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.Alpha);
     if (isAlphaTest && shouldDiscard(diffuse.a)) {
         discard;
     }
@@ -1352,18 +1351,21 @@ void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutpu
 #ifdef FORWARD_PBR_ALPHA_TEST_PASS
 void ItemInHandSurfAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ItemInHand_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+    surfaceOutput.Albedo = color_degamma(surfaceOutput.Albedo);
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
 #ifdef FORWARD_PBR_OPAQUE_PASS
 void ItemInHandSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ItemInHand_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
+    surfaceOutput.Albedo = color_degamma(surfaceOutput.Albedo);
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 void ItemInHandSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ItemInHand_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, false);
+    surfaceOutput.Albedo = color_degamma(surfaceOutput.Albedo);
     ComputePBR(surfaceInput, surfaceOutput);
 }
 #endif
