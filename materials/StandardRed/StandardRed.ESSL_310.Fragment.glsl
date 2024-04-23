@@ -107,6 +107,7 @@ uniform vec4 LightAmbientColorAndIntensity;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 ShadowFilterSize;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 ShadowTexel;
 uniform mat4 ShadowTransform;
 vec4 ViewRect;

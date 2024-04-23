@@ -71,6 +71,9 @@ vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
+vec3 vec3_splat(float _x) {
+    return vec3(_x, _x, _x);
+}
 #endif
 struct NoopImage2D {
     int noop;
@@ -284,6 +287,13 @@ vec3 color_degamma(vec3 clr) {
 vec4 color_degamma(vec4 clr) {
     return vec4(color_degamma(clr.rgb), clr.a);
 }
+float luminance(vec3 clr) {
+    return dot(clr, vec3(0.2126, 0.7152, 0.0722));
+}
+vec3 desaturate(vec3 color, float amount) {
+    float lum = luminance(color);
+    return mix(color, vec3(lum, lum, lum), amount);
+}
 #endif
 struct ColorTransform {
     float hue;
@@ -495,13 +505,13 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
-vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition) {
+vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition, bool enableAtmosphericScattering, bool enableVolumeScattering, bool enableBlendWithSky) {
     vec3 fogAppliedColor;
-    if (AtmosphericScatteringToggles.x != 0.0) {
+    if (enableAtmosphericScattering) {
         float fogIntensity = calculateFogIntensityFaded(viewDistance, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
         if (fogIntensity > 0.0) {
             vec3 fogColor = vec3(0.0, 0.0, 0.0);
-            if (AtmosphericScatteringToggles.y == 0.0) {
+            if (!enableBlendWithSky) {
                 fogColor = FogColor.rgb;
             }
             else {
@@ -518,7 +528,7 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
         fogAppliedColor = applyFogVanilla(surfaceRadiance, FogColor.rgb, fogIntensity);
     }
     vec3 outColor;
-    if (VolumeScatteringEnabled.x != 0.0) {
+    if (enableVolumeScattering) {
         vec3 uvw = ndcToVolume(ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
         outColor = applyScattering(sourceExtinction, fogAppliedColor);
@@ -528,18 +538,21 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     }
     return outColor;
 }
+vec3 evaluateEmissiveContribution(vec3 albedo, float emissive) {
+    return DiffuseSpecularEmissiveAmbientTermToggles.z * desaturate(albedo, EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y) * vec3_splat(emissive) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x;
+}
 #endif
 void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     #ifdef DO_DEFERRED_SHADING_PASS
     PBRFragmentInfo fragmentInfo = getPBRFragmentInfo(fragInput);
-    vec3 surfaceRadiance = fragmentInfo.albedo;
+    vec3 surfaceRadiance = evaluateEmissiveContribution(fragmentInfo.albedo, fragmentInfo.emissive);
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
     if (viewDirWorld.y < 0.1) {
         viewDirWorld.y = 0.1f;
         viewDirWorld = normalize(viewDirWorld);
     }
-    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition);
+    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     fragOutput.Color0.rgb = fogAppliedColor;
     fragOutput.Color0.a = 1.0f;
     if (CurrentFace.x == float(3)) {
@@ -550,7 +563,7 @@ void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutpu
         vec2 uv = (fragmentInfo.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
         float fadeStart = SkyProbeUVFadeParameters.x;
         float fadeEnd = SkyProbeUVFadeParameters.y;
-        float fadeRange = fadeStart - fadeEnd;
+        float fadeRange = fadeStart - fadeEnd + 1e - 5;
         float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
         fade = max(fade, SkyProbeUVFadeParameters.w);
         fragOutput.Color0.rgb *= fade;

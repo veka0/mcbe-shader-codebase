@@ -108,6 +108,7 @@ uniform vec4 FogColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 Velocity;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 PositionBaseOffset;
 uniform vec4 PositionForwardOffset;
 vec4 ViewRect;

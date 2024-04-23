@@ -110,7 +110,7 @@ uniform lowp samplerCube s_SrcTextureCube;
 #ifdef CUBEMAP_TO_OFFSCREEN_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
-    vertOutput.texCoord = vertInput.position.xy;
+    vertOutput.texCoord = vertInput.texcoord0;
 }
 #endif
 #ifdef FALLBACK_PASS

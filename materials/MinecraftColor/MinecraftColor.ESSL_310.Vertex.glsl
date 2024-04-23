@@ -79,6 +79,7 @@ uniform vec4 u_alphaRef4;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;

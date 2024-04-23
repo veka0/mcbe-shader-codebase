@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_PASS
 * - TRANSPARENT_PASS (not used)
 *
 * Instancing:
@@ -28,6 +28,7 @@ attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
 varying vec4 v_fog;
+varying vec3 v_normal;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
@@ -108,13 +109,15 @@ uniform vec4 IBLParameters;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 VolumeScatteringEnabled;
+uniform vec4 MERUniforms;
+uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -222,6 +225,7 @@ struct VertexOutput {
     vec4 position;
     vec4 color0;
     vec4 fog;
+    vec3 normal;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -229,6 +233,7 @@ struct VertexOutput {
 struct FragmentInput {
     vec4 color0;
     vec4 fog;
+    vec3 normal;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -238,6 +243,8 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_NormalTexture;
 uniform lowp sampler2D s_ParticleTexture;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
@@ -251,6 +258,7 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec4 fog;
+    vec3 normal;
 };
 
 struct StandardVertexInput {
@@ -314,6 +322,12 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+#endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
     StandardVertexInput stdInput;
@@ -349,6 +363,7 @@ void main() {
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.fog = vec4(0, 0, 0, 0);
+    vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
@@ -376,6 +391,7 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_color0 = vertexOutput.color0;
     v_fog = vertexOutput.fog;
+    v_normal = vertexOutput.normal;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;

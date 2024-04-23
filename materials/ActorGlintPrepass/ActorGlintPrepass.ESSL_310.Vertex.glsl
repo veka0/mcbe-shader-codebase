@@ -116,12 +116,14 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];
 uniform vec4 RoughnessUniform;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
 uniform vec4 ViewPositionAndTime;
@@ -292,6 +294,10 @@ struct DirectionalLight {
 };
 
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotation, const vec2 scale) {
     vec2 uv = origUV;
     uv -= 0.5;

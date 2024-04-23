@@ -131,7 +131,6 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
-uniform mat4 PrevWorld;
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
 uniform vec4 ActorFPEpsilon;
@@ -164,6 +163,7 @@ uniform vec4 FogSkyBlend;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];
@@ -172,6 +172,7 @@ uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform mat4 PrevWorld;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 RoughnessUniform;
 uniform vec4 ShadowPCFWidth;
@@ -180,6 +181,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 TileLightIntensity;
@@ -496,6 +498,10 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);

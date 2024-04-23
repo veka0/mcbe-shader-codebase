@@ -59,6 +59,9 @@ attribute float a_texcoord4;
 #endif
 varying vec3 v_bitangent;
 varying vec4 v_color0;
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
+flat varying int v_frontFacing;
+#endif
 varying vec2 v_lightmapUV;
 varying vec3 v_normal;
 #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -154,6 +157,7 @@ uniform vec4 SkyHorizonColor;
 uniform vec4 IBLParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MaterialID;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
@@ -278,6 +282,9 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -291,6 +298,9 @@ struct VertexOutput {
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    int frontFacing;
+    #endif
     vec2 lightmapUV;
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -322,6 +332,9 @@ struct StandardSurfaceInput {
     float Alpha;
     vec2 lightmapUV;
     vec3 bitangent;
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    int frontFacing;
+    #endif
     vec3 normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
     int pbrTextureId;
@@ -405,6 +418,11 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
     vOutput.lightmapUV = vInput.lightmapUV;
 }
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 struct ColorTransform {
     float hue;
     float saturation;
@@ -518,6 +536,9 @@ void main() {
     #endif
     vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    vertexOutput.frontFacing = 0;
+    #endif
     vertexOutput.lightmapUV = vec2(0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -551,6 +572,9 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    v_frontFacing = vertexOutput.frontFacing;
+    #endif
     v_lightmapUV = vertexOutput.lightmapUV;
     v_normal = vertexOutput.normal;
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)

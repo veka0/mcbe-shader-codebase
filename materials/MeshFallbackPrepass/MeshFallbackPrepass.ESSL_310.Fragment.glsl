@@ -117,11 +117,12 @@ uniform vec4 u_alphaRef4;
 uniform mat4 PrevWorld;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MERSUniforms;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
 uniform vec4 ZShiftValue;
-uniform vec4 merUniforms;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -297,9 +298,10 @@ void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSur
     }
     surfaceOutput.Albedo = albedo.rgb * surfaceInput.Color.rgb;
     surfaceOutput.Alpha = albedo.a * surfaceInput.Alpha;
-    surfaceOutput.Metallic = merUniforms.x;
-    surfaceOutput.Emissive = merUniforms.y;
-    surfaceOutput.Roughness = merUniforms.z;
+    surfaceOutput.Metallic = MERSUniforms.x;
+    surfaceOutput.Emissive = MERSUniforms.y;
+    surfaceOutput.Roughness = MERSUniforms.z;
+    surfaceOutput.Subsurface = MERSUniforms.w;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 void SurfGeometryPrepassOverride(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {

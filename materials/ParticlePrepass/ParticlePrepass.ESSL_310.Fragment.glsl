@@ -22,10 +22,12 @@ precision mediump float;
 #define varying in
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
 varying vec2 v_ambientLight;
+varying vec3 v_bitangent;
 varying vec4 v_color0;
 varying vec4 v_fog;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
+varying vec3 v_tangent;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
@@ -99,6 +101,8 @@ uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
+uniform vec4 MERUniforms;
+uniform vec4 MaterialID;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -131,20 +135,24 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec2 ambientLight;
+    vec3 bitangent;
     vec4 color0;
     vec4 fog;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
     vec2 ambientLight;
+    vec3 bitangent;
     vec4 color0;
     vec4 fog;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -153,15 +161,19 @@ struct FragmentOutput {
     vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
+uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_NormalTexture;
 uniform lowp sampler2D s_ParticleTexture;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
     vec2 ambientLight;
+    vec3 bitangent;
     vec4 fog;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec3 worldPos;
 };
 
@@ -176,9 +188,11 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.ambientLight = fragInput.ambientLight;
+    result.bitangent = fragInput.bitangent;
     result.fog = fragInput.fog;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
+    result.tangent = fragInput.tangent;
     result.worldPos = fragInput.worldPos;
     return result;
 }
@@ -327,13 +341,40 @@ void Particle_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, in
     diffuse.rgb = applyFogVanilla(diffuse.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
-    surfaceOutput.Roughness = 0.5;
-    surfaceOutput.Metallic = 0.0;
-    surfaceOutput.Emissive = 0.0;
+    float metalness = MERUniforms.r;
+    float emissive = MERUniforms.g;
+    float roughness = MERUniforms.b;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 void ParticleGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     Particle_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+    float metalness = MERUniforms.r;
+    float emissive = MERUniforms.g;
+    float roughness = MERUniforms.b;
+    int flags = int(MERUniforms.a);
+    if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
+        vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
+        metalness = merTexture.r;
+        emissive = merTexture.g;
+        roughness = merTexture.b;
+    }
+    surfaceOutput.Metallic = metalness;
+    surfaceOutput.Emissive = emissive;
+    surfaceOutput.Roughness = roughness;
+    if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
+    {
+        vec3 normalTexture = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;
+        surfaceOutput.ViewSpaceNormal = ((World) * (vec4(normalTexture, 0.0))).xyz;
+    }
+    else
+    {
+        surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
+    }
 }
 #endif
 #ifdef TRANSPARENT_PASS
@@ -379,10 +420,12 @@ void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.ambientLight = v_ambientLight;
+    fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
     fragmentInput.fog = v_fog;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
+    fragmentInput.tangent = v_tangent;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);

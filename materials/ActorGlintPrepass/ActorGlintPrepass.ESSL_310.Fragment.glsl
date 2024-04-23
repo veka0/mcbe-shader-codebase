@@ -132,12 +132,14 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform mat4 PrevBones[8];
 uniform vec4 RoughnessUniform;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
 uniform vec4 ViewPositionAndTime;
@@ -397,6 +399,11 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 }
 #endif
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 vec4 applyActorDiffusePBR(vec4 albedo, vec3 color) {
     albedo.rgb *= mix(vec3(1, 1, 1), color, ColorBased.x);
     albedo = applyOverlayColor(albedo, OverlayColor);

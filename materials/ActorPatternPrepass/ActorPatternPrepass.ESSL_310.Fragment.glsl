@@ -141,6 +141,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 TileLightIntensity;
 uniform vec4 MatColor;
+uniform vec4 MaterialID;
 uniform vec4 MultiplicativeTintColor;
 uniform vec4 MetalnessUniform;
 uniform vec4 PatternColors[7];
@@ -149,6 +150,7 @@ uniform mat4 PrevBones[8];
 uniform vec4 RoughnessUniform;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceUniform;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
 uniform vec4 ViewPositionAndTime;
@@ -501,6 +503,11 @@ void ActorSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurface
 }
 #endif
 #ifdef GEOMETRY_PREPASS_PASS
+
+const int kInvalidPBRTextureHandle = 0xffff;
+const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
 void ActorSurfBannerGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     ActorSurfPatternPBR(surfaceInput, surfaceOutput);
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
