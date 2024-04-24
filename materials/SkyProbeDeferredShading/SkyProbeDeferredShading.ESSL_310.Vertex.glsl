@@ -5,10 +5,11 @@
 *
 * Passes:
 * - DO_DEFERRED_SHADING_PASS
-* - FALLBACK_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_PASS
+* - FALLBACK_PASS
 */
 
-#ifdef DO_DEFERRED_SHADING_PASS
+#ifdef DO_INDIRECT_SPECULAR_SHADING_PASS
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -172,6 +173,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -267,6 +270,8 @@ struct DirectionalLightParams {
     int index;
 };
 
+#endif
+#ifndef FALLBACK_PASS
 struct AtmosphereParams {
     vec3 sunDir;
     vec3 moonDir;

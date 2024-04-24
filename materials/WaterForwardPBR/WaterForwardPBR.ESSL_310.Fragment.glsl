@@ -132,7 +132,6 @@ uniform vec4 u_viewTexel;
 uniform vec4 ShadowBias;
 uniform vec4 ShadowSlopeBias;
 uniform mat4 u_invView;
-uniform vec4 PureWaterAbsorption;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
@@ -146,6 +145,8 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 AbsorptionCoefficients;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
@@ -183,7 +184,6 @@ uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
-uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
@@ -252,6 +252,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -468,7 +470,7 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
-#ifndef DO_WATER_SURFACE_BUFFER_PASS
+#if defined(DEPTH_ONLY_PASS)|| defined(DO_WATER_ABSORPTION_PASS)
 void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
@@ -492,7 +494,7 @@ void WaterAbsorption(in StandardSurfaceInput surfaceInput, inout StandardSurface
     vec2 sceneUv = worldToUv(waterSurfaceWorldPos, ViewProj);
     vec3 objectWorldPos = getWorldPosFromDepthTexture(s_SceneDepth, sceneUv, InvView, InvProj);
     float distance = length(waterSurfaceWorldPos - objectWorldPos);
-    vec3 absorption = exp(-PureWaterAbsorption.xyz * distance);
+    vec3 absorption = exp(-AbsorptionCoefficients.rgb * distance);
     surfaceOutput.Albedo = absorption;
 }
 #endif
@@ -1118,6 +1120,9 @@ vec3 GetOceanSurfaceNormal(vec2 pos, float time) {
     vec3 point_c = vec3(pos.x, height_c, pos.y + sampleWidth);
     return normalize(cross(point_a - point_b, point_a - point_c));
 }
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
 #endif
 #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
@@ -1167,6 +1172,16 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
     #endif
 }
 #endif
+#ifdef DO_WATER_SHADING_PASS
+void WaterApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
+    vec3 color = surfaceOutput.Albedo;
+    if (PreExposureEnabled.x > 0.0) {
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        color = PreExposeLighting(color, exposure);
+    }
+    fragOutput.Color0.rgb = color;
+}
+#endif
 #ifdef DO_WATER_SURFACE_BUFFER_PASS
 void WaterFinal(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     applyPrepassSurfaceToGBuffer(
@@ -1202,8 +1217,11 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #ifndef DO_WATER_SURFACE_BUFFER_PASS
+    #if defined(DEPTH_ONLY_PASS)|| defined(DO_WATER_ABSORPTION_PASS)
     StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
+    #endif
+    #ifdef DO_WATER_SHADING_PASS
+    WaterApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #ifdef DO_WATER_SURFACE_BUFFER_PASS
     WaterFinal(fragInput, surfaceInput, surfaceOutput, fragOutput);
