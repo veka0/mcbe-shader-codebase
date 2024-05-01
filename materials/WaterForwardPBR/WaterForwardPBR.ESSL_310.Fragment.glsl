@@ -845,11 +845,6 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
     }
     return outColor;
 }
-float calculateCosRefractedAngle(float cosIncidentAngle, float index1, float index2) {
-    float ratioSqr = (index1 / index2) * (index1 / index2);
-    float cosRefractedAngleSqr = 1.0 - ratioSqr + ratioSqr * cosIncidentAngle * cosIncidentAngle;
-    return sqrt(cosRefractedAngleSqr);
-}
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -1039,19 +1034,12 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth)
     }
     return amt;
 }
-vec3 getRefractedDir(vec3 incidentDir, vec3 surfaceNormal, float index1, float index2) {
-    float ratio = index2 / index1;
-    float cosIncidentAngle = dot(-incidentDir, surfaceNormal);
-    float cosRefractedAngle = calculateCosRefractedAngle(cosIncidentAngle, index1, index2);
-    return normalize(incidentDir * ratio + surfaceNormal * (cosIncidentAngle * ratio - cosRefractedAngle));
-}
-vec3 evaluateDirectionalLightsDirectContributionSurface(vec3 waterSurfaceWorldPos, vec3 waterSurfaceNormal, vec3 waterSubsurfaceNormal, vec3 viewDirWorld, vec3 viewUnderWaterDir, float linearRoughness) {
+vec3 evaluateDirectionalLightsDirectContributionSurface(vec3 waterSurfaceWorldPos, vec3 waterSurfaceNormal, vec3 viewDirWorld, float linearRoughness) {
     vec3 surfaceReflectionColor = vec3_splat(0.0);
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {
         vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
         vec3 lightDirWorld = normalize(-DirectionalLightSources[i].worldSpaceDirection.xyz);
-        vec3 lightUnderWaterDir = getRefractedDir(lightDirWorld, waterSurfaceNormal, 1.000, 1.333);
         float directOcclusion = 1.0;
         vec4 waterSurfaceViewPos = ((View) * (vec4(waterSurfaceWorldPos, 1.0)));
         if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
@@ -1063,10 +1051,9 @@ vec3 evaluateDirectionalLightsDirectContributionSurface(vec3 waterSurfaceWorldPo
                 nDotsl,
             waterSurfaceViewPos.z);
         }
-        const float waterF0 = 0.02;
         vec3 specular = vec3_splat(0.0);
         BSDF_VanillaMinecraft_SpecularOnly(
-            normalize(waterSubsurfaceNormal),
+            waterSurfaceNormal,
             - lightDirWorld,
             viewDirWorld,
             0.0f,
@@ -1083,6 +1070,8 @@ vec3 F_Schlick_waterView(float cosTheta) {
     vec3 waterF0 = vec3_splat(0.02);
     return waterF0 + (1.0 - waterF0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
+#endif
+#if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
 vec2 GenerateWave(vec2 position, vec2 direction, float frequency, float time) {
     float x = dot(direction, position) * frequency + time;
     float wave = pow((sin(x) + 1.0) / 2.0, WaterSurfaceWaveParameters.y);
@@ -1120,6 +1109,18 @@ vec3 GetOceanSurfaceNormal(vec2 pos, float time) {
     vec3 point_c = vec3(pos.x, height_c, pos.y + sampleWidth);
     return normalize(cross(point_a - point_b, point_a - point_c));
 }
+vec3 getWaterSurfaceNormal(vec3 normal, vec3 worldPos, vec3 worldOrigin) {
+    vec3 worldSpaceWaterPosition = worldPos - worldOrigin;
+    vec3 waterNormal = GetOceanSurfaceNormal(
+        worldSpaceWaterPosition.xz,
+        ViewPositionAndTime.w * 0.5
+    );
+    float surfaceFactor = dot(normal, vec3(0.0, 1.0, 0.0));
+    vec3 surfaceNormal = mix(normal, waterNormal, surfaceFactor);
+    return normalize(surfaceNormal);
+}
+#endif
+#ifdef DO_WATER_SHADING_PASS
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
@@ -1128,32 +1129,30 @@ vec3 PreExposeLighting(vec3 color, float averageLuminance) {
 void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     #ifdef DO_WATER_SHADING_PASS
     vec3 viewDirWorld = normalize(-worldSpaceViewDir(surfaceInput.worldPos));
+    #endif
+    #ifdef DO_WATER_SURFACE_BUFFER_PASS
+    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
+    #endif
     vec3 surfaceNormal = surfaceOutput.ViewSpaceNormal;
     if (WaterSurfaceEnabled.x > 0.0) {
-        vec3 worldSpaceWaterPosition = surfaceInput.worldPos.xyz - WorldOrigin.xyz;
-        vec3 waterNormal = GetOceanSurfaceNormal(
-            worldSpaceWaterPosition.xz,
-            ViewPositionAndTime.w * 0.5
-        );
-        float surfaceFactor = dot(surfaceOutput.ViewSpaceNormal, vec3(0.0, 1.0, 0.0));
-        surfaceNormal = mix(surfaceNormal, waterNormal, surfaceFactor);
+        #ifdef DO_WATER_SHADING_PASS
+        surfaceNormal = getWaterSurfaceNormal(surfaceNormal, surfaceInput.worldPos.xyz, WorldOrigin.xyz);
+        #endif
+        #ifdef DO_WATER_SURFACE_BUFFER_PASS
+        surfaceOutput.ViewSpaceNormal = getWaterSurfaceNormal(surfaceNormal, surfaceInput.worldPos.xyz, WorldOrigin.xyz);
+        #endif
     }
-    vec3 waterSurfaceNormal = normalize(surfaceNormal);
-    vec3 viewUnderWaterDir = -getRefractedDir(-viewDirWorld, waterSurfaceNormal, 1.000, 1.333);
-    RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
-    #endif
-    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
     #ifdef DO_WATER_SHADING_PASS
+    RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
     vec3 waterSurfaceWorldPos = surfaceInput.worldPos;
     vec2 sceneUv = worldToUv(waterSurfaceWorldPos, ViewProj);
     vec3 waterSurfaceReflection = evaluateDirectionalLightsDirectContributionSurface(
         waterSurfaceWorldPos,
-        waterSurfaceNormal,
-        surfaceOutput.ViewSpaceNormal,
+        surfaceNormal,
         viewDirWorld,
-        viewUnderWaterDir,
     surfaceOutput.Roughness);
-    vec3 ambientFresnel = F_Schlick_waterView(max(dot(viewDirWorld, waterSurfaceNormal), 0.0));
+    vec3 ambientFresnel = F_Schlick_waterView(max(dot(viewDirWorld, surfaceNormal), 0.0));
     vec3 baseWaterColor = waterSurfaceReflection + ambientFresnel * DiffuseSpecularEmissiveAmbientTermToggles.w *
     evaluateSampledAmbient(
         surfaceInput.lightmapUV.x,

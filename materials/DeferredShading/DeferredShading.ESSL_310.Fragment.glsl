@@ -147,6 +147,7 @@ uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
+uniform vec4 SSRParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 VolumeNearFar;
@@ -272,6 +273,7 @@ uniform lowp sampler2D s_Normal;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
+uniform lowp sampler2D s_SSRTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SceneDepth;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
@@ -1337,24 +1339,72 @@ vec3 calculateIndirectSpecularProbeOnly(PBRFragmentInfo fragmentData, sampler2D 
     vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, indirectProbeLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), rf0);
     return indirectSpecularColor;
 }
+vec3 calculateIndirectSpecular(PBRFragmentInfo fragmentData, sampler2D brdfLUT, sampler2D ssrTexture, samplerCube currentEnvironmentProbe, samplerCube previousEnvironmentProbe, float numMips, float blendFactor, float skyFadeStart, float skyFadeEnd, float contribution, bool isPreExposureEnabled, float exposure) {
+    float viewDistance = length(fragmentData.viewPosition);
+    vec3 viewDir = -(fragmentData.viewPosition / viewDistance);
+    vec3 viewDirWorld = worldSpaceViewDir(fragmentData.worldPosition.xyz);
+    vec3 rf0 = calculateRf0(fragmentData.albedo, fragmentData.metalness);
+    vec2 uv = (fragmentData.ndcPosition.xy + 1.0) * 0.5f;
+    vec4 ssrLight = textureSample(ssrTexture, uv);
+    if (isPreExposureEnabled) {
+        ssrLight.rgb = UnExposeLighting(ssrLight.rgb, exposure);
+    }
+    vec3 indirectProbeLight = getProbeLighting(
+        currentEnvironmentProbe,
+        previousEnvironmentProbe,
+        fragmentData.skyAmbientContribution,
+        fragmentData.roughness,
+        viewDirWorld,
+        fragmentData.worldNormal,
+        numMips,
+        blendFactor,
+        skyFadeStart,
+        skyFadeEnd,
+        contribution,
+    isPreExposureEnabled);
+    vec3 incomingLight = mix(indirectProbeLight.rgb, ssrLight.rgb, ssrLight.a);
+    vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, incomingLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), rf0);
+    return indirectSpecularColor;
+}
 void IndirectSpecularLighting(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     PBRFragmentInfo fragmentInfo = getPBRFragmentInfo(fragInput);
-    vec3 indirectSpecularColor = calculateIndirectSpecularProbeOnly(
-        fragmentInfo,
-        s_BrdfLUT,
-        s_SpecularIBLCurrent,
-        s_SpecularIBLPrevious,
-        IBLParameters.y,
-        IBLParameters.w,
-        IBLSkyFadeParameters.x,
-        IBLSkyFadeParameters.y,
-        IBLParameters.z,
-    PreExposureEnabled.x > 0.0f);
+    vec3 indirectSpecularColor = vec3_splat(0.0f);
+    float exposure = 0.0f;
+    if (PreExposureEnabled.x > 0.0) {
+        exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+    }
+    if (SSRParameters.x != 0.0f) {
+        indirectSpecularColor = calculateIndirectSpecular(
+            fragmentInfo,
+            s_BrdfLUT,
+            s_SSRTexture,
+            s_SpecularIBLCurrent,
+            s_SpecularIBLPrevious,
+            IBLParameters.y,
+            IBLParameters.w,
+            IBLSkyFadeParameters.x,
+            IBLSkyFadeParameters.y,
+            IBLParameters.z,
+            PreExposureEnabled.x > 0.0f,
+        exposure);
+    }
+    else {
+        indirectSpecularColor = calculateIndirectSpecularProbeOnly(
+            fragmentInfo,
+            s_BrdfLUT,
+            s_SpecularIBLCurrent,
+            s_SpecularIBLPrevious,
+            IBLParameters.y,
+            IBLParameters.w,
+            IBLSkyFadeParameters.x,
+            IBLSkyFadeParameters.y,
+            IBLParameters.z,
+        PreExposureEnabled.x > 0.0f);
+    }
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
     vec3 indirectSpecWithFog = evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(indirectSpecularColor, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     if (PreExposureEnabled.x > 0.0) {
-        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
         indirectSpecWithFog.rgb = PreExposeLighting(indirectSpecWithFog.rgb, exposure);
     }
     vec4 color = vec4(indirectSpecWithFog, 1.0);
