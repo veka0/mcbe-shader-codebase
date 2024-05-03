@@ -2,7 +2,7 @@
 
 This repository contains vanilla Minecraft: Bedrock Edition GLSL and BGFX SC shaders.
 
-Shader code is auto-generated with **COMING VERY SOON** using material.bin files extracted from Android MCBE version.
+Shader code is auto-generated with [lazurite](https://github.com/veka0/lazurite) using material.bin files extracted from Android MCBE version.
 
 ## Branches
 
