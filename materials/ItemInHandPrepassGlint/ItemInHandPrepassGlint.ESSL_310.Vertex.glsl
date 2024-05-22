@@ -28,6 +28,7 @@ attribute vec4 a_normal;
 attribute vec3 a_position;
 attribute vec2 a_texcoord0;
 attribute vec4 a_texcoord1;
+attribute vec4 a_texcoord8;
 #ifdef INSTANCING__ON
 attribute vec4 i_data1;
 attribute vec4 i_data2;
@@ -35,6 +36,7 @@ attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
 varying vec4 v_glintUV;
+varying vec4 v_mers;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec2 v_texcoord0;
@@ -122,6 +124,7 @@ float AlphaRef;
 struct VertexInput {
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
@@ -136,6 +139,7 @@ struct VertexOutput {
     vec4 position;
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -145,6 +149,7 @@ struct VertexOutput {
 struct FragmentInput {
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -161,6 +166,7 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -198,6 +204,7 @@ struct ColorTransform {
 #ifdef DEPTH_ONLY_OPAQUE_PASS
 void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
 }
 #endif
 void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
@@ -286,6 +293,7 @@ void main() {
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
     vertexInput.glintUV = (a_texcoord1);
+    vertexInput.mers = (a_texcoord8);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
@@ -296,6 +304,7 @@ void main() {
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.glintUV = vec4(0, 0, 0, 0);
+    vertexOutput.mers = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
@@ -325,6 +334,7 @@ void main() {
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_color0 = vertexOutput.color0;
     v_glintUV = vertexOutput.glintUV;
+    v_mers = vertexOutput.mers;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
     v_texcoord0 = vertexOutput.texcoord0;

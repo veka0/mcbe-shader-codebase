@@ -30,6 +30,7 @@ struct accelerationStructureKHR {
 uniform vec4 ExposureCompensation;
 uniform vec4 ColorGrading_Offset_Highlights;
 uniform vec4 ColorGrading_Gamma_Highlights;
+uniform vec4 ColorGrading_Gamma_PlayerUI;
 uniform vec4 ColorGrading_Contrast_Highlights;
 uniform vec4 ColorGrading_Saturation_Highlights;
 uniform vec4 ColorGrading_Contrast_Midtones;

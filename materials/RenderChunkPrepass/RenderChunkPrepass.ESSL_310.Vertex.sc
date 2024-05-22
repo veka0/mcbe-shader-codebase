@@ -114,6 +114,32 @@ struct Light {
     int pad2;
 };
 
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 rf0;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float subsurface;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+    vec2 causticsMultiplier;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -131,46 +157,6 @@ struct PBRTextureData {
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-};
-
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    mat4 waterSurfaceViewProj;
-    mat4 invWaterSurfaceViewProj;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
-};
-
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float subsurface;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
-};
-
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
 };
 
 struct VertexInput {

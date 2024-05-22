@@ -19,7 +19,7 @@
 * - MULTI_COLOR_TINT__ON
 */
 
-$input v_color0, v_glintUV, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
+$input v_color0, v_glintUV, v_mers, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
 struct NoopSampler {
     int noop;
 };
@@ -110,6 +110,7 @@ float AlphaRef;
 struct VertexInput {
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
@@ -124,6 +125,7 @@ struct VertexOutput {
     vec4 position;
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -133,6 +135,7 @@ struct VertexOutput {
 struct FragmentInput {
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -149,6 +152,7 @@ struct StandardSurfaceInput {
     vec3 Color;
     float Alpha;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -165,6 +169,7 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
     result.glintUV = fragInput.glintUV;
+    result.mers = fragInput.mers;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
     result.worldPos = fragInput.worldPos;
@@ -374,6 +379,7 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.color0 = v_color0;
     fragmentInput.glintUV = v_glintUV;
+    fragmentInput.mers = v_mers;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.texcoord0 = v_texcoord0;

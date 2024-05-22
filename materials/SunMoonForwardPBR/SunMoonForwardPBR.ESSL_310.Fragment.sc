@@ -68,31 +68,44 @@ uniform mat4 PointLightProj;
 uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 ShadowSlopeBias;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
+uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
+uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
+uniform vec4 DirectionalLightSourceIsSun[2];
+uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
+uniform vec4 DirectionalLightSourceShadowDirection[2];
+uniform mat4 DirectionalLightSourceShadowProj0[2];
+uniform mat4 DirectionalLightSourceShadowProj1[2];
+uniform mat4 DirectionalLightSourceShadowProj2[2];
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform mat4 DirectionalLightSourceShadowProj3[2];
+uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 ShadowParams;
-uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
-uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 Time;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 VolumeDimensions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 SkyAmbientLightColorIntensity;
@@ -105,8 +118,8 @@ mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -135,6 +148,32 @@ struct Light {
     int pad2;
 };
 
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 rf0;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float subsurface;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+    vec2 causticsMultiplier;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -152,46 +191,6 @@ struct PBRTextureData {
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-};
-
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    mat4 waterSurfaceViewProj;
-    mat4 invWaterSurfaceViewProj;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
-};
-
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float subsurface;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
-};
-
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
 };
 
 struct VertexInput {
@@ -224,13 +223,12 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2DSHADOW_AUTOREG(s_PlayerShadowMap);
-SAMPLER2DARRAYSHADOW_AUTOREG(s_PointLightShadowTextureArray);
+SAMPLER2D_HIGHP_AUTOREG(s_PlayerShadowMap);
+SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
-SAMPLER2DARRAYSHADOW_AUTOREG(s_ShadowCascades);
+SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
 SAMPLER2D_AUTOREG(s_SunMoonTexture);
-BUFFER_RW_AUTOREG(s_DirectionalLightSources, LightSourceWorldInfo);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
 struct StandardSurfaceInput {
@@ -401,8 +399,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {

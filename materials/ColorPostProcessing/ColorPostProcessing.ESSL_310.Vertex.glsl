@@ -44,6 +44,7 @@ uniform vec4 ExposureCompensation;
 uniform vec4 ColorGrading_Offset_Highlights;
 uniform vec4 ColorGrading_Gamma_Highlights;
 uniform mat4 u_prevViewProj;
+uniform vec4 ColorGrading_Gamma_PlayerUI;
 uniform mat4 u_model[4];
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;

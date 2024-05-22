@@ -28,22 +28,20 @@
 #define texture2DProjGrad textureProjGrad
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
-#define shadow2D(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#extension GL_EXT_texture_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
 attribute vec4 a_normal;
 attribute vec3 a_position;
 attribute vec2 a_texcoord0;
+attribute vec4 a_texcoord8;
 #ifdef INSTANCING__ON
 attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
 varying vec4 v_color0;
+varying vec4 v_mers;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
 varying vec2 v_texcoord0;
@@ -86,19 +84,21 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 u_viewTexel;
-uniform vec4 ShadowBias;
 uniform vec4 SunDir;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 ChangeColor;
-uniform vec4 ShadowSlopeBias;
+uniform vec4 ShadowBias;
+uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_viewProj;
 uniform mat4 u_invProj;
 uniform vec4 OverlayColor;
 uniform mat4 u_invViewProj;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
+uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
+uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
@@ -110,47 +110,62 @@ uniform vec4 u_alphaRef4;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
-uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 WaterSurfaceParameters;
 uniform vec4 CameraLightIntensity;
+uniform vec4 TileLightIntensity;
+uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform mat4 DirectionalLightSourceShadowProj2[2];
 uniform vec4 ColorBased;
-uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
+uniform vec4 DirectionalLightSourceIsSun[2];
+uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 MoonDir;
+uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
+uniform vec4 DirectionalLightSourceShadowDirection[2];
+uniform vec4 MultiplicativeTintColor;
+uniform mat4 DirectionalLightSourceShadowProj0[2];
+uniform mat4 DirectionalLightSourceShadowProj1[2];
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform mat4 DirectionalLightSourceShadowProj3[2];
+uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
-uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
-uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 MoonDir;
-uniform vec4 MultiplicativeTintColor;
+uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
-uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform vec4 PreExposureEnabled;
 uniform vec4 RenderChunkFogAlpha;
+uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
+uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SunColor;
 uniform vec4 TileLightColor;
-uniform vec4 TileLightIntensity;
+uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterSurfaceEnabled;
+uniform vec4 WaterSurfaceOctaveParameters;
+uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -186,6 +201,32 @@ struct Light {
     int pad2;
 };
 
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 rf0;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float subsurface;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+    vec2 causticsMultiplier;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -205,48 +246,9 @@ struct PBRTextureData {
     float maxMipNormal;
 };
 
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    mat4 waterSurfaceViewProj;
-    mat4 invWaterSurfaceViewProj;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
-};
-
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float subsurface;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
-};
-
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
-};
-
 struct VertexInput {
     vec4 color0;
+    vec4 mers;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
@@ -260,6 +262,7 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -268,6 +271,7 @@ struct VertexOutput {
 
 struct FragmentInput {
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -279,17 +283,18 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform highp sampler2DShadow s_PlayerShadowMap;
-uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform highp sampler2D s_PlayerShadowMap;
+uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
-uniform highp sampler2DArrayShadow s_ShadowCascades;
+uniform highp sampler2DArray s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
 uniform lowp samplerCube s_SpecularIBLPrevious;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -312,12 +317,6 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
-vec4 jitterVertexPosition(vec3 worldPosition) {
-    mat4 offsetProj = Proj;
-    offsetProj[2][0] += SubPixelOffset.x;
-    offsetProj[2][1] -= SubPixelOffset.y;
-    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
-}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -342,8 +341,15 @@ struct AtmosphereParams {
     float sunGlareShape;
 };
 
+vec4 jitterVertexPosition(vec3 worldPosition) {
+    mat4 offsetProj = Proj;
+    offsetProj[2][0] += SubPixelOffset.x;
+    offsetProj[2][1] -= SubPixelOffset.y;
+    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
+}
 void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
 }
 void ItemInHandVertPBR(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
@@ -435,6 +441,7 @@ void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
+    vertexInput.mers = (a_texcoord8);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
@@ -444,6 +451,7 @@ void main() {
     vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.mers = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
@@ -472,6 +480,7 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_color0 = vertexOutput.color0;
+    v_mers = vertexOutput.mers;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
     v_texcoord0 = vertexOutput.texcoord0;

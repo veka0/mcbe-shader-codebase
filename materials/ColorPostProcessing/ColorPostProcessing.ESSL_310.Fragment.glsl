@@ -56,6 +56,12 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
+mat4 mtxFromRows(vec4 _0, vec4 _1, vec4 _2, vec4 _3) {
+    return transpose(mat4(_0, _1, _2, _3));
+}
+mat3 mtxFromRows(vec3 _0, vec3 _1, vec3 _2) {
+    return transpose(mat3(_0, _1, _2));
+}
 struct NoopImage2D {
     int noop;
 };
@@ -84,6 +90,7 @@ uniform vec4 ExposureCompensation;
 uniform vec4 ColorGrading_Offset_Highlights;
 uniform vec4 ColorGrading_Gamma_Highlights;
 uniform mat4 u_prevViewProj;
+uniform vec4 ColorGrading_Gamma_PlayerUI;
 uniform mat4 u_model[4];
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
@@ -266,15 +273,15 @@ vec3 RRTAndODTFit(vec3 v) {
     return a / b;
 }
 vec3 ACESFitted(vec3 rgb) {
-    const mat3 ACESInputMat = mat3(
-        0.59719, 0.35458, 0.04823,
-        0.07600, 0.90834, 0.01566,
-        0.02840, 0.13383, 0.83777
+    mat3 ACESInputMat = mtxFromRows(
+        vec3(0.59719, 0.35458, 0.04823),
+        vec3(0.07600, 0.90834, 0.01566),
+        vec3(0.02840, 0.13383, 0.83777)
     );
-    const mat3 ACESOutputMat = mat3(
-        1.60475, - 0.53108, - 0.07367,
-        - 0.10208, 1.10813, - 0.00605,
-        - 0.00327, - 0.07276, 1.07602
+    mat3 ACESOutputMat = mtxFromRows(
+        vec3(1.60475, - 0.53108, - 0.07367),
+        vec3(-0.10208, 1.10813, - 0.00605),
+        vec3(-0.00327, - 0.07276, 1.07602)
     );
     rgb = ((ACESInputMat) * (rgb));
     rgb = RRTAndODTFit(rgb);
@@ -307,7 +314,7 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float compensation, f
         sceneColor = TonemapReinhard(sceneColor);
     }
     float finalLuminance = luminance(sceneColor);
-    vec3 e = vec3_splat(1.0) / getGradingVector(ColorGrading_Gamma_Highlights.xyz, ColorGrading_Gamma_Shadows.xyz, ColorGrading_Gamma_Midtones.xyz, toneMappedAverageLuminance, finalLuminance);
+    vec3 e = vec3_splat(1.0) / (getGradingVector(ColorGrading_Gamma_Highlights.xyz, ColorGrading_Gamma_Shadows.xyz, ColorGrading_Gamma_Midtones.xyz, toneMappedAverageLuminance, finalLuminance) * ColorGrading_Gamma_PlayerUI.x);
     sceneColor = pow(max(sceneColor, vec3_splat(0.0)), e);
     return sceneColor;
 }

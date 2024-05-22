@@ -91,6 +91,7 @@ struct accelerationStructureKHR {
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
+uniform vec4 SSRRoughnessCutoffParams;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -150,6 +151,7 @@ struct FragmentOutput {
 
 uniform lowp sampler2D s_GbufferDepth;
 uniform lowp sampler2D s_GbufferNormal;
+uniform lowp sampler2D s_GbufferRoughness;
 uniform lowp sampler2D s_InputTexture;
 uniform lowp sampler2D s_RasterColor;
 #ifndef SSR_RAY_MARCH_PASS
@@ -216,13 +218,17 @@ bool isDepthInCameraBounds(float depth, float nearPlane, float farPlane) {
         return (nearPlane > depth && depth > farPlane);
     }
 }
-float getFadingValue(vec2 uv, float rayPercentage, float fadingPowerHorizontal, float fadingPowerVertical, float fadeDistance, float aspectRatio) {
+float getFadingValue(vec2 uv, float roughness, float rayPercentage, float fadingPowerHorizontal, float fadingPowerVertical, float fadeDistance, float roughnessCutoff, float roughnessFadeStart, float aspectRatio) {
     uv = (uv * 2.0) - 1.0;
     uv.x = pow(abs(uv.x), fadingPowerHorizontal * aspectRatio);
     uv.y = pow(abs(uv.y), fadingPowerVertical);
     float fadeValueUV = (1.0 - uv.x) * (1.0 - uv.y);
     float fadeValueRayPercentage = 1.0 - smoothstep(fadeDistance, 1.0, rayPercentage);
+    float roughnessFadeDuration = roughnessCutoff - roughnessFadeStart;
+    float roughnessLerpAlpha = (max(roughness, roughnessFadeStart) - roughnessFadeStart) / roughnessFadeDuration;
+    float fadeValueRoughness = mix(1.0f, 0.0f, roughnessLerpAlpha);
     float fadeValue = min(fadeValueUV, fadeValueRayPercentage);
+    fadeValue = min(fadeValue, fadeValueRoughness);
     return fadeValue;
 }
 int getStepsCount(vec3 rayStartScreenSpace, vec3 rayStepScreenSpace, int maxStepsCount) {
@@ -281,7 +287,7 @@ float PerformBinarySearch(int foundIteration, vec3 rayStartScreenSpace, vec3 ray
     }
     return refinedFoundIteration;
 }
-vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, int maxStepsCount, float rayStepLength, float offset, int binarySearchStepsCount, float fadingPowerHorizontal, float fadingPowerVertical, float fadingDistance, float nearPlane, float farPlane, float aspectRatio, vec2 unitPlaneExtents, vec4 screenSize, sampler2D depthBuffer) {
+vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, float roughness, int maxStepsCount, float rayStepLength, float offset, int binarySearchStepsCount, float fadingPowerHorizontal, float fadingPowerVertical, float fadingDistance, float roughnessCutoff, float roughnessFadeStart, float nearPlane, float farPlane, float aspectRatio, vec2 unitPlaneExtents, vec4 screenSize, sampler2D depthBuffer) {
     vec3 viewDir = normalize(viewPosition);
     vec3 reflectionDir = reflect(viewDir, viewNormal);
     vec3 rayStartView = viewPosition + (reflectionDir * offset);
@@ -323,10 +329,13 @@ vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, int maxStepsCount,
     float rayPercentage = refinedFoundIteration / float(stepsCount);
     float fadingValue = getFadingValue(
         foundPosition.xy,
+        roughness,
         rayPercentage,
         fadingPowerHorizontal,
         fadingPowerVertical,
         fadingDistance,
+        roughnessCutoff,
+        roughnessFadeStart,
     aspectRatio);
     float linearDepth = ProjDepthToLinearDepth(foundPosition.z, nearPlane, farPlane);
     float rayDepth = GetWorldDepth(linearDepth, nearPlane, farPlane);
@@ -334,7 +343,7 @@ vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, int maxStepsCount,
     float rayLength = distance(viewPosition, viewFoundPosition.xyz);
     return vec4(foundPosition.xy, rayLength, fadingValue);
 }
-vec4 RayMarch(vec2 uv, vec2 projPos, int maxStepsCount, float rayStepLength, float offset, int binarySearchStepCount, float fadingPowerHorizontal, float fadingPowerVertical, float fadingDistance, float nearPlane, float farPlane, float aspectRatio, vec2 unitPlaneExtents, vec4 screenSize, sampler2D depthBuffer, sampler2D normalVelocityBuffer) {
+vec4 RayMarch(vec2 uv, vec2 projPos, float roughness, int maxStepsCount, float rayStepLength, float offset, int binarySearchStepCount, float fadingPowerHorizontal, float fadingPowerVertical, float fadingDistance, float roughnessCutoff, float roughnessFadeStart, float nearPlane, float farPlane, float aspectRatio, vec2 unitPlaneExtents, vec4 screenSize, sampler2D depthBuffer, sampler2D normalVelocityBuffer) {
     vec4 color = vec4(0.0, 0.0, 0.0, - 1.0);
     float d = textureSample(depthBuffer, uv).x;
     vec3 viewPos = projToView(vec4(projPos, d, 1.0), InvProj).xyz;
@@ -343,6 +352,7 @@ vec4 RayMarch(vec2 uv, vec2 projPos, int maxStepsCount, float rayStepLength, flo
     color = CalculateSSRHitPoint(
         viewPos,
         viewNormal,
+        roughness,
         maxStepsCount,
         rayStepLength,
         offset,
@@ -350,6 +360,8 @@ vec4 RayMarch(vec2 uv, vec2 projPos, int maxStepsCount, float rayStepLength, flo
         fadingPowerHorizontal,
         fadingPowerVertical,
         fadingDistance,
+        roughnessCutoff,
+        roughnessFadeStart,
         nearPlane,
         farPlane,
         aspectRatio,
@@ -385,72 +397,81 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
                 vec2 uv = data.xy;
                 color0 = vec4(textureSample(s_RasterColor, uv).rgb, data.a);
                 #endif
-                #ifndef SSR_RAY_MARCH_PASS
+                #ifdef SSR_RAY_MARCH_PASS
+                float roughness = textureSample(s_GbufferRoughness, fragInput.texcoord0.xy).a;
+                if (roughness > SSRRoughnessCutoffParams.x) {
+                    fragOutput.Color0 = vec4(0.0f, 0.0f, 0.0f, - 1.0);
+                    #endif
+                }
+                #ifdef SSR_RAY_MARCH_PASS
+                else {
+                    fragOutput.Color0 = RayMarch(
+                        fragInput.texcoord0.xy,
+                        fragInput.projPosition.xy,
+                        roughness,
+                        int(SSRRayMarchingParams.x),
+                        SSRRayMarchingParams.y,
+                        SSRRayMarchingParams.z,
+                        int(SSRRayMarchingParams.w),
+                        SSRFadingParams.x,
+                        SSRFadingParams.y,
+                        SSRFadingParams.z,
+                        SSRRoughnessCutoffParams.x,
+                        SSRRoughnessCutoffParams.y,
+                        CameraData.x,
+                        CameraData.y,
+                        CameraData.z,
+                        UnitPlaneExtents.xy,
+                        ScreenSize,
+                        s_GbufferDepth,
+                    s_GbufferNormal);
+                    #endif
+                    #ifndef SSR_GET_REFLECTED_COLOR_PASS
+                }
+                #endif
+                #ifdef SSR_FILL_GAPS_PASS
+                fragOutput.Color0 = data;
+                #endif
+                #ifdef SSR_GET_REFLECTED_COLOR_PASS
+                fragOutput.Color0 = color0;
+                #endif
             }
-            #endif
-            #ifdef SSR_FILL_GAPS_PASS
-        }
-        fragOutput.Color0 = data;
-        #endif
-        #ifdef SSR_GET_REFLECTED_COLOR_PASS
-        fragOutput.Color0 = color0;
-        #endif
-        #ifdef SSR_RAY_MARCH_PASS
-        fragOutput.Color0 = RayMarch(
-            fragInput.texcoord0.xy,
-            fragInput.projPosition.xy,
-            int(SSRRayMarchingParams.x),
-            SSRRayMarchingParams.y,
-            SSRRayMarchingParams.z,
-            int(SSRRayMarchingParams.w),
-            SSRFadingParams.x,
-            SSRFadingParams.y,
-            SSRFadingParams.z,
-            CameraData.x,
-            CameraData.y,
-            CameraData.z,
-            UnitPlaneExtents.xy,
-            ScreenSize,
-            s_GbufferDepth,
-        s_GbufferNormal);
-        #endif
-    }
-    void main() {
-        FragmentInput fragmentInput;
-        FragmentOutput fragmentOutput;
-        #ifdef SSR_RAY_MARCH_PASS
-        fragmentInput.projPosition = v_projPosition;
-        #endif
-        fragmentInput.texcoord0 = v_texcoord0;
-        fragmentOutput.Color0 = vec4(0, 0, 0, 0);
-        ViewRect = u_viewRect;
-        Proj = u_proj;
-        View = u_view;
-        ViewTexel = u_viewTexel;
-        InvView = u_invView;
-        InvProj = u_invProj;
-        ViewProj = u_viewProj;
-        InvViewProj = u_invViewProj;
-        PrevViewProj = u_prevViewProj;
-        {
-            WorldArray[0] = u_model[0];
-            WorldArray[1] = u_model[1];
-            WorldArray[2] = u_model[2];
-            WorldArray[3] = u_model[3];
-        }
-        World = u_model[0];
-        WorldView = u_modelView;
-        WorldViewProj = u_modelViewProj;
-        PrevWorldPosOffset = u_prevWorldPosOffset;
-        AlphaRef4 = u_alphaRef4;
-        AlphaRef = u_alphaRef4.x;
-        Frag(fragmentInput, fragmentOutput);
-        #ifndef SSR_GET_REFLECTED_COLOR_PASS
-        bgfx_FragColor = fragmentOutput.Color0;
-        #endif
-        #ifdef SSR_GET_REFLECTED_COLOR_PASS
-        bgfx_FragData[0] = fragmentOutput.Color0; ;
-        #endif
-    }
-    
-    
+            void main() {
+                FragmentInput fragmentInput;
+                FragmentOutput fragmentOutput;
+                #ifdef SSR_RAY_MARCH_PASS
+                fragmentInput.projPosition = v_projPosition;
+                #endif
+                fragmentInput.texcoord0 = v_texcoord0;
+                fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+                ViewRect = u_viewRect;
+                Proj = u_proj;
+                View = u_view;
+                ViewTexel = u_viewTexel;
+                InvView = u_invView;
+                InvProj = u_invProj;
+                ViewProj = u_viewProj;
+                InvViewProj = u_invViewProj;
+                PrevViewProj = u_prevViewProj;
+                {
+                    WorldArray[0] = u_model[0];
+                    WorldArray[1] = u_model[1];
+                    WorldArray[2] = u_model[2];
+                    WorldArray[3] = u_model[3];
+                }
+                World = u_model[0];
+                WorldView = u_modelView;
+                WorldViewProj = u_modelViewProj;
+                PrevWorldPosOffset = u_prevWorldPosOffset;
+                AlphaRef4 = u_alphaRef4;
+                AlphaRef = u_alphaRef4.x;
+                Frag(fragmentInput, fragmentOutput);
+                #ifndef SSR_GET_REFLECTED_COLOR_PASS
+                bgfx_FragColor = fragmentOutput.Color0;
+                #endif
+                #ifdef SSR_GET_REFLECTED_COLOR_PASS
+                bgfx_FragData[0] = fragmentOutput.Color0; ;
+                #endif
+            }
+            
+            

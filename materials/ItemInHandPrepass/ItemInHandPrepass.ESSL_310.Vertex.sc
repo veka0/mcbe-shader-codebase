@@ -19,11 +19,11 @@
 * - MULTI_COLOR_TINT__ON (not used)
 */
 
-$input a_color0, a_normal, a_position, a_texcoord0
+$input a_color0, a_normal, a_position, a_texcoord0, a_texcoord8
 #ifdef INSTANCING__ON
 $input i_data1, i_data2, i_data3
 #endif
-$output v_color0, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
+$output v_color0, v_mers, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
 struct NoopSampler {
     int noop;
 };
@@ -87,6 +87,7 @@ vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
     vec4 color0;
+    vec4 mers;
     vec4 normal;
     vec3 position;
     vec2 texcoord0;
@@ -100,6 +101,7 @@ struct VertexInput {
 struct VertexOutput {
     vec4 position;
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -108,6 +110,7 @@ struct VertexOutput {
 
 struct FragmentInput {
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec2 texcoord0;
@@ -122,6 +125,7 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
     vec3 worldPos;
@@ -158,6 +162,7 @@ struct ColorTransform {
 
 void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
 }
 void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
@@ -222,6 +227,7 @@ void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
+    vertexInput.mers = (a_texcoord8);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
     vertexInput.texcoord0 = (a_texcoord0);
@@ -231,6 +237,7 @@ void main() {
     vertexInput.instanceData2 = i_data3;
     #endif
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.mers = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
@@ -259,6 +266,7 @@ void main() {
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     v_color0 = vertexOutput.color0;
+    v_mers = vertexOutput.mers;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
     v_texcoord0 = vertexOutput.texcoord0;

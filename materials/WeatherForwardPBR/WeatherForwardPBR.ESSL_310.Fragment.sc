@@ -86,11 +86,13 @@ struct accelerationStructureKHR {
 };
 
 uniform mat4 PointLightProj;
-uniform vec4 PointLightShadowParams1;
 uniform vec4 SunDir;
-uniform vec4 ShadowBias;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 Dimensions;
-uniform vec4 ShadowSlopeBias;
+uniform vec4 ShadowBias;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
+uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
+uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
@@ -98,42 +100,53 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
-uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
+uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
+uniform vec4 DirectionalLightSourceIsSun[2];
+uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 MoonDir;
+uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
+uniform vec4 DirectionalLightSourceShadowDirection[2];
+uniform mat4 DirectionalLightSourceShadowProj0[2];
+uniform mat4 DirectionalLightSourceShadowProj1[2];
+uniform mat4 DirectionalLightSourceShadowProj2[2];
+uniform vec4 LightDiffuseColorAndIlluminance;
+uniform mat4 DirectionalLightSourceShadowProj3[2];
+uniform vec4 PositionForwardOffset;
+uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
-uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 OcclusionHeightOffset;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
-uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 MoonDir;
+uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
-uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
-uniform vec4 SkyHorizonColor;
 uniform vec4 PositionBaseOffset;
-uniform vec4 PositionForwardOffset;
+uniform vec4 PreExposureEnabled;
 uniform vec4 RenderChunkFogAlpha;
+uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
+uniform vec4 SkyHorizonColor;
+uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SunColor;
+uniform vec4 Time;
 uniform vec4 UVOffsetAndScale;
 uniform vec4 Velocity;
 uniform vec4 ViewPosition;
@@ -175,6 +188,32 @@ struct Light {
     int pad2;
 };
 
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 rf0;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float subsurface;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+    vec2 causticsMultiplier;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -192,46 +231,6 @@ struct PBRTextureData {
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-};
-
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    mat4 waterSurfaceViewProj;
-    mat4 invWaterSurfaceViewProj;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
-};
-
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float subsurface;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
-};
-
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
 };
 
 struct VertexInput {
@@ -277,15 +276,14 @@ struct FragmentOutput {
 SAMPLER2D_AUTOREG(s_BrdfLUT);
 SAMPLER2D_AUTOREG(s_LightingTexture);
 SAMPLER2D_AUTOREG(s_OcclusionTexture);
-SAMPLER2DSHADOW_AUTOREG(s_PlayerShadowMap);
-SAMPLER2DARRAYSHADOW_AUTOREG(s_PointLightShadowTextureArray);
+SAMPLER2D_HIGHP_AUTOREG(s_PlayerShadowMap);
+SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
-SAMPLER2DARRAYSHADOW_AUTOREG(s_ShadowCascades);
+SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
 SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
 SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
 SAMPLER2D_AUTOREG(s_WeatherTexture);
-BUFFER_RW_AUTOREG(s_DirectionalLightSources, LightSourceWorldInfo);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
 struct StandardSurfaceInput {
@@ -440,20 +438,6 @@ struct DirectionalLightParams {
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
-vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float blockBaseIntensity, float skyAmbientContribution, vec4 skyBaseColorIntensity, float cameraLightSkyIntensity, float ambientFadeInMultiplier) {
-    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
-    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
-    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
-    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
-    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
-    vec3 sampledBlockAmbient = blockAmbientLightFinal * blockBaseIntensity * ambientFadeInMultiplier;
-    float skyFalloffPow = mix(5.0, 3.0, cameraLightSkyIntensity);
-    float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
-    vec3 sampledSkyAmbient = skyFalloff * skyBaseColorIntensity.rgb * skyBaseColorIntensity.a;
-    vec3 sampledAmbient = sampledBlockAmbient + sampledSkyAmbient;
-    sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
-    return sampledAmbient;
-}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -581,6 +565,20 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float blockBaseIntensity, float skyAmbientContribution, vec4 skyBaseColorIntensity, float cameraLightSkyIntensity, float ambientFadeInMultiplier) {
+    float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
+    float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
+    float gb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * 0.6f + 0.4f) * 0.6f + 0.4f) + blockAmbientTint.g * blockAmbientTint.a;
+    float bb = blockAmbientContributionBalanced * ((blockAmbientContributionBalanced * blockAmbientContributionBalanced) * 0.6f + 0.4f) + blockAmbientTint.b * blockAmbientTint.a;
+    vec3 blockAmbientLightFinal = clamp(vec3(rb, gb, bb), vec3_splat(0.0), vec3_splat(1.0));
+    vec3 sampledBlockAmbient = blockAmbientLightFinal * blockBaseIntensity * ambientFadeInMultiplier;
+    float skyFalloffPow = mix(5.0, 3.0, cameraLightSkyIntensity);
+    float skyFalloff = pow(skyAmbientContribution, skyFalloffPow);
+    vec3 sampledSkyAmbient = skyFalloff * skyBaseColorIntensity.rgb * skyBaseColorIntensity.a;
+    vec3 sampledAmbient = sampledBlockAmbient + sampledSkyAmbient;
+    sampledAmbient = max(sampledAmbient, vec3_splat(0.03));
+    return sampledAmbient;
+}
 vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition, bool enableAtmosphericScattering, bool enableVolumeScattering, bool enableBlendWithSky) {
     vec3 fogAppliedColor;
     if (enableAtmosphericScattering) {
@@ -623,7 +621,7 @@ vec3 getDirectionalDiffuseColor(vec3 albedo) {
     vec3 directDiffuse = vec3_splat(0.0);
     for(int i = 0; i < lightCount; i ++ ) {
         float nDotl = 1.0;
-        vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
+        vec4 colorAndIlluminance = DirectionalLightSourceDiffuseColorAndIlluminance[i];
         vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a * nDotl;
         vec3 diffuse = BRDF_Diff_Lambertian(albedo) * DiffuseSpecularEmissiveAmbientTermToggles.x;
         directDiffuse += (diffuse * illuminance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x);
