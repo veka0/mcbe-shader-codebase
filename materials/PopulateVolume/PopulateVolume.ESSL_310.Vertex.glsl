@@ -32,7 +32,6 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform mat4 PrevInvProj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
 uniform vec4 SunDir;
@@ -71,6 +70,7 @@ uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -96,6 +96,7 @@ uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform mat4 PrevInvProj;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 ShadowPCFWidth;
@@ -110,6 +111,7 @@ uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 uniform vec4 VolumeShadowSettings;
+uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterAlbedoExtinction;
 vec4 ViewRect;
 mat4 Proj;
@@ -208,8 +210,8 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_CausticsTexture;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
-uniform highp sampler2D s_PlayerShadowMap;
 uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;

@@ -125,20 +125,6 @@ SAMPLER2D_AUTOREG(s_GbufferNormal);
 SAMPLER2D_AUTOREG(s_GbufferRoughness);
 SAMPLER2D_AUTOREG(s_InputTexture);
 SAMPLER2D_AUTOREG(s_RasterColor);
-#ifndef SSR_RAY_MARCH_PASS
-bool isRayHit(float value) {
-    return (value >= 0.0f);
-}
-#endif
-#ifdef EXTENDED_GAP_FILL__ON
-vec4 getSample(vec2 uv, vec2 offset) {
-    vec4 result = textureSample(s_InputTexture, uv + offset);
-    if (!isRayHit(result.a)) {
-        result = textureSample(s_InputTexture, uv + (offset * 2.0));
-    }
-    return result;
-}
-#endif
 #ifdef SSR_RAY_MARCH_PASS
 vec2 octWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * ((2.0 * step(0.0, v)) - 1.0); // Attention!
@@ -165,6 +151,8 @@ vec4 uvToViewSpacePosWithDepth(vec2 uv, vec2 unitPlaneExtents, float d) {
     vec3 ray = vec3((vec2(uv.x, 1.0 - uv.y) * 2.0 - 1.0) * unitPlaneExtents.xy, - 1.0);
     return vec4(ray * d, 1.0);
 }
+#endif
+#ifndef SSR_FILL_GAPS_PASS
 vec4 projToView(vec4 p, mat4 inverseProj) {
     p = vec4(
         p.x * inverseProj[0][0], // Attention!
@@ -175,10 +163,48 @@ vec4 projToView(vec4 p, mat4 inverseProj) {
     p /= p.w;
     return p;
 }
+#endif
+#ifdef SSR_GET_REFLECTED_COLOR_PASS
+vec3 worldToNdc(vec3 worldPos, mat4 viewProj) {
+    vec4 clipSpacePos = ((viewProj) * (vec4(worldPos, 1.0))); // Attention!
+    vec3 ndc = clipSpacePos.xyz / clipSpacePos.w;
+    return ndc;
+}
+vec3 getWorldPosFromDepthTexture(sampler2D depthTexture, vec2 uv, mat4 inverseView, mat4 inverseProj) {
+    float depth = textureSample(depthTexture, uv).r;
+    vec2 xy = uv * 2.0 - 1.0;
+    depth = depth * 2.0f - 1.0f;
+    vec4 viewPosition = projToView(vec4(xy, depth, 1.0), inverseProj);
+    return ((inverseView) * (vec4(viewPosition.xyz, 1.0))).xyz; // Attention!
+}
+vec2 getPreviousUV(sampler2D depthTexture, vec2 currentUV, mat4 inverseView, mat4 inverseProj, mat4 prevViewProj) {
+    vec3 currentWorldSpacePos = getWorldPosFromDepthTexture(depthTexture, currentUV, inverseView, inverseProj);
+    vec3 prevNDCSpace = worldToNdc(currentWorldSpacePos, prevViewProj);
+    vec2 prevUV = (prevNDCSpace.xy + 1.0f) * 0.5f;
+    prevUV.y = 1.0f - prevUV.y;
+    return (vec2((prevUV).x, 1.0 - (prevUV).y));
+}
+#endif
+#ifndef SSR_RAY_MARCH_PASS
+bool isRayHit(float value) {
+    return (value >= 0.0f);
+}
+#endif
+#ifdef EXTENDED_GAP_FILL__ON
+vec4 getSample(vec2 uv, vec2 offset) {
+    vec4 result = textureSample(s_InputTexture, uv + offset);
+    if (!isRayHit(result.a)) {
+        result = textureSample(s_InputTexture, uv + (offset * 2.0));
+    }
+    return result;
+}
+#endif
+#ifdef SSR_RAY_MARCH_PASS
 vec3 viewSpaceToUV(vec3 viewPosition) {
     vec4 clipSpacePosition = ((Proj) * (vec4(viewPosition, 1.0))); // Attention!
     vec3 ndcPosition = (clipSpacePosition.xyz / clipSpacePosition.w);
     vec2 uv = (ndcPosition.xy + 1.0) * 0.5;
+    uv.y = 1.0 - uv.y;
     return vec3((vec2((uv).x, 1.0 - (uv).y)), ndcPosition.z);
 }
 bool isDepthInCameraBounds(float depth, float nearPlane, float farPlane) {
@@ -220,7 +246,9 @@ int PerformLinearSearch(vec3 rayStartScreenSpace, vec3 rayStepScreenSpace, int s
     for(int i = 1; i <= stepsCount; i ++ ) {
         vec3 positionScreenSpace = rayStartScreenSpace + (rayStepScreenSpace * float(i));
         float rayLinearZ = ProjDepthToLinearDepth(positionScreenSpace.z, nearPlane, farPlane);
-        sceneLinearDepth = ProjDepthToLinearDepth(textureSample(depthBuffer, positionScreenSpace.xy).x, nearPlane, farPlane);
+        float projectedDepth = textureSample(depthBuffer, positionScreenSpace.xy).x;
+        projectedDepth = projectedDepth * 2.0f - 1.0f;
+        sceneLinearDepth = ProjDepthToLinearDepth(projectedDepth, nearPlane, farPlane);
         bool wasRayInFrontOfTexel = prevRayZ < sceneLinearDepth;
         bool isRayPastTheTexel = rayLinearZ > sceneLinearDepth;
         if (isRayPastTheTexel) {
@@ -244,7 +272,9 @@ float PerformBinarySearch(int foundIteration, vec3 rayStartScreenSpace, vec3 ray
     for(int i = 0; i < binarySearchStepsCount; i ++ ) {
         float searchIterationMidPoint = (searchIterationBeforeHit + searchIterationAfterHit) * 0.5f;
         vec3 positionScreenSpaceMidPoint = rayStartScreenSpace + (rayStepScreenSpace * searchIterationMidPoint);
-        float sceneLinearDepth = ProjDepthToLinearDepth(textureSample(depthBuffer, positionScreenSpaceMidPoint.xy).x, nearPlane, farPlane);
+        float projectedDepth = textureSample(depthBuffer, positionScreenSpaceMidPoint.xy).x;
+        projectedDepth = projectedDepth * 2.0f - 1.0f;
+        float sceneLinearDepth = ProjDepthToLinearDepth(projectedDepth, nearPlane, farPlane);
         float rayLinearZ = ProjDepthToLinearDepth(positionScreenSpaceMidPoint.z, nearPlane, farPlane);
         bool isRayPastTheTexel = (rayLinearZ > sceneLinearDepth);
         if (isRayPastTheTexel) {
@@ -317,6 +347,7 @@ vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, float roughness, i
 vec4 RayMarch(vec2 uv, vec2 projPos, float roughness, int maxStepsCount, float rayStepLength, float offset, int binarySearchStepCount, float fadingPowerHorizontal, float fadingPowerVertical, float fadingDistance, float roughnessCutoff, float roughnessFadeStart, float nearPlane, float farPlane, float aspectRatio, vec2 unitPlaneExtents, vec4 screenSize, sampler2D depthBuffer, sampler2D normalVelocityBuffer) {
     vec4 color = vec4(0.0, 0.0, 0.0, - 1.0);
     float d = textureSample(depthBuffer, uv).x;
+    d = d * 2.0f - 1.0f;
     vec3 viewPos = projToView(vec4(projPos, d, 1.0), InvProj).xyz;
     vec3 worldNorm = normalize(octToNdirSnorm(textureSample(normalVelocityBuffer, uv).xy));
     vec3 viewNormal = normalize(((View) * (vec4(worldNorm, 0.0))).xyz); // Attention!
@@ -362,11 +393,11 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
             data = (up + dn) * 0.5;
             #endif
             #ifdef SSR_GET_REFLECTED_COLOR_PASS
-            vec4 data = textureSample(s_InputTexture, fragInput.texcoord0.xy);
+            vec4 hitPoint = textureSample(s_InputTexture, fragInput.texcoord0.xy);
             vec4 color0 = vec4(0.0, 0.0, 0.0, 0.0);
-            if (isRayHit(data.a)) {
-                vec2 uv = data.xy;
-                color0 = vec4(textureSample(s_RasterColor, uv).rgb, data.a);
+            if (isRayHit(hitPoint.a)) {
+                vec2 uv = getPreviousUV(s_GbufferDepth, hitPoint.xy, InvView, InvProj, PrevViewProj);
+                color0 = vec4(textureSample(s_RasterColor, uv).rgb, hitPoint.a);
                 #endif
                 #ifdef SSR_RAY_MARCH_PASS
                 float roughness = textureSample(s_GbufferRoughness, fragInput.texcoord0.xy).a;

@@ -82,6 +82,7 @@ uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -113,6 +114,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterAbsorptionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -223,7 +225,7 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_HIGHP_AUTOREG(s_PlayerShadowMap);
+SAMPLER2D_AUTOREG(s_CausticsTexture);
 SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);

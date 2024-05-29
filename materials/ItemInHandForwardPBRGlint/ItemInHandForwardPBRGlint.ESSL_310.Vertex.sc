@@ -58,7 +58,6 @@ struct accelerationStructureKHR {
     int noop;
 };
 
-uniform mat4 PointLightProj;
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
 uniform vec4 ShadowBias;
@@ -86,6 +85,7 @@ uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform mat4 DirectionalLightSourceShadowProj2[2];
 uniform vec4 ColorBased;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform vec4 DirectionalLightSourceIsSun[2];
@@ -111,6 +111,7 @@ uniform vec4 MaterialID;
 uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
+uniform mat4 PointLightProj;
 uniform vec4 SunDir;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 PointLightSpecularFadeOutParameters;
@@ -131,6 +132,7 @@ uniform vec4 UVScale;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterSurfaceEnabled;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
@@ -254,8 +256,8 @@ struct FragmentOutput {
 };
 
 SAMPLER2D_AUTOREG(s_BrdfLUT);
+SAMPLER2D_AUTOREG(s_CausticsTexture);
 SAMPLER2D_AUTOREG(s_GlintTexture);
-SAMPLER2D_HIGHP_AUTOREG(s_PlayerShadowMap);
 SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);

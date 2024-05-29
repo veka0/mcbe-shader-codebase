@@ -69,7 +69,6 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform mat4 PointLightProj;
 uniform mat4 u_view;
 uniform vec4 ShadowBias;
 uniform vec4 u_viewTexel;
@@ -107,6 +106,7 @@ uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform vec4 DirectionalLightSourceIsSun[2];
@@ -129,6 +129,7 @@ uniform vec4 HenyeyGreensteinG;
 uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
+uniform mat4 PointLightProj;
 uniform vec4 SunDir;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 PointLightSpecularFadeOutParameters;
@@ -147,6 +148,7 @@ uniform vec4 Time;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 uniform vec4 VolumeShadowSettings;
+uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterAlbedoExtinction;
 vec4 ViewRect;
 mat4 Proj;
@@ -249,8 +251,8 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_CausticsTexture;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
-uniform highp sampler2D s_PlayerShadowMap;
 uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
@@ -259,8 +261,8 @@ uniform lowp sampler2D s_ScreenSpaceWaterDepth;
 uniform highp sampler2DArray s_ShadowCascades;
 uniform lowp samplerCube s_SpecularIBLCurrent;
 uniform lowp samplerCube s_SpecularIBLPrevious;
-layout(std430, binding = 5)buffer s_LightLookupArray { LightData LightLookupArray[]; };
-layout(std430, binding = 6)buffer s_Lights { Light Lights[]; };
+layout(std430, binding = 4)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 5)buffer s_Lights { Light Lights[]; };
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -341,7 +343,7 @@ float GetFilteredCloudShadow(vec3 worldPos, float NdL) {
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
-            vec3 uvw = vec3(cloudUv + (offset * CascadeShadowResolutions[cloudCascade]), DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2));
+            vec3 uvw = vec3(cloudUv + (offset * CascadeShadowResolutions[cloudCascade]), (DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)));
             float shadowDepth = 0.0;
             amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw, cloudProjPos.z, shadowDepth);
         }
@@ -361,19 +363,18 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
     float amt = 0.f;
     playerProjPos.z = playerProjPos.z * 0.5 + 0.5;
     playerUv.y += 1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
+    bool inPlayerTextureBounds = playerUv.x >= 0.0 && playerUv.x < FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y && playerUv.y >= (1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y)&& playerUv.y < 1.0;
+    if (!inPlayerTextureBounds) {
+        return 1.0;
+    }
     for(int iy = 0; iy < filterWidth; ++ iy) {
         for(int ix = 0; ix < filterWidth; ++ ix) {
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z;
             vec2 newUv = playerUv + (offset * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
-            if (newUv.x >= 0.0 && newUv.x < 1.0 && newUv.y >= 0.0 && newUv.y < 1.0) {
-                float shadowDepth = 0.0;
-                amt += shadowSampleAndCompare(s_PlayerShadowMap, FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.w, newUv, playerProjPos.z, shadowDepth);
-            }
-            else {
-                amt += 1.0f;
-            }
+            float shadowDepth = 0.0;
+            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0)), playerProjPos.z, shadowDepth);
         }
     }
     return amt / float(filterWidth * filterWidth);

@@ -123,6 +123,7 @@ uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform mat4 DirectionalLightSourceShadowProj2[2];
 uniform vec4 ColorBased;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform vec4 DirectionalLightSourceIsSun[2];
@@ -163,6 +164,7 @@ uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterSurfaceEnabled;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
@@ -283,7 +285,7 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform highp sampler2D s_PlayerShadowMap;
+uniform lowp sampler2D s_CausticsTexture;
 uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;

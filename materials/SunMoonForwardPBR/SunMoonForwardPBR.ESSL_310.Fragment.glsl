@@ -109,6 +109,7 @@ uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterSize;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -140,6 +141,7 @@ uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SunMoonColor;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterAbsorptionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -250,14 +252,14 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform highp sampler2D s_PlayerShadowMap;
+uniform lowp sampler2D s_CausticsTexture;
 uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
 uniform lowp sampler2D s_SunMoonTexture;
-layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
-layout(std430, binding = 1)buffer s_Lights { Light Lights[]; };
+layout(std430, binding = 1)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 2)buffer s_Lights { Light Lights[]; };
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;

@@ -75,9 +75,9 @@ struct accelerationStructureKHR {
 };
 
 uniform mat4 PointLightProj;
-uniform vec4 ShadowBias;
 uniform vec4 SunDir;
 uniform vec4 PointLightShadowParams1;
+uniform vec4 ShadowBias;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
@@ -98,6 +98,7 @@ uniform vec4 CausticsParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -139,6 +140,7 @@ uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
+uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterSurfaceEnabled;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
@@ -277,9 +279,9 @@ struct FragmentOutput {
 };
 
 SAMPLER2D_AUTOREG(s_BrdfLUT);
+SAMPLER2D_AUTOREG(s_CausticsTexture);
 SAMPLER2D_AUTOREG(s_LightMapTexture);
 SAMPLER2D_AUTOREG(s_MatTexture);
-SAMPLER2D_HIGHP_AUTOREG(s_PlayerShadowMap);
 SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
