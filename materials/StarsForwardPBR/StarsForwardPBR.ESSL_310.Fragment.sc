@@ -3,7 +3,7 @@
 *
 * Passes:
 * - FALLBACK_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_PASS
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
 */
 
@@ -158,6 +158,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -248,23 +250,19 @@ struct TemporalAccumulationParameters {
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
     return color * (0.18f / averageLuminance);
 }
-void FragForwardPBRTransparent(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+void FragForwardPBRTransparent(FragmentInput fragInput, inout vec4 outColor) {
     vec3 starColor = fragInput.color0.rgb;
     starColor.rgb *= StarsColor.rgb * fragInput.color0.a;
-    vec3 outColor;
+    vec3 fogAppliedColor;
     if (VolumeScatteringEnabled.x != 0.0) {
         vec3 uvw = ndcToVolume(fragInput.ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
-        outColor = sourceExtinction.a * starColor.rgb;
+        fogAppliedColor = sourceExtinction.a * starColor.rgb;
     }
     else {
-        outColor = starColor.rgb;
+        fogAppliedColor = starColor.rgb;
     }
-    if (PreExposureEnabled.x > 0.0) {
-        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
-        outColor = PreExposeLighting(outColor, exposure);
-    }
-    fragOutput.Color0 = vec4(outColor, fragInput.color0.a);
+    outColor = vec4(fogAppliedColor, fragInput.color0.a);
 }
 #endif
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
@@ -272,7 +270,8 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
     #endif
     #ifndef FALLBACK_PASS
-    FragForwardPBRTransparent(fragInput, fragOutput);
+    vec4 fogAppliedColor;
+    FragForwardPBRTransparent(fragInput, fogAppliedColor);
     #endif
     #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
     vec2 uv = (fragInput.ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
@@ -280,8 +279,27 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     float fadeEnd = SkyProbeUVFadeParameters.y;
     float fadeRange = fadeStart - fadeEnd + 1e - 5;
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
-    fragOutput.Color0 *= fade;
-    fragOutput.Color0.a = max(fragOutput.Color0.a, SkyProbeUVFadeParameters.z);
+    fogAppliedColor *= fade;
+    #endif
+    #ifndef FALLBACK_PASS
+    if (PreExposureEnabled.x > 0.0) {
+        #endif
+        #ifdef FORWARD_PBR_TRANSPARENT_PASS
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        fogAppliedColor.rgb = PreExposeLighting(fogAppliedColor.rgb, exposure);
+        #endif
+        #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+        fogAppliedColor.rgb = PreExposeLighting(fogAppliedColor.rgb, 1.0);
+        #endif
+        #ifndef FALLBACK_PASS
+    }
+    #endif
+    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+    fragOutput.Color0 = fogAppliedColor;
+    #endif
+    #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
+    fragOutput.Color0.rgb = fogAppliedColor.rgb;
+    fragOutput.Color0.a = max(fogAppliedColor.a, SkyProbeUVFadeParameters.z);
     #endif
 }
 void main() {

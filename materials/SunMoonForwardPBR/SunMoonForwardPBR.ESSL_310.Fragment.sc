@@ -162,6 +162,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -318,10 +320,6 @@ void FragForwardPBRTransparent(vec2 texCoord, vec3 ndcPosition, out vec3 outColo
     else {
         outColor = sunMoonColor;
     }
-    if (PreExposureEnabled.x > 0.0) {
-        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
-        outColor = PreExposeLighting(outColor, exposure);
-    }
 }
 struct CompositingOutput {
     vec3 mLitColor;
@@ -345,6 +343,10 @@ vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInpu
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 void SunMoonSurface(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     FragForwardPBRTransparent(surfaceInput.texcoord0, surfaceInput.ndcPosition, surfaceOutput.Albedo);
+    if (PreExposureEnabled.x > 0.0) {
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        surfaceOutput.Albedo = PreExposeLighting(surfaceOutput.Albedo, exposure);
+    }
     surfaceOutput.Alpha = 1.0;
 }
 #endif
@@ -359,6 +361,9 @@ void SunMoonSkyProbeSurface(in StandardSurfaceInput surfaceInput, inout Standard
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
     surfaceOutput.Albedo *= fade;
     surfaceOutput.Alpha = max(fade, SkyProbeUVFadeParameters.z);
+    if (PreExposureEnabled.x > 0.0) {
+        surfaceOutput.Albedo = PreExposeLighting(surfaceOutput.Albedo, 1.0);
+    }
 }
 #endif
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

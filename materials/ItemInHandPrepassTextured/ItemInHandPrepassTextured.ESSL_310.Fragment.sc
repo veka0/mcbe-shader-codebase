@@ -213,15 +213,6 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
-vec3 color_degamma(vec3 clr) {
-    float e = 2.2;
-    return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
-}
-vec4 color_degamma(vec4 clr) {
-    return vec4(color_degamma(clr.rgb), clr.a);
-}
-#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -328,8 +319,8 @@ vec4 applyItemInHandDiffusePBR(vec4 albedo, const vec3 color, float colorChangeA
     return albedo;
 }
 void ItemInHandTextured_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec4 albedo = color_degamma(getItemInHandAlbedo(surfaceInput));
-    vec3 surfaceColor = color_degamma(surfaceInput.Color);
+    vec4 albedo = getItemInHandAlbedo(surfaceInput);
+    vec3 surfaceColor = surfaceInput.Color;
     vec4 diffuse = applyItemInHandDiffusePBR(albedo, surfaceColor, surfaceInput.Alpha);
     if (isAlphaTest && diffuse.a < 0.5) {
         discard;

@@ -65,11 +65,12 @@ struct accelerationStructureKHR {
     int noop;
 };
 
+uniform vec4 PBRTextureFlags;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 MERUniforms;
+uniform vec4 MERSUniforms;
 uniform vec4 MaterialID;
 vec4 ViewRect;
 mat4 Proj;
@@ -309,22 +310,21 @@ void Particle_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, in
     diffuse.rgb = applyFogVanilla(diffuse.rgb, surfaceInput.fog.rgb, surfaceInput.fog.a);
     surfaceOutput.Albedo = diffuse.rgb;
     surfaceOutput.Alpha = diffuse.a;
-    float metalness = MERUniforms.r;
-    float emissive = MERUniforms.g;
-    float roughness = MERUniforms.b;
     surfaceOutput.ViewSpaceNormal = surfaceInput.normal;
 }
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 void ParticleGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     Particle_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
-    float metalness = MERUniforms.r;
-    float emissive = MERUniforms.g;
-    float roughness = MERUniforms.b;
-    int flags = int(MERUniforms.a);
+    float metalness = MERSUniforms.r;
+    float emissive = MERSUniforms.g;
+    float roughness = MERSUniforms.b;
+    float subsurface = MERSUniforms.a;
+    int flags = int(PBRTextureFlags.x);
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
         vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
         metalness = merTexture.r;
@@ -334,6 +334,7 @@ void ParticleGeometryPrepass(in StandardSurfaceInput surfaceInput, inout Standar
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
     surfaceOutput.Roughness = roughness;
+    surfaceOutput.Subsurface = subsurface;
     if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {
         vec3 normalTexture = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;

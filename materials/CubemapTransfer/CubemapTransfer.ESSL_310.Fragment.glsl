@@ -142,11 +142,7 @@ vec3 convertQuadToCube(vec2 inCoords, int face) {
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 uv = convertQuadToCube(fragInput.texCoord, int(CurrentFace.x));
-    vec4 color = textureCubeLod(s_SrcTextureCube, uv, CurrentMip.x - 1.0);
-    color.r = isnan(color.r)|| isinf(color.r) ? 65503.0 : color.r;
-    color.g = isnan(color.r)|| isinf(color.g) ? 65503.0 : color.g;
-    color.b = isnan(color.r)|| isinf(color.b) ? 65503.0 : color.b;
-    fragOutput.Color0 = color;
+    fragOutput.Color0 = textureCubeLod(s_SrcTextureCube, uv, CurrentMip.x - 1.0);
 }
 #endif
 #ifdef FALLBACK_PASS

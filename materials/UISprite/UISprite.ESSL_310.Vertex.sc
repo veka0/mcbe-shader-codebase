@@ -3,6 +3,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
+* - BLEND_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
 * MultiColorTint:

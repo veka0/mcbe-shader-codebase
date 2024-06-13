@@ -156,7 +156,7 @@ struct FragmentOutput {
     vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
-SAMPLER2D_AUTOREG(s_MERTexture);
+SAMPLER2D_AUTOREG(s_MERSTexture);
 SAMPLER2D_AUTOREG(s_MatTexture);
 SAMPLER2D_AUTOREG(s_MatTexture1);
 SAMPLER2D_AUTOREG(s_NormalTexture);

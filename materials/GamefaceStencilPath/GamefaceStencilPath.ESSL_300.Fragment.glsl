@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 
 /*
 * Available Macros:
@@ -90,20 +90,23 @@ struct FragmentOutput {
 };
 
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    if (int(ShaderType.x) == 14) {
-        vec2 px = dFdx(fragInput.extraParams);
-        vec2 py = dFdy(fragInput.extraParams);
-        float fx = (2.0 * fragInput.extraParams.x) * px.x - px.y;
-        float fy = (2.0 * fragInput.extraParams.x) * py.x - py.y;
-        float edgeAlpha = (fragInput.extraParams.x * fragInput.extraParams.x - fragInput.extraParams.y);
+    if (int(ShaderType.x) == 15) {
+        vec2 uvs = abs(fragInput.extraParams);
+        vec2 px = dFdx(uvs);
+        vec2 py = dFdy(uvs);
+        float fx = (2.0 * uvs.x) * px.x - px.y;
+        float fy = (2.0 * uvs.x) * py.x - py.y;
+        float edgeAlpha = (uvs.x * uvs.x - uvs.y);
         float sd = sqrt((edgeAlpha * edgeAlpha) / (fx * fx + fy * fy));
-        float alpha = 1.0 - sd;
-        fragOutput.Color0 = PrimProps0 * PrimProps1.x * alpha;
-    } else if (int(ShaderType.x) == 11) {
-        fragOutput.Color0 = PrimProps0 * min(1.0, (1.0 - abs(fragInput.extraParams.y * PrimProps1.y - PrimProps1.z)) * PrimProps1.x);
-    } else {
-        fragOutput.Color0 = PrimProps0 * fragInput.extraParams.y;
+        float alpha = clamp(0.0 - sd, 0.0, 1.0);
+        if (alpha < 0.00390625) {
+            discard;
+        }
+    } else if (int(ShaderType.x) == 16) {
+    } else if (fragInput.extraParams.y < 0.00390625) {
+        discard;
     }
+    fragOutput.Color0 = vec4(1.0, 1.0, 1.0, 1.0);
 }
 void main() {
     FragmentInput fragmentInput;

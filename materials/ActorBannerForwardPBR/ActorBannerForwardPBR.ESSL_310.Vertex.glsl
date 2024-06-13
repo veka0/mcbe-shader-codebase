@@ -6,8 +6,8 @@
 * Passes:
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
-* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
-* - FORWARD_PBR_OPAQUE_PASS (not used)
+* - FORWARD_PBR_ALPHA_TEST_PASS
+* - FORWARD_PBR_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
 *
 * Change_Color:
@@ -33,7 +33,6 @@
 * - TINTING__ENABLED
 */
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -41,11 +40,10 @@
 #define texture2DProjGrad textureProjGrad
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
-#endif
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 #extension GL_EXT_texture_array : enable
 #endif
 #define attribute in
@@ -251,6 +249,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -323,7 +323,7 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
-uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_MERSTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_NormalTexture;
@@ -391,6 +391,24 @@ struct ColorTransform {
     float luminance;
 };
 
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
+};
+
 #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 void packPBRVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     mat4 prevWorldBones = ((PrevWorld) * (PrevBones[stdInput.vertInput.boneId]));
@@ -402,6 +420,14 @@ void packPBRVertOutput(StandardVertexInput stdInput, inout VertexOutput vertOutp
     vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
     vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
 }
+#endif
+#ifdef FORWARD_PBR_ALPHA_TEST_PASS
+void ActorVertPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    ActorVertOverrideBase(stdInput, vertOutput);
+    packPBRVertOutput(stdInput, vertOutput);
+}
+#endif
+#if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
 void ActorVertBannerPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     ActorVertOverrideBase(stdInput, vertOutput);
     int frameIndex = int(stdInput.vertInput.color0.a * 255.0);
@@ -452,7 +478,7 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -472,24 +498,6 @@ struct DirectionalLightParams {
     int index;
 };
 
-struct AtmosphereParams {
-    vec3 sunDir;
-    vec3 moonDir;
-    vec4 sunColor;
-    vec4 moonColor;
-    vec3 skyZenithColor;
-    vec3 skyHorizonColor;
-    vec4 fogColor;
-    float horizonBlendMin;
-    float horizonBlendStart;
-    float mieStart;
-    float horizonBlendMax;
-    float rayleighStrength;
-    float sunMieStrength;
-    float moonMieStrength;
-    float sunGlareShape;
-};
-
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -500,8 +508,9 @@ struct TemporalAccumulationParameters {
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);
@@ -520,7 +529,10 @@ void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     ActorVertOverrideBase(vertInput, vertOutput);
     #endif
-    #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+    #ifdef FORWARD_PBR_ALPHA_TEST_PASS
+    ActorVertPBR(vertInput, vertOutput);
+    #endif
+    #if defined(FORWARD_PBR_OPAQUE_PASS)|| defined(FORWARD_PBR_TRANSPARENT_PASS)
     ActorVertBannerForwardPBR(vertInput, vertOutput);
     #endif
 }

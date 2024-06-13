@@ -4,14 +4,23 @@
 * Available Macros:
 *
 * Passes:
-* - TRANSPARENT_PASS (not used)
+* - SSR_FILL_GAPS_PASS (not used)
+* - SSR_GET_REFLECTED_COLOR_PASS (not used)
+* - SSR_RAY_MARCH_PASS
+*
+* ExtendedGapFill:
+* - EXTENDED_GAP_FILL__OFF (not used)
+* - EXTENDED_GAP_FILL__ON (not used)
 */
 
 #define attribute in
 #define varying out
-attribute vec4 a_color0;
 attribute vec4 a_position;
-varying vec4 v_color;
+attribute vec2 a_texcoord0;
+#ifdef SSR_RAY_MARCH_PASS
+varying vec4 v_projPosition;
+#endif
+varying vec2 v_texcoord0;
 struct NoopSampler {
     int noop;
 };
@@ -46,6 +55,12 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform vec4 CameraData;
+uniform vec4 RenderMode;
+uniform vec4 SSRFadingParams;
+uniform vec4 SSRRayMarchingParams;
+uniform vec4 ScreenSize;
+uniform vec4 UnitPlaneExtents;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -63,33 +78,52 @@ vec4 PrevWorldPosOffset;
 vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
-    vec4 color;
     vec4 position;
+    vec2 texcoord0;
 };
 
 struct VertexOutput {
     vec4 position;
-    vec4 color;
+    #ifdef SSR_RAY_MARCH_PASS
+    vec4 projPosition;
+    #endif
+    vec2 texcoord0;
 };
 
 struct FragmentInput {
-    vec4 color;
+    #ifdef SSR_RAY_MARCH_PASS
+    vec4 projPosition;
+    #endif
+    vec2 texcoord0;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
+uniform lowp sampler2D s_GbufferDepth;
+uniform lowp sampler2D s_GbufferNormal;
+uniform lowp sampler2D s_InputTexture;
+uniform lowp sampler2D s_RasterColor;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    vertOutput.position = vertInput.position;
-    vertOutput.color = vertInput.color;
+    vertOutput.position = vec4(vertInput.position.xy * 2.0 - 1.0, 0.0, 1.0);
+    vertOutput.texcoord0 = vec2(vertInput.texcoord0.x, vertInput.texcoord0.y);
 }
+#ifdef SSR_RAY_MARCH_PASS
+void RayMarchVert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    Vert(vertInput, vertOutput);
+    vertOutput.projPosition = vec4(vertOutput.position);
+}
+#endif
 void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
-    vertexInput.color = (a_color0);
     vertexInput.position = (a_position);
-    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexInput.texcoord0 = (a_texcoord0);
+    #ifdef SSR_RAY_MARCH_PASS
+    vertexOutput.projPosition = vec4(0, 0, 0, 0);
+    #endif
+    vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -112,8 +146,14 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
+    #ifndef SSR_RAY_MARCH_PASS
     Vert(vertexInput, vertexOutput);
-    v_color = vertexOutput.color;
+    #endif
+    #ifdef SSR_RAY_MARCH_PASS
+    RayMarchVert(vertexInput, vertexOutput);
+    v_projPosition = vertexOutput.projPosition;
+    #endif
+    v_texcoord0 = vertexOutput.texcoord0;
     gl_Position = vertexOutput.position;
 }
 

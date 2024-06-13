@@ -170,6 +170,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -374,8 +376,9 @@ void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput v
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     vertOutput.pbrTextureId = stdInput.vertInput.pbrTextureId & 0xffff;

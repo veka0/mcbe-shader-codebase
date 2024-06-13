@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 
 /*
 * Available Macros:
@@ -15,8 +15,6 @@ attribute vec4 a_texcoord3;
 varying vec4 v_additional;
 varying vec4 v_color;
 varying vec4 v_screenPosition;
-varying vec4 v_varyingParam0;
-varying vec4 v_varyingParam1;
 struct NoopSampler {
     int noop;
 };
@@ -39,7 +37,6 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform vec4 GradientMidColor;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
@@ -48,16 +45,13 @@ uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
+uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
-uniform vec4 GradientYCoord;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 ShaderType;
+uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
-uniform mat4 CoordTransformVS;
-uniform vec4 GradientEndColor;
-uniform vec4 GradientStartColor;
-uniform vec4 MaskScaleAndOffset;
 uniform mat4 Transform;
 vec4 ViewRect;
 mat4 Proj;
@@ -86,16 +80,12 @@ struct VertexOutput {
     vec4 additional;
     vec4 color;
     vec4 screenPosition;
-    vec4 varyingParam0;
-    vec4 varyingParam1;
 };
 
 struct FragmentInput {
     vec4 additional;
     vec4 color;
     vec4 screenPosition;
-    vec4 varyingParam0;
-    vec4 varyingParam1;
 };
 
 struct FragmentOutput {
@@ -108,13 +98,6 @@ uniform lowp sampler2D s_Texture2;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = ((vertInput.position) * (Transform));
     vertOutput.screenPosition = vertInput.position;
-    vec4 coords = vertInput.position;
-    if (vertInput.additional.w == 2.0) {
-        coords = vec4(vertInput.additional.xy, 0.0, 1.0);
-    }
-    vertOutput.varyingParam0 = ((coords) * (CoordTransformVS));
-    vertOutput.varyingParam1.x = vertInput.position.x * MaskScaleAndOffset.x + MaskScaleAndOffset.z;
-    vertOutput.varyingParam1.y = vertInput.position.y * MaskScaleAndOffset.y + MaskScaleAndOffset.w;
     float w = vertOutput.position.w;
     vertOutput.position.x = vertOutput.position.x * 2.0 - w;
     vertOutput.position.y = (w - vertOutput.position.y) * 2.0 - w;
@@ -130,8 +113,6 @@ void main() {
     vertexOutput.additional = vec4(0, 0, 0, 0);
     vertexOutput.color = vec4(0, 0, 0, 0);
     vertexOutput.screenPosition = vec4(0, 0, 0, 0);
-    vertexOutput.varyingParam0 = vec4(0, 0, 0, 0);
-    vertexOutput.varyingParam1 = vec4(0, 0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
@@ -158,8 +139,6 @@ void main() {
     v_additional = vertexOutput.additional;
     v_color = vertexOutput.color;
     v_screenPosition = vertexOutput.screenPosition;
-    v_varyingParam0 = vertexOutput.varyingParam0;
-    v_varyingParam1 = vertexOutput.varyingParam1;
     gl_Position = vertexOutput.position;
 }
 

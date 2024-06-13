@@ -73,6 +73,7 @@ uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 u_viewTexel;
 uniform vec4 ShadowSlopeBias;
+uniform vec4 PBRTextureFlags;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
@@ -90,6 +91,7 @@ uniform vec4 u_alphaRef4;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
+uniform vec4 MERSUniforms;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 FogAndDistanceControl;
@@ -109,8 +111,6 @@ uniform vec4 IBLParameters;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 MERUniforms;
 uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
@@ -118,6 +118,7 @@ uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 VolumeNearFar;
+uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -180,6 +181,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -325,8 +328,9 @@ struct DirectionalLight {
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);

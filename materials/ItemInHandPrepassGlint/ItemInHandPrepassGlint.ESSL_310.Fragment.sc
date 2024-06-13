@@ -215,15 +215,6 @@ vec4 applyMultiColorChange(vec4 diffuse, vec3 changeColor, vec3 multiplicativeTi
     return diffuse;
 }
 #endif
-#ifndef DEPTH_ONLY_OPAQUE_PASS
-vec3 color_degamma(vec3 clr) {
-    float e = 2.2;
-    return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
-}
-vec4 color_degamma(vec4 clr) {
-    return vec4(color_degamma(clr.rgb), clr.a);
-}
-#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -331,8 +322,7 @@ vec4 applyItemInHandGlintDiffusePBR(vec4 albedo, const vec3 color, const vec4 gl
     return albedo;
 }
 void ItemInHandGlint_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec3 surfaceColor = color_degamma(surfaceInput.Color);
-    vec4 diffuse = applyItemInHandGlintDiffusePBR(vec4(1.0, 1.0, 1.0, 1.0), surfaceColor, surfaceInput.glintUV, surfaceInput.Alpha);
+    vec4 diffuse = applyItemInHandGlintDiffusePBR(vec4(1.0, 1.0, 1.0, 1.0), surfaceInput.Color, surfaceInput.glintUV, surfaceInput.Alpha);
     if (isAlphaTest && diffuse.a < 0.5) {
         discard;
     }

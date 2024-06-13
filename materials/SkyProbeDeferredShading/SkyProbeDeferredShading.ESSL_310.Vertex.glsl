@@ -5,10 +5,11 @@
 *
 * Passes:
 * - DO_DEFERRED_SHADING_PASS
-* - FALLBACK_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_PASS
+* - FALLBACK_PASS
 */
 
-#ifdef DO_DEFERRED_SHADING_PASS
+#ifdef DO_INDIRECT_SPECULAR_SHADING_PASS
 #extension GL_EXT_shader_texture_lod : enable
 #define texture2DLod textureLod
 #define texture2DGrad textureGrad
@@ -105,6 +106,7 @@ uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
+uniform vec4 SSRParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
@@ -172,6 +174,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -229,6 +233,7 @@ uniform lowp sampler2D s_Normal;
 uniform highp sampler2DShadow s_PlayerShadowMap;
 uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
+uniform lowp sampler2D s_SSRTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SceneDepth;
 uniform highp sampler2DArrayShadow s_ShadowCascades;
@@ -267,6 +272,8 @@ struct DirectionalLightParams {
     int index;
 };
 
+#endif
+#ifndef FALLBACK_PASS
 struct AtmosphereParams {
     vec3 sunDir;
     vec3 moonDir;

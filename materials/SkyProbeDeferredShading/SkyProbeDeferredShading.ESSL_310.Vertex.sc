@@ -3,7 +3,8 @@
 *
 * Passes:
 * - DO_DEFERRED_SHADING_PASS
-* - FALLBACK_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
+* - FALLBACK_PASS
 */
 
 $input a_position, a_texcoord0
@@ -70,6 +71,7 @@ uniform vec4 PointLightAttenuationWindow;
 uniform vec4 SunColor;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 RenderChunkFogAlpha;
+uniform vec4 SSRParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
@@ -137,6 +139,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -194,6 +198,7 @@ SAMPLER2D_AUTOREG(s_Normal);
 SAMPLER2DSHADOW_AUTOREG(s_PlayerShadowMap);
 SAMPLER2DARRAYSHADOW_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
+SAMPLER2D_AUTOREG(s_SSRTexture);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
 SAMPLER2D_AUTOREG(s_SceneDepth);
 SAMPLER2DARRAYSHADOW_AUTOREG(s_ShadowCascades);
@@ -232,6 +237,8 @@ struct DirectionalLightParams {
     int index;
 };
 
+#endif
+#ifndef FALLBACK_PASS
 struct AtmosphereParams {
     vec3 sunDir;
     vec3 moonDir;

@@ -181,6 +181,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -468,10 +470,6 @@ void FragForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout Stand
     else {
         outColor = fogAppliedColor;
     }
-    if (PreExposureEnabled.x > 0.0) {
-        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
-        outColor = PreExposeLighting(outColor, exposure);
-    }
     surfaceOutput.Albedo = outColor;
     surfaceOutput.Alpha = surfaceInput.Alpha;
 }
@@ -506,6 +504,10 @@ vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInpu
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
 void CloudsSurface(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     FragForwardPBRTransparent(surfaceInput, surfaceOutput);
+    if (PreExposureEnabled.x > 0.0) {
+        float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
+        surfaceOutput.Albedo = PreExposeLighting(surfaceOutput.Albedo, exposure);
+    }
 }
 #endif
 #ifdef FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS
@@ -518,6 +520,9 @@ void CloudsSurfaceSkyProbe(in StandardSurfaceInput surfaceInput, inout StandardS
     float fade = (clamp(uv.y, fadeEnd, fadeStart) - fadeEnd) / fadeRange;
     surfaceOutput.Albedo *= fade;
     surfaceOutput.Alpha = max(surfaceOutput.Alpha, SkyProbeUVFadeParameters.z);
+    if (PreExposureEnabled.x > 0.0) {
+        surfaceOutput.Albedo = PreExposeLighting(surfaceOutput.Albedo, 1.0);
+    }
 }
 #endif
 #ifndef DEPTH_ONLY_PASS

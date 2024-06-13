@@ -181,7 +181,7 @@ struct FragmentOutput {
     vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
-uniform lowp sampler2D s_MERTexture;
+uniform lowp sampler2D s_MERSTexture;
 uniform lowp sampler2D s_MatTexture;
 uniform lowp sampler2D s_MatTexture1;
 uniform lowp sampler2D s_NormalTexture;
@@ -292,8 +292,9 @@ struct DirectionalLight {
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);

@@ -190,13 +190,6 @@ vec3 convertQuadToCube(vec2 inCoords, int face) {
     }
     return uv;
 }
-vec4 SampleCubemap(vec3 R, float lod) {
-    vec4 color = textureCubeLod(s_CubeMap, R, lod);
-    color.r = isnan(color.r)|| isinf(color.r) ? 65503.0 : color.r;
-    color.g = isnan(color.r)|| isinf(color.g) ? 65503.0 : color.g;
-    color.b = isnan(color.r)|| isinf(color.b) ? 65503.0 : color.b;
-    return color;
-}
 vec3 ImportanceSample(vec3 R, float roughness, uint sampleCount, float edgeLength) {
     vec3 V = R;
     vec3 N = R;
@@ -212,7 +205,7 @@ vec3 ImportanceSample(vec3 R, float roughness, uint sampleCount, float edgeLengt
             float omegaS = 1.0f / (float(sampleCount) * pdf);
             float omegaP = 4.0f * 3.1415926535897932384626433832795 / (6.0f * edgeLength * edgeLength);
             float mipLevel = max(0.5f * log2(omegaS / omegaP), 0.0f);
-            prefilteredColor += SampleCubemap(L, mipLevel).rgb * NdotL;
+            prefilteredColor += textureCubeLod(s_CubeMap, L, mipLevel).rgb * NdotL;
             totalWeight += NdotL;
         }
     }
@@ -254,7 +247,7 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 R = normalize(convertQuadToCube(fragInput.texCoord, int(CurrentFace.x)));
     vec3 importanceSampled;
     if (int(ConvolutionParameters.y) == 0) {
-        importanceSampled = SampleCubemap(R, 0.0).rgb;
+        importanceSampled = textureCubeLod(s_CubeMap, R, 0.0).rgb;
     }
     else {
         importanceSampled = ImportanceSample(R, (ConvolutionParameters.y / (ConvolutionParameters.w - 1.0)), uint(ConvolutionParameters.x), float(int(ConvolutionParameters.z)));

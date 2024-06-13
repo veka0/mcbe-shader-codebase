@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 
 /*
 * Available Macros:
@@ -49,8 +49,6 @@ uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
-uniform vec4 ShaderType;
-uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
 uniform mat4 Transform;
 vec4 ViewRect;
@@ -94,7 +92,6 @@ struct FragmentOutput {
 
 uniform lowp sampler2D s_Texture0;
 uniform lowp sampler2D s_Texture1;
-uniform lowp sampler2D s_Texture2;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = ((vertInput.position) * (Transform));
     vertOutput.screenPosition = vertInput.position;

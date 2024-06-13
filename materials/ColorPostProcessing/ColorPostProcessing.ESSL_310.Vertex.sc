@@ -48,7 +48,6 @@ uniform vec4 ColorGrading_Saturation_Shadows;
 uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
-uniform vec4 TonemapCorrection;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;

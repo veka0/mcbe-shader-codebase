@@ -219,6 +219,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -333,6 +335,24 @@ struct ColorTransform {
     float luminance;
 };
 
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
+};
+
 void ItemInHandVertPBR(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.normal = ((World) * (vec4(vertInput.vertInput.normal.xyz, 1.0))).xyz;
@@ -402,24 +422,6 @@ struct DirectionalLightParams {
     int cascadeCount;
     int isSun;
     int index;
-};
-
-struct AtmosphereParams {
-    vec3 sunDir;
-    vec3 moonDir;
-    vec4 sunColor;
-    vec4 moonColor;
-    vec3 skyZenithColor;
-    vec3 skyHorizonColor;
-    vec4 fogColor;
-    float horizonBlendMin;
-    float horizonBlendStart;
-    float mieStart;
-    float horizonBlendMax;
-    float rayleighStrength;
-    float sunMieStrength;
-    float moonMieStrength;
-    float sunGlareShape;
 };
 
 struct TemporalAccumulationParameters {

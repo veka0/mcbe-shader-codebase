@@ -76,7 +76,7 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
-uniform vec4 AlbedoExtinction;
+uniform vec4 AirAlbedoExtinction;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 SkyZenithColor;
 uniform vec4 AtmosphericScatteringToggles;
@@ -99,7 +99,7 @@ uniform vec4 ShadowParams;
 uniform vec4 MoonColor;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
 uniform vec4 FogSkyBlend;
-uniform vec4 HeightFogScaleBias;
+uniform vec4 HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias;
 uniform vec4 IBLParameters;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 MoonDir;
@@ -114,6 +114,7 @@ uniform vec4 TemporalSettings;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabled;
 uniform vec4 VolumeShadowSettings;
+uniform vec4 WaterAlbedoExtinction;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -180,6 +181,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -233,6 +236,7 @@ SAMPLER2DARRAYSHADOW_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_PreviousLightingBuffer);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
+SAMPLER2D_AUTOREG(s_ScreenSpaceWaterDepth);
 SAMPLER2DARRAYSHADOW_AUTOREG(s_ShadowCascades);
 SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
 SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
@@ -493,18 +497,27 @@ void Populate() {
     vec3 worldPosition = volumeToWorld(uvw, InvViewProj, Proj, VolumeNearFar.xy);
     vec3 viewPosition = ((View) * (vec4(worldPosition, 1.0))).xyz; // Attention!
     vec3 worldAbsolute = worldPosition - WorldOrigin.xyz;
-    float density = clamp(HeightFogScaleBias.x * worldPosition.y + HeightFogScaleBias.y, 0.0, 1.0);
+    float density = clamp(HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.x * worldPosition.y + HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.y, 0.0, 1.0);
     float viewDistance = length(viewPosition);
     float fogIntensity = calculateFogIntensityFaded(viewDistance, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
     density = mix(density, 0.0, fogIntensity);
-    vec3 scattering = density * AlbedoExtinction.rgb * AlbedoExtinction.a;
-    float extinction = density * AlbedoExtinction.a;
+    float waterDepthSampleW = max(uvw.z - HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.w / VolumeDimensions.z, 0.0f);
+    vec3 waterDepthSampleNdc = volumeToNdc(vec3(uvw.xy, waterDepthSampleW), Proj, VolumeNearFar.xy);
+    float waterDepth = texelFetch(s_ScreenSpaceWaterDepth, ivec2(x, volumeHeight - 1 - y), 0).r;
+    bool underwater = HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.z != 0.0f;
+    if (waterDepthSampleNdc.z > waterDepth) {
+        underwater = !underwater;
+    }
+    vec4 albedoExtinction = underwater ? WaterAlbedoExtinction : AirAlbedoExtinction;
+    vec3 scattering = density * albedoExtinction.rgb * albedoExtinction.a;
+    float extinction = density * albedoExtinction.a;
     vec3 source = vec3(0.0, 0.0, 0.0);
     vec3 blockAmbient = AmbientContribution.x * BlockBaseAmbientLightColorIntensity.rgb * BlockBaseAmbientLightColorIntensity.a;
     vec3 skyAmbient = AmbientContribution.y * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
     vec3 ambient = blockAmbient + skyAmbient;
     ambient = max(ambient, vec3_splat(AmbientContribution.z));
-    source += scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    const float kInv4Pi = 1.0f / (4.0f * 3.1415926535897932384626433832795);
+    source += kInv4Pi * scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
     if (abs(AmbientContribution.y) > 0.0001) {
         int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
         for(int i = 0; i < lightCount; i ++ ) {
@@ -518,7 +531,7 @@ void Populate() {
             }
             vec4 colorAndIlluminance = DirectionalLightSources[i].diffuseColorAndIlluminance;
             vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
-            source += scattering * directOcclusion * illuminance;
+            source += kInv4Pi * scattering * directOcclusion * illuminance;
         }
     }
     if (TemporalSettings.x > 0.0) {

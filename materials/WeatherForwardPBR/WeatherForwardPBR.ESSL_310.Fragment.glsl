@@ -24,15 +24,6 @@
 * - NO_VARIETY__ON (not used)
 */
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-#extension GL_EXT_shader_texture_lod : enable
-#define texture2DLod textureLod
-#define texture2DGrad textureGrad
-#define texture2DProjLod textureProjLod
-#define texture2DProjGrad textureProjGrad
-#define textureCubeLod textureLod
-#define textureCubeGrad textureGrad
-#endif
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
@@ -245,6 +236,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -478,6 +471,9 @@ struct DirectionalLightParams {
     int index;
 };
 
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
 vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float blockBaseIntensity, float skyAmbientContribution, vec4 skyBaseColorIntensity, float cameraLightSkyIntensity, float ambientFadeInMultiplier) {
     float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
     float rb = blockAmbientContributionBalanced + blockAmbientTint.r * blockAmbientTint.a;
@@ -651,9 +647,6 @@ vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewD
         outColor = fogAppliedColor;
     }
     return outColor;
-}
-vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
 }
 vec3 getAmbientDiffuseColor(vec2 lightingUV, vec3 albedo) {
     vec3 lightColor = evaluateSampledAmbient(lightingUV.x, vec4(1.0, 1.0, 1.0, 1.0), BlockBaseAmbientLightColorIntensity.a, lightingUV.y, SkyAmbientLightColorIntensity, CameraLightIntensity.y, 1.0);

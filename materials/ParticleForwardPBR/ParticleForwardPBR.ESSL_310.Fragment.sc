@@ -69,6 +69,7 @@ uniform mat4 PointLightProj;
 uniform vec4 ShadowBias;
 uniform vec4 PointLightShadowParams1;
 uniform vec4 ShadowSlopeBias;
+uniform vec4 PBRTextureFlags;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
@@ -76,6 +77,7 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
 uniform vec4 WorldOrigin;
+uniform vec4 MERSUniforms;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
 uniform vec4 FogAndDistanceControl;
@@ -95,8 +97,6 @@ uniform vec4 IBLParameters;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 MERUniforms;
 uniform vec4 MaterialID;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
@@ -104,6 +104,7 @@ uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 VolumeNearFar;
+uniform vec4 VolumeScatteringEnabled;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -166,6 +167,8 @@ struct LightSourceWorldInfo {
     mat4 shadowProj1;
     mat4 shadowProj2;
     mat4 shadowProj3;
+    mat4 waterSurfaceViewProj;
+    mat4 invWaterSurfaceViewProj;
     int isSun;
     int shadowCascadeNumber;
     int pad0;
@@ -331,8 +334,9 @@ void ParticleAlphaTest(in StandardSurfaceInput surfaceInput, inout StandardSurfa
 
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 diffuse = textureSample(s_ParticleTexture, surfaceInput.UV);
     diffuse = diffuse * vec4(surfaceInput.Color, surfaceInput.Alpha);
@@ -340,10 +344,11 @@ void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout S
     vec3 skyAmbient = SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
     vec3 ambient = blockAmbient + skyAmbient;
     vec4 shadedColor = vec4(diffuse.rgb * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w, diffuse.a);
-    float metalness = MERUniforms.r;
-    float emissive = MERUniforms.g;
-    float roughness = MERUniforms.b;
-    int flags = int(MERUniforms.a);
+    float metalness = MERSUniforms.r;
+    float emissive = MERSUniforms.g;
+    float roughness = MERSUniforms.b;
+    float subsurface = MERSUniforms.a;
+    int flags = int(PBRTextureFlags.x);
     if ((flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture) {
         vec3 merTexture = textureSample(s_MERTexture, surfaceInput.UV).rgb;
         metalness = merTexture.r;
@@ -353,6 +358,7 @@ void ParticleForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout S
     surfaceOutput.Metallic = metalness;
     surfaceOutput.Emissive = emissive;
     surfaceOutput.Roughness = roughness;
+    surfaceOutput.Subsurface = subsurface;
     if ((flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
     {
         vec3 normalTexture = textureSample(s_NormalTexture, surfaceInput.UV).xyz * 2.f - 1.f;

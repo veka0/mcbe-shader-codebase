@@ -107,7 +107,6 @@ uniform vec4 ColorGrading_Saturation_Shadows;
 uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RenderMode;
-uniform vec4 TonemapCorrection;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -286,11 +285,7 @@ vec3 ACESFitted(vec3 rgb) {
 vec3 TonemapACES(vec3 rgb) {
     return ACESFitted(rgb);
 }
-vec3 TonemapColorCorrection(vec3 rgb, float luminance, float brightness, float contrast, float saturation) {
-    rgb = (rgb - 0.5) * contrast + 0.5 + brightness;
-    return mix(vec3_splat(luminance), rgb, max(0.0, saturation));
-}
-vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, float contrast, float saturation, float compensation, float whitePoint, int tonemapper) {
+vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float compensation, float whitePoint, int tonemapper) {
     float toneMappedAverageLuminance = 0.18f;
     float exposure = (toneMappedAverageLuminance / averageLuminance) * compensation;
     sceneColor *= exposure;
@@ -314,10 +309,10 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float brightness, flo
     float finalLuminance = luminance(sceneColor);
     vec3 e = vec3_splat(1.0) / getGradingVector(ColorGrading_Gamma_Highlights.xyz, ColorGrading_Gamma_Shadows.xyz, ColorGrading_Gamma_Midtones.xyz, toneMappedAverageLuminance, finalLuminance);
     sceneColor = pow(max(sceneColor, vec3_splat(0.0)), e);
-    return TonemapColorCorrection(sceneColor, finalLuminance, brightness, contrast, saturation);
+    return sceneColor;
 }
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f * averageLuminance);
+    return color / (0.18f / averageLuminance);
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 sceneColor = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;
@@ -349,9 +344,6 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         finalColor.rgb = ApplyTonemap(
             sceneColor,
             averageLuminance,
-            TonemapCorrection.x,
-            TonemapCorrection.y,
-            TonemapCorrection.z,
             compensation,
             whitePoint,
             int(TonemapParams0.x)

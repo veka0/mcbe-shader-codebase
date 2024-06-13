@@ -50,11 +50,12 @@ struct accelerationStructureKHR {
     int noop;
 };
 
+uniform vec4 PBRTextureFlags;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
-uniform vec4 MERUniforms;
+uniform vec4 MERSUniforms;
 uniform vec4 MaterialID;
 vec4 ViewRect;
 mat4 Proj;
@@ -215,8 +216,9 @@ struct DirectionalLight {
 #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
 const int kInvalidPBRTextureHandle = 0xffff;
 const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 1);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 2);
+const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
+const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
+const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
 #endif
 void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertOutput) {
     StandardTemplate_InvokeVertexPreprocessFunction(vertInput, vertOutput);

@@ -3,6 +3,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS
+* - BLEND_PASS
 * - TRANSPARENT_PASS (not used)
 *
 * MultiColorTint:
@@ -115,9 +116,11 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     diffuse.rgb = colorMask.rrr * fragInput.color0.rgb;
     diffuse.rgb = mix(diffuse.rgb, colorMask.ggg * ChangeColor.rgb, ceil(colorMask.g));
     #endif
+    #ifndef BLEND_PASS
     if (fragInput.color0.a > 0.0) {
         diffuse.a = ceil(diffuse.a);
     }
+    #endif
     #ifdef ALPHA_TEST_PASS
     const float ALPHA_THRESHOLD = 0.5;
     if (diffuse.a < ALPHA_THRESHOLD) {

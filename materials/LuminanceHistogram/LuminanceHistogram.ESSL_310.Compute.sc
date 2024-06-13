@@ -102,7 +102,7 @@ SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 BUFFER_RW_AUTOREG(s_CurFrameLuminanceHistogram, Histogram);
 #ifdef BUILD_HISTOGRAM_PASS
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f * averageLuminance);
+    return color / (0.18f / averageLuminance);
 }
 #endif
 #ifdef CALCULATE_AVERAGE_PASS
