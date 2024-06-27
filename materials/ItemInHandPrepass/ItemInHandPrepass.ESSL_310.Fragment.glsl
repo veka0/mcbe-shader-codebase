@@ -21,6 +21,7 @@
 * - MULTI_COLOR_TINT__ON
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -71,6 +72,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform mat4 PrevWorld;
 uniform vec4 ColorBased;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
@@ -184,6 +186,15 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     return result;
 }
 #ifndef DEPTH_ONLY_OPAQUE_PASS
+vec2 calculateMotionVector(vec3 worldPosition, vec3 previousWorldPosition) {
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(previousWorldPosition, 1.0)));
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    return screenSpacePos.xy - prevScreenSpacePos.xy;
+}
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
@@ -231,13 +242,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
     fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0)));
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color1.zw = calculateMotionVector(worldPosition, prevWorldPosition);
     fragOutput.Color2 = vec4(
         surfaceOutput.Emissive,
         ambientBlockLight,
@@ -251,7 +256,7 @@ bool shouldDiscard(const float alpha) {
 void ItemInHandSurfGeometryPrepass(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     applyPrepassSurfaceToGBuffer(
         fragInput.worldPos.xyz,
-        fragInput.worldPos.xyz - PrevWorldPosOffset.xyz,
+        fragInput.prevWorldPos.xyz - PrevWorldPosOffset.xyz,
         TileLightIntensity.x,
         TileLightIntensity.y,
         surfaceOutput,

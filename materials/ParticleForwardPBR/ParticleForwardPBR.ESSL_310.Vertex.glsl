@@ -13,6 +13,7 @@
 * - INSTANCING__ON
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
@@ -97,9 +98,10 @@ uniform vec4 MERSUniforms;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 ClusterSize;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -135,8 +137,8 @@ uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -258,8 +260,7 @@ uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;

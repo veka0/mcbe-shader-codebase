@@ -2,8 +2,9 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_AND_NORMAL_PASS
 * - DEPTH_ONLY_PASS
-* - DO_WATER_ABSORPTION_PASS
+* - DO_WATER_EXTINCTION_PASS
 * - DO_WATER_SHADING_PASS
 * - DO_WATER_SURFACE_BUFFER_PASS
 *
@@ -79,10 +80,11 @@ uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextur
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -96,7 +98,6 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -127,6 +128,7 @@ uniform vec4 MaterialID;
 uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
+uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform mat4 PointLightProj;
 uniform vec4 SunDir;
@@ -145,8 +147,8 @@ uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
@@ -298,8 +300,7 @@ SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
 SAMPLER2D_AUTOREG(s_SceneDepth);
 SAMPLER2D_AUTOREG(s_SeasonsTexture);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
+SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -370,10 +371,6 @@ struct DirectionalLight {
 void computeLighting_RenderChunk_Vertex(VertexInput vInput, inout VertexOutput vOutput, vec3 worldPosition) {
     vOutput.lightmapUV = vInput.lightmapUV;
 }
-#ifdef DEPTH_ONLY_PASS
-void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-}
-#endif
 #ifdef DO_WATER_SURFACE_BUFFER_PASS
 struct ColorTransform {
     float hue;
@@ -426,6 +423,8 @@ struct AtmosphereParams {
     float sunGlareShape;
 };
 
+#endif
+#if defined(DEPTH_AND_NORMAL_PASS)|| defined(DO_WATER_SHADING_PASS)
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -434,6 +433,19 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+#endif
+#ifdef DEPTH_AND_NORMAL_PASS
+void WaterVertDepthAndNormal(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    vec3 n = stdInput.vertInput.normal.xyz;
+    vertOutput.normal = normalize(((World) * (vec4(n, 0.0))).xyz); // Attention!
+    vertOutput.worldPos = stdInput.worldPos;
+}
+#endif
+#ifdef DEPTH_ONLY_PASS
+void WaterVertDepthOnly(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+}
+#endif
+#ifdef DO_WATER_SHADING_PASS
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -454,13 +466,13 @@ struct DirectionalLightParams {
 };
 
 #endif
-#ifndef DEPTH_ONLY_PASS
+#if ! defined(DEPTH_AND_NORMAL_PASS)&& ! defined(DEPTH_ONLY_PASS)
 float WaterVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    #ifdef DO_WATER_ABSORPTION_PASS
+    #ifdef DO_WATER_EXTINCTION_PASS
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     return cameraDepth;
     #endif
-    #ifndef DO_WATER_ABSORPTION_PASS
+    #ifndef DO_WATER_EXTINCTION_PASS
     return applyPBRValuesToVertexOutput(stdInput, vertOutput);
     #endif
 }
@@ -479,10 +491,13 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
+    #ifdef DEPTH_AND_NORMAL_PASS
+    WaterVertDepthAndNormal(vertInput, vertOutput);
+    #endif
     #ifdef DEPTH_ONLY_PASS
     WaterVertDepthOnly(vertInput, vertOutput);
     #endif
-    #ifndef DEPTH_ONLY_PASS
+    #if ! defined(DEPTH_AND_NORMAL_PASS)&& ! defined(DEPTH_ONLY_PASS)
     WaterVert(vertInput, vertOutput);
     #endif
 }

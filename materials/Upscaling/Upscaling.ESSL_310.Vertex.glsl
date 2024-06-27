@@ -8,6 +8,7 @@
 * - TAAU_PASS
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec3 a_position;

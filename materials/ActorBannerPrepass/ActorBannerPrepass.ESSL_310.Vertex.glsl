@@ -33,6 +33,7 @@
 * - TINTING__ENABLED
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;

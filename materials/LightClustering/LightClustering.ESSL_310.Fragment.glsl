@@ -14,6 +14,7 @@
 * - CHANGE_MAX_LIGHT_PER_CLUSTER__OFF (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else

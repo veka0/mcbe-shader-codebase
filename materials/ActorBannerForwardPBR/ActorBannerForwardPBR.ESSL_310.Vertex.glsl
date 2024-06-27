@@ -33,13 +33,7 @@
 * - TINTING__ENABLED
 */
 
-#extension GL_EXT_shader_texture_lod : enable
-#define texture2DLod textureLod
-#define texture2DGrad textureGrad
-#define texture2DProjLod textureProjLod
-#define texture2DProjGrad textureProjGrad
-#define textureCubeLod textureLod
-#define textureCubeGrad textureGrad
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
@@ -121,14 +115,16 @@ uniform vec4 u_alphaRef4;
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
 uniform vec4 ActorFPEpsilon;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 SubsurfaceUniform;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 BannerColors[7];
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 BannerUVOffsetsAndScales[7];
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 Bones[8];
@@ -154,7 +150,6 @@ uniform mat4 DirectionalLightSourceShadowInvProj1[2];
 uniform mat4 DirectionalLightSourceShadowInvProj2[2];
 uniform mat4 DirectionalLightSourceShadowProj0[2];
 uniform mat4 DirectionalLightSourceShadowProj1[2];
-uniform vec4 LightDiffuseColorAndIlluminance;
 uniform mat4 DirectionalLightSourceShadowProj3[2];
 uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
@@ -164,6 +159,7 @@ uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 IBLParameters;
 uniform vec4 EmissiveUniform;
 uniform vec4 FogSkyBlend;
+uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 MatColor;
@@ -195,15 +191,14 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 SubsurfaceScatteringContribution;
-uniform vec4 SubsurfaceUniform;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 Time;
 uniform vec4 TintedAlphaTestEnabled;
 uniform vec4 UVAnimation;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
@@ -337,8 +332,7 @@ uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -394,24 +388,6 @@ struct ColorTransform {
     float hue;
     float saturation;
     float luminance;
-};
-
-struct AtmosphereParams {
-    vec3 sunDir;
-    vec3 moonDir;
-    vec4 sunColor;
-    vec4 moonColor;
-    vec3 skyZenithColor;
-    vec3 skyHorizonColor;
-    vec4 fogColor;
-    float horizonBlendMin;
-    float horizonBlendStart;
-    float mieStart;
-    float horizonBlendMax;
-    float rayleighStrength;
-    float sunMieStrength;
-    float moonMieStrength;
-    float sunGlareShape;
 };
 
 #if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
@@ -501,6 +477,24 @@ struct DirectionalLightParams {
     int cascadeCount;
     int isSun;
     int index;
+};
+
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
 };
 
 struct TemporalAccumulationParameters {

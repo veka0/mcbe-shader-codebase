@@ -21,6 +21,7 @@
 * - MULTI_COLOR_TINT__ON (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
@@ -89,6 +90,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 u_alphaRef4;
+uniform mat4 PrevWorld;
 uniform vec4 ColorBased;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
@@ -196,7 +198,7 @@ void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.normal = vertInput.vertInput.normal.xyz;
-    vertOutput.prevWorldPos = vertInput.worldPos;
+    vertOutput.prevWorldPos = ((PrevWorld) * (vec4(vertInput.vertInput.position, 1.0))).xyz;
 }
 struct CompositingOutput {
     vec3 mLitColor;

@@ -14,6 +14,7 @@
 * - CHANGE_MAX_LIGHT_PER_CLUSTER__OFF
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)

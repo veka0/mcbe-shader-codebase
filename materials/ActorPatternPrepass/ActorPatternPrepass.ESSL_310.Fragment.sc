@@ -65,16 +65,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -335,6 +344,17 @@ vec4 getActorAlbedoNoColorChange(vec2 uv) {
 void SurfaceFinalColorOverrideBase(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
+vec2 calculateMotionVector(vec3 worldPosition, vec3 previousWorldPosition) {
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(previousWorldPosition, 1.0))); // Attention!
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    return screenSpacePos.xy - prevScreenSpacePos.xy;
+}
+#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -368,13 +388,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
     fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0))); // Attention!
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color1.zw = calculateMotionVector(worldPosition, prevWorldPosition);
     fragOutput.Color2 = vec4(
         surfaceOutput.Emissive,
         ambientBlockLight,

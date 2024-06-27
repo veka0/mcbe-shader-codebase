@@ -8,6 +8,7 @@
 * - POPULATE_PASS (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 struct NoopSampler {
@@ -53,22 +54,25 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 JitterOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 HeightFogScaleBias;
 uniform vec4 AirAlbedoExtinction;
 uniform vec4 SkyZenithColor;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 AmbientContribution;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
 uniform vec4 CausticsParameters;
 uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -76,7 +80,6 @@ uniform vec4 DirectionalLightSourceIsSun[2];
 uniform vec4 MoonDir;
 uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 uniform vec4 DirectionalLightSourceShadowDirection[2];
-uniform vec4 HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias;
 uniform mat4 DirectionalLightSourceShadowInvProj0[2];
 uniform mat4 DirectionalLightSourceShadowInvProj1[2];
 uniform mat4 DirectionalLightSourceShadowInvProj2[2];
@@ -115,10 +118,10 @@ uniform vec4 TemporalSettings;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform vec4 VolumeShadowSettings;
-uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterAlbedoExtinction;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -222,10 +225,9 @@ uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
 uniform highp sampler2DArray s_ScatteringBuffer;
-uniform lowp sampler2D s_ScreenSpaceWaterDepth;
+uniform lowp sampler2D s_ScreenSpaceWaterDepthAndNormal;
 uniform highp sampler2DArray s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

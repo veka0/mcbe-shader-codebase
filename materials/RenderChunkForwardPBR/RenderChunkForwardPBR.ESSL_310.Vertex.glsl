@@ -4,9 +4,9 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
-* - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - ALPHA_TEST_PASS
+* - DEPTH_ONLY_PASS
+* - DEPTH_ONLY_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
 * - OPAQUE_PASS
 *
@@ -23,15 +23,7 @@
 * - SEASONS__ON (not used)
 */
 
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-#extension GL_EXT_shader_texture_lod : enable
-#define texture2DLod textureLod
-#define texture2DGrad textureGrad
-#define texture2DProjLod textureProjLod
-#define texture2DProjGrad textureProjGrad
-#define textureCubeLod textureLod
-#define textureCubeGrad textureGrad
-#endif
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
@@ -114,14 +106,15 @@ uniform mat4 u_model[4];
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -135,7 +128,6 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -166,6 +158,7 @@ uniform vec4 MaterialID;
 uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
+uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform mat4 PointLightProj;
 uniform vec4 SunDir;
@@ -184,8 +177,8 @@ uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
@@ -331,8 +324,7 @@ uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SeasonsTexture;
 uniform highp sampler2DArray s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
@@ -368,6 +360,14 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+vec4 jitterVertexPosition(vec3 worldPosition) {
+    mat4 offsetProj = Proj;
+    offsetProj[2][0] += SubPixelOffset.x;
+    offsetProj[2][1] -= SubPixelOffset.y;
+    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
+}
+#endif
 #if defined(RENDER_AS_BILLBOARDS__ON)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
 void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     stdInput.worldPos += vec3(0.5, 0.5, 0.5);
@@ -379,8 +379,19 @@ void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout Vertex
     vertOutput.position = ((ViewProj) * (vec4(stdInput.worldPos, 1.0)));
 }
 #endif
-#ifndef FORWARD_PBR_TRANSPARENT_PASS
+#if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)
 float RenderChunkVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    #ifdef RENDER_AS_BILLBOARDS__ON
+    vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
+    transformAsBillboardVertex(stdInput, vertOutput);
+    #endif
+    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
+    float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
+    return cameraDepth;
+}
+#endif
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+float RenderChunkVertDepth(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     #ifdef RENDER_AS_BILLBOARDS__ON
     vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
     transformAsBillboardVertex(stdInput, vertOutput);
@@ -494,6 +505,7 @@ float applyPBRValuesToVertexOutput(StandardVertexInput stdInput, inout VertexOut
     return cameraDepth;
 }
 float RenderChunkVertPBR(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
     return applyPBRValuesToVertexOutput(stdInput, vertOutput);
 }
 #endif
@@ -511,8 +523,11 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifndef FORWARD_PBR_TRANSPARENT_PASS
+    #if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)
     RenderChunkVert(vertInput, vertOutput);
+    #endif
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
+    RenderChunkVertDepth(vertInput, vertOutput);
     #endif
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     RenderChunkVertPBR(vertInput, vertOutput);

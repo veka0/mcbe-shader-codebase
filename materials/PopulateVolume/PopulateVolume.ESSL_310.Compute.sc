@@ -31,10 +31,16 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
@@ -43,8 +49,14 @@ vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
+}
+vec4 vec4_splat(float _x) {
+    return vec4(_x, _x, _x, _x);
 }
 struct NoopImage2D {
     int noop;
@@ -68,35 +80,35 @@ uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextur
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 JitterOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform mat4 DirectionalLightSourceShadowInvProj1[2];
 uniform vec4 FogColor;
 uniform vec4 VolumeDimensions;
+uniform vec4 HeightFogScaleBias;
 uniform vec4 AirAlbedoExtinction;
 uniform vec4 SkyZenithColor;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 AmbientContribution;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 CameraLightIntensity;
+uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
 uniform vec4 CausticsParameters;
 uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform vec4 DirectionalLightSourceIsSun[2];
 uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 uniform vec4 DirectionalLightSourceShadowDirection[2];
-uniform vec4 HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias;
 uniform mat4 DirectionalLightSourceShadowInvProj0[2];
 uniform mat4 DirectionalLightSourceShadowInvProj2[2];
 uniform mat4 DirectionalLightSourceShadowProj0[2];
@@ -110,6 +122,8 @@ uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 HenyeyGreensteinG;
+uniform vec4 LastSpecularIBLIdx;
+uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 MoonColor;
 uniform vec4 MoonDir;
 uniform mat4 PlayerShadowProj;
@@ -133,10 +147,10 @@ uniform vec4 SunColor;
 uniform vec4 TemporalSettings;
 uniform vec4 Time;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform vec4 VolumeShadowSettings;
-uniform vec4 WaterAbsorptionCoefficients;
 uniform vec4 WaterAlbedoExtinction;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -244,12 +258,56 @@ SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_PreviousLightingBuffer);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
-SAMPLER2D_AUTOREG(s_ScreenSpaceWaterDepth);
+SAMPLER2D_AUTOREG(s_ScreenSpaceWaterDepthAndNormal);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
+SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
+float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
+    float a2 = a * a;
+    float nDotH = max(dot(N, H), 0.0);
+    float f = max((a2 - 1.0) * nDotH * nDotH + 1.0, 1e - 4);
+    return a2 / (f * f * 3.1415926535897932384626433832795);
+}
+float G_Smith(float nDotL, float nDotV, float a) {
+    float k = a / 2.0;
+    float viewTerm = nDotV / (nDotV * (1.0 - k) + k + 1e - 4);
+    float lightTerm = nDotL / (nDotL * (1.0 - k) + k + 1e - 4);
+    return viewTerm * lightTerm;
+}
+vec3 F_Schlick(vec3 V, vec3 H, vec3 R0) {
+    float vDotH = max(dot(V, H), 0.0);
+    return R0 + (1.0 - R0) * pow(clamp(1.0 - vDotH, 0.0, 1.0), 5.0);
+}
+vec3 BRDF_Spec_CookTorrance(float nDotL, float nDotV, float D, float G, vec3 F) {
+    return (F * D * G) / (4.0 * nDotL * nDotV + 1e - 4);
+}
+vec3 BRDF_Diff_Lambertian(vec3 albedo) {
+    return albedo / 3.1415926535897932384626433832795;
+}
+float getClusterDepthIndex(float viewSpaceDepth, float maxSlices, vec2 clusterNearFar) {
+    float zNear = clusterNearFar.x;
+    float zFar = clusterNearFar.y;
+    if (viewSpaceDepth < zNear) {
+        return - 1.0f;
+    }
+    if (viewSpaceDepth >= zNear && viewSpaceDepth <= 1.0f) {
+        return 0.0f;
+    }
+    if (viewSpaceDepth > 1.0f && viewSpaceDepth <= 1.5f) {
+        return 1.0f;
+    }
+    float nearFarLog = log2(zFar / 1.5f);
+    return floor(log2(viewSpaceDepth / 1.5f) * ((maxSlices - 2.0f) / nearFarLog) + 2.0f); // Attention!
+}
+vec3 getClusterIndex(vec2 uv, float viewSpaceDepth, vec3 clusterDimensions, vec2 clusterNearFar, vec2 screenSize, vec2 clusterSize) {
+    float viewportX = uv.x * screenSize.x;
+    float viewportY = uv.y * screenSize.y;
+    float clusterIdxX = floor(viewportX / clusterSize.x);
+    float clusterIdxY = floor(viewportY / clusterSize.y);
+    float clusterIdxZ = getClusterDepthIndex(viewSpaceDepth, clusterDimensions.z, clusterNearFar);
+    return vec3(clusterIdxX, clusterIdxY, clusterIdxZ);
+}
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
     vec4 shadowBias;
@@ -272,21 +330,16 @@ struct DirectionalLightParams {
 bool areCascadedShadowsEnabled(float mode) {
     return int(mode) == 1;
 }
-float shadowSampleAndCompare(highp sampler2D shadowMap, float textureDimensions, vec2 uv, float comparisonValue, out float shadowDepth) {
+vec2 bilinearWeights(float textureDimensions, vec2 uv) {
     vec2 pixel = (uv * textureDimensions) + vec2(0.5, 0.5);
-    vec2 weight = fract(pixel);
-    vec4 samples = textureGather(shadowMap, uv, 0);
-    shadowDepth = mix(mix(samples.w, samples.z, weight.x), mix(samples.x, samples.y, weight.x), weight.y);
-    vec4 comparisonTests = vec4(step(comparisonValue, samples.x), step(comparisonValue, samples.y), step(comparisonValue, samples.z), step(comparisonValue, samples.w));
-    return mix(mix(comparisonTests.w, comparisonTests.z, weight.x), mix(comparisonTests.x, comparisonTests.y, weight.x), weight.y);
+    return fract(pixel);
 }
-float shadowSampleAndCompare(highp sampler2DArray shadowMap, float textureDimensions, vec3 uvw, float comparisonValue, out float shadowDepth) {
-    vec2 pixel = (uvw.xy * textureDimensions) + vec2(0.5, 0.5);
-    vec2 weight = fract(pixel);
-    vec4 samples = textureGather(shadowMap, uvw, 0);
-    shadowDepth = mix(mix(samples.w, samples.z, weight.x), mix(samples.x, samples.y, weight.x), weight.y);
-    vec4 comparisonTests = vec4(step(comparisonValue, samples.x), step(comparisonValue, samples.y), step(comparisonValue, samples.z), step(comparisonValue, samples.w));
-    return mix(mix(comparisonTests.w, comparisonTests.z, weight.x), mix(comparisonTests.x, comparisonTests.y, weight.x), weight.y);
+float bilinearFilter(vec4 samples, vec2 weights) {
+    return mix(mix(samples.w, samples.z, weights.x), mix(samples.x, samples.y, weights.x), weights.y);
+}
+float bilinearPCF(vec4 samples, vec2 weights, float comparisonValue) {
+    vec4 comparisonTests = step(comparisonValue, samples);
+    return bilinearFilter(comparisonTests, weights);
 }
 bool pointInFrustum(vec4 projPos) {
     return projPos.x >= -1.0 && projPos.x <= 1.0 &&
@@ -335,8 +388,9 @@ float GetFilteredCloudShadow(vec3 worldPos, float NdL) {
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
             vec3 uvw = vec3(cloudUv + (offset * CascadeShadowResolutions[cloudCascade]), (DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)));
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw, cloudProjPos.z, shadowDepth);
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, cloudProjPos.z);
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -364,8 +418,10 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z;
             vec2 newUv = playerUv + (offset * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0)), playerProjPos.z, shadowDepth);
+            vec3 uvw = vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0));
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, playerProjPos.z);
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -388,9 +444,11 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade)), projZ, shadowDepth);
-            depthSamples += shadowDepth;
+            vec3 uvw = vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade));
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, projZ);
+            depthSamples += bilinearFilter(shadowSamples, weights);
         }
     }
     shadowDepth = depthSamples / float(filterWidth * filterWidth);
@@ -521,10 +579,428 @@ struct AtmosphereParams {
     float sunGlareShape;
 };
 
+vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
+    return lineDirection * (1.f / dot(lineDirection, normal));
+}
+vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
+    vec3 outCoordinate = inCoordinate;
+    if (inCoordinate.y > 1.0f) {
+        switch(int(inCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = 2.0f - inCoordinate.y;
+            outCoordinate.y = inCoordinate.x;
+            break;
+            case 1 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = inCoordinate.y - 1.0f;
+            outCoordinate.y = 1.0f - inCoordinate.x;
+            break;
+            case 2 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = inCoordinate.y - 1.0f;
+            break;
+            case 3 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = inCoordinate.y - 1.0f;
+            break;
+            case 5 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
+            default :
+            break;
+        }
+    } else if (inCoordinate.y < 0.0f) {
+        switch(int(inCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = 1.0f + inCoordinate.y;
+            outCoordinate.y = 1.0f - inCoordinate.x;
+            break;
+            case 1 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = -inCoordinate.y;
+            outCoordinate.y = inCoordinate.x;
+            break;
+            case 2 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = -inCoordinate.y;
+            break;
+            case 3 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = -inCoordinate.y;
+            break;
+            default :
+            break;
+        }
+    }
+    vec2 uvCache = outCoordinate.xy;
+    if (uvCache.x > 1.0) {
+        switch(int(outCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 1 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 2 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = uvCache.x - 1.0f;
+            break;
+            case 3 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = 2.0f - uvCache.x;
+            break;
+            case 4 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            default :
+            break;
+        }
+    } else if (uvCache.x < 0.0) {
+        switch(int(outCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 1 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 2 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = -uvCache.x;
+            break;
+            case 3 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = 1.0f + uvCache.x;
+            break;
+            case 4 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            default :
+            break;
+        }
+    }
+    return outCoordinate;
+}
+float wrappedDiffuse(vec3 n, vec3 l, float w) {
+    return max((dot(n, l) + w) / ((1.0 + w) * (1.0 + w)), 0.0); // Attention!
+}
+void BSDF_VanillaMinecraft(vec3 n, vec3 l, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, float diffuseEnabled, float specularEnabled, inout vec3 diffuse, inout vec3 specular) {
+    float nDotL = max(dot(n, l), 0.0);
+    float nDotV = max(dot(n, v), 0.0);
+    float nDotLSubsurf = mix(nDotL, wrappedDiffuse(n, l, 0.25) + wrappedDiffuse(-n, l, 0.25), subsurface);
+    vec3 h = normalize(l + v);
+    float roughness = linearRoughness * linearRoughness;
+    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
+    float g = G_Smith(nDotL, nDotV, roughness);
+    vec3 f = F_Schlick(v, h, rf0);
+    vec3 albedo = (1.0 - f) * (1.0 - metalness) * color; // Attention!
+    diffuse = nDotLSubsurf * BRDF_Diff_Lambertian(albedo) * diffuseEnabled;
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * specularEnabled;
+}
+void BSDF_VanillaMinecraft_DiffuseOnly(vec3 n, vec3 l, vec3 color, float metalness, float subsurface, float diffuseEnabled, inout vec3 diffuse) {
+    float nDotL = max(dot(n, l), 0.0);
+    float nDotLSubsurf = mix(nDotL, wrappedDiffuse(n, l, 0.25) + wrappedDiffuse(-n, l, 0.25), subsurface);
+    vec3 albedo = (1.0 - metalness) * color;
+    diffuse = nDotLSubsurf * BRDF_Diff_Lambertian(albedo) * diffuseEnabled;
+}
+void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, vec3 v, float metalness, float linearRoughness, vec3 rf0, float specularEnabled, inout vec3 specular) {
+    float nDotL = max(dot(n, l), 0.0);
+    float nDotV = max(dot(n, v), 0.0);
+    vec3 h = normalize(l + v);
+    float roughness = linearRoughness * linearRoughness;
+    float d = D_GGX_TrowbridgeReitz(n, h, roughness);
+    float g = G_Smith(nDotL, nDotV, roughness);
+    vec3 f = F_Schlick(v, h, rf0);
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * specularEnabled;
+}
+float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
+    return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
+}
+float smoothDistanceAttenuation(float sqrDistance, float sqrRadius) {
+    float ratio = sqrDistance / sqrRadius;
+    float smoothFactor = clamp(1.0f - ratio * ratio, 0.0, 1.0);
+    return smoothFactor * smoothFactor;
+}
+float getDistanceAttenuation(float sqrDistance, float radius) {
+    float attenuation = 1.0f / max(sqrDistance, 0.01f * 0.01f);
+    attenuation *= smoothDistanceAttenuation(sqrDistance, radius * radius);
+    if (PointLightAttenuationWindowEnabled.x > 0.0f) {
+        attenuation *= smoothWindowAttenuation(sqrDistance, radius * radius, 1.0f - attenuation);
+    }
+    return attenuation;
+}
+float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool useShadowBias) {
+    Light lightInfo = Lights[lightIndex];
+    if (lightInfo.shadowProbeIndex < 0) {
+        return 1.f;
+    }
+    vec3 lightToPoint = surfaceWorldPos - lightInfo.position.xyz;
+    vec3 surfaceViewPosition = abs(lightToPoint);
+    vec3 sampleCoordinates = vec3_splat(0.f);
+    if (surfaceViewPosition.x >= surfaceViewPosition.y && surfaceViewPosition.x >= surfaceViewPosition.z) {
+        surfaceViewPosition = vec3(surfaceViewPosition.y, surfaceViewPosition.z, surfaceViewPosition.x);
+        if (lightToPoint.x > 0.f) {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(1.f, 0.f, 0.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(1.f - intersection.z, intersection.y, float(0));
+        } else {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(-1.f, 0.f, 0.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(intersection.z, intersection.y, float(1));
+        }
+    } else if (surfaceViewPosition.y >= surfaceViewPosition.z) {
+        surfaceViewPosition = vec3(surfaceViewPosition.x, surfaceViewPosition.z, surfaceViewPosition.y);
+        if (lightToPoint.y > 0.f) {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(0.f, 1.f, 0.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(intersection.x, 1.f - intersection.z, float(2));
+        } else {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(0.f, - 1.f, 0.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(intersection.x, intersection.z, float(3));
+        }
+    } else {
+        if (lightToPoint.z > 0.f) {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(0.f, 0.f, 1.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(intersection.x, intersection.y, float(4));
+        } else {
+            vec3 intersection = findLinePlaneIntersectionForCubemap(vec3(0.f, 0.f, - 1.f), lightToPoint);
+            intersection = intersection * 0.5f + 0.5f;
+            sampleCoordinates = vec3(1.f - intersection.x, intersection.y, float(5));
+        }
+    }
+    surfaceViewPosition.z *= -1.f;
+    vec4 surfaceProjPos = ((PointLightProj) * (vec4(surfaceViewPosition, 1.0))); // Attention!
+    if (useShadowBias) {
+        float NdL = dot(-normalize(lightToPoint), surfaceWorldNormal);
+        float bias = PointLightShadowParams1.x + PointLightShadowParams1.y * clamp(tan(acos(NdL)), 0.0, 1.0);
+        surfaceProjPos.z += bias;
+    }
+    surfaceProjPos /= surfaceProjPos.w;
+    int filterWidth = 4;
+    int filterOffset = filterWidth / 2;
+    float directOcclusion = 0.f;
+    for(int iy = 0; iy < filterWidth; ++ iy) {
+        for(int ix = 0; ix < filterWidth; ++ ix) {
+            float y = float(iy - filterOffset) + 0.5f;
+            float x = float(ix - filterOffset) + 0.5f;
+            vec2 offset = vec2(x, y) * PointLightShadowParams1.w;
+            vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(vec3(sampleCoordinates.x + offset.x, 1.0f - sampleCoordinates.y + offset.y, sampleCoordinates.z));
+            offsetSampleCoordinates.z = float(lightInfo.shadowProbeIndex * 6) + offsetSampleCoordinates.z;
+            vec4 shadowSamples = textureGather(s_PointLightShadowTextureArray, offsetSampleCoordinates, 0);
+            vec2 weights = bilinearWeights(1.0 / PointLightShadowParams1.w, offsetSampleCoordinates.xy);
+            directOcclusion += bilinearPCF(shadowSamples, weights, surfaceProjPos.z);
+        }
+    }
+    return directOcclusion / float(filterWidth * filterWidth);
+}
+bool getLightClusterRangeIfValid(vec2 lightClusterUV, float surfaceViewPosZ, out highp int rangeStart, out highp int rangeEnd) {
+    vec3 clusterId = getClusterIndex(lightClusterUV, - surfaceViewPosZ, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
+    if (clusterId.x < 0.0 || clusterId.y < 0.0 || clusterId.z < 0.0 || clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
+        return false;
+    }
+    highp int clusterIdx = int(clusterId.x + clusterId.y * ClusterDimensions.x + clusterId.z * ClusterDimensions.x * ClusterDimensions.y);
+    rangeStart = clusterIdx * int(ClusterDimensions.w);
+    rangeEnd = rangeStart + int(ClusterDimensions.w);
+    return true;
+}
+float getSquaredDistanceToLight(vec3 lightWorldDir) {
+    float squaredDistanceToLight = 0.0f;
+    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
+        squaredDistanceToLight = abs(lightWorldDir.x) + abs(lightWorldDir.y) + abs(lightWorldDir.z);
+        squaredDistanceToLight = dot(squaredDistanceToLight, squaredDistanceToLight);
+    }
+    else {
+        squaredDistanceToLight = dot(lightWorldDir, lightWorldDir);
+    }
+    return squaredDistanceToLight;
+}
+vec3 calculatePointLightIlluminance(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool useShadowBias, out vec4 ambientTint) {
+    ambientTint = vec4_splat(0.0);
+    if (lightIndex < 0) {
+        return vec3_splat(0.0);
+    }
+    vec3 lightWorldDir = Lights[lightIndex].position.xyz - surfaceWorldPos.xyz;
+    float squaredDistanceToLight = getSquaredDistanceToLight(lightWorldDir);
+    float r = Lights[lightIndex].position.w;
+    if (squaredDistanceToLight >= r * r) {
+        return vec3_splat(0.0);
+    }
+    float directOcclusion = 1.0f;
+    if (DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.w != 0.0) {
+        directOcclusion = calculateDirectOcclusionForDiscreteLight(lightIndex, surfaceWorldPos, surfaceWorldNormal, useShadowBias);
+    }
+    if (directOcclusion <= 0.0) {
+        return vec3_splat(0.0);
+    }
+    float lightIntensity = Lights[lightIndex].color.a;
+    float attenuation = getDistanceAttenuation(squaredDistanceToLight, r);
+    vec3 lightColor = Lights[lightIndex].color.rgb;
+    vec3 illuminance = lightColor * lightIntensity * attenuation;
+    ambientTint.rgb = lightColor * attenuation;
+    ambientTint.a = 1.0f - squaredDistanceToLight / (r * r);
+    return directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
+}
+DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfacePos, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool calculateDiffuse, bool calculateSpecular, out bool noDiscreteLight) {
+    DiscreteLightingContributions lightContrib;
+    lightContrib.diffuse = vec3_splat(0.0);
+    lightContrib.specular = vec3_splat(0.0);
+    lightContrib.ambientTint = vec4(0.0, 0.0, 0.0, 0.0);
+    if (!(calculateSpecular || calculateDiffuse))
+    {
+        return lightContrib;
+    }
+    highp int rangeStart = 0;
+    highp int rangeEnd = 0;
+    if (!getLightClusterRangeIfValid(lightClusterUV, surfacePos.z, rangeStart, rangeEnd)) {
+        return lightContrib;
+    }
+    int usedLightCount = 0;
+    for(highp int i = rangeStart; i < rangeEnd; ++ i) {
+        int lightIndex = int(LightLookupArray[i].lookup);
+        if (lightIndex < 0) {
+            break;
+        }
+        vec3 lightPos = ((View) * (vec4(Lights[lightIndex].position.xyz, 1.0))).xyz; // Attention!
+        vec3 lightDir = lightPos - surfacePos;
+        vec3 l = normalize(lightDir);
+        vec3 diffuse = vec3_splat(0.0);
+        vec3 specular = vec3_splat(0.0);
+        if (calculateDiffuse) {
+            if (calculateSpecular) {
+                BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, DiffuseSpecularEmissiveAmbientTermToggles.x, DiffuseSpecularEmissiveAmbientTermToggles.y, diffuse, specular);
+            }
+            else {
+                BSDF_VanillaMinecraft_DiffuseOnly(n, l, color, metalness, subsurface, DiffuseSpecularEmissiveAmbientTermToggles.x, diffuse);
+            }
+        }
+        else {
+            if (calculateSpecular) {
+                BSDF_VanillaMinecraft_SpecularOnly(n, l, v, metalness, linearRoughness, rf0, DiffuseSpecularEmissiveAmbientTermToggles.y, specular);
+            }
+        }
+        usedLightCount ++ ;
+        vec4 ambientTint = vec4_splat(0.0);
+        bool useShadowBias = true;
+        vec3 pointLightContribution = calculatePointLightIlluminance(lightIndex, surfaceWorldPos, surfaceWorldNormal, useShadowBias, ambientTint);
+        lightContrib.ambientTint += ambientTint;
+        lightContrib.diffuse += diffuse * pointLightContribution;
+        lightContrib.specular += specular * pointLightContribution;
+    }
+    if (usedLightCount > 0) {
+        lightContrib.ambientTint.rgb = lightContrib.ambientTint.rgb / float(usedLightCount);
+        lightContrib.ambientTint.a = lightContrib.ambientTint.a / float(usedLightCount);
+        noDiscreteLight = false;
+    }
+    return lightContrib;
+}
+bool isCloseEnoughToSeePointLightTerm(float dist, float distFadeBegin, float distFadeEnd, out float percentOfFade) {
+    bool enablePointLightFade = distFadeBegin > 0.0f;
+    percentOfFade = 0.0f;
+    if (enablePointLightFade) {
+        percentOfFade = smoothstep(distFadeBegin, distFadeEnd, dist);
+    }
+    bool isCloseEnough = (!enablePointLightFade)||(enablePointLightFade && dist < distFadeEnd);
+    return isCloseEnough;
+}
+bool isCloseEnoughToSeePointLightDiffuse(float dist, out float percentOfDiffuseFade) {
+    float distPointLightDiffuseFadeOut_Begin = PointLightDiffuseFadeOutParameters.x;
+    float distPointLightDiffuseFadeOut_End = PointLightDiffuseFadeOutParameters.y;
+    return isCloseEnoughToSeePointLightTerm(dist, distPointLightDiffuseFadeOut_Begin, distPointLightDiffuseFadeOut_End, percentOfDiffuseFade);
+}
+float getPointLightViewDistance(vec3 viewPosition) {
+    float dist = 0.0;
+    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
+        dist = abs(viewPosition.x) + abs(viewPosition.y) + abs(viewPosition.z);
+    } else {
+        dist = length(viewPosition);
+    }
+    return dist;
+}
+
 const float kInv4Pi = 1.0f / (4.0f * 3.1415926535897932384626433832795);
 float henyeyGreenstein(float cosTheta, float g) {
     float denom = (1.0 + g * g + 2.0 * g * cosTheta);
     return kInv4Pi * (1.0 - g * g) / (denom * sqrt(denom));
+}
+vec3 evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfaceViewPos, vec3 v, vec3 surfaceWorldPos, float henyeyGreensteinG, vec3 scattering) {
+    highp int rangeStart = 0;
+    highp int rangeEnd = 0;
+    if (!getLightClusterRangeIfValid(lightClusterUV, surfaceViewPos.z, rangeStart, rangeEnd)) {
+        return vec3_splat(0.0);
+    }
+    vec3 source = vec3(0.0, 0.0, 0.0);
+    for(highp int i = rangeStart; i < rangeEnd; ++ i) {
+        int lightIndex = int(LightLookupArray[i].lookup);
+        if (lightIndex < 0) {
+            break;
+        }
+        vec4 unused = vec4_splat(0.0);
+        vec3 dummySurfaceNormal = vec3(0.0, 1.0, 0.0);
+        bool useShadowBias = false;
+        vec3 pointLightContribution = calculatePointLightIlluminance(
+            lightIndex,
+            surfaceWorldPos,
+            dummySurfaceNormal,
+            useShadowBias,
+            unused
+        );
+        vec3 lightPos = ((View) * (vec4(Lights[lightIndex].position.xyz, 1.0))).xyz; // Attention!
+        vec3 lightDir = lightPos - surfaceViewPos;
+        vec3 l = normalize(lightDir);
+        float phase = henyeyGreenstein(dot(v, l), henyeyGreensteinG);
+        source += scattering * phase * pointLightContribution;
+    }
+    return source;
 }
 void Populate() {
     int volumeWidth = int(VolumeDimensions.x);
@@ -539,28 +1015,31 @@ void Populate() {
     vec3 uvw = (vec3(x, y, z) + vec3(0.5, 0.5, 0.5) + JitterOffset.xyz) / VolumeDimensions.xyz;
     vec3 worldPosition = volumeToWorld(uvw, InvViewProj, Proj, VolumeNearFar.xy);
     vec3 viewPosition = ((View) * (vec4(worldPosition, 1.0))).xyz; // Attention!
-    vec3 worldAbsolute = worldPosition - WorldOrigin.xyz;
-    float waterDepthSampleW = max(uvw.z - HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.w / VolumeDimensions.z, 0.0f);
-    vec3 waterDepthSampleNdc = volumeToNdc(vec3(uvw.xy, waterDepthSampleW), Proj, VolumeNearFar.xy);
-    float waterDepth = texelFetch(s_ScreenSpaceWaterDepth, ivec2(x, volumeHeight - 1 - y), 0).r;
-    bool underwater = HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.z != 0.0f;
-    if (waterDepthSampleNdc.z > waterDepth) {
-        underwater = !underwater;
-    }
-    float density = underwater ? 1.0 : clamp(HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.x * worldPosition.y + HeightFogScaleBiasAndCameraUnderwaterAndWaterDepthBias.y, 0.0, 1.0);
+    vec2 waterDepthAndNormal = texelFetch(s_ScreenSpaceWaterDepthAndNormal, ivec2(x, volumeHeight - 1 - y), 0).rg;
+    float waterDepth = waterDepthAndNormal.x;
+    float waterNormal = waterDepthAndNormal.y;
+    float waterSurfaceSignedDistance = (uvw.z - waterDepth) * VolumeDimensions.z * waterNormal;
+    float underwater = smoothstep(-0.5, 0.5, (waterSurfaceSignedDistance - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
+    underwater = CameraUnderwaterAndWaterSurfaceBiasAndFalloff.x != 0.0f ? 1.0 - underwater : underwater;
+    float density = clamp(HeightFogScaleBias.x * worldPosition.y + HeightFogScaleBias.y, 0.0, 1.0);
+    vec3 airScattering = density * AirAlbedoExtinction.rgb * AirAlbedoExtinction.a;
+    vec3 waterScattering = WaterAlbedoExtinction.rgb * WaterAlbedoExtinction.a;
+    vec3 scattering = mix(airScattering, waterScattering, underwater);
+    float airExtinction = density * AirAlbedoExtinction.a;
+    float waterExtinction = WaterAlbedoExtinction.a;
+    float extinction = mix(airExtinction, waterExtinction, underwater);
+    float henyeyGreensteinG = mix(HenyeyGreensteinG.x, HenyeyGreensteinG.y, underwater);
     float viewDistance = length(viewPosition);
     float fogIntensity = calculateFogIntensityFaded(viewDistance, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y, RenderChunkFogAlpha.x);
-    density = mix(density, 0.0, fogIntensity);
-    vec4 albedoExtinction = underwater ? WaterAlbedoExtinction : AirAlbedoExtinction;
-    float henyeyGreensteinG = underwater ? HenyeyGreensteinG.y : HenyeyGreensteinG.x;
-    vec3 scattering = density * albedoExtinction.rgb * albedoExtinction.a;
-    float extinction = density * albedoExtinction.a;
+    scattering = mix(scattering, vec3_splat(0.0), fogIntensity);
+    extinction = mix(extinction, 0.0, fogIntensity);
     vec3 source = vec3(0.0, 0.0, 0.0);
     vec3 blockAmbient = AmbientContribution.x * BlockBaseAmbientLightColorIntensity.rgb * BlockBaseAmbientLightColorIntensity.a;
     vec3 skyAmbient = AmbientContribution.y * SkyAmbientLightColorIntensity.rgb * SkyAmbientLightColorIntensity.a;
     vec3 ambient = blockAmbient + skyAmbient;
     ambient = max(ambient, vec3_splat(AmbientContribution.z));
     source += kInv4Pi * scattering * ambient * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    vec3 v = -(viewPosition / viewDistance);
     if (abs(AmbientContribution.y) > 0.0001) {
         int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
         for(int i = 0; i < lightCount; i ++ ) {
@@ -574,13 +1053,26 @@ void Populate() {
                     0.0,
                 shadowDepth);
             }
-            vec3 v = -(viewPosition / viewDistance);
             vec3 l = normalize(((View) * (DirectionalLightSourceWorldSpaceDirection[i])).xyz); // Attention!
             float phase = henyeyGreenstein(dot(v, l), henyeyGreensteinG);
             vec4 colorAndIlluminance = DirectionalLightSourceDiffuseColorAndIlluminance[i];
             vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
             source += scattering * directOcclusion * phase * illuminance;
         }
+    }
+    float dist = getPointLightViewDistance(viewPosition);
+    float unused = 0.0;
+    bool shouldCalculatePointLights = isCloseEnoughToSeePointLightDiffuse(dist, unused);
+    vec2 lightClusterUV = uvw.xy;
+    if (bool(VolumeScatteringEnabledAndPointLightVolumetricsEnabled.y)&& bool(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z)&& shouldCalculatePointLights) {
+        source += evaluateDiscreteLightsDirectContribution(
+            lightClusterUV,
+            viewPosition,
+            v,
+            worldPosition,
+            henyeyGreensteinG,
+            scattering
+        );
     }
     if (TemporalSettings.x > 0.0) {
         vec3 uvwUnjittered = (vec3(x, y, z) + vec3(0.5, 0.5, 0.5)) / VolumeDimensions.xyz;

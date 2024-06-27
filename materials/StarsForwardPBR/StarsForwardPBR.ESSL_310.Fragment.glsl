@@ -12,6 +12,7 @@
 * - INSTANCING__ON
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -49,16 +50,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 struct NoopImage2D {
@@ -110,8 +120,8 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 ClusterSize;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
@@ -146,8 +156,8 @@ uniform vec4 SubsurfaceScatteringContribution;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -345,7 +355,7 @@ void FragForwardPBRTransparent(StandardSurfaceInput fragInput, inout vec4 outCol
     vec3 starColor = fragInput.color0.rgb;
     starColor.rgb *= StarsColor.rgb * fragInput.color0.a;
     vec3 fogAppliedColor;
-    if (VolumeScatteringEnabled.x != 0.0) {
+    if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0) {
         vec3 uvw = ndcToVolume(fragInput.ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
         fogAppliedColor = sourceExtinction.a * starColor.rgb;

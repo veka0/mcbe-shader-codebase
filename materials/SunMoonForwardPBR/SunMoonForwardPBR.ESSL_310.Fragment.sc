@@ -36,16 +36,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 struct NoopImage2D {
@@ -83,8 +92,8 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 ClusterSize;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
@@ -119,8 +128,8 @@ uniform vec4 SunMoonColor;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -318,7 +327,7 @@ vec3 PreExposeLighting(vec3 color, float averageLuminance) {
 void FragForwardPBRTransparent(vec2 texCoord, vec3 ndcPosition, out vec3 outColor) {
     vec4 spriteColor = textureSample(s_SunMoonTexture, texCoord);
     vec3 sunMoonColor = SunMoonColor.rgb * spriteColor.rgb * SunMoonColor.a;
-    if (VolumeScatteringEnabled.x != 0.0) {
+    if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0) {
         vec3 uvw = ndcToVolume(ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
         outColor = sourceExtinction.a * sunMoonColor;

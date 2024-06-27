@@ -61,6 +61,7 @@ struct accelerationStructureKHR {
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
 uniform vec4 OverlayColor;
+uniform mat4 PrevWorld;
 uniform vec4 ColorBased;
 uniform vec4 FogColor;
 uniform vec4 GlintColor;
@@ -179,7 +180,7 @@ void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
 void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.normal = vertInput.vertInput.normal.xyz;
-    vertOutput.prevWorldPos = vertInput.worldPos;
+    vertOutput.prevWorldPos = ((PrevWorld) * (vec4(vertInput.vertInput.position, 1.0))).xyz; // Attention!
 }
 struct CompositingOutput {
     vec3 mLitColor;

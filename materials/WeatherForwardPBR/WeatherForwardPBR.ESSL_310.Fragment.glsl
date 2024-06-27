@@ -24,6 +24,7 @@
 * - NO_VARIETY__ON (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -66,16 +67,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
@@ -122,7 +132,9 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -135,7 +147,6 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -187,8 +198,8 @@ uniform vec4 Velocity;
 uniform vec4 ViewPosition;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -317,8 +328,7 @@ uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 uniform lowp sampler2D s_WeatherTexture;
 layout(std430, binding = 2)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 4)buffer s_Lights { Light Lights[]; };
@@ -675,7 +685,7 @@ void WeatherApplyFogForwardPBRSurface(FragmentInput fragInput, StandardSurfaceIn
     vec3 shadedColor = surfaceOutput.Albedo;
     vec4 viewPosition = ((View) * (((World) * (vec4(surfaceInput.worldPos, 1.0)))));
     float viewDistance = length(viewPosition);
-    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(shadedColor, worldSpaceViewDir(surfaceInput.worldPos.xyz), viewDistance, fragInput.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
+    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(shadedColor, worldSpaceViewDir(surfaceInput.worldPos.xyz), viewDistance, fragInput.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     if (PreExposureEnabled.x > 0.0) {
         float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
         fogAppliedColor = PreExposeLighting(fogAppliedColor, exposure);

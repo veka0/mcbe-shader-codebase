@@ -38,16 +38,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -75,7 +84,9 @@ uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -90,7 +101,6 @@ uniform vec4 CloudColor;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -138,8 +148,8 @@ uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -256,8 +266,7 @@ SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
+SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
 struct StandardSurfaceInput {
@@ -468,7 +477,7 @@ void FragForwardPBRTransparent(in StandardSurfaceInput surfaceInput, inout Stand
         fogAppliedColor = applyFogVanilla(shadedColor, FogColor.rgb, fogIntensity);
     }
     vec3 outColor;
-    if (VolumeScatteringEnabled.x != 0.0) {
+    if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0) {
         vec3 uvw = ndcToVolume(surfaceInput.ndcPosition, InvProj, VolumeNearFar.xy);
         vec4 sourceExtinction = sampleVolume(s_ScatteringBuffer, ivec3(VolumeDimensions.xyz), uvw);
         outColor = applyScattering(sourceExtinction, fogAppliedColor);

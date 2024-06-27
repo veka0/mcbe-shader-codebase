@@ -17,6 +17,7 @@
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
 #endif
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 #ifdef CUBEMAP_TO_OFFSCREEN_PASS

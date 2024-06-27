@@ -8,6 +8,7 @@
 * - SCATTERING_PASS (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 struct NoopSampler {

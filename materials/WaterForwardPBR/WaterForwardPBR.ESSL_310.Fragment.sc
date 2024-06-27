@@ -2,8 +2,9 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_AND_NORMAL_PASS
 * - DEPTH_ONLY_PASS
-* - DO_WATER_ABSORPTION_PASS
+* - DO_WATER_EXTINCTION_PASS
 * - DO_WATER_SHADING_PASS
 * - DO_WATER_SURFACE_BUFFER_PASS
 *
@@ -33,7 +34,7 @@ struct NoopSampler {
     int noop;
 };
 
-#ifndef DEPTH_ONLY_PASS
+#if ! defined(DEPTH_AND_NORMAL_PASS)&& ! defined(DEPTH_ONLY_PASS)
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -55,16 +56,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -74,6 +84,9 @@ vec2 vec2_splat(float _x) {
 }
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
+}
+vec4 vec4_splat(float _x) {
+    return vec4(_x, _x, _x, _x);
 }
 #endif
 #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
@@ -106,10 +119,11 @@ uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextur
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
-uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -123,7 +137,6 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -154,6 +167,7 @@ uniform vec4 MaterialID;
 uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
+uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 PointLightDiffuseFadeOutParameters;
 uniform mat4 PointLightProj;
 uniform vec4 SunDir;
@@ -172,8 +186,8 @@ uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
-uniform vec4 WaterAbsorptionCoefficients;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
 uniform vec4 WaterSurfaceOctaveParameters;
 uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
@@ -325,8 +339,7 @@ SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
 SAMPLER2D_AUTOREG(s_SceneDepth);
 SAMPLER2D_AUTOREG(s_SeasonsTexture);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLCurrent);
-SAMPLERCUBE_AUTOREG(s_SpecularIBLPrevious);
+SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
 BUFFER_RW_AUTOREG(s_PBRData, PBRTextureData);
@@ -397,7 +410,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#ifdef DO_WATER_ABSORPTION_PASS
+#ifdef DO_WATER_EXTINCTION_PASS
 vec4 projToView(vec4 p, mat4 inverseProj) {
     p = vec4(
         p.x * inverseProj[0][0], // Attention!
@@ -409,14 +422,14 @@ vec4 projToView(vec4 p, mat4 inverseProj) {
     return p;
 }
 #endif
-#if defined(DO_WATER_ABSORPTION_PASS)|| defined(DO_WATER_SHADING_PASS)
+#if defined(DO_WATER_EXTINCTION_PASS)|| defined(DO_WATER_SHADING_PASS)
 vec3 worldToNdc(vec3 worldPos, mat4 viewProj) {
     vec4 clipSpacePos = ((viewProj) * (vec4(worldPos, 1.0))); // Attention!
     vec3 ndc = clipSpacePos.xyz / clipSpacePos.w;
     return ndc;
 }
 #endif
-#ifdef DO_WATER_ABSORPTION_PASS
+#ifdef DO_WATER_EXTINCTION_PASS
 vec3 getWorldPosFromDepthTexture(sampler2D depthTexture, vec2 uv, mat4 inverseView, mat4 inverseProj) {
     float depth = textureSample(depthTexture, uv).r;
     vec2 xy = uv * 2.0 - 1.0;
@@ -425,12 +438,12 @@ vec3 getWorldPosFromDepthTexture(sampler2D depthTexture, vec2 uv, mat4 inverseVi
     return ((inverseView) * (vec4(viewPosition.xyz, 1.0))).xyz; // Attention!
 }
 #endif
-#if defined(DO_WATER_ABSORPTION_PASS)|| defined(DO_WATER_SHADING_PASS)
+#if defined(DO_WATER_EXTINCTION_PASS)|| defined(DO_WATER_SHADING_PASS)
 vec2 worldToUv(vec3 worldPos, mat4 viewProj) {
     vec3 ndc = worldToNdc(worldPos, viewProj);
     ndc.y *= -1.0;
-    vec2 platformNdc = (vec2((ndc.xy).x, 1.0 - (ndc.xy).y));
-    vec2 uv = 0.5 * (platformNdc + vec2(1.0, 1.0));
+    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
+    uv = (vec2((uv).x, 1.0 - (uv).y));
     return uv;
 }
 #endif
@@ -441,7 +454,7 @@ struct CompositingOutput {
 vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
     return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
 }
-#if defined(DEPTH_ONLY_PASS)|| defined(DO_WATER_ABSORPTION_PASS)
+#if ! defined(DO_WATER_SHADING_PASS)&& ! defined(DO_WATER_SURFACE_BUFFER_PASS)
 void StandardTemplate_FinalColorOverrideIdentity(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
@@ -455,21 +468,16 @@ struct DirectionalLight {
 vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return stdOutput.Albedo;
 }
-#ifdef DEPTH_ONLY_PASS
-void WaterSurfDepthOnly(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-}
-#endif
-#ifdef DO_WATER_ABSORPTION_PASS
-void WaterAbsorption(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec3 waterSurfaceWorldPos = surfaceInput.worldPos;
-    vec2 sceneUv = worldToUv(waterSurfaceWorldPos, ViewProj);
-    vec3 objectWorldPos = getWorldPosFromDepthTexture(s_SceneDepth, sceneUv, InvView, InvProj);
-    float distance = length(waterSurfaceWorldPos - objectWorldPos);
-    vec3 absorption = exp(-WaterAbsorptionCoefficients.rgb * distance);
-    surfaceOutput.Albedo = absorption;
-}
-#endif
 #ifdef DO_WATER_SURFACE_BUFFER_PASS
+vec2 calculateMotionVector(vec3 worldPosition, vec3 previousWorldPosition) {
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(previousWorldPosition, 1.0))); // Attention!
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    return screenSpacePos.xy - prevScreenSpacePos.xy;
+}
 struct ColorTransform {
     float hue;
     float saturation;
@@ -497,13 +505,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
     fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0))); // Attention!
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color1.zw = calculateMotionVector(worldPosition, prevWorldPosition);
     fragOutput.Color2 = vec4(
         surfaceOutput.Emissive,
         ambientBlockLight,
@@ -726,6 +728,8 @@ vec3 worldSpaceViewDir(vec3 worldPosition) {
     vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz; // Attention!
     return normalize(worldPosition - cameraPosition);
 }
+#endif
+#if defined(DEPTH_AND_NORMAL_PASS)|| defined(DO_WATER_SHADING_PASS)
 float linearToLogDepth(float linearDepth) {
     return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
 }
@@ -736,6 +740,15 @@ vec3 ndcToVolume(vec3 ndc, mat4 inverseProj, vec2 nearFar) {
     float wLinear = (viewDepth - nearFar.x) / (nearFar.y - nearFar.x);
     return vec3(uv, linearToLogDepth(wLinear));
 }
+#endif
+#ifdef DEPTH_AND_NORMAL_PASS
+vec3 worldToVolume(vec3 world, mat4 viewProj, mat4 invProj, vec2 nearFar) {
+    vec4 proj = ((viewProj) * (vec4(world, 1.0))); // Attention!
+    vec3 ndc = proj.xyz / proj.w;
+    return ndcToVolume(ndc, invProj, nearFar);
+}
+#endif
+#ifdef DO_WATER_SHADING_PASS
 vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
     float depth = uvw.z * float(dimensions.z) - 0.5;
     int index = clamp(int(depth), 0, dimensions.z - 2);
@@ -747,6 +760,8 @@ vec4 sampleVolume(highp sampler2DArray volume, ivec3 dimensions, vec3 uvw) {
 vec3 applyScattering(vec4 sourceExtinction, vec3 color) {
     return sourceExtinction.rgb + sourceExtinction.a * color;
 }
+#endif
+#if defined(DEPTH_AND_NORMAL_PASS)|| defined(DO_WATER_SHADING_PASS)
 struct TemporalAccumulationParameters {
     ivec3 dimensions;
     vec3 previousUvw;
@@ -755,6 +770,32 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+#endif
+#ifdef DEPTH_AND_NORMAL_PASS
+void WaterSurfDepthAndNormal(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    vec3 uvw = worldToVolume(surfaceInput.worldPos, ViewProj, InvProj, VolumeNearFar.xy);
+    float depth = uvw.z;
+    vec3 cameraWorldPos = ((InvView) * (vec4(0.0, 0.0, 0.0, 1.0))).xyz; // Attention!
+    vec3 ray = normalize(surfaceInput.worldPos - cameraWorldPos);
+    float normal = abs(dot(surfaceInput.normal, ray));
+    surfaceOutput.Albedo = vec3(depth, normal, 0.0);
+}
+#endif
+#ifdef DEPTH_ONLY_PASS
+void WaterSurfDepthOnly(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+}
+#endif
+#ifdef DO_WATER_EXTINCTION_PASS
+void WaterExtinction(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    vec3 waterSurfaceWorldPos = surfaceInput.worldPos;
+    vec2 sceneUv = worldToUv(waterSurfaceWorldPos, ViewProj);
+    vec3 objectWorldPos = getWorldPosFromDepthTexture(s_SceneDepth, sceneUv, InvView, InvProj);
+    float distance = length(waterSurfaceWorldPos - objectWorldPos);
+    vec3 transmittance = exp(-WaterExtinctionCoefficients.rgb * distance);
+    surfaceOutput.Albedo = transmittance;
+}
+#endif
+#ifdef DO_WATER_SHADING_PASS
 float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
     float distance = cameraDepth / maxDistance;
     distance += fogAlpha;
@@ -886,21 +927,16 @@ struct DirectionalLightParams {
 bool areCascadedShadowsEnabled(float mode) {
     return int(mode) == 1;
 }
-float shadowSampleAndCompare(highp sampler2D shadowMap, float textureDimensions, vec2 uv, float comparisonValue, out float shadowDepth) {
+vec2 bilinearWeights(float textureDimensions, vec2 uv) {
     vec2 pixel = (uv * textureDimensions) + vec2(0.5, 0.5);
-    vec2 weight = fract(pixel);
-    vec4 samples = textureGather(shadowMap, uv, 0);
-    shadowDepth = mix(mix(samples.w, samples.z, weight.x), mix(samples.x, samples.y, weight.x), weight.y);
-    vec4 comparisonTests = vec4(step(comparisonValue, samples.x), step(comparisonValue, samples.y), step(comparisonValue, samples.z), step(comparisonValue, samples.w));
-    return mix(mix(comparisonTests.w, comparisonTests.z, weight.x), mix(comparisonTests.x, comparisonTests.y, weight.x), weight.y);
+    return fract(pixel);
 }
-float shadowSampleAndCompare(highp sampler2DArray shadowMap, float textureDimensions, vec3 uvw, float comparisonValue, out float shadowDepth) {
-    vec2 pixel = (uvw.xy * textureDimensions) + vec2(0.5, 0.5);
-    vec2 weight = fract(pixel);
-    vec4 samples = textureGather(shadowMap, uvw, 0);
-    shadowDepth = mix(mix(samples.w, samples.z, weight.x), mix(samples.x, samples.y, weight.x), weight.y);
-    vec4 comparisonTests = vec4(step(comparisonValue, samples.x), step(comparisonValue, samples.y), step(comparisonValue, samples.z), step(comparisonValue, samples.w));
-    return mix(mix(comparisonTests.w, comparisonTests.z, weight.x), mix(comparisonTests.x, comparisonTests.y, weight.x), weight.y);
+float bilinearFilter(vec4 samples, vec2 weights) {
+    return mix(mix(samples.w, samples.z, weights.x), mix(samples.x, samples.y, weights.x), weights.y);
+}
+float bilinearPCF(vec4 samples, vec2 weights, float comparisonValue) {
+    vec4 comparisonTests = step(comparisonValue, samples);
+    return bilinearFilter(comparisonTests, weights);
 }
 bool pointInFrustum(vec4 projPos) {
     return projPos.x >= -1.0 && projPos.x <= 1.0 &&
@@ -949,8 +985,9 @@ float GetFilteredCloudShadow(vec3 worldPos, float NdL) {
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
             vec3 uvw = vec3(cloudUv + (offset * CascadeShadowResolutions[cloudCascade]), (DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)));
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw, cloudProjPos.z, shadowDepth);
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, cloudProjPos.z);
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -978,8 +1015,10 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z;
             vec2 newUv = playerUv + (offset * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0)), playerProjPos.z, shadowDepth);
+            vec3 uvw = vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0));
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, playerProjPos.z);
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -1002,9 +1041,11 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
             float y = float(iy - filterOffset) + 0.5f;
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
-            float shadowDepth = 0.0;
-            amt += shadowSampleAndCompare(s_ShadowCascades, ShadowFilterOffsetAndRangeFarAndMapSize.z, vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade)), projZ, shadowDepth);
-            depthSamples += shadowDepth;
+            vec3 uvw = vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade));
+            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+            amt += bilinearPCF(shadowSamples, weights, projZ);
+            depthSamples += bilinearFilter(shadowSamples, weights);
         }
     }
     shadowDepth = depthSamples / float(filterWidth * filterWidth);
@@ -1042,7 +1083,7 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth,
     return amt;
 }
 int getWaterDepthIndex(int cascadeNumber) {
-    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex.y);
+    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.y);
 }
 bool isUnderwaterAndReceivesDirectionalLight(vec3 objectWorldPos, int lightIdx, out float lightDistance) {
     mat4 surfaceViewProj = DirectionalLightSourceWaterSurfaceViewProj[lightIdx];
@@ -1256,7 +1297,7 @@ float getDistanceAttenuation(float sqrDistance, float radius) {
     }
     return attenuation;
 }
-float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal) {
+float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool useShadowBias) {
     Light lightInfo = Lights[lightIndex];
     if (lightInfo.shadowProbeIndex < 0) {
         return 1.f;
@@ -1299,9 +1340,11 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
     }
     surfaceViewPosition.z *= -1.f;
     vec4 surfaceProjPos = ((PointLightProj) * (vec4(surfaceViewPosition, 1.0))); // Attention!
-    float NdL = dot(-normalize(lightToPoint), surfaceWorldNormal);
-    float bias = PointLightShadowParams1.x + PointLightShadowParams1.y * clamp(tan(acos(NdL)), 0.0, 1.0);
-    surfaceProjPos.z += bias;
+    if (useShadowBias) {
+        float NdL = dot(-normalize(lightToPoint), surfaceWorldNormal);
+        float bias = PointLightShadowParams1.x + PointLightShadowParams1.y * clamp(tan(acos(NdL)), 0.0, 1.0);
+        surfaceProjPos.z += bias;
+    }
     surfaceProjPos /= surfaceProjPos.w;
     int filterWidth = 4;
     int filterOffset = filterWidth / 2;
@@ -1313,11 +1356,59 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
             vec2 offset = vec2(x, y) * PointLightShadowParams1.w;
             vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(vec3(sampleCoordinates.x + offset.x, 1.0f - sampleCoordinates.y + offset.y, sampleCoordinates.z));
             offsetSampleCoordinates.z = float(lightInfo.shadowProbeIndex * 6) + offsetSampleCoordinates.z;
-            float shadowDepth = 0.0;
-            directOcclusion += shadowSampleAndCompare(s_PointLightShadowTextureArray, 1.0 / PointLightShadowParams1.w, offsetSampleCoordinates, surfaceProjPos.z, shadowDepth);
+            vec4 shadowSamples = textureGather(s_PointLightShadowTextureArray, offsetSampleCoordinates, 0);
+            vec2 weights = bilinearWeights(1.0 / PointLightShadowParams1.w, offsetSampleCoordinates.xy);
+            directOcclusion += bilinearPCF(shadowSamples, weights, surfaceProjPos.z);
         }
     }
     return directOcclusion / float(filterWidth * filterWidth);
+}
+bool getLightClusterRangeIfValid(vec2 lightClusterUV, float surfaceViewPosZ, out highp int rangeStart, out highp int rangeEnd) {
+    vec3 clusterId = getClusterIndex(lightClusterUV, - surfaceViewPosZ, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
+    if (clusterId.x < 0.0 || clusterId.y < 0.0 || clusterId.z < 0.0 || clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
+        return false;
+    }
+    highp int clusterIdx = int(clusterId.x + clusterId.y * ClusterDimensions.x + clusterId.z * ClusterDimensions.x * ClusterDimensions.y);
+    rangeStart = clusterIdx * int(ClusterDimensions.w);
+    rangeEnd = rangeStart + int(ClusterDimensions.w);
+    return true;
+}
+float getSquaredDistanceToLight(vec3 lightWorldDir) {
+    float squaredDistanceToLight = 0.0f;
+    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
+        squaredDistanceToLight = abs(lightWorldDir.x) + abs(lightWorldDir.y) + abs(lightWorldDir.z);
+        squaredDistanceToLight = dot(squaredDistanceToLight, squaredDistanceToLight);
+    }
+    else {
+        squaredDistanceToLight = dot(lightWorldDir, lightWorldDir);
+    }
+    return squaredDistanceToLight;
+}
+vec3 calculatePointLightIlluminance(int lightIndex, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool useShadowBias, out vec4 ambientTint) {
+    ambientTint = vec4_splat(0.0);
+    if (lightIndex < 0) {
+        return vec3_splat(0.0);
+    }
+    vec3 lightWorldDir = Lights[lightIndex].position.xyz - surfaceWorldPos.xyz;
+    float squaredDistanceToLight = getSquaredDistanceToLight(lightWorldDir);
+    float r = Lights[lightIndex].position.w;
+    if (squaredDistanceToLight >= r * r) {
+        return vec3_splat(0.0);
+    }
+    float directOcclusion = 1.0f;
+    if (DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.w != 0.0) {
+        directOcclusion = calculateDirectOcclusionForDiscreteLight(lightIndex, surfaceWorldPos, surfaceWorldNormal, useShadowBias);
+    }
+    if (directOcclusion <= 0.0) {
+        return vec3_splat(0.0);
+    }
+    float lightIntensity = Lights[lightIndex].color.a;
+    float attenuation = getDistanceAttenuation(squaredDistanceToLight, r);
+    vec3 lightColor = Lights[lightIndex].color.rgb;
+    vec3 illuminance = lightColor * lightIntensity * attenuation;
+    ambientTint.rgb = lightColor * attenuation;
+    ambientTint.a = 1.0f - squaredDistanceToLight / (r * r);
+    return directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
 }
 DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfacePos, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool calculateDiffuse, bool calculateSpecular, out bool noDiscreteLight) {
     DiscreteLightingContributions lightContrib;
@@ -1328,22 +1419,10 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
     {
         return lightContrib;
     }
-    vec3 clusterId = getClusterIndex(lightClusterUV, - surfacePos.z, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
-    if (clusterId.x < 0.0 || clusterId.y < 0.0 || clusterId.z < 0.0 || clusterId.x >= ClusterDimensions.x || clusterId.y >= ClusterDimensions.y || clusterId.z >= ClusterDimensions.z) {
+    highp int rangeStart = 0;
+    highp int rangeEnd = 0;
+    if (!getLightClusterRangeIfValid(lightClusterUV, surfacePos.z, rangeStart, rangeEnd)) {
         return lightContrib;
-    }
-    highp int clusterIdx = int(clusterId.x + clusterId.y * ClusterDimensions.x + clusterId.z * ClusterDimensions.x * ClusterDimensions.y);
-    highp int rangeStart = clusterIdx * int(ClusterDimensions.w);
-    highp int rangeEnd = rangeStart + int(ClusterDimensions.w);
-    float surfaceDistanceFromCamera = 0.0f;
-    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
-        vec3 surfaceGridPos = floor(surfaceWorldPos + WorldOrigin.xyz);
-        vec3 cameraGridPos = floor(((InvView) * (vec4(0.0f, 0.0f, 0.0f, 1.0f))).xyz + WorldOrigin.xyz); // Attention!
-        vec3 gridDist = surfaceGridPos - cameraGridPos;
-        surfaceDistanceFromCamera = abs(gridDist.x) + abs(gridDist.y) + abs(gridDist.z);
-    }
-    else {
-        surfaceDistanceFromCamera = length(surfacePos);
     }
     int usedLightCount = 0;
     for(highp int i = rangeStart; i < rangeEnd; ++ i) {
@@ -1351,33 +1430,9 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
         if (lightIndex < 0) {
             break;
         }
-        vec3 lightWorldDir = Lights[lightIndex].position.xyz - surfaceWorldPos.xyz;
-        float squaredDistanceToLight = 0.0f;
-        if (ManhattanDistAttenuationEnabled.x > 0.0f) {
-            squaredDistanceToLight = abs(lightWorldDir.x) + abs(lightWorldDir.y) + abs(lightWorldDir.z);
-            squaredDistanceToLight = dot(squaredDistanceToLight, squaredDistanceToLight);
-        }
-        else {
-            squaredDistanceToLight = dot(lightWorldDir, lightWorldDir);
-        }
-        float r = Lights[lightIndex].position.w;
-        if (squaredDistanceToLight >= r * r) {
-            continue;
-        }
-        float directOcclusion = 1.0f;
-        if (DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.w != 0.0) {
-            directOcclusion = calculateDirectOcclusionForDiscreteLight(lightIndex, surfaceWorldPos, surfaceWorldNormal);
-        }
-        if (directOcclusion <= 0.0f) {
-            continue;
-        }
         vec3 lightPos = ((View) * (vec4(Lights[lightIndex].position.xyz, 1.0))).xyz; // Attention!
         vec3 lightDir = lightPos - surfacePos;
         vec3 l = normalize(lightDir);
-        float lightIntensity = Lights[lightIndex].color.a;
-        float attenuation = getDistanceAttenuation(squaredDistanceToLight, r);
-        vec3 lightColor = Lights[lightIndex].color.rgb;
-        vec3 illuminance = lightColor * lightIntensity * attenuation;
         vec3 diffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
         if (calculateDiffuse) {
@@ -1394,10 +1449,12 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
             }
         }
         usedLightCount ++ ;
-        lightContrib.ambientTint.rgb += lightColor * attenuation;
-        lightContrib.ambientTint.a += 1.0f - squaredDistanceToLight / (r * r);
-        lightContrib.diffuse += diffuse * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
-        lightContrib.specular += specular * directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
+        vec4 ambientTint = vec4_splat(0.0);
+        bool useShadowBias = true;
+        vec3 pointLightContribution = calculatePointLightIlluminance(lightIndex, surfaceWorldPos, surfaceWorldNormal, useShadowBias, ambientTint);
+        lightContrib.ambientTint += ambientTint;
+        lightContrib.diffuse += diffuse * pointLightContribution;
+        lightContrib.specular += specular * pointLightContribution;
     }
     if (usedLightCount > 0) {
         lightContrib.ambientTint.rgb = lightContrib.ambientTint.rgb / float(usedLightCount);
@@ -1425,11 +1482,11 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
                 shadowDepth
             );
         }
-        vec3 waterAbsorption = vec3_splat(1.0);
-        if (bool(DeferredWaterAndDirectionalLightWaterAbsorptionEnabledAndWaterDepthMapCascadeIndex.x)) {
+        vec3 waterTransmittance = vec3_splat(1.0);
+        if (bool(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.x)) {
             float lightDistance = 0.0;
             isUnderwaterAndReceivesDirectionalLight(worldPosition, i, lightDistance);
-            waterAbsorption = exp(-WaterAbsorptionCoefficients.rgb * lightDistance);
+            waterTransmittance = exp(-WaterExtinctionCoefficients.rgb * lightDistance);
         }
         vec3 l = normalize(((View) * (DirectionalLightSourceWorldSpaceDirection[i])).xyz); // Attention!
         vec4 colorAndIlluminance = DirectionalLightSourceDiffuseColorAndIlluminance[i];
@@ -1437,8 +1494,8 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
         vec3 diffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
         BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, DiffuseSpecularEmissiveAmbientTermToggles.x, DiffuseSpecularEmissiveAmbientTermToggles.y, diffuse, specular);
-        lightContrib.directDiffuse += diffuse * directOcclusion * illuminance * waterAbsorption * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
-        lightContrib.directSpecular += specular * directOcclusion * illuminance * waterAbsorption * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
+        lightContrib.directDiffuse += diffuse * directOcclusion * illuminance * waterTransmittance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
+        lightContrib.directSpecular += specular * directOcclusion * illuminance * waterTransmittance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
     }
 }
 vec3 evaluateIndirectLightingDiffuseContribution(vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, vec4 ambientTint) {
@@ -1448,6 +1505,44 @@ vec3 evaluateIndirectLightingDiffuseContribution(vec3 albedo, float blockAmbient
 vec3 evaluateEmissiveContribution(vec3 albedo, float emissive) {
     return DiffuseSpecularEmissiveAmbientTermToggles.z * desaturate(albedo, EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y) * vec3_splat(emissive) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x;
 }
+bool isCloseEnoughToSeePointLightTerm(float dist, float distFadeBegin, float distFadeEnd, out float percentOfFade) {
+    bool enablePointLightFade = distFadeBegin > 0.0f;
+    percentOfFade = 0.0f;
+    if (enablePointLightFade) {
+        percentOfFade = smoothstep(distFadeBegin, distFadeEnd, dist);
+    }
+    bool isCloseEnough = (!enablePointLightFade)||(enablePointLightFade && dist < distFadeEnd);
+    return isCloseEnough;
+}
+bool isCloseEnoughToSeePointLightSpecular(float dist, out float percentOfSpecularFade) {
+    float distPointLightSpecularFadeOut_Begin = PointLightSpecularFadeOutParameters.x;
+    float distPointLightSpecularFadeOut_End = PointLightSpecularFadeOutParameters.y;
+    return isCloseEnoughToSeePointLightTerm(dist, distPointLightSpecularFadeOut_Begin, distPointLightSpecularFadeOut_End, percentOfSpecularFade);
+}
+bool isCloseEnoughToSeePointLightDiffuse(float dist, out float percentOfDiffuseFade) {
+    float distPointLightDiffuseFadeOut_Begin = PointLightDiffuseFadeOutParameters.x;
+    float distPointLightDiffuseFadeOut_End = PointLightDiffuseFadeOutParameters.y;
+    return isCloseEnoughToSeePointLightTerm(dist, distPointLightDiffuseFadeOut_Begin, distPointLightDiffuseFadeOut_End, percentOfDiffuseFade);
+}
+float getPointLightViewDistance(vec3 viewPosition) {
+    float dist = 0.0;
+    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
+        dist = abs(viewPosition.x) + abs(viewPosition.y) + abs(viewPosition.z);
+    } else {
+        dist = length(viewPosition);
+    }
+    return dist;
+}
+float calculatePointLightFadeInAmbient(float percentOfDiffuseFade, bool noDiscreteLight) {
+    float ambientBlockContributionNaught = PointLightDiffuseFadeOutParameters.z;
+    float ambientBlockContributionFinal = PointLightDiffuseFadeOutParameters.w;
+    float fadeInAmbient = ambientBlockContributionNaught;
+    fadeInAmbient += ((ambientBlockContributionFinal - ambientBlockContributionNaught) * percentOfDiffuseFade);
+    if (noDiscreteLight) {
+        fadeInAmbient = ambientBlockContributionFinal;
+    }
+    return fadeInAmbient;
+}
 PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) {
     PBRLightingContributions lightContrib;
     lightContrib.directDiffuse = vec3_splat(0.0);
@@ -1455,36 +1550,15 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
     lightContrib.indirectDiffuse = vec3_splat(0.0);
     lightContrib.indirectSpecular = vec3_splat(0.0);
     lightContrib.emissive = vec3_splat(0.0);
-    float dist = 0.0f;
-    if (ManhattanDistAttenuationEnabled.x > 0.0f) {
-        dist = abs(fragmentInfo.viewPosition.x) + abs(fragmentInfo.viewPosition.y) + abs(fragmentInfo.viewPosition.z);
-    }
-    else {
-        dist = length(fragmentInfo.viewPosition);
-    }
-    float distPointLightSpecularFadeOut_Begin = PointLightSpecularFadeOutParameters.x;
-    float distPointLightSpecularFadeOut_End = PointLightSpecularFadeOutParameters.y;
-    bool enablePointLightSpecularFade = distPointLightSpecularFadeOut_Begin > 0.0f;
+    float dist = getPointLightViewDistance(fragmentInfo.viewPosition);
     float percentOfSpecularFade = 0.0f;
-    if (enablePointLightSpecularFade) {
-        percentOfSpecularFade = smoothstep(distPointLightSpecularFadeOut_Begin, distPointLightSpecularFadeOut_End, dist);
-    }
+    bool shouldCalculateSpecularTerm = isCloseEnoughToSeePointLightSpecular(dist, percentOfSpecularFade);
     float fadeOutSpecularMultiplier = 1.0f - percentOfSpecularFade;
-    float distPointLightDiffuseFadeOut_Begin = PointLightDiffuseFadeOutParameters.x;
-    float distPointLightDiffuseFadeOut_End = PointLightDiffuseFadeOutParameters.y;
-    float ambientBlockContributionNaught = PointLightDiffuseFadeOutParameters.z;
-    float ambientBlockContributionFinal = PointLightDiffuseFadeOutParameters.w;
-    bool enablePointLightDiffuseFade = distPointLightDiffuseFadeOut_Begin > 0.0f;
     float percentOfDiffuseFade = 0.0f;
-    float fadeInAmbient = ambientBlockContributionNaught;
-    if (enablePointLightDiffuseFade) {
-        percentOfDiffuseFade = smoothstep(distPointLightDiffuseFadeOut_Begin, distPointLightDiffuseFadeOut_End, dist);
-        fadeInAmbient += ((ambientBlockContributionFinal - ambientBlockContributionNaught) * percentOfDiffuseFade);
-    }
+    bool shouldCalculateDiffuseTerm = isCloseEnoughToSeePointLightDiffuse(dist, percentOfDiffuseFade);
     float fadeOutDiffuseMultiplier = 1.0f - percentOfDiffuseFade;
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
-    vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
     float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContribution.x;
     vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
@@ -1503,8 +1577,6 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
             fragmentInfo.worldNormal,
             fragmentInfo.skyAmbientContribution,
         fragmentInfo.causticsMultiplier);
-        bool shouldCalculateSpecularTerm = (!enablePointLightSpecularFade)||(enablePointLightSpecularFade && dist < distPointLightSpecularFadeOut_End);
-        bool shouldCalculateDiffuseTerm = (!enablePointLightDiffuseFade)||(enablePointLightDiffuseFade && dist < distPointLightDiffuseFadeOut_End);
         DiscreteLightingContributions discreteLightContrib = evaluateDiscreteLightsDirectContribution(
             fragmentInfo.lightClusterUV, fragmentInfo.viewPosition.xyz, fragmentInfo.viewNormal, viewDir,
             fragmentInfo.albedo,
@@ -1522,9 +1594,7 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
         lightContrib.directSpecular += discreteLightContrib.specular * fadeOutSpecularMultiplier;
     }
     lightContrib.emissive += evaluateEmissiveContribution(fragmentInfo.albedo, fragmentInfo.emissive);
-    if (noDiscreteLight) {
-        fadeInAmbient = ambientBlockContributionFinal;
-    }
+    float fadeInAmbient = calculatePointLightFadeInAmbient(percentOfDiffuseFade, noDiscreteLight);
     lightContrib.indirectDiffuse += evaluateIndirectLightingDiffuseContribution(
         (1.0 - fragmentInfo.metalness) * fragmentInfo.albedo.rgb,
         fragmentInfo.blockAmbientContribution,
@@ -1655,7 +1725,7 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
         viewDistance,
         ndcPos,
         AtmosphericScatteringToggles.x != 0.0,
-        VolumeScatteringEnabled.x != 0.0,
+        VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0,
         AtmosphericScatteringToggles.y != 0.0
     );
     surfaceOutput.Albedo.xyz = baseWaterColor;
@@ -1693,11 +1763,14 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
+    #ifdef DEPTH_AND_NORMAL_PASS
+    WaterSurfDepthAndNormal(surfaceInput, surfaceOutput);
+    #endif
     #ifdef DEPTH_ONLY_PASS
     WaterSurfDepthOnly(surfaceInput, surfaceOutput);
     #endif
-    #ifdef DO_WATER_ABSORPTION_PASS
-    WaterAbsorption(surfaceInput, surfaceOutput);
+    #ifdef DO_WATER_EXTINCTION_PASS
+    WaterExtinction(surfaceInput, surfaceOutput);
     #endif
     #if defined(DO_WATER_SHADING_PASS)|| defined(DO_WATER_SURFACE_BUFFER_PASS)
     WaterSurf(surfaceInput, surfaceOutput);
@@ -1710,7 +1783,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     CompositingOutput compositingOutput;
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if defined(DEPTH_ONLY_PASS)|| defined(DO_WATER_ABSORPTION_PASS)
+    #if ! defined(DO_WATER_SHADING_PASS)&& ! defined(DO_WATER_SURFACE_BUFFER_PASS)
     StandardTemplate_FinalColorOverrideIdentity(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #ifdef DO_WATER_SHADING_PASS
@@ -1764,11 +1837,11 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
+    #if ! defined(DEPTH_ONLY_PASS)&& ! defined(DO_WATER_SURFACE_BUFFER_PASS)
+    gl_FragData[0] = fragmentOutput.Color0; ;
+    #endif
     #ifdef DEPTH_ONLY_PASS
     gl_FragColor = fragmentOutput.Color0;
-    #endif
-    #if defined(DO_WATER_ABSORPTION_PASS)|| defined(DO_WATER_SHADING_PASS)
-    gl_FragData[0] = fragmentOutput.Color0; ;
     #endif
     #ifdef DO_WATER_SURFACE_BUFFER_PASS
     gl_FragData[0] = fragmentOutput.Color0; gl_FragData[1] = fragmentOutput.Color1; gl_FragData[2] = fragmentOutput.Color2; ;

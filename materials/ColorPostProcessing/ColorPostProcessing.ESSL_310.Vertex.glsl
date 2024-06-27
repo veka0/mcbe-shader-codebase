@@ -7,6 +7,7 @@
 * - COLOR_POST_PROCESS_PASS (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_position;
@@ -67,6 +68,7 @@ uniform vec4 ColorGrading_Saturation_Midtones;
 uniform vec4 ColorGrading_Saturation_Shadows;
 uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
+uniform vec4 RasterizedColorEnabled;
 uniform vec4 RenderMode;
 vec4 ViewRect;
 mat4 Proj;

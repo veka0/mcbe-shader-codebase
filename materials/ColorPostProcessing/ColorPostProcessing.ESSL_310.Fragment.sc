@@ -31,16 +31,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec3 vec3_splat(float _x) {
@@ -89,6 +98,7 @@ uniform vec4 ColorGrading_Saturation_Midtones;
 uniform vec4 ColorGrading_Saturation_Shadows;
 uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
+uniform vec4 RasterizedColorEnabled;
 uniform vec4 RenderMode;
 vec4 ViewRect;
 mat4 Proj;
@@ -333,9 +343,11 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         );
     }
     finalColor.rgb = clamp(finalColor.rgb, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
-    vec4 rasterized = textureSample(s_RasterizedColor, fragInput.texcoord0);
-    finalColor.rgb *= 1.0 - rasterized.a;
-    finalColor.rgb += rasterized.rgb;
+    if (RasterizedColorEnabled.x > 0.0f) {
+        vec4 rasterized = textureSample(s_RasterizedColor, fragInput.texcoord0);
+        finalColor.rgb *= 1.0 - rasterized.a;
+        finalColor.rgb += rasterized.rgb;
+    }
     fragOutput.Color0 = vec4(finalColor.rgb, 1.0);
 }
 void main() {
