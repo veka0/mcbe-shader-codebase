@@ -92,9 +92,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
+uniform lowp sampler2D s_InputBufferMotionVectors;
 #ifdef FALLBACK_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }

@@ -117,7 +117,7 @@ uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;

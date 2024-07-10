@@ -112,7 +112,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 TemporalSettings;
 uniform vec4 Time;
@@ -218,16 +218,17 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_BrdfLUT;
-uniform lowp sampler2D s_CausticsTexture;
 layout(rgba16f, binding = 0)writeonly uniform highp image2DArray s_CurrentLightingBuffer;
-uniform highp sampler2DArray s_PointLightShadowTextureArray;
-uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
-uniform highp sampler2DArray s_ScatteringBuffer;
-uniform lowp sampler2D s_ScreenSpaceWaterDepthAndNormal;
+uniform lowp sampler2D s_ScreenSpaceWaterFrontFaceDepthAndNormal;
+uniform lowp sampler2D s_ScreenSpaceWaterBackFaceDepthAndNormal;
 uniform highp sampler2DArray s_ShadowCascades;
+uniform highp sampler2DArray s_PointLightShadowTextureArray;
+uniform highp sampler2DArray s_ScatteringBuffer;
+uniform lowp sampler2D s_PreviousFrameAverageLuminance;
+uniform lowp sampler2D s_CausticsTexture;
 uniform highp samplerCubeArray s_SpecularIBLRecords;
+uniform lowp sampler2D s_BrdfLUT;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

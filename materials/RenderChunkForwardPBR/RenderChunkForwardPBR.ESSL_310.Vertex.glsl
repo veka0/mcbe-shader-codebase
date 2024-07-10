@@ -4,7 +4,6 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
@@ -171,7 +170,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
@@ -360,15 +359,7 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
-#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
-vec4 jitterVertexPosition(vec3 worldPosition) {
-    mat4 offsetProj = Proj;
-    offsetProj[2][0] += SubPixelOffset.x;
-    offsetProj[2][1] -= SubPixelOffset.y;
-    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
-}
-#endif
-#if defined(RENDER_AS_BILLBOARDS__ON)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)
+#if defined(RENDER_AS_BILLBOARDS__ON)&& ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
 void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     stdInput.worldPos += vec3(0.5, 0.5, 0.5);
     vec3 forward = normalize(stdInput.worldPos - ViewPositionAndTime.xyz);
@@ -379,23 +370,42 @@ void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout Vertex
     vertOutput.position = ((ViewProj) * (vec4(stdInput.worldPos, 1.0)));
 }
 #endif
-#if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)
-float RenderChunkVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
-    #ifdef RENDER_AS_BILLBOARDS__ON
-    vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
-    transformAsBillboardVertex(stdInput, vertOutput);
-    #endif
-    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
-    float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
-    return cameraDepth;
-}
-#endif
 #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 float RenderChunkVertDepth(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
     #ifdef RENDER_AS_BILLBOARDS__ON
     vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
     transformAsBillboardVertex(stdInput, vertOutput);
     #endif
+    float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
+    return cameraDepth;
+}
+#endif
+#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
+vec4 jitterVertexPosition(vec3 worldPosition) {
+    mat4 offsetProj = Proj;
+    offsetProj[2][0] += SubPixelOffset.x;
+    offsetProj[2][1] -= SubPixelOffset.y;
+    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
+}
+#endif
+#if defined(OPAQUE_PASS)&& defined(RENDER_AS_BILLBOARDS__ON)
+void transformAsBillboardVertex(inout StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    stdInput.worldPos += vec3(0.5, 0.5, 0.5);
+    vec3 forward = normalize(stdInput.worldPos - ViewPositionAndTime.xyz);
+    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
+    vec3 up = cross(forward, right);
+    vec3 offsets = stdInput.vertInput.color0.xyz;
+    stdInput.worldPos -= up * (offsets.z - 0.5) + right * (offsets.x - 0.5);
+    vertOutput.position = ((ViewProj) * (vec4(stdInput.worldPos, 1.0)));
+}
+#endif
+#ifdef OPAQUE_PASS
+float RenderChunkVert(StandardVertexInput stdInput, inout VertexOutput vertOutput) {
+    #ifdef RENDER_AS_BILLBOARDS__ON
+    vertOutput.color0 = vec4(1.0, 1.0, 1.0, 1.0);
+    transformAsBillboardVertex(stdInput, vertOutput);
+    #endif
+    vertOutput.position = jitterVertexPosition(stdInput.worldPos);
     float cameraDepth = length(ViewPositionAndTime.xyz - stdInput.worldPos);
     return cameraDepth;
 }
@@ -523,14 +533,14 @@ void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput
     StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
-    #if defined(ALPHA_TEST_PASS)|| defined(OPAQUE_PASS)
-    RenderChunkVert(vertInput, vertOutput);
-    #endif
     #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     RenderChunkVertDepth(vertInput, vertOutput);
     #endif
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     RenderChunkVertPBR(vertInput, vertOutput);
+    #endif
+    #ifdef OPAQUE_PASS
+    RenderChunkVert(vertInput, vertOutput);
     #endif
 }
 void StandardTemplate_InvokeLightingVertexFunction(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {

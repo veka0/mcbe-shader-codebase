@@ -30,11 +30,13 @@ precision mediump float;
 #define attribute in
 #define varying in
 out vec4 bgfx_FragData[gl_MaxDrawBuffers];
+varying vec3 v_bitangent;
 varying vec4 v_color0;
 varying vec4 v_glintUV;
 varying vec4 v_mers;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
+varying vec3 v_tangent;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
@@ -154,6 +156,7 @@ struct VertexInput {
     vec4 mers;
     vec4 normal;
     vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -164,21 +167,25 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
+    vec3 bitangent;
     vec4 color0;
     vec4 glintUV;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec3 bitangent;
     vec4 color0;
     vec4 glintUV;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -192,10 +199,12 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec3 bitangent;
     vec4 glintUV;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec3 worldPos;
 };
 
@@ -209,10 +218,12 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
+    result.bitangent = fragInput.bitangent;
     result.glintUV = fragInput.glintUV;
     result.mers = fragInput.mers;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
+    result.tangent = fragInput.tangent;
     result.worldPos = fragInput.worldPos;
     return result;
 }
@@ -421,11 +432,13 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
+    fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
     fragmentInput.glintUV = v_glintUV;
     fragmentInput.mers = v_mers;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
+    fragmentInput.tangent = v_tangent;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);

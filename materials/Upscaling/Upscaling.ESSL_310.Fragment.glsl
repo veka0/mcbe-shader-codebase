@@ -140,9 +140,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
+uniform lowp sampler2D s_InputBufferMotionVectors;
 #ifdef FALLBACK_PASS
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);

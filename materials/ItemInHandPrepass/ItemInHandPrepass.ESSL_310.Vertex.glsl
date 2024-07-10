@@ -27,6 +27,7 @@
 attribute vec4 a_color0;
 attribute vec4 a_normal;
 attribute vec3 a_position;
+attribute vec4 a_tangent;
 attribute vec2 a_texcoord0;
 attribute vec4 a_texcoord8;
 #ifdef INSTANCING__ON
@@ -34,10 +35,12 @@ attribute vec4 i_data1;
 attribute vec4 i_data2;
 attribute vec4 i_data3;
 #endif
+varying vec3 v_bitangent;
 varying vec4 v_color0;
 varying vec4 v_mers;
 varying vec3 v_normal;
 varying vec3 v_prevWorldPos;
+varying vec3 v_tangent;
 varying vec2 v_texcoord0;
 varying vec3 v_worldPos;
 struct NoopSampler {
@@ -121,6 +124,7 @@ struct VertexInput {
     vec4 mers;
     vec4 normal;
     vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -131,19 +135,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
+    vec3 bitangent;
     vec4 color0;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec3 bitangent;
     vec4 color0;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -156,9 +164,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec3 bitangent;
     vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec3 worldPos;
 };
 
@@ -199,6 +209,12 @@ void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOu
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.normal = vertInput.vertInput.normal.xyz;
     vertOutput.prevWorldPos = ((PrevWorld) * (vec4(vertInput.vertInput.position, 1.0))).xyz;
+    vec3 n = vertInput.vertInput.normal.xyz;
+    vec3 t = vertInput.vertInput.tangent.xyz;
+    vec3 b = cross(n, t) * vertInput.vertInput.tangent.w;
+    vertOutput.normal = ((World) * (vec4(n, 0.0))).xyz;
+    vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz;
+    vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz;
 }
 struct CompositingOutput {
     vec3 mLitColor;
@@ -261,16 +277,19 @@ void main() {
     vertexInput.mers = (a_texcoord8);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
+    vertexInput.tangent = (a_tangent);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
+    vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
     vertexOutput.mers = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.tangent = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
@@ -296,10 +315,12 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
+    v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
     v_mers = vertexOutput.mers;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_tangent = vertexOutput.tangent;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;

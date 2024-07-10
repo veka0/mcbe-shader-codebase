@@ -91,8 +91,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
 layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
 #ifdef CLUSTER_LIGHTS_PASS
 float getViewSpaceCoordByRatio(float clusterIndex, float clusterSize, float screenDim, float farPlaneDim, float planeRatio) {
     return ((clusterIndex * clusterSize - screenDim / 2.0f) / screenDim) * (farPlaneDim * planeRatio);

@@ -4,7 +4,6 @@
 * Available Macros:
 *
 * Passes:
-* - ALPHA_TEST_PASS
 * - DEPTH_ONLY_PASS
 * - DEPTH_ONLY_OPAQUE_PASS
 * - FORWARD_PBR_TRANSPARENT_PASS
@@ -31,7 +30,7 @@ precision mediump float;
 #endif
 #define attribute in
 #define varying in
-#if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 out vec4 bgfx_FragColor;
 #endif
 #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -98,12 +97,10 @@ vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)||(defined(ALPHA_TEST_PASS)&& defined(SEASONS__ON))
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
-#endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 vec4 vec4_splat(float _x) {
     return vec4(_x, _x, _x, _x);
 }
@@ -211,7 +208,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
@@ -435,16 +432,7 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#if defined(ALPHA_TEST_PASS)&& defined(SEASONS__ON)
-vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
-    vec2 uv = vertexColor.xy;
-    diffuse.rgb *= mix(vec3(1.0, 1.0, 1.0), textureSample(s_SeasonsTexture, uv).rgb * 2.0, vertexColor.b);
-    diffuse.rgb *= vec3_splat(vertexAlpha);
-    diffuse.a = 1.0;
-    return diffuse;
-}
-#endif
-#if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 void RenderChunkFallback(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
 }
 #endif
@@ -479,28 +467,18 @@ struct DirectionalLight {
     vec3 Intensity;
 };
 
-#if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
 vec3 computeLighting_RenderChunk(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
     return textureSample(s_LightMapTexture, stdInput.lightmapUV).rgb * stdOutput.Albedo;
 }
 #endif
-#if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_PASS)
+#ifdef DEPTH_ONLY_PASS
 void RenderChunkSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
     const float ALPHA_THRESHOLD = 0.5;
     if (diffuse.a < ALPHA_THRESHOLD) {
         discard;
     }
-    #if defined(ALPHA_TEST_PASS)&& defined(SEASONS__OFF)
-    diffuse.rgb *= surfaceInput.Color.rgb;
-    #endif
-    #if defined(ALPHA_TEST_PASS)&& defined(SEASONS__ON)
-    diffuse = applySeasons(surfaceInput.Color, surfaceInput.Alpha, diffuse);
-    #endif
-    #ifdef ALPHA_TEST_PASS
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
-    #endif
 }
 #endif
 #ifdef DEPTH_ONLY_OPAQUE_PASS
@@ -659,6 +637,10 @@ float bilinearPCF(vec4 samples, vec2 weights, float comparisonValue) {
     vec4 comparisonTests = step(comparisonValue, samples);
     return bilinearFilter(comparisonTests, weights);
 }
+float bilinearTransmittance(vec4 samples, vec2 weights, float comparisonValue, float falloffScale) {
+    vec4 transmittanceValues = 1.0 - smoothstep(0.0, 1.0, (comparisonValue - samples) * falloffScale);
+    return bilinearFilter(transmittanceValues, weights);
+}
 bool pointInFrustum(vec4 projPos) {
     return projPos.x >= -1.0 && projPos.x <= 1.0 &&
     projPos.y >= -1.0 && projPos.y <= 1.0 &&
@@ -744,9 +726,9 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
     }
     return amt / float(filterWidth * filterWidth);
 }
-float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out float shadowDepth) {
+float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, float bias, float falloffScale, out float transmittance) {
     if (cascadeIndex < 0) {
-        shadowDepth = 0.0;
+        transmittance = 1.0;
         return 1.0;
     }
     const int MaxFilterWidth = 9;
@@ -756,7 +738,7 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
     vec2 baseUv = uv * CascadeShadowResolutions[cascade];
     projZ = projZ * 0.5 + 0.5;
     baseUv.y += 1.0 - CascadeShadowResolutions[cascade];
-    float depthSamples = 0.0;
+    float transmittanceTotal = 0.0;
     for(int iy = 0; iy < filterWidth; ++ iy) {
         for(int ix = 0; ix < filterWidth; ++ ix) {
             float y = float(iy - filterOffset) + 0.5f;
@@ -765,14 +747,14 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
             vec3 uvw = vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade));
             vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
             vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
-            amt += bilinearPCF(shadowSamples, weights, projZ);
-            depthSamples += bilinearFilter(shadowSamples, weights);
+            amt += bilinearPCF(shadowSamples, weights, projZ - bias);
+            transmittanceTotal += bilinearTransmittance(shadowSamples, weights, projZ, falloffScale);
         }
     }
-    shadowDepth = depthSamples / float(filterWidth * filterWidth);
+    transmittance = transmittanceTotal / float(filterWidth * filterWidth);
     return amt / float(filterWidth * filterWidth);
 }
-float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth, out float depth) {
+float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth, float transmittanceFalloffScale, out float transmittance) {
     float amt = 1.0;
     float cloudAmt = 1.0;
     float playerAmt = 1.0;
@@ -782,11 +764,9 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth,
     if (cascade != -1) {
         float bias = ShadowBias[cascade] + ShadowSlopeBias[cascade] * clamp(tan(acos(NdL)), 0.0, 1.0);
         vec2 uv = vec2(projPos.x, projPos.y) * 0.5f + 0.5f;
-        float shadowDepth;
-        float biasedDepth = projPos.z - bias / projPos.w;
-        amt = GetFilteredShadow(int(DirectionalLightSourceShadowCascadeNumber[lightIndex].x), biasedDepth, cascade, uv, shadowDepth);
         float shadowMapDepthRange = length(((invProj) * (vec4(0.0, 0.0, 1.0, 0.0))));
-        depth = (projPos.z - shadowDepth) * shadowMapDepthRange;
+        float falloffScale = transmittanceFalloffScale * shadowMapDepthRange;
+        amt = GetFilteredShadow(int(DirectionalLightSourceShadowCascadeNumber[lightIndex].x), projPos.z, cascade, uv, bias, falloffScale, transmittance);
         if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0) {
             playerAmt = GetPlayerShadow(worldPos, NdL);
             amt = min(amt, playerAmt);
@@ -1041,6 +1021,13 @@ float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, fl
 }
 vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
     return mix(diffuse, fogColor, fogIntensity);
+}
+vec3 color_degamma(vec3 clr) {
+    float e = 2.2;
+    return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
+}
+vec4 color_degamma(vec4 clr) {
+    return vec4(color_degamma(clr.rgb), clr.a);
 }
 float luminance(vec3 clr) {
     return dot(clr, vec3(0.2126, 0.7152, 0.0722));
@@ -1562,7 +1549,7 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {
         float directOcclusion = 1.0;
-        float shadowDepth;
+        float subsurfaceTransmittance = 1.0;
         if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
             vec3 sl = normalize(((View) * (DirectionalLightSourceShadowDirection[i])).xyz);
             float nDotsl = max(dot(n, sl), 0.0);
@@ -1571,7 +1558,8 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
                 worldPosition,
                 nDotsl,
                 viewDepth,
-                shadowDepth
+                SubsurfaceScatteringContributionAndFalloffScale.y,
+                subsurfaceTransmittance
             );
         }
         vec3 waterTransmittance = vec3_splat(1.0);
@@ -1651,7 +1639,7 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
     float fadeOutDiffuseMultiplier = 1.0f - percentOfDiffuseFade;
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
-    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContribution.x;
+    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContributionAndFalloffScale.x;
     vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
@@ -1726,6 +1714,7 @@ void RenderChunk_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput,
 void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     #ifdef FORWARD_PBR_TRANSPARENT_PASS
     RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
+    surfaceOutput.Albedo = color_degamma(surfaceOutput.Albedo);
     applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
     PBRFragmentInfo fragmentData;
     vec4 viewPosition = ((View) * (vec4(surfaceInput.worldPos, 1.0)));
@@ -1797,7 +1786,7 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
-    #if defined(ALPHA_TEST_PASS)|| defined(DEPTH_ONLY_PASS)
+    #ifdef DEPTH_ONLY_PASS
     RenderChunkSurfAlpha(surfaceInput, surfaceOutput);
     #endif
     #ifdef DEPTH_ONLY_OPAQUE_PASS
@@ -1812,14 +1801,14 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz;
     primaryLight.Intensity = LightDiffuseColorAndIlluminance.rgb * LightDiffuseColorAndIlluminance.w;
     CompositingOutput compositingOutput;
-    #if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     compositingOutput.mLitColor = computeLighting_RenderChunk(fragInput, surfaceInput, surfaceOutput, primaryLight);
     #endif
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
     compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
     #endif
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     RenderChunkFallback(fragInput, surfaceInput, surfaceOutput, fragOutput);
     #endif
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
@@ -1865,7 +1854,7 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
-    #if ! defined(FORWARD_PBR_TRANSPARENT_PASS)&& ! defined(OPAQUE_PASS)
+    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
     bgfx_FragColor = fragmentOutput.Color0;
     #endif
     #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)

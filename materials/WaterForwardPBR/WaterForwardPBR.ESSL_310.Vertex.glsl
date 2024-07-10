@@ -171,7 +171,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;

@@ -150,8 +150,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_ParallaxTexture;
+uniform lowp sampler2D s_ColorTexture;
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_ColorTexture, fragInput.colorUV);
     vec3 parallax = textureSample(s_ParallaxTexture, fragInput.parallaxUV).rgb;

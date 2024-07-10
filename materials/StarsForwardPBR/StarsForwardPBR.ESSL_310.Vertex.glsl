@@ -126,7 +126,7 @@ uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 StarsColor;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;

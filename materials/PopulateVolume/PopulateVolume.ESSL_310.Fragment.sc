@@ -93,7 +93,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 TemporalSettings;
 uniform vec4 Time;
@@ -199,16 +199,17 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_AUTOREG(s_BrdfLUT);
-SAMPLER2D_AUTOREG(s_CausticsTexture);
 IMAGE2D_ARRAY_WR_AUTOREG(s_CurrentLightingBuffer, rgba16f);
-SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
-SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_PreviousLightingBuffer);
-SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
-SAMPLER2D_AUTOREG(s_ScreenSpaceWaterDepthAndNormal);
+SAMPLER2D_AUTOREG(s_ScreenSpaceWaterFrontFaceDepthAndNormal);
+SAMPLER2D_AUTOREG(s_ScreenSpaceWaterBackFaceDepthAndNormal);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
+SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
+SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
+SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
+SAMPLER2D_AUTOREG(s_CausticsTexture);
 SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
+SAMPLER2D_AUTOREG(s_BrdfLUT);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

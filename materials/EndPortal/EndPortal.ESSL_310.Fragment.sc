@@ -122,8 +122,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_AUTOREG(s_ColorTexture);
 SAMPLER2D_AUTOREG(s_ParallaxTexture);
+SAMPLER2D_AUTOREG(s_ColorTexture);
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_ColorTexture, fragInput.colorUV);
     vec3 parallax = textureSample(s_ParallaxTexture, fragInput.parallaxUV).rgb;

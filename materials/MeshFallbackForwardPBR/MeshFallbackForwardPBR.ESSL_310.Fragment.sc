@@ -2,38 +2,36 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS
-* - DEPTH_ONLY_OPAQUE_PASS
-* - FORWARD_PBR_TRANSPARENT_PASS
-* - OPAQUE_PASS
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - RASTERIZED_ALPHA_TEST_PASS (not used)
+* - RASTERIZED_OPAQUE_PASS (not used)
+* - RASTERIZED_TRANSPARENT_PASS (not used)
+*
+* AlphaTest:
+* - ALPHA_TEST__OFF (not used)
+* - ALPHA_TEST__ON_DISCARD_VALUE_BASED (not used)
+* - ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED (not used)
+*
+* Fancy:
+* - FANCY__OFF (not used)
+* - FANCY__ON (not used)
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF (not used)
-* - RENDER_AS_BILLBOARDS__ON (not used)
-*
-* Seasons:
-* - SEASONS__OFF
-* - SEASONS__ON
+* UseTextures:
+* - USE_TEXTURES__OFF
+* - USE_TEXTURES__ON
 */
 
-$input v_bitangent, v_color0
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-$input v_frontFacing
-#endif
-$input v_lightmapUV, v_normal
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-$input v_pbrTextureId
-#endif
-$input v_tangent, v_texcoord0, v_worldPos
+$input v_bitangent, v_color0, v_prevWorldPos, v_tangent, v_texcoord0, v_viewSpaceNormal, v_worldPos
 struct NoopSampler {
     int noop;
 };
 
-#ifndef OPAQUE_PASS
 vec4 textureSample(mediump sampler2D _sampler, vec2 _coord) {
     return texture(_sampler, _coord);
 }
@@ -76,21 +74,12 @@ vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
 vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
-#endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
 vec3 vec3_splat(float _x) {
     return vec3(_x, _x, _x);
 }
 vec4 vec4_splat(float _x) {
     return vec4(_x, _x, _x, _x);
 }
-mat4 mtxFromRows(vec4 _0, vec4 _1, vec4 _2, vec4 _3) {
-    return transpose(mat4(_0, _1, _2, _3));
-}
-mat3 mtxFromRows(vec3 _0, vec3 _1, vec3 _2) {
-    return transpose(mat3(_0, _1, _2));
-}
-#endif
 struct NoopImage2D {
     int noop;
 };
@@ -109,6 +98,7 @@ struct accelerationStructureKHR {
 
 uniform vec4 ShadowBias;
 uniform mat4 DirectionalLightSourceShadowInvProj3[2];
+uniform vec4 Ambient;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
@@ -126,8 +116,11 @@ uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 WaterSurfaceParameters;
 uniform vec4 CameraLightIntensity;
+uniform vec4 MatColor;
+uniform vec4 TileLightIntensity;
 uniform vec4 CausticsParameters;
 uniform vec4 CausticsTextureParameters;
+uniform vec4 MERSUniforms;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
@@ -153,8 +146,6 @@ uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShad
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
-uniform vec4 SkyHorizonColor;
-uniform vec4 GlobalRoughness;
 uniform vec4 IBLParameters;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
@@ -173,11 +164,10 @@ uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
-uniform vec4 SubPixelOffset;
+uniform vec4 SkyHorizonColor;
 uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
-uniform vec4 ViewPositionAndTime;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -266,11 +256,7 @@ struct PBRTextureData {
 
 struct VertexInput {
     vec4 color0;
-    vec2 lightmapUV;
     vec4 normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    int pbrTextureId;
-    #endif
     vec3 position;
     vec4 tangent;
     vec2 texcoord0;
@@ -285,67 +271,45 @@ struct VertexOutput {
     vec4 position;
     vec3 bitangent;
     vec4 color0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    int frontFacing;
-    #endif
-    vec2 lightmapUV;
-    vec3 normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    int pbrTextureId;
-    #endif
+    vec3 prevWorldPos;
     vec3 tangent;
     vec2 texcoord0;
+    vec3 viewSpaceNormal;
     vec3 worldPos;
 };
 
 struct FragmentInput {
     vec3 bitangent;
     vec4 color0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    int frontFacing;
-    #endif
-    vec2 lightmapUV;
-    vec3 normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    int pbrTextureId;
-    #endif
+    vec3 prevWorldPos;
     vec3 tangent;
     vec2 texcoord0;
+    vec3 viewSpaceNormal;
     vec3 worldPos;
 };
 
 struct FragmentOutput {
-    vec4 Color0;
+    vec4 Color0; vec4 Color1; vec4 Color2;
 };
 
 SAMPLER2D_AUTOREG(s_BrdfLUT);
 SAMPLER2D_AUTOREG(s_CausticsTexture);
-SAMPLER2D_AUTOREG(s_LightMapTexture);
 SAMPLER2D_AUTOREG(s_MatTexture);
 SAMPLER2DARRAY_AUTOREG(s_PointLightShadowTextureArray);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 SAMPLER2DARRAY_AUTOREG(s_ScatteringBuffer);
-SAMPLER2D_AUTOREG(s_SeasonsTexture);
 SAMPLER2DARRAY_AUTOREG(s_ShadowCascades);
 SAMPLERCUBEARRAY_AUTOREG(s_SpecularIBLRecords);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
 BUFFER_RW_AUTOREG(s_Lights, Light);
-BUFFER_RW_AUTOREG(s_PBRData, PBRTextureData);
 struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
-    vec2 lightmapUV;
+    vec3 viewSpaceNormal;
     vec3 bitangent;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    int frontFacing;
-    #endif
-    vec3 normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    int pbrTextureId;
-    #endif
+    vec3 prevWorldPos;
     vec3 tangent;
-    vec2 texcoord0;
     vec3 worldPos;
 };
 
@@ -359,17 +323,10 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
-    result.lightmapUV = fragInput.lightmapUV;
+    result.viewSpaceNormal = fragInput.viewSpaceNormal;
     result.bitangent = fragInput.bitangent;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    result.frontFacing = fragInput.frontFacing;
-    #endif
-    result.normal = fragInput.normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    result.pbrTextureId = fragInput.pbrTextureId;
-    #endif
+    result.prevWorldPos = fragInput.prevWorldPos;
     result.tangent = fragInput.tangent;
-    result.texcoord0 = fragInput.texcoord0;
     result.worldPos = fragInput.worldPos;
     return result;
 }
@@ -398,104 +355,6 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     result.ViewSpaceNormal = vec3(0, 1, 0);
     return result;
 }
-#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-void RenderChunkFallback(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-}
-#endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
-}
-vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color / (0.18f / averageLuminance);
-}
-#endif
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)&& defined(SEASONS__ON)
-vec4 applySeasons(vec3 vertexColor, float vertexAlpha, vec4 diffuse) {
-    vec2 uv = vertexColor.xy;
-    diffuse.rgb *= mix(vec3(1.0, 1.0, 1.0), textureSample(s_SeasonsTexture, uv).rgb * 2.0, vertexColor.b);
-    diffuse.rgb *= vec3_splat(vertexAlpha);
-    diffuse.a = 1.0;
-    return diffuse;
-}
-#endif
-struct CompositingOutput {
-    vec3 mLitColor;
-};
-
-vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
-    return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
-}
-void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
-}
-struct DirectionalLight {
-    vec3 ViewSpaceDirection;
-    vec3 Intensity;
-};
-
-#if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-vec3 computeLighting_RenderChunk(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
-    return textureSample(s_LightMapTexture, stdInput.lightmapUV).rgb * stdOutput.Albedo;
-}
-#endif
-#ifdef DEPTH_ONLY_PASS
-void RenderChunkSurfAlpha(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
-    const float ALPHA_THRESHOLD = 0.5;
-    if (diffuse.a < ALPHA_THRESHOLD) {
-        discard;
-    }
-}
-#endif
-#ifdef DEPTH_ONLY_OPAQUE_PASS
-void RenderChunkSurfOpaque(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-}
-#endif
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-vec3 computeLighting_Unlit(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
-    return stdOutput.Albedo;
-}
-#endif
-#ifdef FORWARD_PBR_TRANSPARENT_PASS
-vec3 worldToNdc(vec3 worldPos, mat4 viewProj) {
-    vec4 clipSpacePos = ((viewProj) * (vec4(worldPos, 1.0))); // Attention!
-    vec3 ndc = clipSpacePos.xyz / clipSpacePos.w;
-    return ndc;
-}
-vec2 worldToUv(vec3 worldPos, mat4 viewProj) {
-    vec3 ndc = worldToNdc(worldPos, viewProj);
-    ndc.y *= -1.0;
-    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
-    uv = (vec2((uv).x, 1.0 - (uv).y));
-    return uv;
-}
-vec2 GenerateWave(vec2 position, vec2 direction, float frequency, float time) {
-    float x = dot(direction, position) * frequency + time;
-    float wave = pow((sin(x) + 1.0) / 2.0, WaterSurfaceWaveParameters.y);
-    float d = (wave * cos(x)) * -1.0;
-    return vec2(wave, d);
-}
-float fBm_ocean(vec2 position, float currentTime) {
-    float currentFrequency = WaterSurfaceParameters.x;
-    vec2 currentPosition = position;
-    float currentSpeed = WaterSurfaceWaveParameters.x;
-    float randomValue = 0.0;
-    float currentWeight = 1.0;
-    float totalHeight = 0.0;
-    float totalWeights = 0.0;
-    for(uint octave = uint(0); octave < uint(WaterSurfaceParameters.y); octave ++ ) {
-        vec2 randomWaveDirection = vec2(sin(randomValue), cos(randomValue));
-        vec2 wave = GenerateWave(currentPosition, randomWaveDirection, currentFrequency, currentTime * currentSpeed);
-        totalHeight += wave.x * currentWeight;
-        totalWeights += currentWeight;
-        currentPosition += randomWaveDirection * wave.y * currentWeight * WaterSurfaceOctaveParameters.x;
-        currentWeight = mix(currentWeight, 0.0, WaterSurfaceOctaveParameters.y);
-        currentFrequency *= WaterSurfaceOctaveParameters.z;
-        currentSpeed *= WaterSurfaceOctaveParameters.w;
-        randomValue += 1.399;
-    }
-    return totalHeight / totalWeights;
-}
 float D_GGX_TrowbridgeReitz(vec3 N, vec3 H, float a) {
     float a2 = a * a;
     float nDotH = max(dot(N, H), 0.0);
@@ -517,6 +376,308 @@ vec3 BRDF_Spec_CookTorrance(float nDotL, float nDotV, float D, float G, vec3 F) 
 }
 vec3 BRDF_Diff_Lambertian(vec3 albedo) {
     return albedo / 3.1415926535897932384626433832795;
+}
+float getClusterDepthIndex(float viewSpaceDepth, float maxSlices, vec2 clusterNearFar) {
+    float zNear = clusterNearFar.x;
+    float zFar = clusterNearFar.y;
+    if (viewSpaceDepth < zNear) {
+        return - 1.0f;
+    }
+    if (viewSpaceDepth >= zNear && viewSpaceDepth <= 1.0f) {
+        return 0.0f;
+    }
+    if (viewSpaceDepth > 1.0f && viewSpaceDepth <= 1.5f) {
+        return 1.0f;
+    }
+    float nearFarLog = log2(zFar / 1.5f);
+    return floor(log2(viewSpaceDepth / 1.5f) * ((maxSlices - 2.0f) / nearFarLog) + 2.0f); // Attention!
+}
+vec3 getClusterIndex(vec2 uv, float viewSpaceDepth, vec3 clusterDimensions, vec2 clusterNearFar, vec2 screenSize, vec2 clusterSize) {
+    float viewportX = uv.x * screenSize.x;
+    float viewportY = uv.y * screenSize.y;
+    float clusterIdxX = floor(viewportX / clusterSize.x);
+    float clusterIdxY = floor(viewportY / clusterSize.y);
+    float clusterIdxZ = getClusterDepthIndex(viewSpaceDepth, clusterDimensions.z, clusterNearFar);
+    return vec3(clusterIdxX, clusterIdxY, clusterIdxZ);
+}
+vec3 PreExposeLighting(vec3 color, float averageLuminance) {
+    return color * (0.18f / averageLuminance);
+}
+vec3 UnExposeLighting(vec3 color, float averageLuminance) {
+    return color / (0.18f / averageLuminance);
+}
+float getIBLMipLevel(float linearRoughness, float numMips) {
+    float x = 1.0 - linearRoughness;
+    return (1.0 - (x * x)) * (numMips - 1.0); // Attention!
+}
+vec3 evaluateIndirectSpecular(sampler2D brdfLUT, vec3 indirectLight, float linearRoughness, float nDotv, vec3 f0) {
+    vec2 envDFGUV = vec2(nDotv, linearRoughness);
+    vec2 envDFG = textureSample(brdfLUT, envDFGUV).rg;
+    return indirectLight * (f0 * envDFG.x + envDFG.y);
+}
+vec3 transformCubemapDirectionForScreen(vec3 R) {
+    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
+        R.z *= -1.0;
+    }
+    else {
+        R.y *= -1.0;
+    }
+    return R;
+}
+vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
+    return lineDirection * (1.f / dot(lineDirection, normal));
+}
+vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
+    vec3 outCoordinate = inCoordinate;
+    if (inCoordinate.y > 1.0f) {
+        switch(int(inCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = 2.0f - inCoordinate.y;
+            outCoordinate.y = inCoordinate.x;
+            break;
+            case 1 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = inCoordinate.y - 1.0f;
+            outCoordinate.y = 1.0f - inCoordinate.x;
+            break;
+            case 2 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = inCoordinate.y - 1.0f;
+            break;
+            case 3 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = inCoordinate.y - 1.0f;
+            break;
+            case 5 :
+            outCoordinate.z = float(3);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = 2.0f - inCoordinate.y;
+            break;
+            default :
+            break;
+        }
+    } else if (inCoordinate.y < 0.0f) {
+        switch(int(inCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = 1.0f + inCoordinate.y;
+            outCoordinate.y = 1.0f - inCoordinate.x;
+            break;
+            case 1 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = -inCoordinate.y;
+            outCoordinate.y = inCoordinate.x;
+            break;
+            case 2 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = -inCoordinate.y;
+            break;
+            case 3 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 4 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = inCoordinate.x;
+            outCoordinate.y = 1.0f + inCoordinate.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(2);
+            outCoordinate.x = 1.0f - inCoordinate.x;
+            outCoordinate.y = -inCoordinate.y;
+            break;
+            default :
+            break;
+        }
+    }
+    vec2 uvCache = outCoordinate.xy;
+    if (uvCache.x > 1.0) {
+        switch(int(outCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 1 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 2 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = uvCache.x - 1.0f;
+            break;
+            case 3 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = 2.0f - uvCache.x;
+            break;
+            case 4 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = uvCache.x - 1.0f;
+            outCoordinate.y = uvCache.y;
+            break;
+            default :
+            break;
+        }
+    } else if (uvCache.x < 0.0) {
+        switch(int(outCoordinate.z)) {
+            case 0 :
+            outCoordinate.z = float(4);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 1 :
+            outCoordinate.z = float(5);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 2 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = uvCache.y;
+            outCoordinate.y = -uvCache.x;
+            break;
+            case 3 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = 1.0f - uvCache.y;
+            outCoordinate.y = 1.0f + uvCache.x;
+            break;
+            case 4 :
+            outCoordinate.z = float(1);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            case 5 :
+            outCoordinate.z = float(0);
+            outCoordinate.x = 1.0f + uvCache.x;
+            outCoordinate.y = uvCache.y;
+            break;
+            default :
+            break;
+        }
+    }
+    return outCoordinate;
+}
+float luminance(vec3 clr) {
+    return dot(clr, vec3(0.2126, 0.7152, 0.0722));
+}
+vec3 desaturate(vec3 color, float amount) {
+    float lum = luminance(color);
+    return mix(color, vec3(lum, lum, lum), amount);
+}
+struct ColorTransform {
+    float hue;
+    float saturation;
+    float luminance;
+};
+
+float calculateFogIntensityFaded(float cameraDepth, float maxDistance, float fogStart, float fogEndMinusStartReciprocal, float fogAlpha) {
+    float distance = cameraDepth / maxDistance;
+    distance += fogAlpha;
+    return clamp((distance - fogStart) * fogEndMinusStartReciprocal, 0.0, 1.0);
+}
+vec3 applyFog(vec3 diffuse, vec3 fogColor, float fogIntensity) {
+    return mix(diffuse, fogColor, fogIntensity);
+}
+float getHorizonBlend(float start, float end, float x) {
+    float horizon = smoothstep(start, end, x);
+    horizon = horizon * horizon * horizon;
+    return clamp(horizon, 0.0, 1.0);
+}
+float getRayleighContribution(float VdL, float strength) {
+    float rayleigh = 0.5 * (VdL + 1.0);
+    return (rayleigh * rayleigh) * strength;
+}
+struct AtmosphereParams {
+    vec3 sunDir;
+    vec3 moonDir;
+    vec4 sunColor;
+    vec4 moonColor;
+    vec3 skyZenithColor;
+    vec3 skyHorizonColor;
+    vec4 fogColor;
+    float horizonBlendMin;
+    float horizonBlendStart;
+    float mieStart;
+    float horizonBlendMax;
+    float rayleighStrength;
+    float sunMieStrength;
+    float moonMieStrength;
+    float sunGlareShape;
+};
+
+vec3 calculateSkyColor(AtmosphereParams params, vec3 V) {
+    float startHorizon = params.horizonBlendStart;
+    float endHorizon = params.horizonBlendMin - params.horizonBlendMax;
+    float mieStartHorizon = params.mieStart - params.horizonBlendMax;
+    vec3 sunColor = params.sunColor.a * params.sunColor.rgb;
+    vec3 moonColor = params.moonColor.a * params.moonColor.rgb;
+    float horizon = getHorizonBlend(startHorizon, endHorizon, V.y);
+    float mieHorizon = getHorizonBlend(mieStartHorizon, endHorizon, V.y);
+    vec3 zenithColor = params.skyZenithColor;
+    vec3 horizonColor = params.skyHorizonColor;
+    float sunVdL = dot(V, params.sunDir);
+    float moonVdL = dot(V, params.moonDir);
+    float sunRay = getRayleighContribution(sunVdL, params.sunColor.a);
+    float moonRay = getRayleighContribution(moonVdL, params.moonColor.a);
+    const float kThreeOverSixteenPi = (3.0 / (16.0 * 3.1415926535897932384626433832795));
+    vec3 rayleighColor = params.rayleighStrength * mix(zenithColor, horizonColor, horizon);
+    vec3 rayleigh = rayleighColor * kThreeOverSixteenPi * (sunRay + moonRay);
+    float miePower = params.sunGlareShape;
+    float mieSunVdL = clamp(pow(max(sunVdL, 0.0), miePower), 0.0, 1.0);
+    float mieMoonVdL = clamp(pow(max(moonVdL, 0.0), miePower), 0.0, 1.0);
+    const float kMieEccentricity = -0.9;
+    const float kTwoMieEccentricity = kMieEccentricity * 2.0;
+    const float kSquaredMieEccentricity = kMieEccentricity * kMieEccentricity;
+    const float kOnePlusSquaredMieEccentricity = 1.0 + kSquaredMieEccentricity;
+    const float kSquaredInverseSquaredMieEccentricity = (1.0 - kSquaredMieEccentricity) * (1.0 - kSquaredMieEccentricity); // Attention!
+    float sunPhase = kSquaredInverseSquaredMieEccentricity / pow((kOnePlusSquaredMieEccentricity - kTwoMieEccentricity * -mieSunVdL), 1.5);
+    float moonPhase = kSquaredInverseSquaredMieEccentricity / pow((kOnePlusSquaredMieEccentricity - kTwoMieEccentricity * -mieMoonVdL), 1.5);
+    const float kOneOverFourPi = (1.0 / (4.0 * 3.1415926535897932384626433832795));
+    vec3 mieSun = params.sunMieStrength * sunColor * mieSunVdL * sunPhase;
+    vec3 mieMoon = params.moonMieStrength * moonColor * mieMoonVdL * moonPhase;
+    vec3 mieColor = horizonColor * mieHorizon;
+    vec3 mie = kOneOverFourPi * mieColor * (mieSun + mieMoon);
+    return rayleigh + mie;
+}
+AtmosphereParams getAtmosphereParams() {
+    AtmosphereParams params;
+    params.sunDir = SunDir.xyz;
+    params.moonDir = MoonDir.xyz;
+    params.sunColor = SunColor;
+    params.moonColor = MoonColor;
+    params.skyZenithColor = SkyZenithColor.rgb;
+    params.skyHorizonColor = SkyHorizonColor.rgb;
+    params.fogColor = FogColor;
+    params.horizonBlendMin = FogSkyBlend.x;
+    params.horizonBlendStart = FogSkyBlend.y;
+    params.mieStart = FogSkyBlend.z;
+    params.horizonBlendMax = FogSkyBlend.w;
+    params.rayleighStrength = AtmosphericScattering.x;
+    params.sunMieStrength = AtmosphericScattering.y;
+    params.moonMieStrength = AtmosphericScattering.z;
+    params.sunGlareShape = AtmosphericScattering.w;
+    return params;
+}
+vec3 worldSpaceViewDir(vec3 worldPosition) {
+    vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz; // Attention!
+    return normalize(worldPosition - cameraPosition);
 }
 float wrappedDiffuse(vec3 n, vec3 l, float w) {
     return max((dot(n, l) + w) / ((1.0 + w) * (1.0 + w)), 0.0); // Attention!
@@ -569,6 +730,43 @@ vec3 calculateRf0(vec3 albedo, float metalness) {
     float dielectricF0 = 0.16f * reflectance * reflectance * (1.0f - metalness);
     vec3 rf0 = vec3_splat(dielectricF0) + albedo * metalness;
     return rf0;
+}
+float getSkyProbeVisibility(float skyAmbientContribution, float skyFadeStart, float skyFadeEnd) {
+    float skyProbeVisRange = max(skyFadeStart - skyFadeEnd, 1.0);
+    float skyProbeVisibility = clamp((skyAmbientContribution * 16.0f - skyFadeEnd) / skyProbeVisRange, 0.0, 1.0);
+    skyProbeVisibility = pow(skyProbeVisibility, 3.0f);
+    return skyProbeVisibility * IBLParameters.x;
+}
+vec3 getProbeLighting(highp samplerCubeArray environmentProbes, float lastProbeIdx, float skyProbeVisibility, float linearRoughness, vec3 v, vec3 n, float numMips, float blendFactor, float contribution, bool isPreExposureEnabled) {
+    vec3 R = transformCubemapDirectionForScreen(reflect(v, n));
+    float iblMipLevel = getIBLMipLevel(linearRoughness, numMips);
+    int curr = int(lastProbeIdx);
+    int prev = (curr + 3 - 1)% 3;
+    vec3 preFilteredColorCurrent = textureSample(environmentProbes, vec4(R, curr), iblMipLevel).rgb;
+    vec3 preFilteredColorPrevious = textureSample(environmentProbes, vec4(R, prev), iblMipLevel).rgb;
+    vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, blendFactor);
+    if (isPreExposureEnabled) {
+        preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
+    }
+    return preFilteredColor * skyProbeVisibility * contribution;
+}
+vec3 calculateIndirectSpecularProbeOnly(PBRFragmentInfo fragmentData, sampler2D brdfLUT, highp samplerCubeArray environmentProbes, float lastProbeIdx, float numMips, float blendFactor, float skyVisibility, float contribution, bool isPreExposureEnabled) {
+    float viewDistance = length(fragmentData.viewPosition);
+    vec3 viewDir = -(fragmentData.viewPosition / viewDistance);
+    vec3 viewDirWorld = worldSpaceViewDir(fragmentData.worldPosition.xyz);
+    vec3 indirectProbeLight = getProbeLighting(
+        environmentProbes,
+        lastProbeIdx,
+        skyVisibility,
+        fragmentData.roughness,
+        viewDirWorld,
+        fragmentData.worldNormal,
+        numMips,
+        blendFactor,
+        contribution,
+    isPreExposureEnabled);
+    vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, indirectProbeLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), fragmentData.rf0);
+    return indirectSpecularColor;
 }
 struct ShadowParameters {
     vec4 cascadeShadowResolutions;
@@ -749,500 +947,6 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth,
     }
     return amt;
 }
-int getWaterDepthIndex(int cascadeNumber) {
-    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.y);
-}
-bool isUnderwaterAndReceivesDirectionalLight(vec3 objectWorldPos, int lightIdx, out float lightDistance) {
-    mat4 surfaceViewProj = DirectionalLightSourceWaterSurfaceViewProj[lightIdx];
-    mat4 invSurfaceViewProj = DirectionalLightSourceInvWaterSurfaceViewProj[lightIdx];
-    int cascadeNumber = int(DirectionalLightSourceShadowCascadeNumber[lightIdx].x);
-    if (cascadeNumber < 0) {
-        return false;
-    }
-    vec3 objectPositionSunClipSpace = worldToNdc(objectWorldPos, surfaceViewProj);
-    vec2 uv = worldToUv(objectWorldPos, surfaceViewProj);
-    float sampledDepth = textureSample(s_ShadowCascades, vec3(uv, getWaterDepthIndex(cascadeNumber))).r;
-    sampledDepth = sampledDepth * 2.0f - 1.0f;
-    if (objectPositionSunClipSpace.z > sampledDepth) {
-        vec4 sampledProjPos = vec4(objectPositionSunClipSpace.xy, sampledDepth, 1.0);
-        vec4 sampledWaterSurfaceWorldPos = ((invSurfaceViewProj) * (sampledProjPos)); // Attention!
-        lightDistance = length(sampledWaterSurfaceWorldPos.xyz - objectWorldPos);
-        return true;
-    }
-    return false;
-}
-float calculateCausticsMultiplier(vec3 steveSpacePosition, int lightIndex) {
-    if (bool(CausticsParameters.x)) {
-        vec3 worldPosition = steveSpacePosition - WorldOrigin.xyz;
-        vec2 uv = worldToUv(worldPosition, DirectionalLightSourceCausticsViewProj[lightIndex]) * float(CausticsParameters.y);
-        float waterDepth = 0.0f;
-        bool isPointUnderWater = isUnderwaterAndReceivesDirectionalLight(steveSpacePosition, lightIndex, waterDepth);
-        float outCaustics = 1.0f;
-        if (bool(CausticsTextureParameters.x)&& isPointUnderWater) {
-            uv = vec2(uv.x - floor(uv.x), uv.y - floor(uv.y));
-            uv.y = float(CausticsTextureParameters.y) + uv.y * (float(CausticsTextureParameters.z) - float(CausticsTextureParameters.y));
-            outCaustics = textureSample(s_CausticsTexture, uv).r * 2.f;
-        } else if (isPointUnderWater) {
-            outCaustics = fBm_ocean(uv, Time.x);
-        }
-        return pow(outCaustics, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
-    }
-    return 1.0f;
-}
-vec3 transformCubemapDirectionForScreen(vec3 R) {
-    if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
-        R.z *= -1.0;
-    }
-    else {
-        R.y *= -1.0;
-    }
-    return R;
-}
-vec3 findLinePlaneIntersectionForCubemap(vec3 normal, vec3 lineDirection) {
-    return lineDirection * (1.f / dot(lineDirection, normal));
-}
-vec3 getSampleCoordinateForAdjacentFace(vec3 inCoordinate) {
-    vec3 outCoordinate = inCoordinate;
-    if (inCoordinate.y > 1.0f) {
-        switch(int(inCoordinate.z)) {
-            case 0 :
-            outCoordinate.z = float(3);
-            outCoordinate.x = 2.0f - inCoordinate.y;
-            outCoordinate.y = inCoordinate.x;
-            break;
-            case 1 :
-            outCoordinate.z = float(3);
-            outCoordinate.x = inCoordinate.y - 1.0f;
-            outCoordinate.y = 1.0f - inCoordinate.x;
-            break;
-            case 2 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = inCoordinate.y - 1.0f;
-            break;
-            case 3 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = 2.0f - inCoordinate.y;
-            break;
-            case 4 :
-            outCoordinate.z = float(3);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = inCoordinate.y - 1.0f;
-            break;
-            case 5 :
-            outCoordinate.z = float(3);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = 2.0f - inCoordinate.y;
-            break;
-            default :
-            break;
-        }
-    } else if (inCoordinate.y < 0.0f) {
-        switch(int(inCoordinate.z)) {
-            case 0 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = 1.0f + inCoordinate.y;
-            outCoordinate.y = 1.0f - inCoordinate.x;
-            break;
-            case 1 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = -inCoordinate.y;
-            outCoordinate.y = inCoordinate.x;
-            break;
-            case 2 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = -inCoordinate.y;
-            break;
-            case 3 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0f + inCoordinate.y;
-            break;
-            case 4 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = inCoordinate.x;
-            outCoordinate.y = 1.0f + inCoordinate.y;
-            break;
-            case 5 :
-            outCoordinate.z = float(2);
-            outCoordinate.x = 1.0f - inCoordinate.x;
-            outCoordinate.y = -inCoordinate.y;
-            break;
-            default :
-            break;
-        }
-    }
-    vec2 uvCache = outCoordinate.xy;
-    if (uvCache.x > 1.0) {
-        switch(int(outCoordinate.z)) {
-            case 0 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = uvCache.x - 1.0f;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 1 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = uvCache.x - 1.0f;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 2 :
-            outCoordinate.z = float(0);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = uvCache.x - 1.0f;
-            break;
-            case 3 :
-            outCoordinate.z = float(0);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = 2.0f - uvCache.x;
-            break;
-            case 4 :
-            outCoordinate.z = float(0);
-            outCoordinate.x = uvCache.x - 1.0f;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 5 :
-            outCoordinate.z = float(1);
-            outCoordinate.x = uvCache.x - 1.0f;
-            outCoordinate.y = uvCache.y;
-            break;
-            default :
-            break;
-        }
-    } else if (uvCache.x < 0.0) {
-        switch(int(outCoordinate.z)) {
-            case 0 :
-            outCoordinate.z = float(4);
-            outCoordinate.x = 1.0f + uvCache.x;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 1 :
-            outCoordinate.z = float(5);
-            outCoordinate.x = 1.0f + uvCache.x;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 2 :
-            outCoordinate.z = float(1);
-            outCoordinate.x = uvCache.y;
-            outCoordinate.y = -uvCache.x;
-            break;
-            case 3 :
-            outCoordinate.z = float(1);
-            outCoordinate.x = 1.0f - uvCache.y;
-            outCoordinate.y = 1.0f + uvCache.x;
-            break;
-            case 4 :
-            outCoordinate.z = float(1);
-            outCoordinate.x = 1.0f + uvCache.x;
-            outCoordinate.y = uvCache.y;
-            break;
-            case 5 :
-            outCoordinate.z = float(0);
-            outCoordinate.x = 1.0f + uvCache.x;
-            outCoordinate.y = uvCache.y;
-            break;
-            default :
-            break;
-        }
-    }
-    return outCoordinate;
-}
-float getIBLMipLevel(float linearRoughness, float numMips) {
-    float x = 1.0 - linearRoughness;
-    return (1.0 - (x * x)) * (numMips - 1.0); // Attention!
-}
-vec3 evaluateIndirectSpecular(sampler2D brdfLUT, vec3 indirectLight, float linearRoughness, float nDotv, vec3 f0) {
-    vec2 envDFGUV = vec2(nDotv, linearRoughness);
-    vec2 envDFG = textureSample(brdfLUT, envDFGUV).rg;
-    return indirectLight * (f0 * envDFG.x + envDFG.y);
-}
-float getClusterDepthIndex(float viewSpaceDepth, float maxSlices, vec2 clusterNearFar) {
-    float zNear = clusterNearFar.x;
-    float zFar = clusterNearFar.y;
-    if (viewSpaceDepth < zNear) {
-        return - 1.0f;
-    }
-    if (viewSpaceDepth >= zNear && viewSpaceDepth <= 1.0f) {
-        return 0.0f;
-    }
-    if (viewSpaceDepth > 1.0f && viewSpaceDepth <= 1.5f) {
-        return 1.0f;
-    }
-    float nearFarLog = log2(zFar / 1.5f);
-    return floor(log2(viewSpaceDepth / 1.5f) * ((maxSlices - 2.0f) / nearFarLog) + 2.0f); // Attention!
-}
-vec3 getClusterIndex(vec2 uv, float viewSpaceDepth, vec3 clusterDimensions, vec2 clusterNearFar, vec2 screenSize, vec2 clusterSize) {
-    float viewportX = uv.x * screenSize.x;
-    float viewportY = uv.y * screenSize.y;
-    float clusterIdxX = floor(viewportX / clusterSize.x);
-    float clusterIdxY = floor(viewportY / clusterSize.y);
-    float clusterIdxZ = getClusterDepthIndex(viewSpaceDepth, clusterDimensions.z, clusterNearFar);
-    return vec3(clusterIdxX, clusterIdxY, clusterIdxZ);
-}
-float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-}
-vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-vec3 color_degamma(vec3 clr) {
-    float e = 2.2;
-    return pow(max(clr, vec3(0.0, 0.0, 0.0)), vec3(e, e, e));
-}
-vec4 color_degamma(vec4 clr) {
-    return vec4(color_degamma(clr.rgb), clr.a);
-}
-float luminance(vec3 clr) {
-    return dot(clr, vec3(0.2126, 0.7152, 0.0722));
-}
-vec3 desaturate(vec3 color, float amount) {
-    float lum = luminance(color);
-    return mix(color, vec3(lum, lum, lum), amount);
-}
-struct ColorTransform {
-    float hue;
-    float saturation;
-    float luminance;
-};
-
-float calculateFogIntensityFaded(float cameraDepth, float maxDistance, float fogStart, float fogEndMinusStartReciprocal, float fogAlpha) {
-    float distance = cameraDepth / maxDistance;
-    distance += fogAlpha;
-    return clamp((distance - fogStart) * fogEndMinusStartReciprocal, 0.0, 1.0);
-}
-vec3 applyFog(vec3 diffuse, vec3 fogColor, float fogIntensity) {
-    return mix(diffuse, fogColor, fogIntensity);
-}
-float getHorizonBlend(float start, float end, float x) {
-    float horizon = smoothstep(start, end, x);
-    horizon = horizon * horizon * horizon;
-    return clamp(horizon, 0.0, 1.0);
-}
-float getRayleighContribution(float VdL, float strength) {
-    float rayleigh = 0.5 * (VdL + 1.0);
-    return (rayleigh * rayleigh) * strength;
-}
-struct AtmosphereParams {
-    vec3 sunDir;
-    vec3 moonDir;
-    vec4 sunColor;
-    vec4 moonColor;
-    vec3 skyZenithColor;
-    vec3 skyHorizonColor;
-    vec4 fogColor;
-    float horizonBlendMin;
-    float horizonBlendStart;
-    float mieStart;
-    float horizonBlendMax;
-    float rayleighStrength;
-    float sunMieStrength;
-    float moonMieStrength;
-    float sunGlareShape;
-};
-
-vec3 calculateSkyColor(AtmosphereParams params, vec3 V) {
-    float startHorizon = params.horizonBlendStart;
-    float endHorizon = params.horizonBlendMin - params.horizonBlendMax;
-    float mieStartHorizon = params.mieStart - params.horizonBlendMax;
-    vec3 sunColor = params.sunColor.a * params.sunColor.rgb;
-    vec3 moonColor = params.moonColor.a * params.moonColor.rgb;
-    float horizon = getHorizonBlend(startHorizon, endHorizon, V.y);
-    float mieHorizon = getHorizonBlend(mieStartHorizon, endHorizon, V.y);
-    vec3 zenithColor = params.skyZenithColor;
-    vec3 horizonColor = params.skyHorizonColor;
-    float sunVdL = dot(V, params.sunDir);
-    float moonVdL = dot(V, params.moonDir);
-    float sunRay = getRayleighContribution(sunVdL, params.sunColor.a);
-    float moonRay = getRayleighContribution(moonVdL, params.moonColor.a);
-    const float kThreeOverSixteenPi = (3.0 / (16.0 * 3.1415926535897932384626433832795));
-    vec3 rayleighColor = params.rayleighStrength * mix(zenithColor, horizonColor, horizon);
-    vec3 rayleigh = rayleighColor * kThreeOverSixteenPi * (sunRay + moonRay);
-    float miePower = params.sunGlareShape;
-    float mieSunVdL = clamp(pow(max(sunVdL, 0.0), miePower), 0.0, 1.0);
-    float mieMoonVdL = clamp(pow(max(moonVdL, 0.0), miePower), 0.0, 1.0);
-    const float kMieEccentricity = -0.9;
-    const float kTwoMieEccentricity = kMieEccentricity * 2.0;
-    const float kSquaredMieEccentricity = kMieEccentricity * kMieEccentricity;
-    const float kOnePlusSquaredMieEccentricity = 1.0 + kSquaredMieEccentricity;
-    const float kSquaredInverseSquaredMieEccentricity = (1.0 - kSquaredMieEccentricity) * (1.0 - kSquaredMieEccentricity); // Attention!
-    float sunPhase = kSquaredInverseSquaredMieEccentricity / pow((kOnePlusSquaredMieEccentricity - kTwoMieEccentricity * -mieSunVdL), 1.5);
-    float moonPhase = kSquaredInverseSquaredMieEccentricity / pow((kOnePlusSquaredMieEccentricity - kTwoMieEccentricity * -mieMoonVdL), 1.5);
-    const float kOneOverFourPi = (1.0 / (4.0 * 3.1415926535897932384626433832795));
-    vec3 mieSun = params.sunMieStrength * sunColor * mieSunVdL * sunPhase;
-    vec3 mieMoon = params.moonMieStrength * moonColor * mieMoonVdL * moonPhase;
-    vec3 mieColor = horizonColor * mieHorizon;
-    vec3 mie = kOneOverFourPi * mieColor * (mieSun + mieMoon);
-    return rayleigh + mie;
-}
-AtmosphereParams getAtmosphereParams() {
-    AtmosphereParams params;
-    params.sunDir = SunDir.xyz;
-    params.moonDir = MoonDir.xyz;
-    params.sunColor = SunColor;
-    params.moonColor = MoonColor;
-    params.skyZenithColor = SkyZenithColor.rgb;
-    params.skyHorizonColor = SkyHorizonColor.rgb;
-    params.fogColor = FogColor;
-    params.horizonBlendMin = FogSkyBlend.x;
-    params.horizonBlendStart = FogSkyBlend.y;
-    params.mieStart = FogSkyBlend.z;
-    params.horizonBlendMax = FogSkyBlend.w;
-    params.rayleighStrength = AtmosphericScattering.x;
-    params.sunMieStrength = AtmosphericScattering.y;
-    params.moonMieStrength = AtmosphericScattering.z;
-    params.sunGlareShape = AtmosphericScattering.w;
-    return params;
-}
-vec3 worldSpaceViewDir(vec3 worldPosition) {
-    vec3 cameraPosition = ((InvView) * (vec4(0.f, 0.f, 0.f, 1.f))).xyz; // Attention!
-    return normalize(worldPosition - cameraPosition);
-}
-float getSkyProbeVisibility(float skyAmbientContribution, float skyFadeStart, float skyFadeEnd) {
-    float skyProbeVisRange = max(skyFadeStart - skyFadeEnd, 1.0);
-    float skyProbeVisibility = clamp((skyAmbientContribution * 16.0f - skyFadeEnd) / skyProbeVisRange, 0.0, 1.0);
-    skyProbeVisibility = pow(skyProbeVisibility, 3.0f);
-    return skyProbeVisibility * IBLParameters.x;
-}
-vec3 getProbeLighting(highp samplerCubeArray environmentProbes, float lastProbeIdx, float skyProbeVisibility, float linearRoughness, vec3 v, vec3 n, float numMips, float blendFactor, float contribution, bool isPreExposureEnabled) {
-    vec3 R = transformCubemapDirectionForScreen(reflect(v, n));
-    float iblMipLevel = getIBLMipLevel(linearRoughness, numMips);
-    int curr = int(lastProbeIdx);
-    int prev = (curr + 3 - 1)% 3;
-    vec3 preFilteredColorCurrent = textureSample(environmentProbes, vec4(R, curr), iblMipLevel).rgb;
-    vec3 preFilteredColorPrevious = textureSample(environmentProbes, vec4(R, prev), iblMipLevel).rgb;
-    vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, blendFactor);
-    if (isPreExposureEnabled) {
-        preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
-    }
-    return preFilteredColor * skyProbeVisibility * contribution;
-}
-vec3 calculateIndirectSpecularProbeOnly(PBRFragmentInfo fragmentData, sampler2D brdfLUT, highp samplerCubeArray environmentProbes, float lastProbeIdx, float numMips, float blendFactor, float skyVisibility, float contribution, bool isPreExposureEnabled) {
-    float viewDistance = length(fragmentData.viewPosition);
-    vec3 viewDir = -(fragmentData.viewPosition / viewDistance);
-    vec3 viewDirWorld = worldSpaceViewDir(fragmentData.worldPosition.xyz);
-    vec3 indirectProbeLight = getProbeLighting(
-        environmentProbes,
-        lastProbeIdx,
-        skyVisibility,
-        fragmentData.roughness,
-        viewDirWorld,
-        fragmentData.worldNormal,
-        numMips,
-        blendFactor,
-        contribution,
-    isPreExposureEnabled);
-    vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, indirectProbeLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), fragmentData.rf0);
-    return indirectSpecularColor;
-}
-float saturatedLinearRemapZeroToOne(float value, float zeroValue, float oneValue) {
-    return clamp((((value) * (1.f / (oneValue - zeroValue))) + -zeroValue / (oneValue - zeroValue)), 0.0, 1.0); // Attention!
-}
-vec3 calculateTangentNormalFromHeightmap(sampler2D heightmapTexture, vec2 heightmapUV, float mipLevel) {
-    vec3 tangentNormal = vec3(0.f, 0.f, 1.f);
-    const float kHeightMapPixelEdgeWidth = 1.0f / 12.0f;
-    const float kHeightMapDepth = 4.0f;
-    const float kRecipHeightMapDepth = 1.0f / kHeightMapDepth;
-    float fadeForLowerMips = saturatedLinearRemapZeroToOne(mipLevel, 2.f, 1.f);
-    if (fadeForLowerMips > 0.f)
-    {
-        vec2 widthHeight = vec2(textureSize(heightmapTexture, 0));
-        vec2 pixelCoord = heightmapUV * widthHeight;
-        {
-            const float kNudgePixelCentreDistEpsilon = 0.0625f;
-            const float kNudgeUvEpsilon = 0.25f / 65536.f;
-            vec2 nudgeSampleCoord = fract(pixelCoord);
-            if (abs(nudgeSampleCoord.x - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.x += (nudgeSampleCoord.x > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-            if (abs(nudgeSampleCoord.y - 0.5) < kNudgePixelCentreDistEpsilon)
-            {
-                heightmapUV.y += (nudgeSampleCoord.y > 0.5f) ? kNudgeUvEpsilon : -kNudgeUvEpsilon;
-            }
-        }
-        vec4 heightSamples = textureGather(heightmapTexture, heightmapUV, 0);
-        vec2 subPixelCoord = fract(pixelCoord + 0.5f);
-        const float kBevelMode = 0.0f;
-        vec2 axisSamplePair = (subPixelCoord.y > 0.5f) ? heightSamples.xy : heightSamples.wz;
-        float axisBevelCentreSampleCoord = subPixelCoord.x;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        ivec2 axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.x = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        axisSamplePair = (subPixelCoord.x > 0.5f) ? heightSamples.zy : heightSamples.wx;
-        axisBevelCentreSampleCoord = subPixelCoord.y;
-        axisBevelCentreSampleCoord += ((axisSamplePair.x > axisSamplePair.y) ? kHeightMapPixelEdgeWidth : -kHeightMapPixelEdgeWidth) * kBevelMode;
-        axisSampleIndices = ivec2(clamp(vec2(axisBevelCentreSampleCoord - kHeightMapPixelEdgeWidth, axisBevelCentreSampleCoord + kHeightMapPixelEdgeWidth) * 2.f, 0.0, 1.0));
-        tangentNormal.y = (axisSamplePair[axisSampleIndices.x] - axisSamplePair[axisSampleIndices.y]);
-        tangentNormal.z = kRecipHeightMapDepth;
-        tangentNormal = normalize(tangentNormal);
-        tangentNormal.xy *= fadeForLowerMips;
-    }
-    return tangentNormal;
-}
-
-const int kInvalidPBRTextureHandle = 0xffff;
-const int kPBRTextureDataFlagHasMaterialTexture = (1 << 0);
-const int kPBRTextureDataFlagHasSubsurfaceChannel = (1 << 1);
-const int kPBRTextureDataFlagHasNormalTexture = (1 << 2);
-const int kPBRTextureDataFlagHasHeightMapTexture = (1 << 3);
-vec2 getPBRDataUV(vec2 surfaceUV, vec2 uvScale, vec2 uvBias) {
-    return (((surfaceUV) * (uvScale)) + uvBias); // Attention!
-}
-void applyPBRValuesToSurfaceOutput(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, int pbrTextureId) {
-    if (pbrTextureId == kInvalidPBRTextureHandle) {
-        return;
-    }
-    PBRTextureData pbrTextureData = PBRData[pbrTextureId];
-    vec2 normalUVScale = vec2(pbrTextureData.colourToNormalUvScale0, pbrTextureData.colourToNormalUvScale1);
-    vec2 normalUVBias = vec2(pbrTextureData.colourToNormalUvBias0, pbrTextureData.colourToNormalUvBias1);
-    vec2 materialUVScale = vec2(pbrTextureData.colourToMaterialUvScale0, pbrTextureData.colourToMaterialUvScale1);
-    vec2 materialUVBias = vec2(pbrTextureData.colourToMaterialUvBias0, pbrTextureData.colourToMaterialUvBias1);
-    vec3 tangentNormal = vec3(0, 0, 1);
-    if ((pbrTextureData.flags & kPBRTextureDataFlagHasNormalTexture) == kPBRTextureDataFlagHasNormalTexture)
-    {
-        vec2 uv = getPBRDataUV(surfaceInput.UV, normalUVScale, normalUVBias);
-        tangentNormal = textureSample(s_MatTexture, uv).xyz * 2.f - 1.f;
-    }
-    else if ((pbrTextureData.flags & kPBRTextureDataFlagHasHeightMapTexture) == kPBRTextureDataFlagHasHeightMapTexture)
-    {
-        vec2 normalUv = getPBRDataUV(surfaceInput.UV, normalUVScale, normalUVBias);
-        float normalMipLevel = min(pbrTextureData.maxMipNormal - pbrTextureData.maxMipColour, pbrTextureData.maxMipNormal);
-        tangentNormal = calculateTangentNormalFromHeightmap(s_MatTexture, normalUv, normalMipLevel);
-    }
-    float emissive = pbrTextureData.uniformEmissive;
-    float metalness = pbrTextureData.uniformMetalness;
-    float linearRoughness = pbrTextureData.uniformRoughness;
-    float subsurface = pbrTextureData.uniformSubsurface;
-    if ((pbrTextureData.flags & kPBRTextureDataFlagHasMaterialTexture) == kPBRTextureDataFlagHasMaterialTexture)
-    {
-        vec2 uv = getPBRDataUV(surfaceInput.UV, materialUVScale, materialUVBias);
-        vec4 texel = textureSample(s_MatTexture, uv).rgba;
-        metalness = texel.r;
-        emissive = texel.g;
-        linearRoughness = texel.b;
-        if ((pbrTextureData.flags & kPBRTextureDataFlagHasSubsurfaceChannel) == kPBRTextureDataFlagHasSubsurfaceChannel) {
-            subsurface = texel.a;
-        }
-    }
-    vec3 vertexNormal = surfaceInput.normal;
-    if (surfaceInput.frontFacing != 0) {
-        vertexNormal = -vertexNormal;
-    }
-    mat3 tbn = mtxFromRows(
-        normalize(surfaceInput.tangent),
-        normalize(surfaceInput.bitangent),
-        normalize(vertexNormal)
-    );
-    tbn = transpose(tbn);
-    surfaceOutput.Roughness = linearRoughness;
-    surfaceOutput.Metallic = metalness;
-    surfaceOutput.Emissive = emissive;
-    surfaceOutput.Subsurface = subsurface;
-    surfaceOutput.ViewSpaceNormal = ((tbn) * (tangentNormal)).xyz; // Attention!
-}
 float linearToLogDepth(float linearDepth) {
     return log((exp(4.0) - 1.0) * linearDepth + 1.0) / 4.0;
 }
@@ -1272,6 +976,14 @@ struct TemporalAccumulationParameters {
     float frustumBoundaryFalloff;
 };
 
+float calculateFogIntensityFadedVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd, float fogAlpha) {
+    float distance = cameraDepth / maxDistance;
+    distance += fogAlpha;
+    return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+}
+vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
+    return mix(diffuse, fogColor, fogIntensity);
+}
 vec3 evaluateAtmosphericAndVolumetricScattering(vec3 surfaceRadiance, vec3 viewDirWorld, float viewDistance, vec3 ndcPosition, bool enableAtmosphericScattering, bool enableVolumeScattering, bool enableBlendWithSky) {
     vec3 fogAppliedColor;
     if (enableAtmosphericScattering) {
@@ -1325,6 +1037,40 @@ vec3 evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(vec3 surfaceRadi
         outColor = fogAppliedColor;
     }
     return outColor;
+}
+vec3 worldToNdc(vec3 worldPos, mat4 viewProj) {
+    vec4 clipSpacePos = ((viewProj) * (vec4(worldPos, 1.0))); // Attention!
+    vec3 ndc = clipSpacePos.xyz / clipSpacePos.w;
+    return ndc;
+}
+vec2 worldToUv(vec3 worldPos, mat4 viewProj) {
+    vec3 ndc = worldToNdc(worldPos, viewProj);
+    ndc.y *= -1.0;
+    vec2 uv = 0.5 * (ndc.xy + vec2(1.0, 1.0));
+    uv = (vec2((uv).x, 1.0 - (uv).y));
+    return uv;
+}
+int getWaterDepthIndex(int cascadeNumber) {
+    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.y);
+}
+bool isUnderwaterAndReceivesDirectionalLight(vec3 objectWorldPos, int lightIdx, out float lightDistance) {
+    mat4 surfaceViewProj = DirectionalLightSourceWaterSurfaceViewProj[lightIdx];
+    mat4 invSurfaceViewProj = DirectionalLightSourceInvWaterSurfaceViewProj[lightIdx];
+    int cascadeNumber = int(DirectionalLightSourceShadowCascadeNumber[lightIdx].x);
+    if (cascadeNumber < 0) {
+        return false;
+    }
+    vec3 objectPositionSunClipSpace = worldToNdc(objectWorldPos, surfaceViewProj);
+    vec2 uv = worldToUv(objectWorldPos, surfaceViewProj);
+    float sampledDepth = textureSample(s_ShadowCascades, vec3(uv, getWaterDepthIndex(cascadeNumber))).r;
+    sampledDepth = sampledDepth * 2.0f - 1.0f;
+    if (objectPositionSunClipSpace.z > sampledDepth) {
+        vec4 sampledProjPos = vec4(objectPositionSunClipSpace.xy, sampledDepth, 1.0);
+        vec4 sampledWaterSurfaceWorldPos = ((invSurfaceViewProj) * (sampledProjPos)); // Attention!
+        lightDistance = length(sampledWaterSurfaceWorldPos.xyz - objectWorldPos);
+        return true;
+    }
+    return false;
 }
 float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
     return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
@@ -1657,37 +1403,58 @@ vec4 evaluateFragmentColor(PBRFragmentInfo fragmentInfo) {
     vec3 outColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     return vec4(outColor, 1.0);
 }
-void RenderChunk_getPBRSurfaceOutputValues(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput, bool isAlphaTest) {
-    vec4 diffuse = textureSample(s_MatTexture, surfaceInput.UV);
-    if (isAlphaTest) {
-        const float ALPHA_THRESHOLD = 0.5;
-        if (diffuse.a < ALPHA_THRESHOLD) {
-            discard;
-        }
-    }
-    #ifdef SEASONS__OFF
-    diffuse.rgb *= surfaceInput.Color.rgb;
-    diffuse.a *= surfaceInput.Alpha;
-    #endif
-    #ifdef SEASONS__ON
-    diffuse = applySeasons(surfaceInput.Color, surfaceInput.Alpha, diffuse);
-    #endif
-    surfaceOutput.Albedo = diffuse.rgb;
-    surfaceOutput.Alpha = diffuse.a;
+vec2 GenerateWave(vec2 position, vec2 direction, float frequency, float time) {
+    float x = dot(direction, position) * frequency + time;
+    float wave = pow((sin(x) + 1.0) / 2.0, WaterSurfaceWaveParameters.y);
+    float d = (wave * cos(x)) * -1.0;
+    return vec2(wave, d);
 }
-#endif
-#if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    RenderChunk_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
-    surfaceOutput.Albedo = color_degamma(surfaceOutput.Albedo);
-    applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
+float fBm_ocean(vec2 position, float currentTime) {
+    float currentFrequency = WaterSurfaceParameters.x;
+    vec2 currentPosition = position;
+    float currentSpeed = WaterSurfaceWaveParameters.x;
+    float randomValue = 0.0;
+    float currentWeight = 1.0;
+    float totalHeight = 0.0;
+    float totalWeights = 0.0;
+    for(uint octave = uint(0); octave < uint(WaterSurfaceParameters.y); octave ++ ) {
+        vec2 randomWaveDirection = vec2(sin(randomValue), cos(randomValue));
+        vec2 wave = GenerateWave(currentPosition, randomWaveDirection, currentFrequency, currentTime * currentSpeed);
+        totalHeight += wave.x * currentWeight;
+        totalWeights += currentWeight;
+        currentPosition += randomWaveDirection * wave.y * currentWeight * WaterSurfaceOctaveParameters.x;
+        currentWeight = mix(currentWeight, 0.0, WaterSurfaceOctaveParameters.y);
+        currentFrequency *= WaterSurfaceOctaveParameters.z;
+        currentSpeed *= WaterSurfaceOctaveParameters.w;
+        randomValue += 1.399;
+    }
+    return totalHeight / totalWeights;
+}
+float calculateCausticsMultiplier(vec3 steveSpacePosition, int lightIndex) {
+    if (bool(CausticsParameters.x)) {
+        vec3 worldPosition = steveSpacePosition - WorldOrigin.xyz;
+        vec2 uv = worldToUv(worldPosition, DirectionalLightSourceCausticsViewProj[lightIndex]) * float(CausticsParameters.y);
+        float waterDepth = 0.0f;
+        bool isPointUnderWater = isUnderwaterAndReceivesDirectionalLight(steveSpacePosition, lightIndex, waterDepth);
+        float outCaustics = 1.0f;
+        if (bool(CausticsTextureParameters.x)&& isPointUnderWater) {
+            uv = vec2(uv.x - floor(uv.x), uv.y - floor(uv.y));
+            uv.y = float(CausticsTextureParameters.y) + uv.y * (float(CausticsTextureParameters.z) - float(CausticsTextureParameters.y));
+            outCaustics = textureSample(s_CausticsTexture, uv).r * 2.f;
+        } else if (isPointUnderWater) {
+            outCaustics = fBm_ocean(uv, Time.x);
+        }
+        return pow(outCaustics, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+    }
+    return 1.0f;
+}
+void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     PBRFragmentInfo fragmentData;
-    vec4 viewPosition = ((View) * (vec4(surfaceInput.worldPos, 1.0))); // Attention!
+    vec4 viewPosition = ((View) * (((World) * (vec4(surfaceInput.worldPos, 1.0))))); // Attention!
     vec4 clipPosition = ((Proj) * (viewPosition)); // Attention!
     vec3 ndcPosition = clipPosition.xyz / clipPosition.w;
     vec2 uv = (ndcPosition.xy + vec2(1.0, 1.0)) / 2.0;
-    vec4 worldNormal = vec4(surfaceOutput.ViewSpaceNormal, 0.0);
+    vec4 worldNormal = vec4(normalize(surfaceOutput.ViewSpaceNormal), 1.0);
     vec4 viewNormal = ((View) * (worldNormal)); // Attention!
     fragmentData.lightClusterUV = uv;
     fragmentData.worldPosition = surfaceInput.worldPos;
@@ -1700,9 +1467,9 @@ void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout Stan
     fragmentData.roughness = surfaceOutput.Roughness;
     fragmentData.emissive = surfaceOutput.Emissive;
     fragmentData.subsurface = surfaceOutput.Subsurface;
-    fragmentData.blockAmbientContribution = surfaceInput.lightmapUV.x;
-    fragmentData.skyAmbientContribution = surfaceInput.lightmapUV.y;
     fragmentData.rf0 = calculateRf0(fragmentData.albedo, fragmentData.metalness);
+    fragmentData.blockAmbientContribution = TileLightIntensity.x;
+    fragmentData.skyAmbientContribution = TileLightIntensity.y;
     fragmentData.causticsMultiplier = vec2(calculateCausticsMultiplier(surfaceInput.worldPos.xyz, 0), calculateCausticsMultiplier(surfaceInput.worldPos.xyz, 1));
     float skyVisibility = getSkyProbeVisibility(
         fragmentData.skyAmbientContribution,
@@ -1727,77 +1494,81 @@ void RenderChunkSurfTransparent(in StandardSurfaceInput surfaceInput, inout Stan
         indirectSpecularColor = evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(indirectSpecularColor, viewDirWorld, viewDistance, ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     }
     surfaceOutput.Albedo = colorNoIndirectSpec.rgb + indirectSpecularColor;
-    #endif
-    #ifdef OPAQUE_PASS
-    surfaceOutput.Albedo = vec3(1.0, 1.0, 1.0);
-    #endif
 }
-void RenderChunkApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
+void SurfGeometryForwardPBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
+    #ifdef USE_TEXTURES__OFF
+    vec4 albedo = vec4(1, 1, 1, 1);
+    #endif
+    #ifdef USE_TEXTURES__ON
+    vec4 albedo = MatColor;
+    albedo *= textureSample(s_MatTexture, surfaceInput.UV) * vec4(10000.0, 0.0, 10000.0, 1.0);
+    #endif
+    if (albedo.a < 0.5) {
+        discard;
+    }
+    surfaceOutput.Albedo = albedo.rgb * surfaceInput.Color.rgb;
+    surfaceOutput.Alpha = albedo.a * surfaceInput.Alpha;
+    surfaceOutput.Metallic = MERSUniforms.x;
+    surfaceOutput.Emissive = MERSUniforms.y;
+    surfaceOutput.Roughness = MERSUniforms.z;
+    surfaceOutput.Subsurface = MERSUniforms.w;
+    ComputePBR(surfaceInput, surfaceOutput);
+    surfaceOutput.ViewSpaceNormal = surfaceInput.viewSpaceNormal;
+}
+void ApplyPBR(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     vec3 color = surfaceOutput.Albedo;
     if (PreExposureEnabled.x > 0.0) {
         float exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
         color = PreExposeLighting(color, exposure);
     }
     fragOutput.Color0.rgb = color;
-    #endif
-    #ifdef OPAQUE_PASS
-    fragOutput.Color0.rgb = surfaceOutput.Albedo;
-    #endif
 }
-#endif
+struct CompositingOutput {
+    vec3 mLitColor;
+};
+
+vec4 standardComposite(StandardSurfaceOutput stdOutput, CompositingOutput compositingOutput) {
+    return vec4(compositingOutput.mLitColor, stdOutput.Alpha);
+}
+void StandardTemplate_CustomSurfaceShaderEntryIdentity(vec2 uv, vec3 worldPosition, inout StandardSurfaceOutput surfaceOutput) {
+}
+struct DirectionalLight {
+    vec3 ViewSpaceDirection;
+    vec3 Intensity;
+};
+
+vec3 computeLighting_NdotL(FragmentInput fragInput, StandardSurfaceInput stdInput, StandardSurfaceOutput stdOutput, DirectionalLight primaryLight) {
+    float l = clamp(dot(fragInput.viewSpaceNormal, - primaryLight.ViewSpaceDirection), 0.0, 1.0);
+    return vec3(0.2, 0.2, 0.2) + (vec3(0.8, 0.8, 0.8) * l * stdOutput.Albedo);
+}
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     StandardSurfaceInput surfaceInput = StandardTemplate_DefaultInput(fragInput);
     StandardSurfaceOutput surfaceOutput = StandardTemplate_DefaultOutput();
     surfaceInput.UV = fragInput.texcoord0;
     surfaceInput.Color = fragInput.color0.xyz;
     surfaceInput.Alpha = fragInput.color0.a;
-    #ifdef DEPTH_ONLY_PASS
-    RenderChunkSurfAlpha(surfaceInput, surfaceOutput);
-    #endif
-    #ifdef DEPTH_ONLY_OPAQUE_PASS
-    RenderChunkSurfOpaque(surfaceInput, surfaceOutput);
-    #endif
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    RenderChunkSurfTransparent(surfaceInput, surfaceOutput);
-    #endif
+    SurfGeometryForwardPBR(surfaceInput, surfaceOutput);
     StandardTemplate_CustomSurfaceShaderEntryIdentity(surfaceInput.UV, fragInput.worldPos, surfaceOutput);
     DirectionalLight primaryLight;
     vec3 worldLightDirection = LightWorldSpaceDirection.xyz;
     primaryLight.ViewSpaceDirection = ((View) * (vec4(worldLightDirection, 0))).xyz; // Attention!
     primaryLight.Intensity = LightDiffuseColorAndIlluminance.rgb * LightDiffuseColorAndIlluminance.w;
     CompositingOutput compositingOutput;
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    compositingOutput.mLitColor = computeLighting_RenderChunk(fragInput, surfaceInput, surfaceOutput, primaryLight);
-    #endif
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    compositingOutput.mLitColor = computeLighting_Unlit(fragInput, surfaceInput, surfaceOutput, primaryLight);
-    #endif
+    compositingOutput.mLitColor = computeLighting_NdotL(fragInput, surfaceInput, surfaceOutput, primaryLight);
     fragOutput.Color0 = standardComposite(surfaceOutput, compositingOutput);
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    RenderChunkFallback(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    RenderChunkApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
-    #endif
+    ApplyPBR(fragInput, surfaceInput, surfaceOutput, fragOutput);
 }
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
     fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
-    #ifdef FORWARD_PBR_TRANSPARENT_PASS
-    fragmentInput.frontFacing = int(gl_FrontFacing);
-    #endif
-    fragmentInput.lightmapUV = v_lightmapUV;
-    fragmentInput.normal = v_normal;
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    fragmentInput.pbrTextureId = v_pbrTextureId;
-    #endif
+    fragmentInput.prevWorldPos = v_prevWorldPos;
     fragmentInput.tangent = v_tangent;
     fragmentInput.texcoord0 = v_texcoord0;
+    fragmentInput.viewSpaceNormal = v_viewSpaceNormal;
     fragmentInput.worldPos = v_worldPos;
-    fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+    fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
     View = u_view;
@@ -1820,11 +1591,6 @@ void main() {
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
     StandardTemplate_Opaque_Frag(fragmentInput, fragmentOutput);
-    #if defined(DEPTH_ONLY_OPAQUE_PASS)|| defined(DEPTH_ONLY_PASS)
-    gl_FragColor = fragmentOutput.Color0;
-    #endif
-    #if defined(FORWARD_PBR_TRANSPARENT_PASS)|| defined(OPAQUE_PASS)
-    gl_FragData[0] = fragmentOutput.Color0; ;
-    #endif
+    gl_FragData[0] = fragmentOutput.Color0; gl_FragData[1] = fragmentOutput.Color1; gl_FragData[2] = fragmentOutput.Color2; ;
 }
 

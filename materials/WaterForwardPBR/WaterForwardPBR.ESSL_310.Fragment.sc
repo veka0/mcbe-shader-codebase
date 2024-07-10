@@ -180,7 +180,7 @@ uniform vec4 ShadowPCFWidth;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 ViewPositionAndTime;
@@ -938,6 +938,10 @@ float bilinearPCF(vec4 samples, vec2 weights, float comparisonValue) {
     vec4 comparisonTests = step(comparisonValue, samples);
     return bilinearFilter(comparisonTests, weights);
 }
+float bilinearTransmittance(vec4 samples, vec2 weights, float comparisonValue, float falloffScale) {
+    vec4 transmittanceValues = 1.0 - smoothstep(0.0, 1.0, (comparisonValue - samples) * falloffScale);
+    return bilinearFilter(transmittanceValues, weights);
+}
 bool pointInFrustum(vec4 projPos) {
     return projPos.x >= -1.0 && projPos.x <= 1.0 &&
     projPos.y >= -1.0 && projPos.y <= 1.0 &&
@@ -1023,9 +1027,9 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
     }
     return amt / float(filterWidth * filterWidth);
 }
-float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out float shadowDepth) {
+float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, float bias, float falloffScale, out float transmittance) {
     if (cascadeIndex < 0) {
-        shadowDepth = 0.0;
+        transmittance = 1.0;
         return 1.0;
     }
     const int MaxFilterWidth = 9;
@@ -1035,7 +1039,7 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
     vec2 baseUv = uv * CascadeShadowResolutions[cascade];
     projZ = projZ * 0.5 + 0.5;
     baseUv.y += 1.0 - CascadeShadowResolutions[cascade];
-    float depthSamples = 0.0;
+    float transmittanceTotal = 0.0;
     for(int iy = 0; iy < filterWidth; ++ iy) {
         for(int ix = 0; ix < filterWidth; ++ ix) {
             float y = float(iy - filterOffset) + 0.5f;
@@ -1044,14 +1048,14 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, out
             vec3 uvw = vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade));
             vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
             vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
-            amt += bilinearPCF(shadowSamples, weights, projZ);
-            depthSamples += bilinearFilter(shadowSamples, weights);
+            amt += bilinearPCF(shadowSamples, weights, projZ - bias);
+            transmittanceTotal += bilinearTransmittance(shadowSamples, weights, projZ, falloffScale);
         }
     }
-    shadowDepth = depthSamples / float(filterWidth * filterWidth);
+    transmittance = transmittanceTotal / float(filterWidth * filterWidth);
     return amt / float(filterWidth * filterWidth);
 }
-float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth, out float depth) {
+float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth, float transmittanceFalloffScale, out float transmittance) {
     float amt = 1.0;
     float cloudAmt = 1.0;
     float playerAmt = 1.0;
@@ -1061,11 +1065,9 @@ float GetShadowAmount(int lightIndex, vec3 worldPos, float NdL, float viewDepth,
     if (cascade != -1) {
         float bias = ShadowBias[cascade] + ShadowSlopeBias[cascade] * clamp(tan(acos(NdL)), 0.0, 1.0);
         vec2 uv = vec2(projPos.x, projPos.y) * 0.5f + 0.5f;
-        float shadowDepth;
-        float biasedDepth = projPos.z - bias / projPos.w;
-        amt = GetFilteredShadow(int(DirectionalLightSourceShadowCascadeNumber[lightIndex].x), biasedDepth, cascade, uv, shadowDepth);
         float shadowMapDepthRange = length(((invProj) * (vec4(0.0, 0.0, 1.0, 0.0)))); // Attention!
-        depth = (projPos.z - shadowDepth) * shadowMapDepthRange;
+        float falloffScale = transmittanceFalloffScale * shadowMapDepthRange;
+        amt = GetFilteredShadow(int(DirectionalLightSourceShadowCascadeNumber[lightIndex].x), projPos.z, cascade, uv, bias, falloffScale, transmittance);
         if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0) {
             playerAmt = GetPlayerShadow(worldPos, NdL);
             amt = min(amt, playerAmt);
@@ -1470,7 +1472,7 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
     int lightCount = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
     for(int i = 0; i < lightCount; i ++ ) {
         float directOcclusion = 1.0;
-        float shadowDepth;
+        float subsurfaceTransmittance = 1.0;
         if (areCascadedShadowsEnabled(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x)) {
             vec3 sl = normalize(((View) * (DirectionalLightSourceShadowDirection[i])).xyz); // Attention!
             float nDotsl = max(dot(n, sl), 0.0);
@@ -1479,7 +1481,8 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
                 worldPosition,
                 nDotsl,
                 viewDepth,
-                shadowDepth
+                SubsurfaceScatteringContributionAndFalloffScale.y,
+                subsurfaceTransmittance
             );
         }
         vec3 waterTransmittance = vec3_splat(1.0);
@@ -1559,7 +1562,7 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
     float fadeOutDiffuseMultiplier = 1.0f - percentOfDiffuseFade;
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
-    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContribution.x;
+    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContributionAndFalloffScale.x;
     vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
@@ -1672,15 +1675,20 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
     #endif
     applyPBRValuesToSurfaceOutput(surfaceInput, surfaceOutput, surfaceInput.pbrTextureId);
     vec3 surfaceNormal = surfaceOutput.ViewSpaceNormal;
+    #ifdef DO_WATER_SHADING_PASS
+    surfaceNormal = surfaceInput.frontFacing > 0? - surfaceOutput.ViewSpaceNormal : surfaceOutput.ViewSpaceNormal;
+    #endif
     if (WaterSurfaceEnabled.x > 0.0) {
         #ifdef DO_WATER_SHADING_PASS
-        surfaceNormal = getWaterSurfaceNormal(surfaceInput.normal, surfaceInput.worldPos.xyz, WorldOrigin.xyz, ViewPositionAndTime.w);
+        vec3 correctedNormal = surfaceInput.frontFacing > 0? - surfaceInput.normal : surfaceInput.normal;
+        surfaceNormal = getWaterSurfaceNormal(correctedNormal, surfaceInput.worldPos.xyz, WorldOrigin.xyz, ViewPositionAndTime.w);
         #endif
         #ifdef DO_WATER_SURFACE_BUFFER_PASS
         surfaceOutput.ViewSpaceNormal = getWaterSurfaceNormal(surfaceInput.normal, surfaceInput.worldPos.xyz, WorldOrigin.xyz, ViewPositionAndTime.w);
         #endif
     }
     #ifdef DO_WATER_SHADING_PASS
+    surfaceNormal = surfaceInput.frontFacing > 0? - surfaceNormal : surfaceNormal;
     vec4 viewNormal = ((View) * (vec4(surfaceNormal, 1.0))); // Attention!
     vec3 waterSurfaceWorldPos = surfaceInput.worldPos;
     vec4 waterSurfaceViewPos = ((View) * (vec4(waterSurfaceWorldPos, 1.0))); // Attention!
@@ -1729,6 +1737,15 @@ void WaterSurf(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput
         AtmosphericScatteringToggles.y != 0.0
     );
     surfaceOutput.Albedo.xyz = baseWaterColor;
+    if (surfaceInput.frontFacing > 0) {
+        const float waterIOR = 1.333;
+        vec3 incident = normalize(worldSpaceViewDir(surfaceInput.worldPos));
+        vec3 refractionVector = refract(incident, - surfaceNormal, waterIOR);
+        float snellsWindow = max(dot(surfaceNormal, refractionVector), 0.0);
+        if (snellsWindow > 0.0) {
+            surfaceOutput.Alpha = 0.0;
+        }
+    }
     #endif
     #ifdef DO_WATER_SURFACE_BUFFER_PASS
     surfaceOutput.Albedo = textureSample(s_MatTexture, surfaceInput.UV).rgb;

@@ -122,8 +122,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
 layout(std430, binding = 0)buffer s_LightLookupArray { LightData LightLookupArray[]; };
+layout(std430, binding = 1)buffer s_Extends { LightExtends Extends[]; };
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
 }

@@ -143,8 +143,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_GlintTexture;
 uniform lowp sampler2D s_MatTexture;
+uniform lowp sampler2D s_GlintTexture;
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_MatTexture, fragInput.texcoord0);
     if (diffuse.a <= 0.00390625) {

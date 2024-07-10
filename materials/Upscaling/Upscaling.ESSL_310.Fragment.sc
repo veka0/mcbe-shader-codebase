@@ -115,9 +115,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_AUTOREG(s_InputBufferMotionVectors);
 SAMPLER2D_AUTOREG(s_InputFinalColor);
 SAMPLER2D_AUTOREG(s_InputTAAHistory);
+SAMPLER2D_AUTOREG(s_InputBufferMotionVectors);
 #ifdef FALLBACK_PASS
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
