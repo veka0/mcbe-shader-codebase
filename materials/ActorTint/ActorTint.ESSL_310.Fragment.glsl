@@ -31,7 +31,6 @@
 * - MASKED_MULTITEXTURE__ON
 */
 
-#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -69,9 +68,6 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
     return texture(_sampler, _coord);
 }
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
-vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {

@@ -15,7 +15,6 @@
 * - DEBUGFONT_PASS
 */
 
-#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 #ifdef DEBUGFONT_PASS

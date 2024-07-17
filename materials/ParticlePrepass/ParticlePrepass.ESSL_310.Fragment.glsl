@@ -13,7 +13,9 @@
 * - INSTANCING__ON
 */
 
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
 #extension GL_EXT_texture_cube_map_array : enable
+#endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -56,9 +58,11 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+#endif
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }

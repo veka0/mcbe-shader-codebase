@@ -1,4 +1,4 @@
-#version 300 es
+#version 310 es
 
 /*
 * Available Macros:
@@ -18,8 +18,6 @@ out vec4 bgfx_FragColor;
 varying vec4 v_additional;
 varying vec4 v_color;
 varying vec4 v_screenPosition;
-varying vec4 v_varyingParam0;
-varying vec4 v_varyingParam1;
 struct NoopSampler {
     int noop;
 };
@@ -81,7 +79,6 @@ struct accelerationStructureKHR {
 
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
-uniform vec4 GradientMidColor;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
@@ -90,16 +87,13 @@ uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
+uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
-uniform vec4 GradientYCoord;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 ShaderType;
+uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
-uniform mat4 CoordTransformVS;
-uniform vec4 GradientEndColor;
-uniform vec4 GradientStartColor;
-uniform vec4 MaskScaleAndOffset;
 uniform mat4 Transform;
 vec4 ViewRect;
 mat4 Proj;
@@ -128,16 +122,12 @@ struct VertexOutput {
     vec4 additional;
     vec4 color;
     vec4 screenPosition;
-    vec4 varyingParam0;
-    vec4 varyingParam1;
 };
 
 struct FragmentInput {
     vec4 additional;
     vec4 color;
     vec4 screenPosition;
-    vec4 varyingParam0;
-    vec4 varyingParam1;
 };
 
 struct FragmentOutput {
@@ -147,44 +137,44 @@ struct FragmentOutput {
 uniform lowp sampler2D s_Texture0;
 uniform lowp sampler2D s_Texture1;
 uniform lowp sampler2D s_Texture2;
-float Mirror(float u) {
-    float t = 2.0 * fract(u * 0.5);
-    return t < 1.0 ? t : 2.0 - t;
+float GetLuminance(vec3 color) {
+    return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+}
+void ShadeGeometry(in FragmentInput fragInput, inout vec4 outColor, inout float alpha) {
+    if (int(ShaderType.x) == 0) {
+        alpha = min(1.0, fragInput.additional.z * fragInput.additional.w);
+    } else if (int(ShaderType.x) == 3) {
+        vec2 uvPoint = fragInput.additional.xy;
+        if (PrimProps1.z != -1.0f || PrimProps1.w != -1.0f)
+        {
+            uvPoint.x = clamp(fragInput.additional.x, PrimProps1.x, PrimProps1.x + PrimProps1.z);
+            uvPoint.y = clamp(fragInput.additional.y, PrimProps1.y, PrimProps1.y + PrimProps1.w);
+        }
+        outColor = textureSample(s_Texture0, uvPoint);
+        outColor.a = mix(1.0 - outColor.a, outColor.a, fragInput.color.r);
+    } else if (int(ShaderType.x) == 17) {
+        float dfValue = textureSample(s_Texture1, fragInput.additional.xy).r;
+        float lum = GetLuminance(fragInput.color.xyz);
+        outColor = fragInput.color * pow(abs(dfValue), 1.45 - lum);
+    } else if (int(ShaderType.x) == 18) {
+        float dfValue = textureSample(s_Texture2, fragInput.additional.xy).r;
+        dfValue = (dfValue * 7.96875) - 3.984375;
+        dfValue = smoothstep(-0.50196078431 / PrimProps0.x, 0.50196078431 / PrimProps0.x, dfValue);
+        float lum = GetLuminance(fragInput.color.xyz);
+        outColor = fragInput.color * pow(abs(dfValue), 1.45 - lum);
+    }
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    float tVal = 0.0;
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x2)) * 2)))) >= (int(0x2)))) {
-        tVal = fragInput.varyingParam0.x;
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x4)) * 2)))) >= (int(0x4)))) {
-        tVal = length(fragInput.varyingParam0.xy);
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x8)) * 2)))) >= (int(0x8)))) {
-        tVal = (3.14 + atan(fragInput.varyingParam0.y, fragInput.varyingParam0.x)) / (2.0 * 3.14);
+    float alpha = 1.0;
+    vec4 outColor = fragInput.color;
+    ShadeGeometry(fragInput, outColor, alpha);
+    if (int(ShaderType.x) == 3) {
+        alpha = outColor.a;
     }
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x100)) * 2)))) >= (int(0x100)))) {
-        tVal = fract(tVal);
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x200)) * 2)))) >= (int(0x200)))) {
-        tVal = Mirror(tVal);
+    if (alpha < 0.00390625) {
+        discard;
     }
-    vec4 colorTemp = vec4(0, 0, 0, 0);
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x10)) * 2)))) >= (int(0x10)))) {
-        colorTemp = mix(GradientStartColor, GradientEndColor, clamp(tVal, 0.0, 1.0));
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x20)) * 2)))) >= (int(0x20)))) {
-        float oneMinus2t = 1.0 - (2.0 * tVal);
-        colorTemp = clamp(oneMinus2t, 0.0, 1.0) * GradientStartColor;
-        colorTemp += (1.0 - min(abs(oneMinus2t), 1.0)) * GradientMidColor;
-        colorTemp += clamp(-oneMinus2t, 0.0, 1.0) * GradientEndColor;
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x40)) * 2)))) >= (int(0x40)))) {
-        vec2 coord = vec2(tVal, GradientYCoord.x);
-        colorTemp = textureSample(s_Texture2, coord);
-    } else if ((int(mod(float(int(ShaderType.x)), float(((int(0x1)) * 2)))) >= (int(0x1)))) {
-        vec2 uvCoords = (vec2((vec2(fragInput.additional.xy)).x, 1.0 - (vec2(fragInput.additional.xy)).y));
-        colorTemp = textureSample(s_Texture0, uvCoords);
-    }
-    if ((int(mod(float(int(ShaderType.x)), float(((int(0x80)) * 2)))) >= (int(0x80)))) {
-        float mask = textureSample(s_Texture1, fragInput.varyingParam1.xy).a;
-        colorTemp *= mask;
-    }
-    fragOutput.Color0 = colorTemp * clamp(fragInput.additional.z, 0.0, 1.0);
+    fragOutput.Color0 = vec4(1.0, 1.0, 1.0, 1.0);
 }
 void main() {
     FragmentInput fragmentInput;
@@ -192,8 +182,6 @@ void main() {
     fragmentInput.additional = v_additional;
     fragmentInput.color = v_color;
     fragmentInput.screenPosition = v_screenPosition;
-    fragmentInput.varyingParam0 = v_varyingParam0;
-    fragmentInput.varyingParam1 = v_varyingParam1;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

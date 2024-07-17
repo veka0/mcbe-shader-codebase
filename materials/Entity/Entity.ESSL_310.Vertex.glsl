@@ -35,7 +35,6 @@
 * - SOURCE_INPUT_TYPE2__SHARED1 (not used)
 */
 
-#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute float a_indices;

@@ -31,7 +31,9 @@
 * - MASKED_MULTITEXTURE__ON
 */
 
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 #extension GL_EXT_texture_cube_map_array : enable
+#endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -73,9 +75,13 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+#endif
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+#endif
+#ifndef DEPTH_ONLY_OPAQUE_PASS
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }

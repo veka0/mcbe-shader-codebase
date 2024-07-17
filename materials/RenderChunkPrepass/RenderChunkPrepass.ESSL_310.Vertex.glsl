@@ -22,7 +22,9 @@
 * - SEASONS__ON (not used)
 */
 
+#if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS)|| defined(GEOMETRY_PREPASS_PASS)
 #extension GL_EXT_texture_cube_map_array : enable
+#endif
 #define attribute in
 #define varying out
 attribute vec4 a_color0;

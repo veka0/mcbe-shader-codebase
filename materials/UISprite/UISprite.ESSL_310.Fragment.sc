@@ -37,9 +37,6 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
-vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
-    return textureLod(_sampler, _coord, _lod);
-}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }

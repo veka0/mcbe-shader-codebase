@@ -1,4 +1,4 @@
-#version 300 es
+#version 310 es
 
 /*
 * Available Macros:
@@ -17,7 +17,7 @@ precision mediump float;
 out vec4 bgfx_FragColor;
 varying vec4 v_additional;
 varying vec4 v_color;
-varying float v_shaderType;
+varying vec3 v_screenPosition;
 struct NoopSampler {
     int noop;
 };
@@ -91,9 +91,11 @@ uniform vec4 PrimProps0;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
+uniform vec4 ShaderType;
 uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
 uniform vec4 TextureSize1;
+uniform mat4 Transform;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -120,13 +122,13 @@ struct VertexOutput {
     vec4 position;
     vec4 additional;
     vec4 color;
-    float shaderType;
+    vec3 screenPosition;
 };
 
 struct FragmentInput {
     vec4 additional;
     vec4 color;
-    float shaderType;
+    vec3 screenPosition;
 };
 
 struct FragmentOutput {
@@ -140,10 +142,9 @@ float GetLuminance(vec3 color) {
     return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 }
 void ShadeGeometry(in FragmentInput fragInput, inout vec4 outColor, inout float alpha) {
-    int ShaderType = int(fragInput.shaderType);
-    if (ShaderType == 0) {
-        alpha = min(1.0, fragInput.additional.x * fragInput.additional.y);
-    } else if (ShaderType == 3) {
+    if (int(ShaderType.x) == 0) {
+        alpha = min(1.0, fragInput.additional.z * fragInput.additional.w);
+    } else if (int(ShaderType.x) == 3) {
         vec2 uvPoint = fragInput.additional.xy;
         if (PrimProps1.z != -1.0f || PrimProps1.w != -1.0f)
         {
@@ -154,7 +155,7 @@ void ShadeGeometry(in FragmentInput fragInput, inout vec4 outColor, inout float 
         outColor.a = mix(1.0 - outColor.a, outColor.a, fragInput.color.r);
         outColor.a = mix(GetLuminance(outColor.rgb), outColor.a, fragInput.color.b);
         alpha = fragInput.color.a * clamp(fragInput.additional.z, 0.0, 1.0);
-    } else if (ShaderType == 17) {
+    } else if (int(ShaderType.x) == 17) {
         vec2 uvPos = vec2(fragInput.additional.x, fragInput.additional.y);
         vec2 texCoords = vec2(uvPos.x * TextureSize1.x, uvPos.y * TextureSize1.y);
         vec2 centeredTexCoords = floor(texCoords) + vec2(0.5, 0.5);
@@ -162,8 +163,9 @@ void ShadeGeometry(in FragmentInput fragInput, inout vec4 outColor, inout float 
         float dfValue = textureSample(s_Texture1, centeredUvPos).r;
         float lum = GetLuminance(fragInput.color.xyz);
         outColor = fragInput.color * pow(abs(dfValue), 1.45 - lum);
-    } else if (ShaderType == 18) {
-        float dfValue = textureSample(s_Texture2, fragInput.additional.xy).r;
+    } else if (int(ShaderType.x) == 18) {
+        vec2 uvPos = vec2(fragInput.additional.x, fragInput.additional.y);
+        float dfValue = textureSample(s_Texture2, uvPos).r;
         dfValue = (dfValue * 7.96875) - 3.984375;
         dfValue = smoothstep(-0.50196078431 / fragInput.additional.z, 0.50196078431 / fragInput.additional.z, dfValue);
         float lum = GetLuminance(fragInput.color.xyz);
@@ -181,7 +183,7 @@ void main() {
     FragmentOutput fragmentOutput;
     fragmentInput.additional = v_additional;
     fragmentInput.color = v_color;
-    fragmentInput.shaderType = v_shaderType;
+    fragmentInput.screenPosition = v_screenPosition;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;

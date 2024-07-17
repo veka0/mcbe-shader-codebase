@@ -1,4 +1,4 @@
-#version 300 es
+#version 310 es
 
 /*
 * Available Macros:
@@ -7,15 +7,14 @@
 * - TRANSPARENT_PASS (not used)
 */
 
-#if GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
 #define attribute in
-#define varying in
-out vec4 bgfx_FragColor;
-varying vec2 v_extraParams;
+#define varying out
+attribute vec4 a_color0;
+attribute vec4 a_position;
+attribute vec4 a_texcoord3;
+varying vec4 v_additional;
+varying vec4 v_color;
+varying vec4 v_screenPosition;
 struct NoopSampler {
     int noop;
 };
@@ -53,7 +52,10 @@ uniform vec4 u_prevWorldPosOffset;
 uniform vec4 ShaderType;
 uniform vec4 PrimProps1;
 uniform vec4 u_alphaRef4;
+uniform vec4 Coefficients[3];
+uniform vec4 PixelOffsets[6];
 uniform mat4 Transform;
+uniform vec4 Viewport;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -78,38 +80,44 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
-    vec2 extraParams;
+    vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
 };
 
 struct FragmentInput {
-    vec2 extraParams;
+    vec4 additional;
+    vec4 color;
+    vec4 screenPosition;
 };
 
 struct FragmentOutput {
     vec4 Color0;
 };
 
-void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
-    if (int(ShaderType.x) == 14) {
-        vec2 px = dFdx(fragInput.extraParams);
-        vec2 py = dFdy(fragInput.extraParams);
-        float fx = (2.0 * fragInput.extraParams.x) * px.x - px.y;
-        float fy = (2.0 * fragInput.extraParams.x) * py.x - py.y;
-        float edgeAlpha = (fragInput.extraParams.x * fragInput.extraParams.x - fragInput.extraParams.y);
-        float sd = sqrt((edgeAlpha * edgeAlpha) / (fx * fx + fy * fy));
-        float alpha = 1.0 - sd;
-        fragOutput.Color0 = PrimProps0 * PrimProps1.x * alpha;
-    } else if (int(ShaderType.x) == 11) {
-        fragOutput.Color0 = PrimProps0 * min(1.0, (1.0 - abs(fragInput.extraParams.y * PrimProps1.y - PrimProps1.z)) * PrimProps1.x);
-    } else {
-        fragOutput.Color0 = PrimProps0 * fragInput.extraParams.y;
-    }
+uniform lowp sampler2D s_Texture0;
+uniform lowp sampler2D s_Texture1;
+uniform lowp sampler2D s_Texture2;
+uniform lowp sampler2D s_Texture3;
+void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    vertOutput.position = ((vertInput.position) * (Transform));
+    vertOutput.screenPosition = vertInput.position;
+    float w = vertOutput.position.w;
+    vertOutput.position.x = vertOutput.position.x * 2.0 - w;
+    vertOutput.position.y = (w - vertOutput.position.y) * 2.0 - w;
+    vertOutput.color = vertInput.color;
+    vertOutput.additional = vertInput.additional;
 }
 void main() {
-    FragmentInput fragmentInput;
-    FragmentOutput fragmentOutput;
-    fragmentInput.extraParams = v_extraParams;
-    fragmentOutput.Color0 = vec4(0, 0, 0, 0);
+    VertexInput vertexInput;
+    VertexOutput vertexOutput;
+    vertexInput.additional = (a_texcoord3);
+    vertexInput.color = (a_color0);
+    vertexInput.position = (a_position);
+    vertexOutput.additional = vec4(0, 0, 0, 0);
+    vertexOutput.color = vec4(0, 0, 0, 0);
+    vertexOutput.screenPosition = vec4(0, 0, 0, 0);
+    vertexOutput.position = vec4(0, 0, 0, 0);
     ViewRect = u_viewRect;
     Proj = u_proj;
     View = u_view;
@@ -131,7 +139,10 @@ void main() {
     PrevWorldPosOffset = u_prevWorldPosOffset;
     AlphaRef4 = u_alphaRef4;
     AlphaRef = u_alphaRef4.x;
-    Frag(fragmentInput, fragmentOutput);
-    bgfx_FragColor = fragmentOutput.Color0;
+    Vert(vertexInput, vertexOutput);
+    v_additional = vertexOutput.additional;
+    v_color = vertexOutput.color;
+    v_screenPosition = vertexOutput.screenPosition;
+    gl_Position = vertexOutput.position;
 }
 

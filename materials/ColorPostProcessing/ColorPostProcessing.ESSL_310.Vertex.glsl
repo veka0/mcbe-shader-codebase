@@ -7,7 +7,6 @@
 * - COLOR_POST_PROCESS_PASS (not used)
 */
 
-#extension GL_EXT_texture_cube_map_array : enable
 #define attribute in
 #define varying out
 attribute vec4 a_position;
