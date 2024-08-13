@@ -8,6 +8,9 @@
 * - TAAU_PASS
 */
 
+#ifdef TAAU_PASS
+#extension GL_EXT_texture_cube_map_array : enable
+#endif
 #define attribute in
 #define varying out
 attribute vec3 a_position;
@@ -91,9 +94,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_InputBufferMotionVectors;
 uniform lowp sampler2D s_InputFinalColor;
 uniform lowp sampler2D s_InputTAAHistory;
+uniform lowp sampler2D s_InputBufferMotionVectors;
 #ifdef FALLBACK_PASS
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }

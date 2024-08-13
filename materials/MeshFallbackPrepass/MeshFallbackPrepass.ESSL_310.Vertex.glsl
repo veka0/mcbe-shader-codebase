@@ -29,6 +29,9 @@
 * - USE_TEXTURES__ON (not used)
 */
 
+#ifndef DEPTH_ONLY_PASS
+#extension GL_EXT_texture_cube_map_array : enable
+#endif
 #define attribute in
 #define varying out
 attribute vec4 a_color0;

@@ -34,16 +34,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -94,10 +103,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
-SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_GameColor);
+IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
 IMAGE2D_RW_AUTOREG(s_MaxFrameLuminance, r32f);
+SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 BUFFER_RW_AUTOREG(s_CurFrameLuminanceHistogram, Histogram);
 #ifdef BUILD_HISTOGRAM_PASS

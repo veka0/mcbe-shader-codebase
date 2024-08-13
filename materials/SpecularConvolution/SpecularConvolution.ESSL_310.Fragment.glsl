@@ -17,6 +17,7 @@
 #define texture2DProjGrad textureProjGrad
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
+#extension GL_EXT_texture_cube_map_array : enable
 #endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;

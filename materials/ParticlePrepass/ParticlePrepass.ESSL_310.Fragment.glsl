@@ -13,6 +13,9 @@
 * - INSTANCING__ON
 */
 
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+#extension GL_EXT_texture_cube_map_array : enable
+#endif
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -55,16 +58,27 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
+#endif
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 struct NoopImage2D {
@@ -104,6 +118,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MERSUniforms;
 uniform vec4 MaterialID;
+uniform vec4 SubPixelOffset;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -232,6 +247,17 @@ void ParticleApplyFog(FragmentInput fragInput, StandardSurfaceInput surfaceInput
     fragOutput.Color0.rgb = diffuse;
 }
 #endif
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+vec2 calculateMotionVector(vec3 worldPosition, vec3 previousWorldPosition) {
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(previousWorldPosition, 1.0)));
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    return screenSpacePos.xy - prevScreenSpacePos.xy;
+}
+#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -260,13 +286,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
     fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0)));
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0)));
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color1.zw = calculateMotionVector(worldPosition, prevWorldPosition);
     fragOutput.Color2 = vec4(
         surfaceOutput.Emissive,
         ambientBlockLight,

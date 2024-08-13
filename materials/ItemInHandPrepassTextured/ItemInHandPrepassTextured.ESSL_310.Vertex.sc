@@ -20,11 +20,11 @@
 * - MULTI_COLOR_TINT__ON (not used)
 */
 
-$input a_color0, a_normal, a_position, a_texcoord0
+$input a_color0, a_normal, a_position, a_tangent, a_texcoord0, a_texcoord8
 #ifdef INSTANCING__ON
 $input i_data1, i_data2, i_data3
 #endif
-$output v_color0, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
+$output v_bitangent, v_color0, v_mers, v_normal, v_prevWorldPos, v_tangent, v_texcoord0, v_worldPos
 struct NoopSampler {
     int noop;
 };
@@ -62,6 +62,7 @@ struct accelerationStructureKHR {
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
 uniform vec4 OverlayColor;
+uniform mat4 PrevWorld;
 uniform vec4 ColorBased;
 uniform vec4 FogColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
@@ -91,8 +92,10 @@ vec4 AlphaRef4;
 float AlphaRef;
 struct VertexInput {
     vec4 color0;
+    vec4 mers;
     vec4 normal;
     vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -103,17 +106,23 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
+    vec3 bitangent;
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec3 bitangent;
     vec4 color0;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -127,8 +136,11 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec3 bitangent;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec3 worldPos;
 };
 
@@ -166,11 +178,18 @@ struct ColorTransform {
 #ifndef DEPTH_ONLY_PASS
 void ItemInHandVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
 }
 void ItemInHandVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.normal = vertInput.vertInput.normal.xyz;
-    vertOutput.prevWorldPos = vertInput.worldPos;
+    vertOutput.prevWorldPos = ((PrevWorld) * (vec4(vertInput.vertInput.position, 1.0))).xyz; // Attention!
+    vec3 n = vertInput.vertInput.normal.xyz;
+    vec3 t = vertInput.vertInput.tangent.xyz;
+    vec3 b = cross(n, t) * vertInput.vertInput.tangent.w;
+    vertOutput.normal = ((World) * (vec4(n, 0.0))).xyz; // Attention!
+    vertOutput.tangent = ((World) * (vec4(t, 0.0))).xyz; // Attention!
+    vertOutput.bitangent = ((World) * (vec4(b, 0.0))).xyz; // Attention!
 }
 #endif
 struct CompositingOutput {
@@ -266,17 +285,22 @@ void main() {
     VertexInput vertexInput;
     VertexOutput vertexOutput;
     vertexInput.color0 = (a_color0);
+    vertexInput.mers = (a_texcoord8);
     vertexInput.normal = (a_normal);
     vertexInput.position = (a_position);
+    vertexInput.tangent = (a_tangent);
     vertexInput.texcoord0 = (a_texcoord0);
     #ifdef INSTANCING__ON
     vertexInput.instanceData0 = i_data1;
     vertexInput.instanceData1 = i_data2;
     vertexInput.instanceData2 = i_data3;
     #endif
+    vertexOutput.bitangent = vec3(0, 0, 0);
     vertexOutput.color0 = vec4(0, 0, 0, 0);
+    vertexOutput.mers = vec4(0, 0, 0, 0);
     vertexOutput.normal = vec3(0, 0, 0);
     vertexOutput.prevWorldPos = vec3(0, 0, 0);
+    vertexOutput.tangent = vec3(0, 0, 0);
     vertexOutput.texcoord0 = vec2(0, 0);
     vertexOutput.worldPos = vec3(0, 0, 0);
     vertexOutput.position = vec4(0, 0, 0, 0);
@@ -307,9 +331,12 @@ void main() {
     #ifndef DEPTH_ONLY_PASS
     StandardTemplate_Opaque_Vert(vertexInput, vertexOutput);
     #endif
+    v_bitangent = vertexOutput.bitangent;
     v_color0 = vertexOutput.color0;
+    v_mers = vertexOutput.mers;
     v_normal = vertexOutput.normal;
     v_prevWorldPos = vertexOutput.prevWorldPos;
+    v_tangent = vertexOutput.tangent;
     v_texcoord0 = vertexOutput.texcoord0;
     v_worldPos = vertexOutput.worldPos;
     gl_Position = vertexOutput.position;

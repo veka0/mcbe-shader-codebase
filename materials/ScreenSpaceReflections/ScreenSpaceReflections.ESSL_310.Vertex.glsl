@@ -44,6 +44,7 @@ struct accelerationStructureKHR {
 uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 u_view;
+uniform vec4 SSRRoughnessCutoffParams;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
 uniform mat4 u_invProj;
@@ -103,6 +104,7 @@ struct FragmentOutput {
 
 uniform lowp sampler2D s_GbufferDepth;
 uniform lowp sampler2D s_GbufferNormal;
+uniform lowp sampler2D s_GbufferRoughness;
 uniform lowp sampler2D s_InputTexture;
 uniform lowp sampler2D s_RasterColor;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {

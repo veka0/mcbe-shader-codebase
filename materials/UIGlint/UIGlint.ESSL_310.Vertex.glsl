@@ -97,8 +97,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_GlintTexture;
 uniform lowp sampler2D s_MatTexture;
+uniform lowp sampler2D s_GlintTexture;
 vec2 calculateLayerUV(vec2 origUV, float offset, float rotation) {
     vec2 uv = origUV;
     uv -= 0.5;

@@ -10,6 +10,7 @@
 * - FALLBACK_PASS (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
@@ -39,16 +40,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -99,10 +109,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
-uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_GameColor;
+layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
+uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 layout(std430, binding = 1)buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; };
 #ifdef BUILD_HISTOGRAM_PASS

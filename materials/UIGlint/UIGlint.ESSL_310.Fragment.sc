@@ -37,10 +37,16 @@ vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 struct NoopImage2D {
@@ -106,8 +112,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_AUTOREG(s_GlintTexture);
 SAMPLER2D_AUTOREG(s_MatTexture);
+SAMPLER2D_AUTOREG(s_GlintTexture);
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_MatTexture, fragInput.texcoord0);
     if (diffuse.a <= 0.00390625) {

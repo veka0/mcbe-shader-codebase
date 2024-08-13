@@ -9,21 +9,7 @@
 * - FALLBACK_PASS
 */
 
-#ifdef DO_INDIRECT_SPECULAR_SHADING_PASS
-#extension GL_EXT_shader_texture_lod : enable
-#define texture2DLod textureLod
-#define texture2DGrad textureGrad
-#define texture2DProjLod textureProjLod
-#define texture2DProjGrad textureProjGrad
-#define textureCubeLod textureLod
-#define textureCubeGrad textureGrad
-#endif
-#define shadow2D(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
-#define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
-#ifdef DO_DEFERRED_SHADING_PASS
-#extension GL_EXT_texture_array : enable
-#endif
+#extension GL_EXT_texture_cube_map_array : enable
 #if GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -60,16 +46,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec3 vec3_splat(float _x) {
@@ -96,17 +91,18 @@ uniform vec4 u_viewRect;
 uniform mat4 u_proj;
 uniform mat4 PointLightProj;
 uniform mat4 u_view;
-uniform vec4 SunDir;
 uniform vec4 ShadowBias;
-uniform vec4 PointLightShadowParams1;
 uniform vec4 u_viewTexel;
-uniform vec4 ShadowSlopeBias;
+uniform mat4 DirectionalLightSourceShadowInvProj3[2];
 uniform mat4 u_invView;
-uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
+uniform mat4 u_invProj;
 uniform mat4 u_invViewProj;
+uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform mat4 u_prevViewProj;
 uniform mat4 u_model[4];
+uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
+uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 ManhattanDistAttenuationEnabled;
@@ -115,52 +111,77 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_prevWorldPosOffset;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
+uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 ClusterSize;
+uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
+uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
 uniform vec4 IBLSkyFadeParameters;
 uniform vec4 AtmosphericScatteringToggles;
 uniform vec4 ClusterNearFarWidthHeight;
+uniform vec4 WaterSurfaceParameters;
 uniform vec4 CameraLightIntensity;
+uniform vec4 CausticsParameters;
+uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
+uniform mat4 DirectionalLightSourceShadowInvProj1[2];
+uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 CurrentFace;
-uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform vec4 SubsurfaceScatteringContribution;
+uniform mat4 DirectionalLightSourceCausticsViewProj[2];
+uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
+uniform vec4 DirectionalLightSourceIsSun[2];
+uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 MoonDir;
+uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
+uniform vec4 DirectionalLightSourceShadowDirection[2];
+uniform vec4 WaterSurfaceEnabled;
+uniform mat4 DirectionalLightSourceShadowInvProj0[2];
+uniform mat4 DirectionalLightSourceShadowInvProj2[2];
+uniform mat4 DirectionalLightSourceShadowProj0[2];
+uniform mat4 DirectionalLightSourceShadowProj1[2];
+uniform mat4 DirectionalLightSourceShadowProj2[2];
+uniform mat4 DirectionalLightSourceShadowProj3[2];
+uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
-uniform vec4 ShadowParams;
-uniform vec4 MoonColor;
-uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidth;
-uniform vec4 VolumeDimensions;
-uniform vec4 ShadowPCFWidth;
 uniform vec4 FogColor;
 uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
-uniform vec4 PointLightDiffuseFadeOutParameters;
-uniform vec4 MoonDir;
+uniform vec4 MoonColor;
 uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
-uniform vec4 SunColor;
+uniform vec4 SunDir;
+uniform vec4 PointLightShadowParams1;
 uniform vec4 PointLightSpecularFadeOutParameters;
+uniform vec4 PreExposureEnabled;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SSRParameters;
+uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SkyProbeUVFadeParameters;
+uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
+uniform vec4 SunColor;
+uniform vec4 Time;
+uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
-uniform vec4 VolumeScatteringEnabled;
+uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+uniform vec4 WaterExtinctionCoefficients;
+uniform vec4 WaterSurfaceOctaveParameters;
+uniform vec4 WaterSurfaceWaveParameters;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
 vec4 ViewTexel;
 mat4 InvView;
-mat4 InvProj;
 mat4 ViewProj;
+mat4 InvProj;
 mat4 InvViewProj;
 mat4 PrevViewProj;
 mat4 WorldArray[4];
@@ -189,6 +210,32 @@ struct Light {
     int pad2;
 };
 
+struct PBRFragmentInfo {
+    vec2 lightClusterUV;
+    vec3 worldPosition;
+    vec3 viewPosition;
+    vec3 ndcPosition;
+    vec3 worldNormal;
+    vec3 viewNormal;
+    vec3 rf0;
+    vec3 albedo;
+    float metalness;
+    float roughness;
+    float emissive;
+    float subsurface;
+    float blockAmbientContribution;
+    float skyAmbientContribution;
+    vec2 causticsMultiplier;
+};
+
+struct PBRLightingContributions {
+    vec3 directDiffuse;
+    vec3 directSpecular;
+    vec3 indirectDiffuse;
+    vec3 indirectSpecular;
+    vec3 emissive;
+};
+
 struct PBRTextureData {
     float colourToMaterialUvScale0;
     float colourToMaterialUvScale1;
@@ -206,46 +253,6 @@ struct PBRTextureData {
     float maxMipColour;
     float maxMipMer;
     float maxMipNormal;
-};
-
-struct LightSourceWorldInfo {
-    vec4 worldSpaceDirection;
-    vec4 diffuseColorAndIlluminance;
-    vec4 shadowDirection;
-    mat4 shadowProj0;
-    mat4 shadowProj1;
-    mat4 shadowProj2;
-    mat4 shadowProj3;
-    mat4 waterSurfaceViewProj;
-    mat4 invWaterSurfaceViewProj;
-    int isSun;
-    int shadowCascadeNumber;
-    int pad0;
-    int pad1;
-};
-
-struct PBRFragmentInfo {
-    vec2 lightClusterUV;
-    vec3 worldPosition;
-    vec3 viewPosition;
-    vec3 ndcPosition;
-    vec3 worldNormal;
-    vec3 viewNormal;
-    vec3 albedo;
-    float metalness;
-    float roughness;
-    float emissive;
-    float subsurface;
-    float blockAmbientContribution;
-    float skyAmbientContribution;
-};
-
-struct PBRLightingContributions {
-    vec3 directDiffuse;
-    vec3 directSpecular;
-    vec3 indirectDiffuse;
-    vec3 indirectSpecular;
-    vec3 emissive;
 };
 
 struct VertexInput {
@@ -269,19 +276,17 @@ struct FragmentOutput {
 };
 
 uniform lowp sampler2D s_BrdfLUT;
+uniform lowp sampler2D s_CausticsTexture;
 uniform lowp sampler2D s_ColorMetalnessSubsurface;
 uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 uniform lowp sampler2D s_Normal;
-uniform highp sampler2DShadow s_PlayerShadowMap;
-uniform highp sampler2DArrayShadow s_PointLightShadowTextureArray;
+uniform highp sampler2DArray s_PointLightShadowTextureArray;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 uniform lowp sampler2D s_SSRTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform lowp sampler2D s_SceneDepth;
-uniform highp sampler2DArrayShadow s_ShadowCascades;
-uniform lowp samplerCube s_SpecularIBLCurrent;
-uniform lowp samplerCube s_SpecularIBLPrevious;
-layout(std430, binding = 2)buffer s_DirectionalLightSources { LightSourceWorldInfo DirectionalLightSources[]; };
+uniform highp sampler2DArray s_ShadowCascades;
+uniform highp samplerCubeArray s_SpecularIBLRecords;
 layout(std430, binding = 4)buffer s_LightLookupArray { LightData LightLookupArray[]; };
 layout(std430, binding = 5)buffer s_Lights { Light Lights[]; };
 #ifndef FALLBACK_PASS
@@ -341,6 +346,12 @@ vec3 UnExposeLighting(vec3 color, float averageLuminance) {
 }
 #endif
 #ifndef FALLBACK_PASS
+vec3 calculateRf0(vec3 albedo, float metalness) {
+    float reflectance = 0.5;
+    float dielectricF0 = 0.16f * reflectance * reflectance * (1.0f - metalness);
+    vec3 rf0 = vec3_splat(dielectricF0) + albedo * metalness;
+    return rf0;
+}
 PBRFragmentInfo getPBRFragmentInfo(FragmentInput fragInput) {
     vec2 uv = fragInput.texcoord0;
     float z = textureSample(s_SceneDepth, uv).r;
@@ -372,6 +383,7 @@ PBRFragmentInfo getPBRFragmentInfo(FragmentInput fragInput) {
     result.subsurface = subsurface;
     result.blockAmbientContribution = blockAmbientContribution;
     result.skyAmbientContribution = skyAmbientContribution;
+    result.rf0 = calculateRf0(result.albedo, result.metalness);
     return result;
 }
 #endif
@@ -409,12 +421,6 @@ vec3 applyFogVanilla(vec3 diffuse, vec3 fogColor, float fogIntensity) {
 }
 #endif
 #ifdef DO_INDIRECT_SPECULAR_SHADING_PASS
-vec3 calculateRf0(vec3 albedo, float metalness) {
-    float reflectance = 0.5;
-    float dielectricF0 = 0.16f * reflectance * reflectance * (1.0f - metalness);
-    vec3 rf0 = vec3_splat(dielectricF0) + albedo * metalness;
-    return rf0;
-}
 vec3 transformCubemapDirectionForScreen(vec3 R) {
     if (abs(R.y) > abs(R.x)&& abs(R.y) > abs(R.z)) {
         R.z *= -1.0;
@@ -615,7 +621,7 @@ void IBLDeferredLighting(FragmentInput fragInput, inout FragmentOutput fragOutpu
         viewDirWorld.y = 0.1f;
         viewDirWorld = normalize(viewDirWorld);
     }
-    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
+    vec3 fogAppliedColor = evaluateAtmosphericAndVolumetricScattering(surfaceRadiance, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     if (CurrentFace.x == float(3)) {
         float fade = SkyProbeUVFadeParameters.w;
         fogAppliedColor *= fade;
@@ -658,42 +664,44 @@ vec3 evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(vec3 surfaceRadi
     }
     return outColor;
 }
-vec3 getProbeLighting(samplerCube currentEnvironmentProbe, samplerCube previousEnvironmentProbe, float skyAmbientContribution, float linearRoughness, vec3 v, vec3 n, float numMips, float blendFactor, float skyFadeStart, float skyFadeEnd, float contribution, bool isPreExposureEnabled) {
+float getSkyProbeVisibility(float skyAmbientContribution, float skyFadeStart, float skyFadeEnd) {
+    float skyProbeVisRange = max(skyFadeStart - skyFadeEnd, 1.0);
+    float skyProbeVisibility = clamp((skyAmbientContribution * 16.0f - skyFadeEnd) / skyProbeVisRange, 0.0, 1.0);
+    skyProbeVisibility = pow(skyProbeVisibility, 3.0f);
+    return skyProbeVisibility * IBLParameters.x;
+}
+vec3 getProbeLighting(highp samplerCubeArray environmentProbes, float lastProbeIdx, float skyProbeVisibility, float linearRoughness, vec3 v, vec3 n, float numMips, float blendFactor, float contribution, bool isPreExposureEnabled) {
     vec3 R = transformCubemapDirectionForScreen(reflect(v, n));
     float iblMipLevel = getIBLMipLevel(linearRoughness, numMips);
-    vec3 preFilteredColorCurrent = textureCubeLod(currentEnvironmentProbe, R, iblMipLevel).rgb;
-    vec3 preFilteredColorPrevious = textureCubeLod(previousEnvironmentProbe, R, iblMipLevel).rgb;
+    int curr = int(lastProbeIdx);
+    int prev = (curr + 3 - 1)% 3;
+    vec3 preFilteredColorCurrent = textureSample(environmentProbes, vec4(R, curr), iblMipLevel).rgb;
+    vec3 preFilteredColorPrevious = textureSample(environmentProbes, vec4(R, prev), iblMipLevel).rgb;
     vec3 preFilteredColor = mix(preFilteredColorPrevious, preFilteredColorCurrent, blendFactor);
     if (isPreExposureEnabled) {
         preFilteredColor = UnExposeLighting(preFilteredColor, 1.0);
     }
-    float skyProbeVisRange = max(skyFadeStart - skyFadeEnd, 1.0);
-    float skyProbeVisibility = clamp((skyAmbientContribution * 16.0f - skyFadeEnd) / skyProbeVisRange, 0.0, 1.0);
-    float skyProbeScaling = pow(skyProbeVisibility, 3.0f);
-    return preFilteredColor * skyProbeScaling * contribution;
+    return preFilteredColor * skyProbeVisibility * contribution;
 }
-vec3 calculateIndirectSpecularProbeOnly(PBRFragmentInfo fragmentData, sampler2D brdfLUT, samplerCube currentEnvironmentProbe, samplerCube previousEnvironmentProbe, float numMips, float blendFactor, float skyFadeStart, float skyFadeEnd, float contribution, bool isPreExposureEnabled) {
+vec3 calculateIndirectSpecularProbeOnly(PBRFragmentInfo fragmentData, sampler2D brdfLUT, highp samplerCubeArray environmentProbes, float lastProbeIdx, float numMips, float blendFactor, float skyVisibility, float contribution, bool isPreExposureEnabled) {
     float viewDistance = length(fragmentData.viewPosition);
     vec3 viewDir = -(fragmentData.viewPosition / viewDistance);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentData.worldPosition.xyz);
-    vec3 rf0 = calculateRf0(fragmentData.albedo, fragmentData.metalness);
     vec3 indirectProbeLight = getProbeLighting(
-        currentEnvironmentProbe,
-        previousEnvironmentProbe,
-        fragmentData.skyAmbientContribution,
+        environmentProbes,
+        lastProbeIdx,
+        skyVisibility,
         fragmentData.roughness,
         viewDirWorld,
         fragmentData.worldNormal,
         numMips,
         blendFactor,
-        skyFadeStart,
-        skyFadeEnd,
         contribution,
     isPreExposureEnabled);
-    vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, indirectProbeLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), rf0);
+    vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, indirectProbeLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), fragmentData.rf0);
     return indirectSpecularColor;
 }
-vec3 calculateIndirectSpecular(PBRFragmentInfo fragmentData, sampler2D brdfLUT, sampler2D ssrTexture, samplerCube currentEnvironmentProbe, samplerCube previousEnvironmentProbe, float numMips, float blendFactor, float skyFadeStart, float skyFadeEnd, float contribution, bool isPreExposureEnabled, float exposure) {
+vec3 calculateIndirectSpecular(PBRFragmentInfo fragmentData, sampler2D brdfLUT, sampler2D ssrTexture, highp samplerCubeArray environmentProbes, float lastProbeIdx, float numMips, float blendFactor, float skyVisibility, float ssrContribution, float iblContribution, bool isPreExposureEnabled, float exposure) {
     float viewDistance = length(fragmentData.viewPosition);
     vec3 viewDir = -(fragmentData.viewPosition / viewDistance);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentData.worldPosition.xyz);
@@ -704,19 +712,18 @@ vec3 calculateIndirectSpecular(PBRFragmentInfo fragmentData, sampler2D brdfLUT, 
         ssrLight.rgb = UnExposeLighting(ssrLight.rgb, exposure);
     }
     vec3 indirectProbeLight = getProbeLighting(
-        currentEnvironmentProbe,
-        previousEnvironmentProbe,
-        fragmentData.skyAmbientContribution,
+        environmentProbes,
+        lastProbeIdx,
+        skyVisibility,
         fragmentData.roughness,
         viewDirWorld,
         fragmentData.worldNormal,
         numMips,
         blendFactor,
-        skyFadeStart,
-        skyFadeEnd,
-        contribution,
+        iblContribution,
     isPreExposureEnabled);
-    vec3 incomingLight = mix(indirectProbeLight.rgb, ssrLight.rgb, ssrLight.a);
+    float ssrIntensity = ssrLight.a * ssrContribution;
+    vec3 incomingLight = mix(indirectProbeLight.rgb, ssrLight.rgb, ssrIntensity);
     vec3 indirectSpecularColor = evaluateIndirectSpecular(brdfLUT, incomingLight, fragmentData.roughness, clamp(dot(fragmentData.viewNormal, viewDir), 0.0, 1.0), rf0);
     return indirectSpecularColor;
 }
@@ -727,17 +734,22 @@ void IndirectSpecularLighting(FragmentInput fragInput, inout FragmentOutput frag
     if (PreExposureEnabled.x > 0.0) {
         exposure = textureSample(s_PreviousFrameAverageLuminance, vec2(0.5, 0.5)).r;
     }
+    float skyVisibility = getSkyProbeVisibility(
+        fragmentInfo.skyAmbientContribution,
+        IBLSkyFadeParameters.x,
+        IBLSkyFadeParameters.y
+    );
     if (SSRParameters.x != 0.0f) {
         indirectSpecularColor = calculateIndirectSpecular(
             fragmentInfo,
             s_BrdfLUT,
             s_SSRTexture,
-            s_SpecularIBLCurrent,
-            s_SpecularIBLPrevious,
+            s_SpecularIBLRecords,
+            LastSpecularIBLIdx.x,
             IBLParameters.y,
             IBLParameters.w,
-            IBLSkyFadeParameters.x,
-            IBLSkyFadeParameters.y,
+            skyVisibility,
+            SSRParameters.y,
             IBLParameters.z,
             PreExposureEnabled.x > 0.0f,
         exposure);
@@ -746,18 +758,17 @@ void IndirectSpecularLighting(FragmentInput fragInput, inout FragmentOutput frag
         indirectSpecularColor = calculateIndirectSpecularProbeOnly(
             fragmentInfo,
             s_BrdfLUT,
-            s_SpecularIBLCurrent,
-            s_SpecularIBLPrevious,
+            s_SpecularIBLRecords,
+            LastSpecularIBLIdx.x,
             IBLParameters.y,
             IBLParameters.w,
-            IBLSkyFadeParameters.x,
-            IBLSkyFadeParameters.y,
+            skyVisibility,
             IBLParameters.z,
         PreExposureEnabled.x > 0.0f);
     }
     float viewDistance = length(fragmentInfo.viewPosition);
     vec3 viewDirWorld = worldSpaceViewDir(fragmentInfo.worldPosition.xyz);
-    vec3 indirectSpecWithFog = evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(indirectSpecularColor, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
+    vec3 indirectSpecWithFog = evaluateAtmosphericAndVolumetricScatteringFogIntensityOnly(indirectSpecularColor, viewDirWorld, viewDistance, fragmentInfo.ndcPosition, AtmosphericScatteringToggles.x != 0.0, VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0, AtmosphericScatteringToggles.y != 0.0);
     if (PreExposureEnabled.x > 0.0) {
         indirectSpecWithFog.rgb = PreExposeLighting(indirectSpecWithFog.rgb, exposure);
     }
@@ -781,8 +792,8 @@ void main() {
     View = u_view;
     ViewTexel = u_viewTexel;
     InvView = u_invView;
-    InvProj = u_invProj;
     ViewProj = u_viewProj;
+    InvProj = u_invProj;
     InvViewProj = u_invViewProj;
     PrevViewProj = u_prevViewProj;
     {

@@ -36,6 +36,7 @@ struct accelerationStructureKHR {
     int noop;
 };
 
+uniform vec4 SSRRoughnessCutoffParams;
 uniform vec4 CameraData;
 uniform vec4 RenderMode;
 uniform vec4 SSRFadingParams;
@@ -84,6 +85,7 @@ struct FragmentOutput {
 
 SAMPLER2D_AUTOREG(s_GbufferDepth);
 SAMPLER2D_AUTOREG(s_GbufferNormal);
+SAMPLER2D_AUTOREG(s_GbufferRoughness);
 SAMPLER2D_AUTOREG(s_InputTexture);
 SAMPLER2D_AUTOREG(s_RasterColor);
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {

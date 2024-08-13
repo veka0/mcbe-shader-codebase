@@ -135,8 +135,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_ParallaxTexture;
+uniform lowp sampler2D s_ColorTexture;
 float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float fogStart, float fogEnd) {
     float distance = cameraDepth / maxDistance;
     return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);

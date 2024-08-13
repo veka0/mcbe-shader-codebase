@@ -71,10 +71,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
-SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_GameColor);
+IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
 IMAGE2D_RW_AUTOREG(s_MaxFrameLuminance, r32f);
+SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }

@@ -97,8 +97,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-BUFFER_RW_AUTOREG(s_Extends, LightExtends);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
+BUFFER_RW_AUTOREG(s_Extends, LightExtends);
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     fragOutput.Color0 = vec4(0.0, 0.0, 0.0, 0.0);
 }

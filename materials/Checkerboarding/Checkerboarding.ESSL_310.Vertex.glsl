@@ -79,19 +79,19 @@ struct FragmentOutput {
 };
 
 layout(rgba8, binding = 0)readonly uniform highp image2D s_ColorMetalnessInput;
-layout(rgba8, binding = 7)writeonly uniform highp image2D s_ColorMetalnessOutput;
-layout(rgba16f, binding = 2)readonly uniform highp image2D s_EmissiveLinearRoughnessInput;
-layout(rgba16f, binding = 9)writeonly uniform highp image2D s_EmissiveLinearRoughnessOutput;
-layout(rgba16f, binding = 5)readonly uniform highp image2D s_LowPrecisionWorldPositionInput;
-layout(rgba16f, binding = 12)writeonly uniform highp image2D s_LowPrecisionWorldPositionOutput;
 uniform lowp sampler2D s_NormalInput;
-uniform lowp sampler2D s_NormalOutput;
+layout(rgba16f, binding = 2)readonly uniform highp image2D s_EmissiveLinearRoughnessInput;
 layout(r32ui, binding = 3)readonly uniform highp uimage2D s_PlaneIDInput;
-layout(r32ui, binding = 10)writeonly uniform highp uimage2D s_PlaneIDOutput;
-layout(rgba16f, binding = 6)readonly uniform highp image2D s_ViewDirectionAndSplitMaskInput;
-layout(rgba16f, binding = 13)writeonly uniform highp image2D s_ViewDirectionAndSplitMaskOutput;
 layout(rgba32f, binding = 4)readonly uniform highp image2D s_WorldPositionInput;
+layout(rgba16f, binding = 5)readonly uniform highp image2D s_LowPrecisionWorldPositionInput;
+layout(rgba16f, binding = 6)readonly uniform highp image2D s_ViewDirectionAndSplitMaskInput;
+layout(rgba8, binding = 7)writeonly uniform highp image2D s_ColorMetalnessOutput;
+uniform lowp sampler2D s_NormalOutput;
+layout(rgba16f, binding = 9)writeonly uniform highp image2D s_EmissiveLinearRoughnessOutput;
+layout(r32ui, binding = 10)writeonly uniform highp uimage2D s_PlaneIDOutput;
 layout(rgba32f, binding = 11)writeonly uniform highp image2D s_WorldPositionOutput;
+layout(rgba16f, binding = 12)writeonly uniform highp image2D s_LowPrecisionWorldPositionOutput;
+layout(rgba16f, binding = 13)writeonly uniform highp image2D s_ViewDirectionAndSplitMaskOutput;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

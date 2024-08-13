@@ -89,10 +89,10 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
-uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_GameColor;
+layout(r32f, binding = 2)uniform highp image2D s_AdaptedFrameAverageLuminance;
 layout(r32f, binding = 3)uniform highp image2D s_MaxFrameLuminance;
+uniform lowp sampler2D s_CustomWeight;
 uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }

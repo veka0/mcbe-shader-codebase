@@ -74,8 +74,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-SAMPLER2D_AUTOREG(s_GlintTexture);
 SAMPLER2D_AUTOREG(s_MatTexture);
+SAMPLER2D_AUTOREG(s_GlintTexture);
 vec2 calculateLayerUV(vec2 origUV, float offset, float rotation) {
     vec2 uv = origUV;
     uv -= 0.5;

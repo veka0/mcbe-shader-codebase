@@ -85,8 +85,8 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
-BUFFER_RW_AUTOREG(s_Extends, LightExtends);
 BUFFER_RW_AUTOREG(s_LightLookupArray, LightData);
+BUFFER_RW_AUTOREG(s_Extends, LightExtends);
 #ifdef CLUSTER_LIGHTS_PASS
 float getViewSpaceCoordByRatio(float clusterIndex, float clusterSize, float screenDim, float farPlaneDim, float planeRatio) {
     return ((clusterIndex * clusterSize - screenDim / 2.0f) / screenDim) * (farPlaneDim * planeRatio); // Attention!

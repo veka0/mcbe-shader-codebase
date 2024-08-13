@@ -61,19 +61,19 @@ struct FragmentOutput {
 };
 
 IMAGE2D_RO_AUTOREG(s_ColorMetalnessInput, rgba8);
-IMAGE2D_WR_AUTOREG(s_ColorMetalnessOutput, rgba8);
-IMAGE2D_RO_AUTOREG(s_EmissiveLinearRoughnessInput, rgba16f);
-IMAGE2D_WR_AUTOREG(s_EmissiveLinearRoughnessOutput, rgba16f);
-IMAGE2D_RO_AUTOREG(s_LowPrecisionWorldPositionInput, rgba16f);
-IMAGE2D_WR_AUTOREG(s_LowPrecisionWorldPositionOutput, rgba16f);
 SAMPLER2D_AUTOREG(s_NormalInput);
-SAMPLER2D_AUTOREG(s_NormalOutput);
+IMAGE2D_RO_AUTOREG(s_EmissiveLinearRoughnessInput, rgba16f);
 UIMAGE2D_RO_AUTOREG(s_PlaneIDInput, r32ui);
-UIMAGE2D_WR_AUTOREG(s_PlaneIDOutput, r32ui);
-IMAGE2D_RO_AUTOREG(s_ViewDirectionAndSplitMaskInput, rgba16f);
-IMAGE2D_WR_AUTOREG(s_ViewDirectionAndSplitMaskOutput, rgba16f);
 IMAGE2D_RO_AUTOREG(s_WorldPositionInput, rgba32f);
+IMAGE2D_RO_AUTOREG(s_LowPrecisionWorldPositionInput, rgba16f);
+IMAGE2D_RO_AUTOREG(s_ViewDirectionAndSplitMaskInput, rgba16f);
+IMAGE2D_WR_AUTOREG(s_ColorMetalnessOutput, rgba8);
+SAMPLER2D_AUTOREG(s_NormalOutput);
+IMAGE2D_WR_AUTOREG(s_EmissiveLinearRoughnessOutput, rgba16f);
+UIMAGE2D_WR_AUTOREG(s_PlaneIDOutput, r32ui);
 IMAGE2D_WR_AUTOREG(s_WorldPositionOutput, rgba32f);
+IMAGE2D_WR_AUTOREG(s_LowPrecisionWorldPositionOutput, rgba16f);
+IMAGE2D_WR_AUTOREG(s_ViewDirectionAndSplitMaskOutput, rgba16f);
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

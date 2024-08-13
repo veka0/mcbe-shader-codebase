@@ -13,6 +13,9 @@
 * - INSTANCING__ON
 */
 
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+#extension GL_EXT_texture_cube_map_array : enable
+#endif
 #define attribute in
 #define varying out
 attribute vec4 a_color0;
@@ -89,6 +92,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MERSUniforms;
 uniform vec4 MaterialID;
+uniform vec4 SubPixelOffset;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
@@ -194,6 +198,14 @@ void ParticleFogVert(StandardVertexInput vertInput, inout VertexOutput vertOutpu
     vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
 }
 #endif
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+vec4 jitterVertexPosition(vec3 worldPosition) {
+    mat4 offsetProj = Proj;
+    offsetProj[2][0] += SubPixelOffset.x;
+    offsetProj[2][1] -= SubPixelOffset.y;
+    return ((offsetProj) * (((View) * (vec4(worldPosition, 1.0f)))));
+}
+#endif
 struct ColorTransform {
     float hue;
     float saturation;
@@ -210,6 +222,7 @@ void ParticleGeometryAlphaTestVert(VertexInput vertInput, inout VertexOutput ver
 }
 void ParticleVertGeometryPrepass(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.normal = vertInput.vertInput.normal.xyz;
+    vertOutput.position = jitterVertexPosition(vertInput.worldPos);
     vertOutput.prevWorldPos = vertInput.worldPos;
 }
 #endif

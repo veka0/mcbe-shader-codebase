@@ -33,6 +33,9 @@
 * - TINTING__ENABLED
 */
 
+#if ! defined(DEPTH_ONLY_OPAQUE_PASS)&& ! defined(DEPTH_ONLY_PASS)
+#extension GL_EXT_texture_cube_map_array : enable
+#endif
 #define attribute in
 #define varying out
 attribute vec4 a_color0;

@@ -19,7 +19,7 @@
 * - MULTI_COLOR_TINT__ON
 */
 
-$input v_color0, v_glintUV, v_normal, v_prevWorldPos, v_texcoord0, v_worldPos
+$input v_bitangent, v_color0, v_glintUV, v_mers, v_normal, v_prevWorldPos, v_tangent, v_texcoord0, v_worldPos
 struct NoopSampler {
     int noop;
 };
@@ -46,16 +46,25 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord) {
 vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
+    return textureLod(_sampler, _coord, _lod);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord) {
     return vec4(0, 0, 0, 0);
 }
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord) {
+    return vec4(0, 0, 0, 0);
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 vec4 textureSample(NoopSampler noopsampler, vec3 _coord, float _lod) {
+    return vec4(0, 0, 0, 0);
+}
+vec4 textureSample(NoopSampler noopsampler, vec4 _coord, float _lod) {
     return vec4(0, 0, 0, 0);
 }
 #endif
@@ -78,6 +87,7 @@ struct accelerationStructureKHR {
 uniform vec4 FogControl;
 uniform vec4 ChangeColor;
 uniform vec4 OverlayColor;
+uniform mat4 PrevWorld;
 uniform vec4 ColorBased;
 uniform vec4 FogColor;
 uniform vec4 GlintColor;
@@ -110,8 +120,10 @@ float AlphaRef;
 struct VertexInput {
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec4 normal;
     vec3 position;
+    vec4 tangent;
     vec2 texcoord0;
     #ifdef INSTANCING__ON
     vec4 instanceData0;
@@ -122,19 +134,25 @@ struct VertexInput {
 
 struct VertexOutput {
     vec4 position;
+    vec3 bitangent;
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
 
 struct FragmentInput {
+    vec3 bitangent;
     vec4 color0;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec2 texcoord0;
     vec3 worldPos;
 };
@@ -148,9 +166,12 @@ struct StandardSurfaceInput {
     vec2 UV;
     vec3 Color;
     float Alpha;
+    vec3 bitangent;
     vec4 glintUV;
+    vec4 mers;
     vec3 normal;
     vec3 prevWorldPos;
+    vec3 tangent;
     vec3 worldPos;
 };
 
@@ -164,9 +185,12 @@ StandardSurfaceInput StandardTemplate_DefaultInput(FragmentInput fragInput) {
     result.UV = vec2(0, 0);
     result.Color = vec3(1, 1, 1);
     result.Alpha = 1.0;
+    result.bitangent = fragInput.bitangent;
     result.glintUV = fragInput.glintUV;
+    result.mers = fragInput.mers;
     result.normal = fragInput.normal;
     result.prevWorldPos = fragInput.prevWorldPos;
+    result.tangent = fragInput.tangent;
     result.worldPos = fragInput.worldPos;
     return result;
 }
@@ -196,6 +220,15 @@ StandardSurfaceOutput StandardTemplate_DefaultOutput() {
     return result;
 }
 #ifndef DEPTH_ONLY_OPAQUE_PASS
+vec2 calculateMotionVector(vec3 worldPosition, vec3 previousWorldPosition) {
+    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
+    screenSpacePos /= screenSpacePos.w;
+    screenSpacePos = screenSpacePos * 0.5 + 0.5;
+    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(previousWorldPosition, 1.0))); // Attention!
+    prevScreenSpacePos /= prevScreenSpacePos.w;
+    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
+    return screenSpacePos.xy - prevScreenSpacePos.xy;
+}
 vec4 applyOverlayColor(vec4 diffuse, const vec4 overlayColor) {
     diffuse.rgb = mix(diffuse.rgb, overlayColor.rgb, overlayColor.a);
     return diffuse;
@@ -243,13 +276,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
     fragOutput.Color0.a = packMetalnessSubsurface(surfaceOutput.Metallic, surfaceOutput.Subsurface);
     vec3 viewNormal = normalize(surfaceOutput.ViewSpaceNormal).xyz;
     fragOutput.Color1.xy = ndirToOctSnorm(viewNormal);
-    vec4 screenSpacePos = ((ViewProj) * (vec4(worldPosition, 1.0))); // Attention!
-    screenSpacePos /= screenSpacePos.w;
-    screenSpacePos = screenSpacePos * 0.5 + 0.5;
-    vec4 prevScreenSpacePos = ((PrevViewProj) * (vec4(prevWorldPosition, 1.0))); // Attention!
-    prevScreenSpacePos /= prevScreenSpacePos.w;
-    prevScreenSpacePos = prevScreenSpacePos * 0.5 + 0.5;
-    fragOutput.Color1.zw = screenSpacePos.xy - prevScreenSpacePos.xy;
+    fragOutput.Color1.zw = calculateMotionVector(worldPosition, prevWorldPosition);
     fragOutput.Color2 = vec4(
         surfaceOutput.Emissive,
         ambientBlockLight,
@@ -260,7 +287,7 @@ void applyPrepassSurfaceToGBuffer(vec3 worldPosition, vec3 prevWorldPosition, fl
 void ItemInHandSurfGeometryPrepass(FragmentInput fragInput, StandardSurfaceInput surfaceInput, StandardSurfaceOutput surfaceOutput, inout FragmentOutput fragOutput) {
     applyPrepassSurfaceToGBuffer(
         fragInput.worldPos.xyz,
-        fragInput.worldPos.xyz - PrevWorldPosOffset.xyz,
+        fragInput.prevWorldPos.xyz - PrevWorldPosOffset.xyz,
         TileLightIntensity.x,
         TileLightIntensity.y,
         surfaceOutput,
@@ -372,10 +399,13 @@ void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput 
 void main() {
     FragmentInput fragmentInput;
     FragmentOutput fragmentOutput;
+    fragmentInput.bitangent = v_bitangent;
     fragmentInput.color0 = v_color0;
     fragmentInput.glintUV = v_glintUV;
+    fragmentInput.mers = v_mers;
     fragmentInput.normal = v_normal;
     fragmentInput.prevWorldPos = v_prevWorldPos;
+    fragmentInput.tangent = v_tangent;
     fragmentInput.texcoord0 = v_texcoord0;
     fragmentInput.worldPos = v_worldPos;
     fragmentOutput.Color0 = vec4(0, 0, 0, 0); fragmentOutput.Color1 = vec4(0, 0, 0, 0); fragmentOutput.Color2 = vec4(0, 0, 0, 0);

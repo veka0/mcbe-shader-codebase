@@ -61,9 +61,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
+IMAGE2D_WR_AUTOREG(s_OutputMip, rgba16f);
 SAMPLER2D_AUTOREG(s_FramebufferDepth);
 IMAGE2D_RO_AUTOREG(s_InputMip, rgba16f);
-IMAGE2D_WR_AUTOREG(s_OutputMip, rgba16f);
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

@@ -8,6 +8,7 @@
 * - MIP_DISTANCE_PASS (not used)
 */
 
+#extension GL_EXT_texture_cube_map_array : enable
 #define shadow2D(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DArray(_sampler, _coord)texture(_sampler, _coord)
 #define shadow2DProj(_sampler, _coord)textureProj(_sampler, _coord)
@@ -54,9 +55,9 @@ struct FragmentOutput {
     vec4 Color0;
 };
 
+layout(rgba16f, binding = 0)writeonly uniform highp image2D s_OutputMip;
 uniform lowp sampler2D s_FramebufferDepth;
 layout(rgba16f, binding = 2)readonly uniform highp image2D s_InputMip;
-layout(rgba16f, binding = 0)writeonly uniform highp image2D s_OutputMip;
 void MipDistance() {
 }
 

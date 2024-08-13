@@ -17,6 +17,7 @@
 #define texture2DProjGrad textureProjGrad
 #define textureCubeLod textureLod
 #define textureCubeGrad textureGrad
+#extension GL_EXT_texture_cube_map_array : enable
 #endif
 #define attribute in
 #define varying out

@@ -121,19 +121,6 @@ struct StandardSurfaceOutput {
     vec3 ViewSpaceNormal;
 };
 
-void CloudVert(VertexInput vertInput, inout VertexOutput vertOutput) {
-    #ifdef INSTANCING__OFF
-    vertOutput.position = ((World) * (vec4(vertInput.position, 1.0))); // Attention!
-    #endif
-    #ifdef INSTANCING__ON
-    mat4 model;
-    model[0] = vec4(vertInput.instanceData0.x, vertInput.instanceData1.x, vertInput.instanceData2.x, 0);
-    model[1] = vec4(vertInput.instanceData0.y, vertInput.instanceData1.y, vertInput.instanceData2.y, 0);
-    model[2] = vec4(vertInput.instanceData0.z, vertInput.instanceData1.z, vertInput.instanceData2.z, 0);
-    model[3] = vec4(vertInput.instanceData0.w, vertInput.instanceData1.w, vertInput.instanceData2.w, 1);
-    vertOutput.position = instMul(model, vec4(vertInput.position, 1.0));
-    #endif
-}
 struct CompositingOutput {
     vec3 mLitColor;
 };
@@ -154,6 +141,8 @@ void StandardTemplate_VertSharedTransform(inout StandardVertexInput stdInput, in
     vertOutput.position = ((ViewProj) * (vec4(wpos, 1.0))); // Attention!
     stdInput.worldPos = wpos;
     vertOutput.worldPos = wpos;
+}
+void StandardTemplate_VertexPreprocessIdentity(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void StandardTemplate_LightingVertexFunctionIdentity(VertexInput vertInput, inout VertexOutput vertOutput, vec3 worldPosition) {
 }
@@ -191,7 +180,7 @@ void StandardTemplate_VertShared(VertexInput vertInput, inout VertexOutput vertO
     StandardTemplate_InvokeLightingVertexFunction(vertInput, vertOutput, stdInput.worldPos);
 }
 void StandardTemplate_InvokeVertexPreprocessFunction(inout VertexInput vertInput, inout VertexOutput vertOutput) {
-    CloudVert(vertInput, vertOutput);
+    StandardTemplate_VertexPreprocessIdentity(vertInput, vertOutput);
 }
 void StandardTemplate_InvokeVertexOverrideFunction(StandardVertexInput vertInput, inout VertexOutput vertOutput) {
     CloudVertTransparent(vertInput, vertOutput);
