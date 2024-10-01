@@ -71,6 +71,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 #endif
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
@@ -136,7 +139,6 @@ uniform vec4 CascadeShadowResolutions;
 uniform vec4 u_alphaRef4;
 uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -166,11 +168,12 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform mat4 DirectionalLightSourceShadowProj3[2];
 uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
+uniform vec4 FogSkyBlend;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FogColor;
 uniform vec4 OcclusionHeightOffset;
-uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
@@ -189,10 +192,11 @@ uniform vec4 PreExposureEnabled;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowQuantizationParameters;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
-uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
+uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 Time;
 uniform vec4 UVOffsetAndScale;
@@ -484,7 +488,7 @@ struct DirectionalLightParams {
 };
 
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
+    return color * (0.18f / averageLuminance + 1e - 4);
 }
 struct ColorTransform {
     float hue;

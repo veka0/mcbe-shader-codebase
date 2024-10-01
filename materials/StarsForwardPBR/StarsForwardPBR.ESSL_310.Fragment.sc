@@ -39,6 +39,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
@@ -92,7 +95,7 @@ uniform vec4 CausticsTextureParameters;
 uniform vec4 WorldOrigin;
 uniform mat4 CloudShadowProj;
 uniform vec4 ClusterDimensions;
-uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
+uniform vec4 ShadowQuantizationParameters;
 uniform vec4 ClusterSize;
 uniform vec4 PreExposureEnabled;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
@@ -105,7 +108,6 @@ uniform vec4 DirectionalLightSourceShadowDirection[2];
 uniform mat4 DirectionalLightSourceShadowInvProj0[2];
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform mat4 DirectionalLightSourceShadowInvProj1[2];
-uniform vec4 SkyAmbientLightColorIntensity;
 uniform mat4 DirectionalLightSourceShadowInvProj2[2];
 uniform mat4 DirectionalLightSourceShadowProj0[2];
 uniform mat4 DirectionalLightSourceShadowProj1[2];
@@ -114,6 +116,7 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform mat4 DirectionalLightSourceShadowProj3[2];
 uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 LightWorldSpaceDirection;
@@ -122,9 +125,10 @@ uniform mat4 PlayerShadowProj;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightSpecularFadeOutParameters;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyProbeUVFadeParameters;
 uniform vec4 StarsColor;
-uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
+uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform vec4 Time;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
@@ -321,7 +325,7 @@ struct TemporalAccumulationParameters {
 };
 
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
+    return color * (0.18f / averageLuminance + 1e - 4);
 }
 void FragForwardPBRTransparent(StandardSurfaceInput fragInput, inout vec4 outColor) {
     vec3 starColor = fragInput.color0.rgb;

@@ -60,6 +60,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 #endif
 #ifndef DEPTH_ONLY_OPAQUE_PASS
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {

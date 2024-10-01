@@ -89,6 +89,7 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 u_viewTexel;
 uniform mat4 u_invView;
+uniform vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 uniform mat4 u_invProj;
 uniform mat4 u_viewProj;
 uniform mat4 u_invViewProj;
@@ -117,6 +118,7 @@ uniform vec4 ColorGrading_Gamma_Midtones;
 uniform vec4 TonemapParams0;
 uniform vec4 ColorGrading_Saturation_Midtones;
 uniform vec4 ColorGrading_Saturation_Shadows;
+uniform vec4 GenericTonemapperCrosstalkParams;
 uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform vec4 OutputTextureMaxValue;
 uniform vec4 RasterizedColorEnabled;
@@ -158,7 +160,6 @@ struct FragmentOutput {
 uniform lowp sampler2D s_AverageLuminance;
 uniform lowp sampler2D s_ColorTexture;
 uniform lowp sampler2D s_CustomExposureCompensation;
-uniform lowp sampler2D s_MaxLuminance;
 uniform lowp sampler2D s_PreExposureLuminance;
 uniform lowp sampler2D s_RasterColor;
 uniform lowp sampler2D s_RasterizedColor;
@@ -247,6 +248,13 @@ vec3 ApplyColorGrading(vec3 inColor, float averageLuminance) {
     outColor = ApplyOffset(outColor, vec3_splat(averageLuminance) * getGradingVector(ColorGrading_Offset_Highlights.xyz, ColorGrading_Offset_Shadows.xyz, ColorGrading_Offset_Midtones.xyz, averageLuminance, finalLuminance));
     return outColor;
 }
+
+const int kTonemapperReinhard = 0;
+const int kTonemapperReinhardLuma = 1;
+const int kTonemapperReinhardLuminance = 2;
+const int kTonemapperHable = 3;
+const int kTonemapperACES = 4;
+const int kTonemapperGeneric = 5;
 vec3 TonemapReinhard(vec3 rgb) {
     vec3 color = rgb / (1.0 + rgb);
     return color;
@@ -299,23 +307,34 @@ vec3 ACESFitted(vec3 rgb) {
 vec3 TonemapACES(vec3 rgb) {
     return ACESFitted(rgb);
 }
+vec3 TonemapGeneric(vec3 rgb) {
+    float peak = max(rgb.r, max(rgb.g, rgb.b));
+    vec3 ratio = rgb / peak;
+    peak = pow(peak, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.x);
+    peak = peak / (GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.y * peak + GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.z);
+    ratio = mix(ratio, vec3(1.0f, 1.0f, 1.0f), pow(peak, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.w));
+    return peak * ratio;
+}
 vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float compensation, float whitePoint, int tonemapper) {
     float toneMappedAverageLuminance = 0.18f;
     float exposure = (toneMappedAverageLuminance / averageLuminance) * compensation;
     sceneColor *= exposure;
     float scaledWhitePoint = exposure * whitePoint;
     float whitePointSquared = scaledWhitePoint * scaledWhitePoint;
-    if (tonemapper == 1) {
+    if (tonemapper == kTonemapperReinhardLuma) {
         sceneColor = TonemapReinhardLuma(sceneColor, whitePointSquared);
     }
-    else if (tonemapper == 2) {
+    else if (tonemapper == kTonemapperReinhardLuminance) {
         sceneColor = TonemapReinhardLuminance(sceneColor, whitePointSquared);
     }
-    else if (tonemapper == 3) {
+    else if (tonemapper == kTonemapperHable) {
         sceneColor = TonemapHable(sceneColor, whitePointSquared);
     }
-    else if (tonemapper == 4) {
+    else if (tonemapper == kTonemapperACES) {
         sceneColor = TonemapACES(sceneColor);
+    }
+    else if (tonemapper == kTonemapperGeneric) {
+        sceneColor = TonemapGeneric(sceneColor);
     }
     else {
         sceneColor = TonemapReinhard(sceneColor);
@@ -326,7 +345,7 @@ vec3 ApplyTonemap(vec3 sceneColor, float averageLuminance, float compensation, f
     return sceneColor;
 }
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color / (0.18f / averageLuminance);
+    return color / (0.18f / averageLuminance + 1e - 4);
 }
 void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec3 sceneColor = textureSample(s_ColorTexture, fragInput.texcoord0.xy).rgb;

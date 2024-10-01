@@ -5,7 +5,6 @@
 *
 * Passes:
 * - OPAQUE_PASS (not used)
-* - RASTERIZED_OPAQUE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -141,7 +140,7 @@ float calculateFogIntensityVanilla(float cameraDepth, float maxDistance, float f
     float distance = cameraDepth / maxDistance;
     return clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
 }
-void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+void EndPortalVert(VertexInput vertInput, inout VertexOutput vertOutput) {
     #ifdef INSTANCING__OFF
     vec3 worldPosition = ((World) * (vec4(vertInput.position, 1.0))).xyz;
     #endif
@@ -181,6 +180,9 @@ void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
     float cameraDepth = length(worldPosition);
     float fogIntensity = calculateFogIntensityVanilla(cameraDepth, FogAndDistanceControl.z, FogAndDistanceControl.x, FogAndDistanceControl.y);
     vertOutput.fog = vec4(FogColor.rgb, fogIntensity);
+}
+void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
+    EndPortalVert(vertInput, vertOutput);
 }
 void main() {
     VertexInput vertexInput;

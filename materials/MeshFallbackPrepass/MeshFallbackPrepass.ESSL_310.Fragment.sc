@@ -57,6 +57,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
@@ -94,10 +97,10 @@ struct accelerationStructureKHR {
 
 uniform vec4 OverlayColor;
 uniform mat4 PrevWorld;
+uniform vec4 CurrentColor;
 uniform vec4 LightDiffuseColorAndIlluminance;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MERSUniforms;
-uniform vec4 MatColor;
 uniform vec4 MaterialID;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
@@ -264,12 +267,12 @@ void SurfGeometryPrepass(in StandardSurfaceInput surfaceInput, inout StandardSur
     vec4 albedo = vec4(1, 1, 1, 1);
     #endif
     #ifdef USE_TEXTURES__ON
-    vec4 albedo = MatColor;
-    albedo *= textureSample(s_MatTexture, surfaceInput.UV);
+    vec4 albedo = textureSample(s_MatTexture, surfaceInput.UV);
     #endif
     if (albedo.a < 0.5) {
         discard;
     }
+    albedo *= CurrentColor;
     surfaceOutput.Albedo = albedo.rgb * surfaceInput.Color.rgb;
     surfaceOutput.Alpha = albedo.a * surfaceInput.Alpha;
     surfaceOutput.Metallic = MERSUniforms.x;

@@ -275,6 +275,7 @@ vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotatio
 }
 void ItemInHandColorGlintVertPBR(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
     vertOutput.glintUV.xy = calculateLayerUV(vertInput.texcoord0, UVAnimation.x, UVAnimation.z, UVScale.xy);
     vertOutput.glintUV.zw = calculateLayerUV(vertInput.texcoord0, UVAnimation.y, UVAnimation.w, UVScale.xy);
 }

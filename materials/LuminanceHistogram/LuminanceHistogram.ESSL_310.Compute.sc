@@ -37,6 +37,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
@@ -73,9 +76,10 @@ struct accelerationStructureKHR {
 };
 
 uniform vec4 AdaptiveParameters;
-uniform vec4 LogLuminanceRange;
 uniform vec4 EnableCustomWeight;
+uniform vec4 CenterWeight;
 uniform vec4 Adaptation;
+uniform vec4 LogLuminanceRange;
 uniform vec4 MinLogLuminance;
 uniform vec4 PreExposureEnabled;
 uniform vec4 ScreenSize;
@@ -105,72 +109,39 @@ struct FragmentOutput {
 
 SAMPLER2D_AUTOREG(s_GameColor);
 IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
-IMAGE2D_RW_AUTOREG(s_MaxFrameLuminance, r32f);
 SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
 BUFFER_RW_AUTOREG(s_CurFrameLuminanceHistogram, Histogram);
+const float kHistogramWeightScaleFactor = float(1 << 8);
 #ifdef BUILD_HISTOGRAM_PASS
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color / (0.18f / averageLuminance);
+    return color / (0.18f / averageLuminance + 1e - 4);
 }
 #endif
 #ifdef CALCULATE_AVERAGE_PASS
-shared float curFrameLuminanceHistogramShared[256];
 void Average() {
-    uint histogramCount = CurFrameLuminanceHistogram[LocalInvocationIndex].count;
-    if (EnableCustomWeight.x != 0.0) {
-        vec2 uv = vec2((float(LocalInvocationIndex) + 0.5f) / float(256), 0.5f);
-        curFrameLuminanceHistogramShared[LocalInvocationIndex] = float(histogramCount) * textureSample(s_CustomWeight, uv, 0.0f).r;
-    }
-    else {
-        curFrameLuminanceHistogramShared[LocalInvocationIndex] = float(histogramCount) * float(LocalInvocationIndex);
-    }
-    barrier();
-    for(uint cutoff = uint(256 >> 1); cutoff > 0u; ) {
-        if (uint(LocalInvocationIndex) < cutoff) {
-            curFrameLuminanceHistogramShared[LocalInvocationIndex] = curFrameLuminanceHistogramShared[LocalInvocationIndex] + curFrameLuminanceHistogramShared[LocalInvocationIndex + cutoff];
-        }
-        barrier();
-        cutoff = (cutoff >> 1u);
-    }
-    if (LocalInvocationIndex == 0u) {
-        float weightedLogAverage = (curFrameLuminanceHistogramShared[0] / max(ScreenSize.x * ScreenSize.y - float(histogramCount), 1.0f)) - 1.0f;
-        if (weightedLogAverage < 1.f) {
-            weightedLogAverage = 0.0f;
-        }
-        float weightedAverageLuminance = exp2(((weightedLogAverage * LogLuminanceRange.x) / 254.0f) + MinLogLuminance.x);
-        float adaptedLuminance = weightedAverageLuminance;
-        if (Adaptation.x > 0.5) {
-            float prevLuminance = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0, 0)).r;
-            bool isBrighter = (weightedAverageLuminance > prevLuminance);
-            float speedParam = isBrighter ? AdaptiveParameters.y : AdaptiveParameters.z;
-            float adjustment = (weightedAverageLuminance - prevLuminance) * (1.0f - exp(-Adaptation.y * AdaptiveParameters.x * speedParam)); // Attention!
-            adaptedLuminance = prevLuminance + adjustment;
-            if (isBrighter) {
-                adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? weightedAverageLuminance : adaptedLuminance;
-            }
-            else {
-                adaptedLuminance = adaptedLuminance > weightedAverageLuminance ? adaptedLuminance : weightedAverageLuminance;
-            }
-        }
-        imageStore(s_AdaptedFrameAverageLuminance, ivec2(0, 0), vec4(adaptedLuminance, adaptedLuminance, adaptedLuminance, adaptedLuminance));
-        int maxLuminanceBin = 0;
-        for(int i = 256 - 1; i > 0; i -- ) {
-            if (float(CurFrameLuminanceHistogram[i].count) >= AdaptiveParameters.w) {
-                maxLuminanceBin = i;
-                break;
-            }
-        }
-        vec2 uv = vec2((float(maxLuminanceBin) + 0.5f) / float(256), 0.5f);
-        float maxLuminance = 0.0f;
+    float totalLogLuminance = 0.0;
+    float totalWeight = 0.0;
+    for(uint i = 1u; i < uint(256); ++ i) {
+        float weight = float(CurFrameLuminanceHistogram[i].count) / kHistogramWeightScaleFactor;
         if (EnableCustomWeight.x != 0.0) {
-            maxLuminance = exp2(((textureSample(s_CustomWeight, uv, 0.0f).r - 1.0f) * LogLuminanceRange.x) / 254.0f + MinLogLuminance.x);
+            vec2 uv = vec2((float(i) + 0.5f) / float(256), 0.5f);
+            weight *= textureSample(s_CustomWeight, uv, 0.0f).r;
         }
-        else {
-            maxLuminance = exp2(((float(maxLuminanceBin) - 1.0f) * LogLuminanceRange.x) / 254.0f + MinLogLuminance.x);
-        }
-        imageStore(s_MaxFrameLuminance, ivec2(0, 0), vec4(maxLuminance, maxLuminance, maxLuminance, maxLuminance));
+        totalLogLuminance += weight * float(i);
+        totalWeight += weight;
     }
+    float meanLogLuminance = totalLogLuminance / max(totalWeight, 1.0f) - 1.0f;
+    float meanLuminance = exp2(((meanLogLuminance * LogLuminanceRange.x) / 254.0f) + MinLogLuminance.x);
+    float adaptedLuminance = meanLuminance;
+    if (Adaptation.x > 0.5) {
+        float prevLuminance = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0, 0)).r;
+        bool isBrighter = (meanLuminance > prevLuminance);
+        float speedParam = isBrighter ? AdaptiveParameters.y : AdaptiveParameters.z;
+        float adjustment = (meanLuminance - prevLuminance) * (1.0f - exp(-Adaptation.y * AdaptiveParameters.x * speedParam)); // Attention!
+        adaptedLuminance = prevLuminance + adjustment;
+    }
+    imageStore(s_AdaptedFrameAverageLuminance, ivec2(0, 0), vec4(adaptedLuminance, adaptedLuminance, adaptedLuminance, adaptedLuminance));
 }
 #endif
 #ifdef CLEAN_UP_PASS
@@ -203,14 +174,22 @@ void Build() {
         }
         float luminance = dot(color.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
         uint index = luminanceToHistogramBin(luminance);
-        atomicAdd(curFrameLuminanceHistogramShared[index], 1u);
+        vec2 centerToPixel = uv - vec2(0.5, 0.5);
+        float weight = exp(-CenterWeight.x * dot(centerToPixel, centerToPixel));
+        uint weightFixed = uint(weight * kHistogramWeightScaleFactor);
+        atomicAdd(curFrameLuminanceHistogramShared[index], weightFixed);
     }
     barrier();
     atomicAdd(CurFrameLuminanceHistogram[LocalInvocationIndex].count, curFrameLuminanceHistogramShared[LocalInvocationIndex]);
 }
 
 #endif
+#ifndef CALCULATE_AVERAGE_PASS
 NUM_THREADS(16, 16, 1)
+#endif
+#ifdef CALCULATE_AVERAGE_PASS
+NUM_THREADS(1, 1, 1)
+#endif
 void main() {
     LocalInvocationID = gl_LocalInvocationID;
     LocalInvocationIndex = gl_LocalInvocationIndex;

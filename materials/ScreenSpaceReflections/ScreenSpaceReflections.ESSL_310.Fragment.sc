@@ -320,7 +320,7 @@ vec4 CalculateSSRHitPoint(vec3 viewPosition, vec3 viewNormal, float roughness, i
         screenSize,
         depthBuffer,
     foundPosition);
-    if (foundIteration < 0) {
+    if (foundIteration < 1) {
         return vec4(0.0, 0.0, 0.0, - 1.0);
     }
     float refinedFoundIteration = PerformBinarySearch(

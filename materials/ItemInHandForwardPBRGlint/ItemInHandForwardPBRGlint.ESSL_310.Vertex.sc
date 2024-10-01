@@ -70,7 +70,6 @@ uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -103,10 +102,11 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform mat4 DirectionalLightSourceShadowProj3[2];
 uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
+uniform vec4 FogSkyBlend;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FogColor;
-uniform vec4 FogSkyBlend;
 uniform vec4 GlintColor;
 uniform vec4 IBLParameters;
 uniform vec4 LightWorldSpaceDirection;
@@ -128,11 +128,12 @@ uniform mat4 PrevWorld;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowQuantizationParameters;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
+uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 Time;
@@ -391,6 +392,7 @@ vec2 calculateLayerUV(const vec2 origUV, const float offset, const float rotatio
 }
 void ItemInHandColorGlintVertPBR(VertexInput vertInput, inout VertexOutput vertOutput) {
     vertOutput.texcoord0 = vertInput.texcoord0;
+    vertOutput.mers = vertInput.mers;
     vertOutput.glintUV.xy = calculateLayerUV(vertInput.texcoord0, UVAnimation.x, UVAnimation.z, UVScale.xy);
     vertOutput.glintUV.zw = calculateLayerUV(vertInput.texcoord0, UVAnimation.y, UVAnimation.w, UVScale.xy);
 }

@@ -48,6 +48,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
@@ -100,7 +103,6 @@ uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 CascadeShadowResolutions;
 uniform vec4 LastSpecularIBLIdx;
 uniform vec4 FogAndDistanceControl;
-uniform vec4 DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 uniform vec4 AtmosphericScattering;
 uniform vec4 ClusterSize;
 uniform vec4 SkyZenithColor;
@@ -134,10 +136,11 @@ uniform vec4 LightDiffuseColorAndIlluminance;
 uniform mat4 DirectionalLightSourceShadowProj3[2];
 uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
+uniform vec4 FogSkyBlend;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FogColor;
-uniform vec4 FogSkyBlend;
 uniform vec4 IBLParameters;
 uniform vec4 LightWorldSpaceDirection;
 uniform vec4 MaterialID;
@@ -158,11 +161,12 @@ uniform mat4 PrevWorld;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
 uniform vec4 ShadowPCFWidth;
+uniform vec4 ShadowQuantizationParameters;
 uniform vec4 ShadowSlopeBias;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 SkyHorizonColor;
 uniform vec4 SubPixelOffset;
-uniform vec4 SubsurfaceScatteringContributionAndFalloffScale;
+uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform vec4 SunColor;
 uniform vec4 TileLightColor;
 uniform vec4 Time;
@@ -712,26 +716,30 @@ vec3 worldSpaceViewDir(vec3 worldPosition) {
 float wrappedDiffuse(vec3 n, vec3 l, float w) {
     return max((dot(n, l) + w) / ((1.0 + w) * (1.0 + w)), 0.0); // Attention!
 }
-void BSDF_VanillaMinecraft(vec3 n, vec3 l, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, float diffuseEnabled, float specularEnabled, inout vec3 diffuse, inout vec3 specular) {
+void BSDF_VanillaMinecraft(vec3 n, vec3 l, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, float diffuseWrap, vec3 rf0, inout vec3 diffuse, inout vec3 transmittedDiffuse, inout vec3 specular) {
     float nDotL = max(dot(n, l), 0.0);
     float nDotV = max(dot(n, v), 0.0);
-    float nDotLSubsurf = mix(nDotL, wrappedDiffuse(n, l, 0.25) + wrappedDiffuse(-n, l, 0.25), subsurface);
+    float nDotLDiffuse = mix(nDotL, wrappedDiffuse(n, l, diffuseWrap), subsurface);
+    float nDotLTransmitted = subsurface * wrappedDiffuse(-n, l, diffuseWrap);
     vec3 h = normalize(l + v);
     float roughness = linearRoughness * linearRoughness;
     float d = D_GGX_TrowbridgeReitz(n, h, roughness);
     float g = G_Smith(nDotL, nDotV, roughness);
     vec3 f = F_Schlick(v, h, rf0);
-    vec3 albedo = (1.0 - f) * (1.0 - metalness) * color; // Attention!
-    diffuse = nDotLSubsurf * BRDF_Diff_Lambertian(albedo) * diffuseEnabled;
-    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * specularEnabled;
-}
-void BSDF_VanillaMinecraft_DiffuseOnly(vec3 n, vec3 l, vec3 color, float metalness, float subsurface, float diffuseEnabled, inout vec3 diffuse) {
-    float nDotL = max(dot(n, l), 0.0);
-    float nDotLSubsurf = mix(nDotL, wrappedDiffuse(n, l, 0.25) + wrappedDiffuse(-n, l, 0.25), subsurface);
     vec3 albedo = (1.0 - metalness) * color;
-    diffuse = nDotLSubsurf * BRDF_Diff_Lambertian(albedo) * diffuseEnabled;
+    diffuse = nDotLDiffuse * (1.0 - f) * BRDF_Diff_Lambertian(albedo);
+    transmittedDiffuse = nDotLTransmitted * BRDF_Diff_Lambertian(albedo);
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f);
 }
-void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, vec3 v, float metalness, float linearRoughness, vec3 rf0, float specularEnabled, inout vec3 specular) {
+void BSDF_VanillaMinecraft_DiffuseOnly(vec3 n, vec3 l, vec3 color, float metalness, float subsurface, float diffuseWrap, inout vec3 diffuse, inout vec3 transmittedDiffuse) {
+    float nDotL = max(dot(n, l), 0.0);
+    float nDotLDiffuse = mix(nDotL, wrappedDiffuse(n, l, diffuseWrap), subsurface);
+    float nDotLTransmitted = subsurface * wrappedDiffuse(-n, l, diffuseWrap);
+    vec3 albedo = (1.0 - metalness) * color;
+    diffuse = nDotLDiffuse * BRDF_Diff_Lambertian(albedo);
+    transmittedDiffuse = nDotLTransmitted * BRDF_Diff_Lambertian(albedo);
+}
+void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, vec3 v, float metalness, float linearRoughness, vec3 rf0, inout vec3 specular) {
     float nDotL = max(dot(n, l), 0.0);
     float nDotV = max(dot(n, v), 0.0);
     vec3 h = normalize(l + v);
@@ -739,7 +747,7 @@ void BSDF_VanillaMinecraft_SpecularOnly(vec3 n, vec3 l, vec3 v, float metalness,
     float d = D_GGX_TrowbridgeReitz(n, h, roughness);
     float g = G_Smith(nDotL, nDotV, roughness);
     vec3 f = F_Schlick(v, h, rf0);
-    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f) * specularEnabled;
+    specular = nDotL * BRDF_Spec_CookTorrance(nDotL, nDotV, d, g, f);
 }
 vec3 evaluateSampledAmbient(float blockAmbientContribution, vec4 blockAmbientTint, float blockBaseIntensity, float skyAmbientContribution, vec4 skyBaseColorIntensity, float cameraLightSkyIntensity, float ambientFadeInMultiplier) {
     float blockAmbientContributionBalanced = blockAmbientContribution * blockAmbientContribution;
@@ -762,10 +770,10 @@ vec3 calculateRf0(vec3 albedo, float metalness) {
     return rf0;
 }
 vec3 PreExposeLighting(vec3 color, float averageLuminance) {
-    return color * (0.18f / averageLuminance);
+    return color * (0.18f / averageLuminance + 1e - 4);
 }
 vec3 UnExposeLighting(vec3 color, float averageLuminance) {
-    return color / (0.18f / averageLuminance);
+    return color / (0.18f / averageLuminance + 1e - 4);
 }
 float getSkyProbeVisibility(float skyAmbientContribution, float skyFadeStart, float skyFadeEnd) {
     float skyProbeVisRange = max(skyFadeStart - skyFadeEnd, 1.0);
@@ -953,9 +961,15 @@ float GetFilteredCloudShadow(vec3 worldPos, float NdL) {
             float x = float(ix - filterOffset) + 0.5f;
             vec2 offset = vec2(x, y) * ShadowFilterOffsetAndRangeFarAndMapSize.x;
             vec3 uvw = vec3(cloudUv + (offset * CascadeShadowResolutions[cloudCascade]), (DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)));
-            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
-            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
-            amt += bilinearPCF(shadowSamples, weights, cloudProjPos.z);
+            if (bool(ShadowQuantizationParameters.x)) {
+                float shadowDepth = textureSample(s_ShadowCascades, uvw, 0.0).r;
+                amt += float(shadowDepth >= cloudProjPos.z);
+            }
+            else {
+                vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+                vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+                amt += bilinearPCF(shadowSamples, weights, cloudProjPos.z);
+            }
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -968,7 +982,7 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
     playerProjPos.z = min(playerProjPos.z, 1.0);
     vec2 playerUv = (vec2(playerProjPos.x, playerProjPos.y) * 0.5f + 0.5f) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
     const int MaxFilterWidth = 9;
-    int filterWidth = clamp(int(2.0 * 1.0 + 0.5f), 1, MaxFilterWidth);
+    int filterWidth = clamp(int(2.0f * 1.0 + 0.5f), 1, MaxFilterWidth);
     int filterOffset = filterWidth / 2;
     float amt = 0.f;
     playerProjPos.z = playerProjPos.z * 0.5 + 0.5;
@@ -984,9 +998,15 @@ float GetPlayerShadow(vec3 worldPos, float NdL) {
             vec2 offset = vec2(x, y) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z;
             vec2 newUv = playerUv + (offset * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
             vec3 uvw = vec3(newUv.x, newUv.y, ((DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * float(2)) + 1.0));
-            vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
-            vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
-            amt += bilinearPCF(shadowSamples, weights, playerProjPos.z);
+            if (bool(ShadowQuantizationParameters.x)) {
+                float shadowDepth = textureSample(s_ShadowCascades, uvw, 0.0).r;
+                amt += float(shadowDepth >= playerProjPos.z);
+            }
+            else {
+                vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
+                vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
+                amt += bilinearPCF(shadowSamples, weights, playerProjPos.z);
+            }
         }
     }
     return amt / float(filterWidth * filterWidth);
@@ -1012,8 +1032,14 @@ float GetFilteredShadow(int cascadeIndex, float projZ, int cascade, vec2 uv, flo
             vec3 uvw = vec3(baseUv + (offset * CascadeShadowResolutions[cascade]), (float(cascadeIndex) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(cascade));
             vec4 shadowSamples = textureGather(s_ShadowCascades, uvw, 0);
             vec2 weights = bilinearWeights(ShadowFilterOffsetAndRangeFarAndMapSize.z, uvw.xy);
-            amt += bilinearPCF(shadowSamples, weights, projZ - bias);
             transmittanceTotal += bilinearTransmittance(shadowSamples, weights, projZ, falloffScale);
+            if (bool(ShadowQuantizationParameters.x)) {
+                float shadowDepth = shadowSamples.a;
+                amt += float(shadowDepth >= (projZ - bias));
+            }
+            else {
+                amt += bilinearPCF(shadowSamples, weights, projZ - bias);
+            }
         }
     }
     transmittance = transmittanceTotal / float(filterWidth * filterWidth);
@@ -1144,32 +1170,33 @@ vec2 worldToUv(vec3 worldPos, mat4 viewProj) {
     return uv;
 }
 int getWaterDepthIndex(int cascadeNumber) {
-    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.y);
+    return cascadeNumber * int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + int(DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.y);
 }
 bool isUnderwaterAndReceivesDirectionalLight(vec3 objectWorldPos, int lightIdx, out float lightDistance) {
     mat4 surfaceViewProj = DirectionalLightSourceWaterSurfaceViewProj[lightIdx];
     mat4 invSurfaceViewProj = DirectionalLightSourceInvWaterSurfaceViewProj[lightIdx];
     int cascadeNumber = int(DirectionalLightSourceShadowCascadeNumber[lightIdx].x);
-    if (cascadeNumber < 0) {
-        return false;
+    lightDistance = 0.0f;
+    bool isPixelUnderwater = false;
+    if (cascadeNumber >= 0) {
+        vec3 objectPositionSunClipSpace = worldToNdc(objectWorldPos, surfaceViewProj);
+        vec2 uv = worldToUv(objectWorldPos, surfaceViewProj);
+        float sampledDepth = textureSample(s_ShadowCascades, vec3(uv, getWaterDepthIndex(cascadeNumber))).r;
+        sampledDepth = sampledDepth * 2.0f - 1.0f;
+        if (objectPositionSunClipSpace.z > sampledDepth) {
+            vec4 sampledProjPos = vec4(objectPositionSunClipSpace.xy, sampledDepth, 1.0);
+            vec4 sampledWaterSurfaceWorldPos = ((invSurfaceViewProj) * (sampledProjPos)); // Attention!
+            lightDistance = length(sampledWaterSurfaceWorldPos.xyz - objectWorldPos);
+            isPixelUnderwater = true;
+        }
     }
-    vec3 objectPositionSunClipSpace = worldToNdc(objectWorldPos, surfaceViewProj);
-    vec2 uv = worldToUv(objectWorldPos, surfaceViewProj);
-    float sampledDepth = textureSample(s_ShadowCascades, vec3(uv, getWaterDepthIndex(cascadeNumber))).r;
-    sampledDepth = sampledDepth * 2.0f - 1.0f;
-    if (objectPositionSunClipSpace.z > sampledDepth) {
-        vec4 sampledProjPos = vec4(objectPositionSunClipSpace.xy, sampledDepth, 1.0);
-        vec4 sampledWaterSurfaceWorldPos = ((invSurfaceViewProj) * (sampledProjPos)); // Attention!
-        lightDistance = length(sampledWaterSurfaceWorldPos.xyz - objectWorldPos);
-        return true;
-    }
-    return false;
+    return isPixelUnderwater;
 }
 float smoothWindowAttenuation(float sqrDistance, float sqrRadius, float t) {
     return clamp(smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, t) * PointLightAttenuationWindow.z + PointLightAttenuationWindow.w, 0.0, 1.0);
 }
 float smoothDistanceAttenuation(float sqrDistance, float sqrRadius) {
-    float ratio = sqrDistance / sqrRadius;
+    float ratio = sqrDistance / (sqrRadius + 1e - 4);
     float smoothFactor = clamp(1.0f - ratio * ratio, 0.0, 1.0);
     return smoothFactor * smoothFactor;
 }
@@ -1241,11 +1268,11 @@ float calculateDirectOcclusionForDiscreteLight(int lightIndex, vec3 surfaceWorld
             vec3 offsetSampleCoordinates = getSampleCoordinateForAdjacentFace(vec3(sampleCoordinates.x + offset.x, 1.0f - sampleCoordinates.y + offset.y, sampleCoordinates.z));
             offsetSampleCoordinates.z = float(lightInfo.shadowProbeIndex * 6) + offsetSampleCoordinates.z;
             vec4 shadowSamples = textureGather(s_PointLightShadowTextureArray, offsetSampleCoordinates, 0);
-            vec2 weights = bilinearWeights(1.0 / PointLightShadowParams1.w, offsetSampleCoordinates.xy);
+            vec2 weights = bilinearWeights(1.0 / (PointLightShadowParams1.w + 1e - 4), offsetSampleCoordinates.xy);
             directOcclusion += bilinearPCF(shadowSamples, weights, surfaceProjPos.z);
         }
     }
-    return directOcclusion / float(filterWidth * filterWidth);
+    return directOcclusion / float(float(filterWidth * filterWidth) + 1e - 4);
 }
 bool getLightClusterRangeIfValid(vec2 lightClusterUV, float surfaceViewPosZ, out highp int rangeStart, out highp int rangeEnd) {
     vec3 clusterId = getClusterIndex(lightClusterUV, - surfaceViewPosZ, ClusterDimensions.xyz, ClusterNearFarWidthHeight.xy, ClusterNearFarWidthHeight.zw, ClusterSize.xy);
@@ -1291,7 +1318,7 @@ vec3 calculatePointLightIlluminance(int lightIndex, vec3 surfaceWorldPos, vec3 s
     vec3 lightColor = Lights[lightIndex].color.rgb;
     vec3 illuminance = lightColor * lightIntensity * attenuation;
     ambientTint.rgb = lightColor * attenuation;
-    ambientTint.a = 1.0f - squaredDistanceToLight / (r * r);
+    ambientTint.a = 1.0f - squaredDistanceToLight / (r * r + 1e - 4);
     return directOcclusion * illuminance * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
 }
 DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 lightClusterUV, vec3 surfacePos, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 surfaceWorldPos, vec3 surfaceWorldNormal, bool calculateDiffuse, bool calculateSpecular, out bool noDiscreteLight) {
@@ -1318,18 +1345,19 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
         vec3 lightDir = lightPos - surfacePos;
         vec3 l = normalize(lightDir);
         vec3 diffuse = vec3_splat(0.0);
+        vec3 transmittedDiffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
         if (calculateDiffuse) {
             if (calculateSpecular) {
-                BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, DiffuseSpecularEmissiveAmbientTermToggles.x, DiffuseSpecularEmissiveAmbientTermToggles.y, diffuse, specular);
+                BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y, rf0, diffuse, transmittedDiffuse, specular);
             }
             else {
-                BSDF_VanillaMinecraft_DiffuseOnly(n, l, color, metalness, subsurface, DiffuseSpecularEmissiveAmbientTermToggles.x, diffuse);
+                BSDF_VanillaMinecraft_DiffuseOnly(n, l, color, metalness, subsurface, SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y, diffuse, transmittedDiffuse);
             }
         }
         else {
             if (calculateSpecular) {
-                BSDF_VanillaMinecraft_SpecularOnly(n, l, v, metalness, linearRoughness, rf0, DiffuseSpecularEmissiveAmbientTermToggles.y, specular);
+                BSDF_VanillaMinecraft_SpecularOnly(n, l, v, metalness, linearRoughness, rf0, specular);
             }
         }
         usedLightCount ++ ;
@@ -1337,8 +1365,8 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
         bool useShadowBias = true;
         vec3 pointLightContribution = calculatePointLightIlluminance(lightIndex, surfaceWorldPos, surfaceWorldNormal, useShadowBias, ambientTint);
         lightContrib.ambientTint += ambientTint;
-        lightContrib.diffuse += diffuse * pointLightContribution;
-        lightContrib.specular += specular * pointLightContribution;
+        lightContrib.diffuse += (diffuse + transmittedDiffuse) * pointLightContribution * DiffuseSpecularEmissiveAmbientTermToggles.x;
+        lightContrib.specular += specular * pointLightContribution * DiffuseSpecularEmissiveAmbientTermToggles.y;
     }
     if (usedLightCount > 0) {
         lightContrib.ambientTint.rgb = lightContrib.ambientTint.rgb / float(usedLightCount);
@@ -1348,6 +1376,17 @@ DiscreteLightingContributions evaluateDiscreteLightsDirectContribution(vec2 ligh
     return lightContrib;
 }
 void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions lightContrib, float viewDepth, vec3 n, vec3 v, vec3 color, float metalness, float linearRoughness, float subsurface, vec3 rf0, vec3 worldPosition, vec3 worldNormal, float skyAmbient, vec2 causticsMultiplier) {
+    vec3 quantizedWorldPosition = worldPosition;
+    if (ShadowQuantizationParameters.y > 0.0) {
+        vec3 baseWorldPos = worldPosition - WorldOrigin.xyz;
+        vec3 worldPosChangeInX = normalize(dFdx(baseWorldPos));
+        vec3 worldPosChangeInY = normalize(dFdy(baseWorldPos));
+        vec3 approximatedSurfaceNormal = normalize(cross(worldPosChangeInX, worldPosChangeInY));
+        baseWorldPos = mod(baseWorldPos, ShadowQuantizationParameters.z);
+        vec3 baseWorldPosNormalComponent = dot(baseWorldPos, approximatedSurfaceNormal) * approximatedSurfaceNormal;
+        baseWorldPos -= baseWorldPosNormalComponent;
+        quantizedWorldPosition = worldPosition - baseWorldPos;
+    }
     if (abs(skyAmbient) < 0.0001) {
         return;
     }
@@ -1360,15 +1399,15 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
             float nDotsl = max(dot(n, sl), 0.0);
             directOcclusion = GetShadowAmount(
                 i,
-                worldPosition,
+                quantizedWorldPosition,
                 nDotsl,
                 viewDepth,
-                SubsurfaceScatteringContributionAndFalloffScale.y,
+                SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.z,
                 subsurfaceTransmittance
             );
         }
         vec3 waterTransmittance = vec3_splat(1.0);
-        if (bool(DeferredWaterAndDirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.x)) {
+        if (bool(DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex.x)) {
             float lightDistance = 0.0;
             isUnderwaterAndReceivesDirectionalLight(worldPosition, i, lightDistance);
             waterTransmittance = exp(-WaterExtinctionCoefficients.rgb * lightDistance);
@@ -1376,11 +1415,13 @@ void evaluateDirectionalLightsDirectContribution(inout PBRLightingContributions 
         vec3 l = normalize(((View) * (DirectionalLightSourceWorldSpaceDirection[i])).xyz); // Attention!
         vec4 colorAndIlluminance = DirectionalLightSourceDiffuseColorAndIlluminance[i];
         vec3 illuminance = colorAndIlluminance.rgb * colorAndIlluminance.a;
+        vec3 directionalLightContribution = illuminance * waterTransmittance * causticsMultiplier[i] * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
         vec3 diffuse = vec3_splat(0.0);
+        vec3 transmittedDiffuse = vec3_splat(0.0);
         vec3 specular = vec3_splat(0.0);
-        BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, rf0, DiffuseSpecularEmissiveAmbientTermToggles.x, DiffuseSpecularEmissiveAmbientTermToggles.y, diffuse, specular);
-        lightContrib.directDiffuse += diffuse * directOcclusion * illuminance * waterTransmittance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
-        lightContrib.directSpecular += specular * directOcclusion * illuminance * waterTransmittance * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x * causticsMultiplier[i];
+        BSDF_VanillaMinecraft(n, l, v, color, metalness, linearRoughness, subsurface, SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y, rf0, diffuse, transmittedDiffuse, specular);
+        lightContrib.directDiffuse += (diffuse * directOcclusion + transmittedDiffuse * subsurfaceTransmittance) * directionalLightContribution * DiffuseSpecularEmissiveAmbientTermToggles.x;
+        lightContrib.directSpecular += specular * directOcclusion * directionalLightContribution * DiffuseSpecularEmissiveAmbientTermToggles.y;
     }
 }
 vec3 evaluateIndirectLightingDiffuseContribution(vec3 albedo, float blockAmbientContribution, float skyAmbientContribution, float ambientFadeInMultiplier, vec4 ambientTint) {
@@ -1443,8 +1484,8 @@ PBRLightingContributions evaluateFragmentLighting(PBRFragmentInfo fragmentInfo) 
     bool shouldCalculateDiffuseTerm = isCloseEnoughToSeePointLightDiffuse(dist, percentOfDiffuseFade);
     float fadeOutDiffuseMultiplier = 1.0f - percentOfDiffuseFade;
     float viewDistance = length(fragmentInfo.viewPosition);
-    vec3 viewDir = -(fragmentInfo.viewPosition / viewDistance);
-    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContributionAndFalloffScale.x;
+    vec3 viewDir = -(fragmentInfo.viewPosition / (viewDistance + 1e - 4));
+    float subsurface = fragmentInfo.subsurface * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
     vec4 ambientTint = vec4(0.0, 0.0, 0.0, 1.0);
     bool noDiscreteLight = true;
     if (fragmentInfo.ndcPosition.z != 1.0) {
@@ -1524,22 +1565,25 @@ float fBm_ocean(vec2 position, float currentTime) {
     return totalHeight / totalWeights;
 }
 float calculateCausticsMultiplier(vec3 steveSpacePosition, int lightIndex) {
+    float causticsMultiplier = 1.0f;
     if (bool(CausticsParameters.x)) {
-        vec3 worldPosition = steveSpacePosition - WorldOrigin.xyz;
-        vec2 uv = worldToUv(worldPosition, DirectionalLightSourceCausticsViewProj[lightIndex]) * float(CausticsParameters.y);
         float waterDepth = 0.0f;
         bool isPointUnderWater = isUnderwaterAndReceivesDirectionalLight(steveSpacePosition, lightIndex, waterDepth);
-        float outCaustics = 1.0f;
-        if (bool(CausticsTextureParameters.x)&& isPointUnderWater) {
-            uv = vec2(uv.x - floor(uv.x), uv.y - floor(uv.y));
-            uv.y = float(CausticsTextureParameters.y) + uv.y * (float(CausticsTextureParameters.z) - float(CausticsTextureParameters.y));
-            outCaustics = textureSample(s_CausticsTexture, uv).r * 2.f;
-        } else if (isPointUnderWater) {
-            outCaustics = fBm_ocean(uv, Time.x);
+        if (isPointUnderWater) {
+            vec3 worldPosition = steveSpacePosition - WorldOrigin.xyz;
+            vec2 uv = worldToUv(worldPosition, DirectionalLightSourceCausticsViewProj[lightIndex]) * float(CausticsParameters.y);
+            float outCaustics = 1.0f;
+            if (bool(CausticsTextureParameters.x)) {
+                uv = vec2(uv.x - floor(uv.x), uv.y - floor(uv.y));
+                uv.y = float(CausticsTextureParameters.y) + uv.y * (float(CausticsTextureParameters.z) - float(CausticsTextureParameters.y));
+                outCaustics = textureSample(s_CausticsTexture, uv).r * 2.f;
+            } else {
+                outCaustics = fBm_ocean(uv, Time.x);
+            }
+            causticsMultiplier = pow(outCaustics, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
         }
-        return pow(outCaustics, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
     }
-    return 1.0f;
+    return causticsMultiplier;
 }
 void ComputePBR(in StandardSurfaceInput surfaceInput, inout StandardSurfaceOutput surfaceOutput) {
     PBRFragmentInfo fragmentData;

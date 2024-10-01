@@ -3,7 +3,6 @@
 *
 * Passes:
 * - OPAQUE_PASS (not used)
-* - RASTERIZED_OPAQUE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
@@ -121,7 +120,7 @@ struct FragmentOutput {
 
 SAMPLER2D_AUTOREG(s_ParallaxTexture);
 SAMPLER2D_AUTOREG(s_ColorTexture);
-void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+void EndPortalFrag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
     vec4 diffuse = textureSample(s_ColorTexture, fragInput.colorUV);
     vec3 parallax = textureSample(s_ParallaxTexture, fragInput.parallaxUV).rgb;
     float brightness = (1.0 - fragInput.encodedPlane);
@@ -134,6 +133,9 @@ void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
         diffuse = vec4(diffuse.rgb * (1.0 - fragInput.fog.a), 0.0);
     }
     fragOutput.Color0 = diffuse;
+}
+void Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {
+    EndPortalFrag(fragInput, fragOutput);
 }
 void main() {
     FragmentInput fragmentInput;

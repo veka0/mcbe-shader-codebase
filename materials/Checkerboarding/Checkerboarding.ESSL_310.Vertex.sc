@@ -3,7 +3,6 @@
 *
 * Passes:
 * - DO_CHECKERBOARDING_PASS (not used)
-* - ESSL_100_PASS (not used)
 * - FALLBACK_PASS (not used)
 */
 

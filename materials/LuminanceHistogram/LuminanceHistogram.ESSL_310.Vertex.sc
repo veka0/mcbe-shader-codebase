@@ -29,6 +29,7 @@ struct accelerationStructureKHR {
 };
 
 uniform vec4 EnableCustomWeight;
+uniform vec4 CenterWeight;
 uniform vec4 Adaptation;
 uniform vec4 AdaptiveParameters;
 uniform vec4 LogLuminanceRange;
@@ -73,9 +74,9 @@ struct FragmentOutput {
 
 SAMPLER2D_AUTOREG(s_GameColor);
 IMAGE2D_RW_AUTOREG(s_AdaptedFrameAverageLuminance, r32f);
-IMAGE2D_RW_AUTOREG(s_MaxFrameLuminance, r32f);
 SAMPLER2D_AUTOREG(s_CustomWeight);
 SAMPLER2D_AUTOREG(s_PreviousFrameAverageLuminance);
+const float kHistogramWeightScaleFactor = float(1 << 8);
 void Vert(VertexInput vertInput, inout VertexOutput vertOutput) {
 }
 void main() {

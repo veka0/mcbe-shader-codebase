@@ -68,6 +68,9 @@ vec4 textureSample(mediump sampler2DArray _sampler, vec3 _coord, float _lod) {
 vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, float _lod) {
     return textureLod(_sampler, _coord, _lod);
 }
+vec4 textureSample(mediump samplerCubeArray _sampler, vec4 _coord, int _lod) {
+    return textureLod(_sampler, _coord, float(_lod));
+}
 vec4 textureSample(NoopSampler noopsampler, vec2 _coord) {
     return vec4(0, 0, 0, 0);
 }
@@ -400,6 +403,10 @@ void ItemInHandGeometryPrepass(in StandardSurfaceInput surfaceInput, inout Stand
     #ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
     ItemInHandGlint_getPBRSurfaceOutputValues(surfaceInput, surfaceOutput, true);
     #endif
+    surfaceOutput.Metallic = surfaceInput.mers.x;
+    surfaceOutput.Emissive = surfaceInput.mers.y;
+    surfaceOutput.Roughness = surfaceInput.mers.z;
+    surfaceOutput.Subsurface = surfaceInput.mers.w;
 }
 #endif
 void StandardTemplate_Opaque_Frag(FragmentInput fragInput, inout FragmentOutput fragOutput) {

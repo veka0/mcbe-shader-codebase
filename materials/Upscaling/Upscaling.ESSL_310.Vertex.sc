@@ -28,16 +28,16 @@ struct accelerationStructureKHR {
     int noop;
 };
 
+uniform vec4 TAAUpscalingParameters;
+uniform vec4 ResolutionRatiosAndFPEpsilon;
 uniform vec4 SubPixelJitter;
 uniform mat4 CurrentViewProjectionMatrixUniform;
 uniform vec4 CurrentWorldOrigin;
 uniform vec4 DisplayResolution;
-uniform vec4 RecipDisplayResolution;
-uniform vec4 DisplayResolutionDivRenderResolution;
 uniform mat4 PreviousViewProjectionMatrixUniform;
 uniform vec4 PreviousWorldOrigin;
+uniform vec4 RecipDisplayResolution;
 uniform vec4 RenderResolution;
-uniform vec4 RenderResolutionDivDisplayResolution;
 vec4 ViewRect;
 mat4 Proj;
 mat4 View;
