@@ -55,6 +55,7 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 Dimensions;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 * - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];

@@ -59,18 +59,18 @@ uniform vec4 ClusterDimensions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
 uniform vec4 LightsPerCluster;
-void func_b9786(inout float arg_82de1, inout float arg_400d4, inout vec2 arg_11328, inout float arg_e3063) {
+void func_be74c(inout float arg_82de1, inout float arg_0e454, inout vec2 arg_56080, inout float arg_c5c17) {
     if (arg_82de1 == 0.0)
     {
-        arg_400d4 = arg_11328.x;
+        arg_0e454 = arg_56080.x;
         return;
     }
     if (arg_82de1 == 1.0)
     {
-        arg_400d4 = 1.0;
+        arg_0e454 = 1.0;
         return;
     }
-    arg_400d4 = pow(2.0, (log2(arg_11328.y * 0.666666686534881591796875) * (arg_e3063 + (-1.5))) / (ClusterDimensions.z - 2.0));
+    arg_0e454 = exp2((log2(arg_56080.y * 0.666666686534881591796875) * (arg_c5c17 + (-1.5))) / (ClusterDimensions.z - 2.0));
 }
 void func_a7e78() {
     float loc_24753 = float(GlobalInvocationID.x);
@@ -105,7 +105,7 @@ void func_a7e78() {
     float loc_a0b8b = loc_a3df9 + 0.5;
     vec2 loc_77a9e = ClusterNearFarWidthHeight.xy;
     float loc_ade86;
-    func_b9786(loc_a0b8b, loc_ade86, loc_77a9e, loc_a3df9);
+    func_be74c(loc_a0b8b, loc_ade86, loc_77a9e, loc_a3df9);
     float loc_8aa53 = loc_ade86 / CameraFarPlane.z;
     vec3 loc_e90de = vec3(((((loc_24753 + 0.5) * ClusterSize.x) - (ClusterNearFarWidthHeight.z * 0.5)) / ClusterNearFarWidthHeight.z) * (CameraFarPlane.x * loc_8aa53), ((((loc_bc44b + 0.5) * ClusterSize.y) - (ClusterNearFarWidthHeight.w * 0.5)) / ClusterNearFarWidthHeight.w) * (CameraFarPlane.y * loc_8aa53), -loc_ade86);
     int loc_c6dc4;

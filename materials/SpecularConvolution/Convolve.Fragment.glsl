@@ -142,10 +142,10 @@ void main() {
             if (var_2b693 > 0.0)
             {
                 highp float var_464ee = var_74b01 * var_74b01;
-                highp float var_6a8bf = var_464ee * var_464ee;
-                highp float var_14c80 = max(dot(var_87300, var_27349), 0.0);
-                highp float var_499ce = max((((var_6a8bf - 1.0) * var_14c80) * var_14c80) + 1.0, 9.9999997473787516355514526367188e-05);
-                var_fcb6a = var_f6f4d + (textureLod(s_CubeMap, var_4a4ca, max(0.5 * log2((1.0 / (float(var_49670) * ((var_6a8bf / ((var_499ce * var_499ce) * 3.1415927410125732421875)) * 0.249993741512298583984375))) / (12.56637096405029296875 / ((6.0 * var_c2ebf) * var_c2ebf))), 0.0)).xyz * var_2b693);
+                highp float var_14b02 = var_464ee * var_464ee;
+                highp float var_7e8fc = max(dot(var_87300, var_27349), 0.0);
+                highp float var_f444a = (((var_14b02 - 1.0) * var_7e8fc) * var_7e8fc) + 1.0;
+                var_fcb6a = var_f6f4d + (textureLod(s_CubeMap, var_4a4ca, max(0.5 * log2((1.0 / (float(var_49670) * ((var_14b02 / ((var_f444a * var_f444a) * 3.1415927410125732421875)) * 0.249993741512298583984375))) / (12.56637096405029296875 / ((6.0 * var_c2ebf) * var_c2ebf))), 0.0)).xyz * var_2b693);
                 var_8354f = var_5813b + var_2b693;
             }
             else

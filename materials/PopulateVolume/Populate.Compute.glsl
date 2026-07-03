@@ -42,6 +42,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 * - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
@@ -151,6 +152,7 @@ uniform vec4 ClusterDimensions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
 uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform vec4 DirectionalLightSourceIsSun[2];
 uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
@@ -732,7 +734,7 @@ void func_d7ccf(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     }
     arg_534d1 = loc_127d4;
 }
-void func_3c2de() {
+void func_88f87() {
     int loc_b5e48 = int(GlobalInvocationID.x);
     int loc_45941 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
@@ -770,8 +772,18 @@ void func_3c2de() {
     float loc_cf02a = mix(mix(loc_305d0 * AirAlbedoExtinction.w, WaterAlbedoExtinction.w, loc_ac022), 0.0, loc_cc74f);
     vec3 loc_db03d = ((loc_8d3b7 * 0.079577468335628509521484375) * max(((BlockBaseAmbientLightColorIntensity.xyz * AmbientContribution.x) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * AmbientContribution.y) * SkyAmbientLightColorIntensity.w), vec3(AmbientContribution.z))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
     vec3 loc_d517c = -(loc_3ced2 / vec3(loc_1595d));
+    bool loc_5b439 = !(DirectionalLightSkyLightHeuristicToggles.y != 0.0);
+    bool loc_bc4cf;
+    if (!loc_5b439)
+    {
+        loc_bc4cf = abs(AmbientContribution.y) > 9.9999997473787516355514526367188e-05;
+    }
+    else
+    {
+        loc_bc4cf = loc_5b439;
+    }
     vec3 loc_81938;
-    if (abs(AmbientContribution.y) > 9.9999997473787516355514526367188e-05)
+    if (loc_bc4cf)
     {
         int loc_c08a4 = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
         vec3 loc_b2f11;
@@ -960,5 +972,5 @@ void func_3c2de() {
 }
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_3c2de();
+    func_88f87();
 }

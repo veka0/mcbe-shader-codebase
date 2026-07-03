@@ -70,44 +70,44 @@ shared LightContribution contributionArray[64][16];
 #ifdef CHANGE_MAX_LIGHT_PER_CLUSTER__OFF
 shared LightContribution contributionArray[64][32];
 #endif
-void func_0d578(inout float arg_497b1, inout float arg_f4ee5, inout vec2 arg_7f43b) {
-    if (arg_497b1 == 0.0)
+void func_920ae(inout float arg_906aa, inout float arg_24f67, inout vec2 arg_bd839) {
+    if (arg_906aa == 0.0)
     {
-        arg_f4ee5 = arg_7f43b.x;
+        arg_24f67 = arg_bd839.x;
         return;
     }
-    if (arg_497b1 == 1.0)
+    if (arg_906aa == 1.0)
     {
-        arg_f4ee5 = 1.0;
+        arg_24f67 = 1.0;
         return;
     }
-    arg_f4ee5 = pow(2.0, (log2(arg_7f43b.y * 0.666666686534881591796875) * (arg_497b1 - 2.0)) / (ClusterDimensions.z - 2.0));
+    arg_24f67 = exp2((log2(arg_bd839.y * 0.666666686534881591796875) * (arg_906aa - 2.0)) / (ClusterDimensions.z - 2.0));
 }
-void func_d80de(inout float arg_82de1, inout float arg_8df00, inout vec2 arg_cab42, inout float arg_8eb6a) {
+void func_07fed(inout float arg_82de1, inout float arg_bdb7a, inout vec2 arg_0d0ae, inout float arg_515bf) {
     if (arg_82de1 == 0.0)
     {
-        arg_8df00 = arg_cab42.x;
+        arg_bdb7a = arg_0d0ae.x;
         return;
     }
     if (arg_82de1 == 1.0)
     {
-        arg_8df00 = 1.0;
+        arg_bdb7a = 1.0;
         return;
     }
-    arg_8df00 = pow(2.0, (log2(arg_cab42.y * 0.666666686534881591796875) * (arg_8eb6a + (-1.0))) / (ClusterDimensions.z - 2.0));
+    arg_bdb7a = exp2((log2(arg_0d0ae.y * 0.666666686534881591796875) * (arg_515bf + (-1.0))) / (ClusterDimensions.z - 2.0));
 }
-void func_b9786(inout float arg_82de1, inout float arg_400d4, inout vec2 arg_11328, inout float arg_e3063) {
+void func_be74c(inout float arg_82de1, inout float arg_0e454, inout vec2 arg_56080, inout float arg_c5c17) {
     if (arg_82de1 == 0.0)
     {
-        arg_400d4 = arg_11328.x;
+        arg_0e454 = arg_56080.x;
         return;
     }
     if (arg_82de1 == 1.0)
     {
-        arg_400d4 = 1.0;
+        arg_0e454 = 1.0;
         return;
     }
-    arg_400d4 = pow(2.0, (log2(arg_11328.y * 0.666666686534881591796875) * (arg_e3063 + (-1.5))) / (ClusterDimensions.z - 2.0));
+    arg_0e454 = exp2((log2(arg_56080.y * 0.666666686534881591796875) * (arg_c5c17 + (-1.5))) / (ClusterDimensions.z - 2.0));
 }
 void func_f8902() {
     float loc_b9559 = float(GlobalInvocationID.x);
@@ -282,7 +282,7 @@ void func_f8902() {
         }
         vec2 loc_2e98e = ClusterNearFarWidthHeight.xy;
         float loc_d20b9;
-        func_0d578(loc_084cb, loc_d20b9, loc_2e98e);
+        func_920ae(loc_084cb, loc_d20b9, loc_2e98e);
         vec3 loc_e9bcc;
         if (loc_fcddd == (-1))
         {
@@ -318,7 +318,7 @@ void func_f8902() {
         float loc_59c94 = loc_084cb + 1.0;
         vec2 loc_7f96a = ClusterNearFarWidthHeight.xy;
         float loc_b89da;
-        func_d80de(loc_59c94, loc_b89da, loc_7f96a, loc_084cb);
+        func_07fed(loc_59c94, loc_b89da, loc_7f96a, loc_084cb);
         vec3 loc_e5f5c;
         loc_e5f5c = vec3(0.0);
         vec3 loc_c4421;
@@ -345,7 +345,7 @@ void func_f8902() {
         float loc_fc5c3 = loc_084cb + 0.5;
         vec2 loc_ebda0 = ClusterNearFarWidthHeight.xy;
         float loc_71d2f;
-        func_b9786(loc_fc5c3, loc_71d2f, loc_ebda0, loc_084cb);
+        func_be74c(loc_fc5c3, loc_71d2f, loc_ebda0, loc_084cb);
         vec3 loc_b09bd = (ViewMat * vec4(loc_88c6d.xyz, 1.0)).xyz;
         float loc_fd6dc = (CameraClusterWeight.x * max(1.0 - (length(loc_b09bd) / length(loc_9a286)), 0.0)) + (CameraClusterWeight.y * max(1.0 - (length(loc_b09bd - vec3((loc_71d2f * ((min((loc_b9559 + 0.5) * ClusterSize.x, ClusterNearFarWidthHeight.z) - (ClusterNearFarWidthHeight.z * 0.5)) / ClusterNearFarWidthHeight.z)) / ProjMat[0].x, (loc_71d2f * ((min((loc_95f7a + 0.5) * ClusterSize.y, ClusterNearFarWidthHeight.w) - (ClusterNearFarWidthHeight.w * 0.5)) / ClusterNearFarWidthHeight.w)) / ProjMat[1].y, -loc_71d2f)) / (length(loc_9a286 - loc_5fc8c) * 0.5)), 0.0));
         bool loc_c1fd8 = loc_95601 >= loc_aa6c6;
