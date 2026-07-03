@@ -30,7 +30,6 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
-* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;

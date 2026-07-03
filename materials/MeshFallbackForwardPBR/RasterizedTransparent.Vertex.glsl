@@ -24,6 +24,10 @@
 * - INSTANCING__OFF
 * - INSTANCING__ON
 *
+* Lit:
+* - LIT__OFF (not used)
+* - LIT__ON (not used)
+*
 * UseTextures:
 * - USE_TEXTURES__OFF (not used)
 * - USE_TEXTURES__ON (not used)

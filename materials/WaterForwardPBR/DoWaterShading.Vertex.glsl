@@ -42,7 +42,6 @@
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
-* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -124,7 +123,9 @@
 */
 
 uniform mat4 u_model[4];
-uniform mat4 u_viewProj;
+uniform mat4 u_proj;
+uniform mat4 u_view;
+uniform vec4 SubPixelOffset;
 in vec4 a_color0;
 in vec2 a_texcoord1;
 in vec4 a_normal;
@@ -148,7 +149,7 @@ centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
-    vec4 var_9b079 = u_model[0] * vec4(a_position, 1.0);
+    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -159,8 +160,11 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_9b079 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
+    mat4 var_be69c = u_proj;
+    var_be69c[2].x += SubPixelOffset.x;
+    var_be69c[2].y -= SubPixelOffset.y;
     vec4 var_4938b = a_tangent;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_color0 = a_color0;
@@ -170,6 +174,6 @@ void main() {
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_worldPos = var_9b079.xyz;
-    gl_Position = u_viewProj * vec4(var_9b079.xyz, 1.0);
+    v_worldPos = var_a67a8.xyz;
+    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
 }
