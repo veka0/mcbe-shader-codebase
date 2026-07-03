@@ -9,9 +9,11 @@
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2D s_BiomeBlendingMap;
+* - layout(binding = 2, std430) buffer s_BiomeInfoBufferBuffer { BiomeInfo s_BiomeInfoBuffer[]; };
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - layout(binding = 3, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
-* - layout(binding = 4, std430) buffer s_LightsBuffer { Light s_Lights[]; };
+* - layout(binding = 5, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
+* - layout(binding = 6, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -21,6 +23,8 @@
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
+* - uniform vec4 BiomeBlendingLastUpdatePosition;
+* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
@@ -54,6 +58,7 @@
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
+* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;

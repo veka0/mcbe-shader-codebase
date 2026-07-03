@@ -15,12 +15,14 @@
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2D s_BiomeBlendingMap;
+* - layout(binding = 1, std430) buffer s_BiomeInfoBufferBuffer { BiomeInfo s_BiomeInfoBuffer[]; };
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
-* - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
-* - layout(binding = 5, std430) buffer s_LightsBuffer { Light s_Lights[]; };
+* - layout(binding = 6, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
+* - layout(binding = 7, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_Normal;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
@@ -34,12 +36,15 @@
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
+* - uniform vec4 BiomeBlendingLastUpdatePosition;
+* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
+* - uniform vec4 ClampViewVectors;
 * - uniform mat4 CloudShadowProj;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
@@ -77,6 +82,7 @@
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
+* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
@@ -98,6 +104,7 @@
 * - uniform vec4 SkyHorizonColor;
 * - uniform vec4 SkyProbeUVFadeParameters;
 * - uniform vec4 SkyZenithColor;
+* - uniform vec4 SubPixelOffset;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
@@ -126,6 +133,7 @@ uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
 uniform highp vec4 BlockBaseAmbientLightColorIntensity;
 uniform highp vec4 CameraLightIntensity;
+uniform highp vec4 ClampViewVectors;
 uniform highp vec4 CurrentFace;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -168,11 +176,21 @@ void main() {
     highp vec4 var_d5758 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0);
     highp vec3 var_900f6 = vec3(v_projPosition.xy, var_971b7);
     highp vec3 var_ce195 = pow(max(var_27860.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
-    highp vec3 var_4323b = normalize((u_invView * vec4(var_98bb3.xyz, 1.0)).xyz - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
-    if (var_4323b.y < 0.100000001490116119384765625)
+    highp vec3 var_1906c = normalize((u_invView * vec4(var_98bb3.xyz, 1.0)).xyz - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+    bool var_431a3 = var_1906c.y < 0.100000001490116119384765625;
+    bool var_2588b;
+    if (var_431a3)
     {
-        var_4323b.y = 0.100000001490116119384765625;
-        var_4323b = normalize(var_4323b);
+        var_2588b = ClampViewVectors.x > 0.0;
+    }
+    else
+    {
+        var_2588b = var_431a3;
+    }
+    if (var_2588b)
+    {
+        var_1906c.y = 0.100000001490116119384765625;
+        var_1906c = normalize(var_1906c);
     }
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
@@ -221,12 +239,12 @@ void main() {
             {
                 highp vec4 var_52ab1 = SunColor;
                 highp vec4 var_c9ec4 = MoonColor;
-                highp vec3 var_e3755 = var_4323b;
+                highp vec3 var_e3755 = var_1906c;
                 highp float var_7b136 = FogSkyBlend.x - FogSkyBlend.w;
                 highp float var_e285c = smoothstep(FogSkyBlend.y, var_7b136, var_e3755.y);
                 highp float var_2ea2e = smoothstep(FogSkyBlend.z - FogSkyBlend.w, var_7b136, var_e3755.y);
-                highp float var_ec0d7 = dot(var_4323b, SunDir.xyz);
-                highp float var_f7518 = dot(var_4323b, MoonDir.xyz);
+                highp float var_ec0d7 = dot(var_1906c, SunDir.xyz);
+                highp float var_f7518 = dot(var_1906c, MoonDir.xyz);
                 highp float var_ae688 = clamp(pow(max(var_ec0d7, 0.0), AtmosphericScattering.w), 0.0, 1.0);
                 highp float var_a74b4 = clamp(pow(max(var_f7518, 0.0), AtmosphericScattering.w), 0.0, 1.0);
                 highp float var_6773c = 1.809999942779541015625 - (var_ae688 * 1.7999999523162841796875);

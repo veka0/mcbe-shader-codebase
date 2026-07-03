@@ -15,11 +15,13 @@
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2D s_BiomeBlendingMap;
+* - layout(binding = 4, std430) buffer s_BiomeInfoBufferBuffer { BiomeInfo s_BiomeInfoBuffer[]; };
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2DArray s_CurrentLightingBuffer;
-* - layout(binding = 5, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
-* - layout(binding = 6, std430) buffer s_LightsBuffer { Light s_Lights[]; };
+* - layout(binding = 7, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_PreviousLightingBuffer;
@@ -35,6 +37,8 @@
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
+* - uniform vec4 BiomeBlendingLastUpdatePosition;
+* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
@@ -81,6 +85,7 @@
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
+* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
@@ -138,8 +143,8 @@ struct LightData {
     float lookup;
 };
 
-layout(binding = 6, std430) buffer s_Lights { Light Lights[]; } var_40487;
-layout(binding = 5, std430) buffer s_LightLookupArray { LightData LightLookupArray[]; } var_71277;
+layout(binding = 8, std430) buffer s_Lights { Light Lights[]; } var_731a5;
+layout(binding = 7, std430) buffer s_LightLookupArray { LightData LightLookupArray[]; } var_65cd1;
 layout(location = 0, binding = 0, rgba16f) uniform writeonly highp image2DArray s_CurrentLightingBuffer;
 uniform highp sampler2D s_ScreenSpaceWaterFrontFaceDepthAndNormal;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
@@ -709,12 +714,12 @@ void func_4147b(inout vec3 arg_bfa93, inout vec3 arg_580a2, inout int arg_e45b8,
     arg_d7f4c = true;
 }
 void func_29f2f(inout int arg_0f3c7, inout float arg_9eee0, inout vec3 arg_451b8) {
-    if (var_40487.Lights[arg_0f3c7].shadowProbeIndex < 0)
+    if (var_731a5.Lights[arg_0f3c7].shadowProbeIndex < 0)
     {
         arg_9eee0 = 1.0;
         return;
     }
-    vec3 loc_4a72a = arg_451b8 - var_40487.Lights[arg_0f3c7].position.xyz;
+    vec3 loc_4a72a = arg_451b8 - var_731a5.Lights[arg_0f3c7].position.xyz;
     vec3 loc_0ca8f = abs(loc_4a72a);
     bool loc_ab77c = loc_0ca8f.x >= loc_0ca8f.y;
     bool loc_ca7f9;
@@ -759,7 +764,7 @@ void func_29f2f(inout int arg_0f3c7, inout float arg_9eee0, inout vec3 arg_451b8
         loc_7225b.y *= (-1.0);
     }
     float loc_41e57;
-    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_7225b, float(var_40487.Lights[arg_0f3c7].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_1eba1.z)
+    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_7225b, float(var_731a5.Lights[arg_0f3c7].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_1eba1.z)
     {
         loc_41e57 = 1.0;
     }
@@ -776,7 +781,7 @@ void func_0a991(inout int arg_5a5a2, inout float arg_43b7a, inout vec3 arg_24936
         arg_24936 = vec3(0.0);
         return;
     }
-    vec3 loc_c75ea = var_40487.Lights[arg_5a5a2].position.xyz - arg_525e6;
+    vec3 loc_c75ea = var_731a5.Lights[arg_5a5a2].position.xyz - arg_525e6;
     vec3 loc_757d0 = loc_c75ea;
     float loc_60aa0;
     if (ManhattanDistAttenuationEnabled.x > 0.0)
@@ -788,7 +793,7 @@ void func_0a991(inout int arg_5a5a2, inout float arg_43b7a, inout vec3 arg_24936
     {
         loc_60aa0 = dot(loc_c75ea, loc_c75ea);
     }
-    if (loc_60aa0 >= (var_40487.Lights[arg_5a5a2].position.w * var_40487.Lights[arg_5a5a2].position.w))
+    if (loc_60aa0 >= (var_731a5.Lights[arg_5a5a2].position.w * var_731a5.Lights[arg_5a5a2].position.w))
     {
         arg_43b7a = 1.0;
         arg_24936 = vec3(0.0);
@@ -805,7 +810,7 @@ void func_0a991(inout int arg_5a5a2, inout float arg_43b7a, inout vec3 arg_24936
     {
         loc_b326d = 1.0;
     }
-    float loc_5b0fa = loc_60aa0 / ((var_40487.Lights[arg_5a5a2].position.w * var_40487.Lights[arg_5a5a2].position.w) + 9.9999997473787516355514526367188e-05);
+    float loc_5b0fa = loc_60aa0 / ((var_731a5.Lights[arg_5a5a2].position.w * var_731a5.Lights[arg_5a5a2].position.w) + 9.9999997473787516355514526367188e-05);
     float loc_f4af9 = clamp(1.0 - (loc_5b0fa * loc_5b0fa), 0.0, 1.0);
     float loc_7abdc = (1.0 / max(loc_60aa0, 9.9999997473787516355514526367188e-05)) * (loc_f4af9 * loc_f4af9);
     float loc_67484;
@@ -818,7 +823,7 @@ void func_0a991(inout int arg_5a5a2, inout float arg_43b7a, inout vec3 arg_24936
         loc_67484 = loc_7abdc;
     }
     arg_43b7a = loc_b326d;
-    arg_24936 = ((var_40487.Lights[arg_5a5a2].color.xyz * var_40487.Lights[arg_5a5a2].color.w) * loc_67484) * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
+    arg_24936 = ((var_731a5.Lights[arg_5a5a2].color.xyz * var_731a5.Lights[arg_5a5a2].color.w) * loc_67484) * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
 }
 void func_ceeb4(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1, inout vec3 arg_81f82, inout float arg_369c8, inout vec3 arg_0a773, inout vec3 arg_be743, inout vec3 arg_e7cf5) {
     bool loc_9f3ca;
@@ -835,7 +840,7 @@ void func_ceeb4(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     vec3 loc_3e87e;
     for (int loc_bee0c = loc_9b40b; loc_bee0c < loc_fbf40; loc_ceaba = loc_3e87e, loc_bee0c++)
     {
-        int loc_982e0 = int(var_71277.LightLookupArray[loc_bee0c].lookup);
+        int loc_982e0 = int(var_65cd1.LightLookupArray[loc_bee0c].lookup);
         if (loc_982e0 < 0)
         {
             break;
@@ -843,7 +848,7 @@ void func_ceeb4(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
         vec3 loc_102a3;
         float loc_b0161;
         func_0a991(loc_982e0, loc_b0161, loc_102a3, arg_81f82);
-        float loc_fc58a = (1.0 + (arg_369c8 * arg_369c8)) + ((2.0 * arg_369c8) * dot(arg_0a773, normalize((u_view * vec4(var_40487.Lights[loc_982e0].position.xyz, 1.0)).xyz - arg_be743)));
+        float loc_fc58a = (1.0 + (arg_369c8 * arg_369c8)) + ((2.0 * arg_369c8) * dot(arg_0a773, normalize((u_view * vec4(var_731a5.Lights[loc_982e0].position.xyz, 1.0)).xyz - arg_be743)));
         loc_3e87e = loc_ceaba + (((arg_e7cf5 * ((0.079577468335628509521484375 * (1.0 - (arg_369c8 * arg_369c8))) / (loc_fc58a * sqrt(loc_fc58a)))) * loc_b0161) * loc_102a3);
     }
     arg_534d1 = loc_ceaba;
