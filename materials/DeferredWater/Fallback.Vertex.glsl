@@ -4,22 +4,13 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_AND_NORMAL_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
-* - DO_WATER_SHADING_PASS (not used)
-* - DO_WATER_SURFACE_BUFFER_PASS (not used)
+* - FALLBACK_PASS (not used)
+* - WATER_EXTINCTION_PASS (not used)
+* - WATER_SURFACE_PASS (not used)
 *
-* Instancing:
-* - INSTANCING__OFF
-* - INSTANCING__ON
-*
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF (not used)
-* - RENDER_AS_BILLBOARDS__ON (not used)
-*
-* Seasons:
-* - SEASONS__OFF (not used)
-* - SEASONS__ON (not used)
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
 *
 * Available Resources:
 *
@@ -27,16 +18,16 @@
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform lowp sampler2D s_LightMapTexture;
-* - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - uniform lowp sampler2D s_ColorMetalnessSubsurface;
+* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+* - uniform lowp sampler2D s_Normal;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
-* - uniform lowp sampler2D s_SeasonsTexture;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
+* - uniform lowp sampler2D s_WaterDepth;
 * - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
 * - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
 * - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
@@ -49,6 +40,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraIsUnderwater;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -75,14 +67,10 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
-* - uniform vec4 GlobalRoughness;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
-* - uniform vec4 LightDiffuseColorAndIlluminance;
-* - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
@@ -108,7 +96,6 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
-* - uniform vec4 ViewPositionAndTime;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -122,58 +109,17 @@
 * - uniform vec4 WorldOrigin;
 */
 
-uniform mat4 u_model[4];
-uniform mat4 u_proj;
-uniform mat4 u_view;
-uniform vec4 SubPixelOffset;
-in vec4 a_color0;
-in vec2 a_texcoord1;
-in vec4 a_normal;
-in float a_texcoord4;
+uniform vec4 ViewportScale;
 in vec3 a_position;
-in vec4 a_tangent;
 in vec2 a_texcoord0;
-#ifdef INSTANCING__ON
-in vec4 i_data1;
-in vec4 i_data2;
-in vec4 i_data3;
-#endif
-out vec3 v_bitangent;
-out vec4 v_color0;
-flat out int v_frontFacing;
-out vec2 v_lightmapUV;
-out vec3 v_normal;
-flat out int v_pbrTextureId;
-out vec3 v_tangent;
-centroid out vec2 v_texcoord0;
-out vec3 v_worldPos;
+out vec3 v_projPosition;
+out vec4 v_texcoord0;
 void main() {
-#ifdef INSTANCING__OFF
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
-#endif
-#ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
-#endif
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
-    vec4 var_4938b = a_tangent;
-    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
-    v_color0 = a_color0;
-    v_frontFacing = 0;
-    v_lightmapUV = a_texcoord1;
-    v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
-    v_pbrTextureId = int(a_texcoord4) & 65535;
-    v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = a_texcoord0;
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
+    vec4 var_c3366 = vec4(a_position, 1.0);
+    vec2 var_19dcd = (var_c3366.xy * 2.0) - vec2(1.0);
+    vec2 var_00970 = (a_position.xy * 2.0) - vec2(1.0);
+    vec2 var_828cb = a_texcoord0 * ViewportScale.xy;
+    v_projPosition = vec3(var_00970.x, var_00970.y, a_position.z);
+    v_texcoord0 = vec4(var_828cb.x, var_828cb.y, a_texcoord0.x, a_texcoord0.y);
+    gl_Position = vec4(var_19dcd.x, var_19dcd.y, var_c3366.z, var_c3366.w);
 }

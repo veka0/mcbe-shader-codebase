@@ -6,7 +6,6 @@
 * Passes:
 * - DEPTH_AND_NORMAL_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
-* - DO_WATER_SHADING_PASS (not used)
 * - DO_WATER_SURFACE_BUFFER_PASS (not used)
 *
 * Instancing:

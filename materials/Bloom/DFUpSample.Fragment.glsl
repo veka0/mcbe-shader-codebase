@@ -7,10 +7,12 @@
 * - BLOOM_BLEND_PASS (not used)
 * - DF_DOWN_SAMPLE_PASS (not used)
 * - DF_UP_SAMPLE_PASS (not used)
+* - THRESHOLDED_DOWN_SAMPLE_PASS (not used)
 *
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2D s_AverageLuminance;
 * - uniform lowp sampler2D s_BlurPyramidTexture;
 * - uniform lowp sampler2D s_HDRi;
 * - uniform lowp sampler2D s_RasterColor;
