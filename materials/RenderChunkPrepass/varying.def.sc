@@ -13,7 +13,11 @@ vec4 i_data2 : TEXCOORD6;
 vec4 i_data3 : TEXCOORD5;
 
 vec3     v_bitangent    : BITANGENT;
+#ifdef GEOMETRY_PREPASS_ALPHA_TEST_PASS
+vec4     v_clipPosition : COLOR1;
+#endif
 vec4     v_color0       : COLOR0;
+float    v_dithering    : TEXCOORD2;
 #if defined(GEOMETRY_PREPASS_ALPHA_TEST_PASS) || defined(GEOMETRY_PREPASS_PASS)
 flat int v_frontFacing  : FRONTFACING;
 #endif

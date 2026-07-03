@@ -9,6 +9,10 @@
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -30,6 +34,8 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2;
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
@@ -59,6 +65,7 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+out float v_dithering;
 flat out int v_frontFacing;
 out vec2 v_lightmapUV;
 out vec3 v_normal;
@@ -101,6 +108,8 @@ void main() {
     var_dd47a[2].x += SubPixelOffset.x;
     var_dd47a[2].y -= SubPixelOffset.y;
     vec4 var_4938b = a_tangent;
+    vec2 var_e91ee = a_texcoord1;
+    uint var_960bd = uint(floor(var_e91ee.x * 255.0));
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
@@ -108,8 +117,9 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
+    v_dithering = float(uint(floor(var_e91ee.y * 255.0)) & 1u);
     v_frontFacing = 0;
-    v_lightmapUV = a_texcoord1;
+    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;

@@ -154,7 +154,7 @@ struct LightData {
 };
 
 int var_e7b23;
-float var_aaae6;
+float var_6394b;
 layout(binding = 4, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_30262;
 layout(binding = 12, std430) buffer s_zLights { Light zLights[]; } var_6f64b;
 layout(binding = 11, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_dfd7f;
@@ -1113,25 +1113,25 @@ void func_3da12(inout highp vec2 arg_c3b89, inout highp float arg_1615d, inout h
     arg_85834 = vec4(loc_eda12, 1.0);
 }
 void main() {
-    highp vec4 var_8fed3 = v_color0;
+    highp vec4 var_47d7b = v_color0;
     highp vec2 var_40be7 = v_lightmapUV;
-    highp vec4 var_9d7e2 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_e16d7 = texture(s_MatTexture, v_texcoord0);
 #ifdef SEASONS__OFF
-    highp vec3 var_82cf8 = var_9d7e2.xyz * v_color0.xyz;
-    var_9d7e2 = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_9d7e2.w);
-    var_9d7e2.w *= var_8fed3.w;
+    highp vec3 var_0255a = var_e16d7.xyz * v_color0.xyz;
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_9d7e2.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_8fed3.w);
-    highp vec4 var_2df10 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_9d7e2.w);
-    var_2df10.w = 1.0;
-    var_9d7e2 = var_2df10;
-    highp vec3 var_3206d = pow(max(var_2df10.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
+    highp vec3 var_0255a = (var_e16d7.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_47d7b.w);
 #endif
+    highp vec4 var_21c3f = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_e16d7.w);
 #ifdef SEASONS__OFF
-    highp vec3 var_3206d = pow(max(var_9d7e2.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
+    var_21c3f.w *= var_47d7b.w;
 #endif
+#ifdef SEASONS__ON
+    var_21c3f.w = 1.0;
+    highp vec4 var_d4180 = var_21c3f;
+#endif
+    highp vec3 var_e222c = pow(max(var_21c3f.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
     highp vec3 var_d2ce2;
     highp float var_5e5e9;
     highp float var_a9a3a;
@@ -1169,7 +1169,7 @@ void main() {
     }
     highp vec3 var_44eb9 = var_e14aa.xyz;
     highp vec3 var_73e61 = (u_view * var_e14aa).xyz;
-    highp vec3 var_c5e74 = vec3(0.039999999105930328369140625 * (1.0 - var_0da4b)) + (var_3206d * var_0da4b);
+    highp vec3 var_c5e74 = vec3(0.039999999105930328369140625 * (1.0 - var_0da4b)) + (var_e222c * var_0da4b);
     bool var_ff669 = CausticsParameters.x != 0.0;
     bool var_94c07;
     if (var_ff669)
@@ -1211,11 +1211,11 @@ void main() {
         }
         highp vec3 var_94c87;
         highp vec3 var_33188;
-        func_7abc7(var_40be7, var_33188, var_94c87, var_73e61, var_a3c91, var_44eb9, var_8bbda, var_c90aa, var_c2de9, var_39edd, var_c5e74, var_3206d, var_0da4b, var_f6272);
+        func_7abc7(var_40be7, var_33188, var_94c87, var_73e61, var_a3c91, var_44eb9, var_8bbda, var_c90aa, var_c2de9, var_39edd, var_c5e74, var_e222c, var_0da4b, var_f6272);
         highp vec4 var_05431;
         highp vec3 var_aae12;
         highp vec3 var_e318f;
-        func_323af(var_e318f, var_33188, var_aae12, var_94c87, var_05431, var_de9be, var_f0a2e, var_73e61, var_c2de9, var_39edd, var_c5e74, var_3206d, var_0da4b, var_f6272, var_44eb9);
+        func_323af(var_e318f, var_33188, var_aae12, var_94c87, var_05431, var_de9be, var_f0a2e, var_73e61, var_c2de9, var_39edd, var_c5e74, var_e222c, var_0da4b, var_f6272, var_44eb9);
         var_45347 = var_e318f;
         var_d476b = var_aae12;
         var_9a0a9 = var_05431;
@@ -1230,7 +1230,7 @@ void main() {
     highp float var_85628 = var_40be7.x * var_40be7.x;
     highp vec4 var_54e7d = SkyAmbientLightColorIntensity;
     highp float var_cf751 = var_40be7.y * var_40be7.y;
-    highp vec3 var_6a612 = (((((var_3206d * (1.0 - var_0da4b)) * max((clamp(vec3(var_85628 + (var_8cbc4.x * var_8cbc4.w), (var_85628 * ((((var_85628 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_8cbc4.y * var_8cbc4.w), (var_85628 * (((var_85628 * var_85628) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_8cbc4.z * var_8cbc4.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_cf751 * var_cf751) * var_40be7.y, (var_40be7.y * var_40be7.y) * var_40be7.y, CameraLightIntensity.y)) * var_54e7d.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_45347) + var_d476b) + (((mix(var_3206d, vec3(dot(var_3206d, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_a9a3a)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x);
+    highp vec3 var_6a612 = (((((var_e222c * (1.0 - var_0da4b)) * max((clamp(vec3(var_85628 + (var_8cbc4.x * var_8cbc4.w), (var_85628 * ((((var_85628 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_8cbc4.y * var_8cbc4.w), (var_85628 * (((var_85628 * var_85628) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_8cbc4.z * var_8cbc4.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_cf751 * var_cf751) * var_40be7.y, (var_40be7.y * var_40be7.y) * var_40be7.y, CameraLightIntensity.y)) * var_54e7d.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_45347) + var_d476b) + (((mix(var_e222c, vec3(dot(var_e222c, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_a9a3a)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x);
     highp vec3 var_d4470 = normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
@@ -1425,14 +1425,19 @@ void main() {
         var_c97e3 = vec3(0.0);
     }
     highp vec3 var_c2d26 = vec4(var_54603.xyz + (mix(var_6a612, var_4dd80.xyz, vec3(var_942b2.w)) * var_a7d79.w), 1.0).xyz + var_c97e3;
-    highp vec3 var_cb832;
+    highp vec3 var_9d369;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_cb832 = var_c2d26 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_9d369 = var_c2d26 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_cb832 = var_c2d26;
+        var_9d369 = var_c2d26;
     }
-    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_9d7e2.w).w);
+#ifdef SEASONS__OFF
+    bgfx_FragData[0] = vec4(var_9d369.x, var_9d369.y, var_9d369.z, vec4(var_6394b, var_6394b, var_6394b, var_21c3f.w).w);
+#endif
+#ifdef SEASONS__ON
+    bgfx_FragData[0] = vec4(var_9d369.x, var_9d369.y, var_9d369.z, vec4(var_6394b, var_6394b, var_6394b, var_d4180.w).w);
+#endif
 }

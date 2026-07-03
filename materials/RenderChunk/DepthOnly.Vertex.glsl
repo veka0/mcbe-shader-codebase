@@ -10,6 +10,10 @@
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -30,6 +34,8 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 GlobalRoughness;
@@ -63,6 +69,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec4 v_color0;
+out float v_dithering;
 out vec4 v_fog;
 out vec2 v_lightmapUV;
 centroid out vec2 v_texcoord0;
@@ -104,17 +111,22 @@ void main() {
     mat4 var_dd47a = u_proj;
     var_dd47a[2].x += SubPixelOffset.x;
     var_dd47a[2].y -= SubPixelOffset.y;
+    vec2 var_e91ee = a_texcoord1;
+    uint var_960bd = uint(floor(var_e91ee.x * 255.0));
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
-    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_c77d5) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif
+    v_dithering = float(uint(floor(var_e91ee.y * 255.0)) & 1u);
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_2b3bd) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif
-    v_lightmapUV = a_texcoord1;
+#ifdef RENDER_AS_BILLBOARDS__ON
+    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_c77d5) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
+#endif
+    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_2b3bd;
 #ifdef RENDER_AS_BILLBOARDS__OFF

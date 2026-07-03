@@ -7,8 +7,15 @@ vec4 i_data1 : TEXCOORD7;
 vec4 i_data2 : TEXCOORD6;
 vec4 i_data3 : TEXCOORD5;
 
-vec4          v_color0     : COLOR0;
-vec4          v_fog        : COLOR2;
-vec2          v_lightmapUV : TEXCOORD1;
-centroid vec2 v_texcoord0  : TEXCOORD0;
-vec3          v_worldPos   : TEXCOORD3;
+#ifdef ALPHA_TEST_PASS
+vec4          v_clipPosition  : COLOR1;
+#endif
+vec4          v_color0        : COLOR0;
+float         v_dithering     : TEXCOORD2;
+vec4          v_fog           : COLOR2;
+vec2          v_lightmapUV    : TEXCOORD1;
+centroid vec2 v_texcoord0     : TEXCOORD0;
+vec3          v_worldPos      : TEXCOORD3;
+#ifdef ALPHA_TEST_PASS
+vec4          v_worldPosition : COLOR3;
+#endif

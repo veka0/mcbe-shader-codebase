@@ -9,6 +9,10 @@
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON (not used)
@@ -30,6 +34,8 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2;
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
