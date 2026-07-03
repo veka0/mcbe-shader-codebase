@@ -159,6 +159,7 @@ uniform highp mat4 u_proj;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_BrdfLUT;
 uniform highp sampler2D s_MatTexture;
+uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2DArray s_CausticsTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
@@ -194,6 +195,7 @@ uniform highp vec4 GlowStrength;
 uniform highp vec4 IBLParameters;
 uniform highp vec4 IBLSkyFadeParameters;
 uniform highp vec4 LastSpecularIBLIdx;
+uniform highp vec4 LightingEnabledAndAdaptiveEmissive;
 uniform highp vec4 MERSUniforms;
 uniform highp vec4 ManhattanDistAttenuationEnabled;
 uniform highp vec4 MoonColor;
@@ -1293,8 +1295,20 @@ void main() {
         }
         var_97b93 = var_e2657;
     }
-    highp vec3 var_b7769 = vec4(var_bfdec.xyz + (mix((var_7eb8a + var_517d2) + (((mix(var_d9629, vec3(dot(var_d9629, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(GlowStrength.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_d9509.xyz, vec3(var_8bbf5.w)) * var_fea27.w), 1.0).xyz + var_97b93;
-    bgfx_FragData[0] = vec4(var_b7769.x, var_b7769.y, var_b7769.z, vec4(var_f570b, var_f570b, var_f570b, var_f25cf.w * var_23597.w).w);
+    highp vec3 var_da49e = vec4(var_bfdec.xyz + (mix((var_7eb8a + var_517d2) + (((mix(var_d9629, vec3(dot(var_d9629, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(GlowStrength.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_d9509.xyz, vec3(var_8bbf5.w)) * var_fea27.w), 1.0).xyz + var_97b93;
+    highp vec4 var_ba5d1 = texture(s_PreviousFrameAverageLuminance, vec2(0.5));
+    highp float var_44167 = var_ba5d1.x;
+    highp vec3 var_2771c = var_da49e + (var_da49e * (vec3(LightingEnabledAndAdaptiveEmissive.y, LightingEnabledAndAdaptiveEmissive.y, LightingEnabledAndAdaptiveEmissive.y) / vec3((0.180000007152557373046875 / var_44167) + 9.9999997473787516355514526367188e-05)));
+    highp vec3 var_a9ce3;
+    if (PreExposureEnabled.x > 0.0)
+    {
+        var_a9ce3 = var_2771c * ((0.180000007152557373046875 / var_44167) + 9.9999997473787516355514526367188e-05);
+    }
+    else
+    {
+        var_a9ce3 = var_2771c;
+    }
+    bgfx_FragData[0] = vec4(var_a9ce3.x, var_a9ce3.y, var_a9ce3.z, vec4(var_f570b, var_f570b, var_f570b, var_f25cf.w * var_23597.w).w);
     bgfx_FragData[1] = vec4(0.0);
     bgfx_FragData[2] = vec4(0.0);
 }
