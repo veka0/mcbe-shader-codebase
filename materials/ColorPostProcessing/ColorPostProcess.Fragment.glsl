@@ -34,6 +34,7 @@
 * - uniform vec4 ColorGrading_Saturation_Highlights;
 * - uniform vec4 ColorGrading_Saturation_Midtones;
 * - uniform vec4 ColorGrading_Saturation_Shadows;
+* - uniform vec4 ColorGrading_Temperature_Params;
 * - uniform vec4 ExposureCompensation;
 * - uniform vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 * - uniform vec4 GenericTonemapperCrosstalkParams;
@@ -68,6 +69,7 @@ uniform highp vec4 ColorGrading_Offset_Shadows;
 uniform highp vec4 ColorGrading_Saturation_Highlights;
 uniform highp vec4 ColorGrading_Saturation_Midtones;
 uniform highp vec4 ColorGrading_Saturation_Shadows;
+uniform highp vec4 ColorGrading_Temperature_Params;
 uniform highp vec4 ExposureCompensation;
 uniform highp vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 uniform highp vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
@@ -78,14 +80,14 @@ layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_97017 = texture(s_ColorTexture, v_texcoord0);
     highp vec3 var_f0fbb = var_97017.xyz;
-    highp vec3 var_e3e21;
+    highp vec3 var_9db8c;
     if (TonemapParams0.z > 0.0)
     {
-        var_e3e21 = var_f0fbb / vec3((0.180000007152557373046875 / texture(s_PreExposureLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_9db8c = var_f0fbb / vec3((0.180000007152557373046875 / texture(s_PreExposureLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_e3e21 = var_f0fbb;
+        var_9db8c = var_f0fbb;
     }
     highp float var_aef79;
     if (ExposureCompensation.z > 0.5)
@@ -124,7 +126,31 @@ void main() {
         }
         var_482cd = var_bc41e;
     }
-    highp float var_830e7 = dot(var_e3e21, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    highp float var_830e7 = dot(var_9db8c, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    highp vec3 var_89b58;
+    if (ColorGrading_Temperature_Params.x != 0.0)
+    {
+        highp vec3 var_effe7 = vec3(0.312720000743865966796875, 0.3290300071239471435546875, 1.0);
+        highp vec3 var_e9388 = mat3(vec3(0.732800006866455078125, 0.4296000003814697265625, -0.1624000072479248046875), vec3(-0.703599989414215087890625, 1.6974999904632568359375, 0.006099999882280826568603515625), vec3(0.0030000000260770320892333984375, 0.013600000180304050445556640625, 0.98339998722076416015625)) * vec3((var_effe7.x * var_effe7.z) / var_effe7.y, var_effe7.z, (((1.0 - var_effe7.x) - var_effe7.y) * var_effe7.z) / var_effe7.y);
+        highp vec2 var_05857 = vec2(((0.860117733478546142578125 + (0.00015411825734190642833709716796875 * ColorGrading_Temperature_Params.y)) + ((1.2864121856637211749330163002014e-07 * ColorGrading_Temperature_Params.y) * ColorGrading_Temperature_Params.y)) / ((1.0 + (0.0008424202096648514270782470703125 * ColorGrading_Temperature_Params.y)) + ((7.0814513719597016461193561553955e-07 * ColorGrading_Temperature_Params.y) * ColorGrading_Temperature_Params.y)), ((0.317398726940155029296875 + (4.2280626075807958841323852539062e-05 * ColorGrading_Temperature_Params.y)) + ((4.2048167614439080352894961833954e-08 * ColorGrading_Temperature_Params.y) * ColorGrading_Temperature_Params.y)) / ((1.0 - (2.8974181986995972692966461181641e-05 * ColorGrading_Temperature_Params.y)) + ((1.6145605741257895715534687042236e-07 * ColorGrading_Temperature_Params.y) * ColorGrading_Temperature_Params.y)));
+        highp vec3 var_a3514 = vec3(vec2(3.0 * var_05857.x, 2.0 * var_05857.y) / vec2(((2.0 * var_05857.x) - (8.0 * var_05857.y)) + 4.0), 1.0);
+        highp vec3 var_acaf6 = mat3(vec3(0.732800006866455078125, 0.4296000003814697265625, -0.1624000072479248046875), vec3(-0.703599989414215087890625, 1.6974999904632568359375, 0.006099999882280826568603515625), vec3(0.0030000000260770320892333984375, 0.013600000180304050445556640625, 0.98339998722076416015625)) * vec3((var_a3514.x * var_a3514.z) / var_a3514.y, var_a3514.z, (((1.0 - var_a3514.x) - var_a3514.y) * var_a3514.z) / var_a3514.y);
+        highp vec3 var_5eed8;
+        if (int(ColorGrading_Temperature_Params.z) == 0)
+        {
+            var_5eed8 = var_e9388 / var_acaf6;
+        }
+        else
+        {
+            var_5eed8 = var_acaf6 / var_e9388;
+        }
+        highp vec3 var_06534 = var_5eed8;
+        var_89b58 = (mat3(vec3(2.8589999675750732421875, -1.6289999485015869140625, -0.02500000037252902984619140625), vec3(-0.20999999344348907470703125, 1.15799999237060546875, 0.0), vec3(-0.0419999994337558746337890625, -0.1180000007152557373046875, 1.0690000057220458984375)) * (mat3(vec3(var_06534.x, 0.0, 0.0), vec3(0.0, var_06534.y, 0.0), vec3(0.0, 0.0, var_06534.z)) * mat3(vec3(0.38999998569488525390625, 0.550000011920928955078125, 0.0089999996125698089599609375), vec3(0.071000002324581146240234375, 0.962999999523162841796875, 0.001000000047497451305389404296875), vec3(0.02300000004470348358154296875, 0.12800000607967376708984375, 0.93599998950958251953125)))) * var_9db8c;
+    }
+    else
+    {
+        var_89b58 = var_9db8c;
+    }
     bool var_710bf = ColorGrading_Contrast_Highlights.w != 0.0;
     bool var_3ddc3 = ColorGrading_Contrast_Shadows.w != 0.0;
     bool var_c60f8;
@@ -191,7 +217,7 @@ void main() {
         var_1cf7f = var_b69b3;
     }
     highp vec3 var_dca8e = vec3(ColorGrading_Misc.x * var_aef79);
-    highp vec3 var_adbb5 = max(var_dca8e * pow(max(var_e3e21, vec3(0.0)) / var_dca8e, var_1cf7f), vec3(0.0));
+    highp vec3 var_adbb5 = max(var_dca8e * pow(max(var_89b58, vec3(0.0)) / var_dca8e, var_1cf7f), vec3(0.0));
     bool var_399ef = ColorGrading_Saturation_Highlights.w != 0.0;
     bool var_25f33 = ColorGrading_Saturation_Shadows.w != 0.0;
     bool var_01349;

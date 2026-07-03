@@ -34,6 +34,7 @@
 * - uniform vec4 ColorGrading_Saturation_Highlights;
 * - uniform vec4 ColorGrading_Saturation_Midtones;
 * - uniform vec4 ColorGrading_Saturation_Shadows;
+* - uniform vec4 ColorGrading_Temperature_Params;
 * - uniform vec4 ExposureCompensation;
 * - uniform vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 * - uniform vec4 GenericTonemapperCrosstalkParams;
