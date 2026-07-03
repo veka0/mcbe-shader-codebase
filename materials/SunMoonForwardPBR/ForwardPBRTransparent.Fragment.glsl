@@ -32,7 +32,10 @@
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
-* - uniform vec4 CascadeShadowResolutions;
+* - uniform vec4 CascadesParameters[8];
+* - uniform vec4 CascadesPerSet;
+* - uniform mat4 CascadesShadowInvProj[8];
+* - uniform mat4 CascadesShadowProj[8];
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
@@ -41,22 +44,11 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-* - uniform vec4 DirectionalLightExplicitCascadedShadowMapEnabled[2];
-* - uniform vec4 DirectionalLightExplicitCascadedShadowMapIndices[2];
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 * - uniform vec4 DirectionalLightSourceIsSun[2];
-* - uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 * - uniform vec4 DirectionalLightSourceShadowDirection[2];
-* - uniform mat4 DirectionalLightSourceShadowInvProj0[2];
-* - uniform mat4 DirectionalLightSourceShadowInvProj1[2];
-* - uniform mat4 DirectionalLightSourceShadowInvProj2[2];
-* - uniform mat4 DirectionalLightSourceShadowInvProj3[2];
-* - uniform mat4 DirectionalLightSourceShadowProj0[2];
-* - uniform mat4 DirectionalLightSourceShadowProj1[2];
-* - uniform mat4 DirectionalLightSourceShadowProj2[2];
-* - uniform mat4 DirectionalLightSourceShadowProj3[2];
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 * - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
@@ -77,14 +69,12 @@
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
-* - uniform vec4 ShadowBias;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
-* - uniform vec4 ShadowPCFWidth;
-* - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyProbeUVFadeParameters;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunMoonColor;
+* - uniform vec4 SunMoonEmissiveMultiplier;
 * - uniform vec4 Time;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -101,6 +91,7 @@ uniform highp sampler2D s_SunMoonTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp vec4 PreExposureEnabled;
 uniform highp vec4 SunMoonColor;
+uniform highp vec4 SunMoonEmissiveMultiplier;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -128,14 +119,16 @@ void main() {
     {
         var_75d4a = var_f733f;
     }
-    highp vec3 var_cc26e;
+    highp vec3 var_699ac;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_cc26e = var_75d4a * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_699ac = var_75d4a * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_cc26e = var_75d4a;
+        var_699ac = var_75d4a;
     }
-    bgfx_FragColor = vec4(var_cc26e, 1.0);
+    highp vec4 var_8defb = vec4(var_699ac, 1.0);
+    highp vec3 var_5d0fa = var_8defb.xyz + (var_8defb.xyz * SunMoonEmissiveMultiplier.x);
+    bgfx_FragColor = vec4(var_5d0fa.x, var_5d0fa.y, var_5d0fa.z, var_8defb.w);
 }
