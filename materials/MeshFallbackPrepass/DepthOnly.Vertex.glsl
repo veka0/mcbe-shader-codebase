@@ -34,10 +34,10 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
+* - uniform vec4 CurrentColor;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MERSUniforms;
-* - uniform vec4 MatColor;
 * - uniform vec4 MaterialID;
 * - uniform vec4 OverlayColor;
 * - uniform mat4 PrevWorld;

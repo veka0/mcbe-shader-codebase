@@ -5,7 +5,6 @@
 *
 * Passes:
 * - OPAQUE_PASS (not used)
-* - RASTERIZED_OPAQUE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF

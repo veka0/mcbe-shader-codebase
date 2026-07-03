@@ -34,6 +34,8 @@
 * - uniform vec4 ColorGrading_Saturation_Midtones;
 * - uniform vec4 ColorGrading_Saturation_Shadows;
 * - uniform vec4 ExposureCompensation;
+* - uniform vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
+* - uniform vec4 GenericTonemapperCrosstalkParams;
 * - uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 * - uniform vec4 OutputTextureMaxValue;
 * - uniform vec4 RasterizedColorEnabled;
@@ -66,6 +68,7 @@ uniform highp vec4 ColorGrading_Saturation_Highlights;
 uniform highp vec4 ColorGrading_Saturation_Midtones;
 uniform highp vec4 ColorGrading_Saturation_Shadows;
 uniform highp vec4 ExposureCompensation;
+uniform highp vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 uniform highp vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform highp vec4 OutputTextureMaxValue;
 uniform highp vec4 RasterizedColorEnabled;
@@ -507,46 +510,59 @@ void main() {
         {
             var_37ec1 = LuminanceMinMaxAndWhitePointAndMinWhitePoint.z;
         }
-        int var_fa22f = int(TonemapParams0.x);
+        int var_fde43 = int(TonemapParams0.x);
         highp float var_f0228 = (0.180000007152557373046875 / var_89116) * var_4627d;
-        highp vec3 var_39f68 = clamp(clamp(mix(vec3(var_e26c4), var_038f6, var_738d6) * var_45fb0, vec3(0.0), vec3(OutputTextureMaxValue.x)) + (vec3(var_89116) * var_6484d), vec3(0.0), vec3(OutputTextureMaxValue.x)) * var_f0228;
+        highp vec3 var_6003d = clamp(clamp(mix(vec3(var_e26c4), var_038f6, var_738d6) * var_45fb0, vec3(0.0), vec3(OutputTextureMaxValue.x)) + (vec3(var_89116) * var_6484d), vec3(0.0), vec3(OutputTextureMaxValue.x)) * var_f0228;
         highp float var_a6dfd = var_f0228 * var_37ec1;
         highp float var_8a41a = var_a6dfd * var_a6dfd;
         highp vec3 var_f1975;
-        if (var_fa22f == 1)
+        if (var_fde43 == 1)
         {
-            var_f1975 = (var_39f68 * (vec3(1.0) + (var_39f68 / vec3(var_8a41a)))) / (vec3(1.0) + var_39f68);
+            var_f1975 = (var_6003d * (vec3(1.0) + (var_6003d / vec3(var_8a41a)))) / (vec3(1.0) + var_6003d);
         }
         else
         {
             highp vec3 var_3a319;
-            if (var_fa22f == 2)
+            if (var_fde43 == 2)
             {
-                highp float var_78bd9 = dot(var_39f68, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-                var_3a319 = var_39f68 * (((var_78bd9 * (1.0 + (var_78bd9 / var_8a41a))) / (1.0 + var_78bd9)) / var_78bd9);
+                highp float var_78bd9 = dot(var_6003d, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+                var_3a319 = var_6003d * (((var_78bd9 * (1.0 + (var_78bd9 / var_8a41a))) / (1.0 + var_78bd9)) / var_78bd9);
             }
             else
             {
                 highp vec3 var_b9221;
-                if (var_fa22f == 3)
+                if (var_fde43 == 3)
                 {
-                    highp vec3 var_8c311 = var_39f68 * 2.0;
+                    highp vec3 var_8c311 = var_6003d * 2.0;
                     highp vec3 var_cb3d4 = vec3(var_8a41a);
                     var_b9221 = ((((var_8c311 * ((var_8c311 * 0.1500000059604644775390625) + vec3(0.0500000007450580596923828125))) + vec3(0.0040000001899898052215576171875)) / ((var_8c311 * ((var_8c311 * 0.1500000059604644775390625) + vec3(0.5))) + vec3(0.060000002384185791015625))) - vec3(0.066666662693023681640625)) * (vec3(1.0) / ((((var_cb3d4 * ((var_cb3d4 * 0.1500000059604644775390625) + vec3(0.0500000007450580596923828125))) + vec3(0.0040000001899898052215576171875)) / ((var_cb3d4 * ((var_cb3d4 * 0.1500000059604644775390625) + vec3(0.5))) + vec3(0.060000002384185791015625))) - vec3(0.066666662693023681640625)));
                 }
                 else
                 {
-                    highp vec3 var_7ea7f;
-                    if (var_fa22f == 4)
+                    highp vec3 var_ab2cf;
+                    if (var_fde43 == 4)
                     {
-                        highp vec3 var_07287 = transpose(mat3(vec3(0.59719002246856689453125, 0.354579985141754150390625, 0.048229999840259552001953125), vec3(0.075999997556209564208984375, 0.908339977264404296875, 0.0156599991023540496826171875), vec3(0.0284000001847743988037109375, 0.13382999598979949951171875, 0.837769985198974609375))) * var_39f68;
-                        var_7ea7f = clamp(transpose(mat3(vec3(1.60475003719329833984375, -0.5310800075531005859375, -0.0736699998378753662109375), vec3(-0.10208000242710113525390625, 1.108129978179931640625, -0.00604999996721744537353515625), vec3(-0.00326999998651444911956787109375, -0.07276000082492828369140625, 1.0760200023651123046875))) * (((var_07287 * (var_07287 + vec3(0.02457859925925731658935546875))) - vec3(9.0537003416102379560470581054688e-05)) / ((var_07287 * ((var_07287 * 0.98372900485992431640625) + vec3(0.4329510033130645751953125))) + vec3(0.23808099329471588134765625))), vec3(0.0), vec3(1.0));
+                        highp vec3 var_07287 = transpose(mat3(vec3(0.59719002246856689453125, 0.354579985141754150390625, 0.048229999840259552001953125), vec3(0.075999997556209564208984375, 0.908339977264404296875, 0.0156599991023540496826171875), vec3(0.0284000001847743988037109375, 0.13382999598979949951171875, 0.837769985198974609375))) * var_6003d;
+                        var_ab2cf = clamp(transpose(mat3(vec3(1.60475003719329833984375, -0.5310800075531005859375, -0.0736699998378753662109375), vec3(-0.10208000242710113525390625, 1.108129978179931640625, -0.00604999996721744537353515625), vec3(-0.00326999998651444911956787109375, -0.07276000082492828369140625, 1.0760200023651123046875))) * (((var_07287 * (var_07287 + vec3(0.02457859925925731658935546875))) - vec3(9.0537003416102379560470581054688e-05)) / ((var_07287 * ((var_07287 * 0.98372900485992431640625) + vec3(0.4329510033130645751953125))) + vec3(0.23808099329471588134765625))), vec3(0.0), vec3(1.0));
                     }
                     else
                     {
-                        var_7ea7f = var_39f68 / (vec3(1.0) + var_39f68);
+                        highp vec3 var_ee8a2;
+                        if (var_fde43 == 5)
+                        {
+                            highp vec3 var_29097 = var_6003d;
+                            highp float var_829b3 = max(var_29097.x, max(var_29097.y, var_29097.z));
+                            highp float var_f9bf5 = pow(var_829b3, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.x);
+                            highp float var_b9ec4 = var_f9bf5 / ((GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.y * var_f9bf5) + GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.z);
+                            var_ee8a2 = mix(var_6003d / vec3(var_829b3), vec3(1.0), vec3(pow(var_b9ec4, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.w))) * var_b9ec4;
+                        }
+                        else
+                        {
+                            var_ee8a2 = var_6003d / (vec3(1.0) + var_6003d);
+                        }
+                        var_ab2cf = var_ee8a2;
                     }
-                    var_b9221 = var_7ea7f;
+                    var_b9221 = var_ab2cf;
                 }
                 var_3a319 = var_b9221;
             }

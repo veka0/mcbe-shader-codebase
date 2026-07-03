@@ -34,10 +34,10 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
+* - uniform vec4 CurrentColor;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MERSUniforms;
-* - uniform vec4 MatColor;
 * - uniform vec4 MaterialID;
 * - uniform vec4 OverlayColor;
 * - uniform mat4 PrevWorld;
@@ -53,10 +53,8 @@ uniform highp mat4 u_viewProj;
 #ifdef USE_TEXTURES__ON
 uniform highp sampler2D s_MatTexture;
 #endif
+uniform highp vec4 CurrentColor;
 uniform highp vec4 MERSUniforms;
-#ifdef USE_TEXTURES__ON
-uniform highp vec4 MatColor;
-#endif
 uniform highp vec4 TileLightColor;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec4 v_color0;
@@ -80,26 +78,22 @@ void func_70ecf(inout highp float arg_781f8) {
     }
 }
 void main() {
-    highp vec4 var_98c35 = v_color0;
+    highp vec4 var_7f649 = v_color0;
 #ifdef USE_TEXTURES__OFF
-    highp vec4 var_0fe8c = vec4(1.0);
+    highp vec4 var_895bf = vec4(1.0);
 #endif
 #ifdef USE_TEXTURES__ON
-    highp vec4 var_7dda5 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_24edf = MatColor * var_7dda5;
-    highp vec4 var_0fe8c = var_24edf;
+    highp vec4 var_895bf = texture(s_MatTexture, v_texcoord0);
 #endif
-    if (var_0fe8c.w < 0.5)
+    if (var_895bf.w < 0.5)
     {
         discard;
     }
-#ifdef USE_TEXTURES__OFF
-    highp vec4 var_77236 = vec4(v_color0.xyz, var_0fe8c.w * var_98c35.w);
-#endif
-#ifdef USE_TEXTURES__ON
-    highp vec4 var_77236 = vec4(var_24edf.xyz * v_color0.xyz, var_0fe8c.w * var_98c35.w);
-#endif
-    highp vec4 var_6de71 = vec4(var_77236.x, var_77236.y, var_77236.z, var_77236.w);
+    highp vec4 var_a2360 = var_895bf;
+    highp vec4 var_9d69b = var_a2360 * CurrentColor;
+    var_895bf = var_9d69b;
+    highp vec4 var_f7609 = vec4(var_9d69b.xyz * v_color0.xyz, var_895bf.w * var_7f649.w);
+    highp vec4 var_6de71 = vec4(var_f7609.x, var_f7609.y, var_f7609.z, var_f7609.w);
     highp float var_1d2b2;
     func_70ecf(var_1d2b2);
     var_6de71.w = var_1d2b2;

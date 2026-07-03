@@ -4,8 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - OPAQUE_PASS (not used)
-* - RASTERIZED_OPAQUE_PASS (not used)
+* - FORCE_FORWARD_PBR_OPAQUE_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -18,6 +17,7 @@
 * - uniform lowp sampler2D s_ParallaxTexture;
 *
 * Uniforms:
+* - uniform vec4 EndPortalEmissiveMultiplierAndDesaturation;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 ViewPositionAndTime;
