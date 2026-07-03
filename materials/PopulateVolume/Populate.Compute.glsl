@@ -32,9 +32,9 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 5, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 6, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
@@ -46,6 +46,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientSamples;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
 * - uniform vec4 CascadesParameters[8];
@@ -73,6 +74,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 HeightFogScaleBias;
 * - uniform vec4 HenyeyGreensteinG;
 * - uniform vec4 IBLParameters;
@@ -107,6 +109,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TemporalSettings;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -158,11 +161,11 @@ struct LightData {
 };
 
 int var_e7b23;
-layout(binding = 7, std430) buffer s_zLights { Light zLights[]; } var_f8d0a;
+layout(binding = 6, std430) buffer s_zLights { Light zLights[]; } var_ba147;
 #endif
-layout(binding = 14, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_7c65b;
+layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_10f4d;
 #ifdef POINT_LIGHT_SHADING__ON
-layout(binding = 6, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_dda85;
+layout(binding = 5, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_bdf93;
 #endif
 layout(location = 0, binding = 0, rgba16f) uniform writeonly highp image2DArray s_CurrentLightingBuffer;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -208,6 +211,7 @@ uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShad
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform vec4 FogAndDistanceControl;
+uniform vec4 GameplayWorldStatus;
 uniform vec4 HeightFogScaleBias;
 uniform vec4 HenyeyGreensteinG;
 uniform vec4 JitterOffset;
@@ -256,7 +260,7 @@ void func_aa346(inout vec3 arg_9de81, inout vec4 arg_34c2e) {
         float loc_2350c = fract(loc_4b4c0);
         float loc_78620 = fract(loc_ec4c0);
         vec4 loc_9af45 = vec4((1.0 - loc_2350c) * (1.0 - loc_78620), loc_2350c * (1.0 - loc_78620), (1.0 - loc_2350c) * loc_78620, loc_2350c * loc_78620);
-        arg_34c2e = (((var_7c65b.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc, 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.x) + (var_7c65b.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1, 0), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.y)) + (var_7c65b.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(0, 1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.z)) + (var_7c65b.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.w);
+        arg_34c2e = (((var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc, 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.x) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1, 0), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.y)) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(0, 1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.z)) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.w);
         return;
     }
     arg_34c2e = WaterAlbedoExtinction;
@@ -338,7 +342,7 @@ void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
 #ifdef POINT_LIGHT_SHADING__OFF
-void func_987b7() {
+void func_54599() {
     int loc_84ff0 = int(GlobalInvocationID.x);
     int loc_b5bd2 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
@@ -397,7 +401,17 @@ void func_987b7() {
     vec3 loc_d93dd = mix(mix((AirAlbedoExtinction.xyz * loc_ebd19) * AirAlbedoExtinction.w, loc_4397b.xyz * loc_12f1c.w, vec3(loc_343cf)), vec3(0.0), vec3(loc_ab2d8));
     float loc_8068a = mix(mix(loc_ebd19 * AirAlbedoExtinction.w, loc_12f1c.w, loc_343cf), 0.0, loc_ab2d8);
     vec2 loc_a50e8 = vec2(0.0, AmbientContribution.y);
-    if (SkySamplesConfig.x > 0.5)
+    bool loc_f682a = SkySamplesConfig.x > 0.5;
+    bool loc_fb83a;
+    if (loc_f682a)
+    {
+        loc_fb83a = GameplayWorldStatus.x > 0.5;
+    }
+    else
+    {
+        loc_fb83a = loc_f682a;
+    }
+    if (loc_fb83a)
     {
         vec3 loc_08c5f = loc_8b342;
         loc_08c5f.y = 1.0 - loc_08c5f.y;
@@ -744,12 +758,12 @@ void func_86391(inout vec3 arg_176e1, inout vec3 arg_580a2, inout int arg_e45b8,
     arg_d7f4c = true;
 }
 void func_c78d8(inout int arg_4a614, inout float arg_9eee0, inout vec3 arg_226c4) {
-    if (var_f8d0a.zLights[arg_4a614].shadowProbeIndex < 0)
+    if (var_ba147.zLights[arg_4a614].shadowProbeIndex < 0)
     {
         arg_9eee0 = 1.0;
         return;
     }
-    vec3 loc_48c8d = arg_226c4 - var_f8d0a.zLights[arg_4a614].position.xyz;
+    vec3 loc_48c8d = arg_226c4 - var_ba147.zLights[arg_4a614].position.xyz;
     vec3 loc_0ca8f = abs(loc_48c8d);
     bool loc_ab77c = loc_0ca8f.x >= loc_0ca8f.y;
     bool loc_ca7f9;
@@ -794,7 +808,7 @@ void func_c78d8(inout int arg_4a614, inout float arg_9eee0, inout vec3 arg_226c4
         loc_2cd45.y *= (-1.0);
     }
     float loc_41e57;
-    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_2cd45, float(var_f8d0a.zLights[arg_4a614].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_e89cb.z)
+    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_2cd45, float(var_ba147.zLights[arg_4a614].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_e89cb.z)
     {
         loc_41e57 = 1.0;
     }
@@ -811,7 +825,7 @@ void func_37ca4(inout int arg_ff970, inout float arg_43b7a, inout vec3 arg_0a2b9
         arg_0a2b9 = vec3(0.0);
         return;
     }
-    vec3 loc_55323 = var_f8d0a.zLights[arg_ff970].position.xyz - arg_39715;
+    vec3 loc_55323 = var_ba147.zLights[arg_ff970].position.xyz - arg_39715;
     vec3 loc_757d0 = loc_55323;
     float loc_2b080;
     if (ManhattanDistAttenuationEnabled.x > 0.0)
@@ -823,7 +837,7 @@ void func_37ca4(inout int arg_ff970, inout float arg_43b7a, inout vec3 arg_0a2b9
     {
         loc_2b080 = dot(loc_55323, loc_55323);
     }
-    if (loc_2b080 >= (var_f8d0a.zLights[arg_ff970].position.w * var_f8d0a.zLights[arg_ff970].position.w))
+    if (loc_2b080 >= (var_ba147.zLights[arg_ff970].position.w * var_ba147.zLights[arg_ff970].position.w))
     {
         arg_43b7a = 1.0;
         arg_0a2b9 = vec3(0.0);
@@ -840,7 +854,7 @@ void func_37ca4(inout int arg_ff970, inout float arg_43b7a, inout vec3 arg_0a2b9
     {
         loc_b326d = 1.0;
     }
-    float loc_728c0 = loc_2b080 / ((var_f8d0a.zLights[arg_ff970].position.w * var_f8d0a.zLights[arg_ff970].position.w) + 9.9999997473787516355514526367188e-05);
+    float loc_728c0 = loc_2b080 / ((var_ba147.zLights[arg_ff970].position.w * var_ba147.zLights[arg_ff970].position.w) + 9.9999997473787516355514526367188e-05);
     float loc_f4af9 = clamp(1.0 - (loc_728c0 * loc_728c0), 0.0, 1.0);
     float loc_7abdc = (1.0 / max(loc_2b080, 9.9999997473787516355514526367188e-05)) * (loc_f4af9 * loc_f4af9);
     float loc_5501b;
@@ -853,7 +867,7 @@ void func_37ca4(inout int arg_ff970, inout float arg_43b7a, inout vec3 arg_0a2b9
         loc_5501b = loc_7abdc;
     }
     arg_43b7a = loc_b326d;
-    arg_0a2b9 = (var_f8d0a.zLights[arg_ff970].color.xyz * var_f8d0a.zLights[arg_ff970].color.w) * loc_5501b;
+    arg_0a2b9 = (var_ba147.zLights[arg_ff970].color.xyz * var_ba147.zLights[arg_ff970].color.w) * loc_5501b;
 }
 void func_2d333(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1, inout vec3 arg_81f82, inout float arg_1eba3, inout vec3 arg_1cde6, inout vec3 arg_3d3f7, inout vec3 arg_e7cf5) {
     bool loc_9f3ca;
@@ -870,7 +884,7 @@ void func_2d333(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     vec3 loc_3e87e;
     for (int loc_97a60 = loc_9b40b; loc_97a60 < loc_fbf40; loc_ceaba = loc_3e87e, loc_97a60++)
     {
-        int loc_99f11 = int(var_dda85.zLightLookupArray[loc_97a60].lookup);
+        int loc_99f11 = int(var_bdf93.zLightLookupArray[loc_97a60].lookup);
         if (loc_99f11 < 0)
         {
             break;
@@ -878,12 +892,12 @@ void func_2d333(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
         vec3 loc_102a3;
         float loc_b0161;
         func_37ca4(loc_99f11, loc_b0161, loc_102a3, arg_81f82);
-        float loc_57b1f = (1.0 + (arg_1eba3 * arg_1eba3)) + ((2.0 * arg_1eba3) * dot(arg_1cde6, normalize((u_view * vec4(var_f8d0a.zLights[loc_99f11].position.xyz, 1.0)).xyz - arg_3d3f7)));
+        float loc_57b1f = (1.0 + (arg_1eba3 * arg_1eba3)) + ((2.0 * arg_1eba3) * dot(arg_1cde6, normalize((u_view * vec4(var_ba147.zLights[loc_99f11].position.xyz, 1.0)).xyz - arg_3d3f7)));
         loc_3e87e = loc_ceaba + (((arg_e7cf5 * ((0.079577468335628509521484375 * (1.0 - (arg_1eba3 * arg_1eba3))) / (loc_57b1f * sqrt(loc_57b1f)))) * loc_b0161) * loc_102a3);
     }
     arg_534d1 = loc_ceaba;
 }
-void func_4b4dc() {
+void func_b3db6() {
     int loc_84ff0 = int(GlobalInvocationID.x);
     int loc_b5bd2 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
@@ -942,7 +956,17 @@ void func_4b4dc() {
     vec3 loc_b58be = mix(mix((AirAlbedoExtinction.xyz * loc_ebd19) * AirAlbedoExtinction.w, loc_4397b.xyz * loc_12f1c.w, vec3(loc_343cf)), vec3(0.0), vec3(loc_ab2d8));
     float loc_8068a = mix(mix(loc_ebd19 * AirAlbedoExtinction.w, loc_12f1c.w, loc_343cf), 0.0, loc_ab2d8);
     vec2 loc_a50e8 = vec2(0.0, AmbientContribution.y);
-    if (SkySamplesConfig.x > 0.5)
+    bool loc_f682a = SkySamplesConfig.x > 0.5;
+    bool loc_fb83a;
+    if (loc_f682a)
+    {
+        loc_fb83a = GameplayWorldStatus.x > 0.5;
+    }
+    else
+    {
+        loc_fb83a = loc_f682a;
+    }
+    if (loc_fb83a)
     {
         vec3 loc_08c5f = loc_5d62d;
         loc_08c5f.y = 1.0 - loc_08c5f.y;
@@ -1227,9 +1251,9 @@ void func_4b4dc() {
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
 #ifdef POINT_LIGHT_SHADING__OFF
-    func_987b7();
+    func_54599();
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-    func_4b4dc();
+    func_b3db6();
 #endif
 }

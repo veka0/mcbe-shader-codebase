@@ -67,6 +67,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -181,6 +182,7 @@ uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAnd
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
+uniform highp vec4 GameplayWorldStatus;
 uniform highp vec4 IBLParameters;
 uniform highp vec4 IBLSkyFadeParameters;
 #ifdef POINT_LIGHT_SHADING__ON
@@ -216,24 +218,33 @@ uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-void func_9aa07(inout highp float arg_ecb1c, inout highp float arg_81cea, inout highp vec4 arg_51821) {
-    if (arg_ecb1c >= 1.0)
+void func_7954d(inout highp float arg_52942, inout highp float arg_8a148, inout highp vec4 arg_7d85f) {
+    if (GameplayWorldStatus.x > 0.5)
     {
-        if (SkySamplesConfig.x > 0.5)
+        if (arg_52942 >= 1.0)
         {
-            arg_81cea = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+            if (SkySamplesConfig.x > 0.5)
+            {
+                arg_8a148 = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+                return;
+            }
+            else
+            {
+                arg_8a148 = 1.0;
+                return;
+            }
             return;
         }
         else
         {
-            arg_81cea = 1.0;
+            arg_8a148 = arg_7d85f.z;
             return;
         }
         return;
     }
     else
     {
-        arg_81cea = arg_51821.z;
+        arg_8a148 = 1.0;
         return;
     }
 }
@@ -957,7 +968,7 @@ void main() {
     highp vec3 var_ba5f8 = normalize((u_view * vec4(var_73ad8, 0.0)).xyz);
     highp vec4 var_d58c9 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
     highp float var_7acb6;
-    func_9aa07(var_4d885, var_7acb6, var_d58c9);
+    func_7954d(var_4d885, var_7acb6, var_d58c9);
     highp vec3 var_f29fe = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_1245c = var_20845.xyz;
     highp vec3 var_603d9 = -(var_1245c / vec3(length(var_1245c) + 9.9999997473787516355514526367188e-05));

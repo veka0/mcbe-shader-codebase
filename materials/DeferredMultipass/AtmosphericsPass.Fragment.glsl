@@ -62,6 +62,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
@@ -121,6 +122,7 @@ uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
+uniform highp vec4 GameplayWorldStatus;
 uniform highp vec4 MoonColor;
 uniform highp vec4 MoonDir;
 uniform highp vec4 PreExposureEnabled;
@@ -134,24 +136,33 @@ uniform highp vec4 SunDir;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-void func_9aa07(inout highp float arg_ecb1c, inout highp float arg_81cea, inout highp vec4 arg_51821) {
-    if (arg_ecb1c >= 1.0)
+void func_7954d(inout highp float arg_52942, inout highp float arg_8a148, inout highp vec4 arg_7d85f) {
+    if (GameplayWorldStatus.x > 0.5)
     {
-        if (SkySamplesConfig.x > 0.5)
+        if (arg_52942 >= 1.0)
         {
-            arg_81cea = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+            if (SkySamplesConfig.x > 0.5)
+            {
+                arg_8a148 = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+                return;
+            }
+            else
+            {
+                arg_8a148 = 1.0;
+                return;
+            }
             return;
         }
         else
         {
-            arg_81cea = 1.0;
+            arg_8a148 = arg_7d85f.z;
             return;
         }
         return;
     }
     else
     {
-        arg_81cea = arg_51821.z;
+        arg_8a148 = 1.0;
         return;
     }
 }
@@ -172,7 +183,7 @@ void main() {
     var_df846 = var_98bb3;
     highp vec4 var_5ea77 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
     highp float var_7acb6;
-    func_9aa07(var_7a513, var_7acb6, var_5ea77);
+    func_7954d(var_7a513, var_7acb6, var_5ea77);
     highp vec3 var_cdd00 = normalize((u_invView * vec4(var_98bb3.xyz, 1.0)).xyz - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;

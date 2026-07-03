@@ -74,6 +74,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 LightingUpscaleParams;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
@@ -148,6 +149,7 @@ uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
+uniform highp vec4 GameplayWorldStatus;
 #ifdef UPSCALING__ON
 uniform highp vec4 LightingUpscaleParams;
 #endif
@@ -167,24 +169,33 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-void func_9aa07(inout highp float arg_ecb1c, inout highp float arg_81cea, inout highp vec4 arg_51821) {
-    if (arg_ecb1c >= 1.0)
+void func_7954d(inout highp float arg_52942, inout highp float arg_8a148, inout highp vec4 arg_7d85f) {
+    if (GameplayWorldStatus.x > 0.5)
     {
-        if (SkySamplesConfig.x > 0.5)
+        if (arg_52942 >= 1.0)
         {
-            arg_81cea = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+            if (SkySamplesConfig.x > 0.5)
+            {
+                arg_8a148 = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+                return;
+            }
+            else
+            {
+                arg_8a148 = 1.0;
+                return;
+            }
             return;
         }
         else
         {
-            arg_81cea = 1.0;
+            arg_8a148 = arg_7d85f.z;
             return;
         }
         return;
     }
     else
     {
-        arg_81cea = arg_51821.z;
+        arg_8a148 = 1.0;
         return;
     }
 }
@@ -225,7 +236,7 @@ void main() {
     highp vec4 var_0fa22 = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
     highp vec4 var_24cdd = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
     highp float var_7acb6;
-    func_9aa07(var_e1723, var_7acb6, var_24cdd);
+    func_7954d(var_e1723, var_7acb6, var_24cdd);
     highp vec3 var_b1215 = vec3(v_projPosition.xy, var_e1723);
     highp vec3 var_6a009 = pow(max(var_0fa22.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
     highp vec3 var_5bd0a = var_b1215;
