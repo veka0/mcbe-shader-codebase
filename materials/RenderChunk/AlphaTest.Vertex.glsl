@@ -70,7 +70,7 @@ in vec4 i_data3;
 #endif
 out vec4 v_clipPosition;
 out vec4 v_color0;
-out float v_dithering;
+out vec2 v_ditheringAndMaskTinting;
 out vec4 v_fog;
 out vec2 v_lightmapUV;
 centroid out vec2 v_texcoord0;
@@ -109,8 +109,9 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec4 var_d80ab = var_f3461 * (u_view * vec4(var_4e1ae, 1.0));
 #endif
-    vec2 var_e91ee = a_texcoord1;
-    uint var_960bd = uint(floor(var_e91ee.x * 255.0));
+    vec2 var_c34f1 = a_texcoord1;
+    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
+    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
     v_clipPosition = var_d80ab;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
@@ -118,7 +119,7 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
-    v_dithering = float(uint(floor(var_e91ee.y * 255.0)) & 1u);
+    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_35d42) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif

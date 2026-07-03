@@ -66,7 +66,7 @@ uniform highp vec4 ViewPositionAndTime;
 in highp vec4 v_clipPosition;
 #endif
 in highp vec4 v_color0;
-in highp float v_dithering;
+in highp vec2 v_ditheringAndMaskTinting;
 in highp vec4 v_fog;
 in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
@@ -79,6 +79,7 @@ void main() {
 #ifdef SEASONS__ON
     highp vec4 var_6c86c = v_color0;
 #endif
+    highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
     highp vec4 var_af465 = texture(s_MatTexture, v_texcoord0);
 #ifdef DITHERING__OFF
     highp vec2 var_47338 = vec2(0.0);
@@ -88,7 +89,7 @@ void main() {
     highp vec2 var_23aa5 = vec2(DitherParams.z, DitherParams.w);
 #endif
     bool var_e031d;
-    if (v_dithering > 0.5)
+    if (var_4f8e7.x > 0.5)
     {
 #ifdef DITHERING__OFF
         highp vec2 var_01f17 = floor(vec2(0.0));
