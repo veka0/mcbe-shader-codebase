@@ -113,6 +113,7 @@
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WaterSurfaceEnabled;
 * - uniform vec4 WaterSurfaceOctaveParameters;
@@ -142,10 +143,22 @@ struct PBRTextureData {
     highp float maxMipNormal;
 };
 
+struct BiomeInfo {
+    highp vec4 waterExtinctionCoefficients;
+    highp vec4 waterAlbedoExtinction;
+    highp vec4 waterSurfaceParameters;
+    highp vec4 waterSurfaceWaveParameters;
+    highp vec4 waterSurfaceOctaveParameters;
+};
+
 layout(binding = 5, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_81302;
+layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_06448;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
+uniform highp sampler2D s_BiomeBlendingMap;
 uniform highp sampler2D s_MatTexture;
+uniform highp vec4 BiomeBlendingLastUpdatePosition;
+uniform highp vec4 BiomeBlendingParameters;
 uniform highp vec4 ViewPositionAndTime;
 uniform highp vec4 WaterSurfaceEnabled;
 uniform highp vec4 WaterSurfaceOctaveParameters;
@@ -281,6 +294,63 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     arg_d2a5b = loc_d7d8a;
     arg_51e76 = transpose(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(loc_93b23)))) * loc_b4ff6;
 }
+void func_8ab59(inout bool arg_5e3ed) {
+    if (BiomeBlendingParameters.x > 0.0)
+    {
+        arg_5e3ed = true;
+        return;
+    }
+    arg_5e3ed = false;
+}
+void func_20c38(inout highp float arg_27e9a, inout highp float arg_a66d0, inout highp float arg_5b991, inout highp float arg_11702, inout highp float arg_85f79, inout highp float arg_62dbf, inout highp float arg_6c048, inout highp float arg_12931, inout highp float arg_89c42, inout highp float arg_5d066) {
+    bool loc_a9f27;
+    func_8ab59(loc_a9f27);
+    if (loc_a9f27)
+    {
+        highp vec3 loc_f0fba = v_worldPos;
+        int loc_b9c0c = int(BiomeBlendingParameters.z * 0.5);
+        highp vec3 loc_4aab1 = BiomeBlendingLastUpdatePosition.xyz + WorldOrigin.xyz;
+        highp float loc_ab857 = (loc_f0fba.x - loc_4aab1.x) / BiomeBlendingLastUpdatePosition.w;
+        highp float loc_ddaf2 = (loc_f0fba.z - loc_4aab1.z) / BiomeBlendingLastUpdatePosition.w;
+        ivec2 loc_542fb = ivec2(loc_b9c0c + int(floor(loc_ab857)), loc_b9c0c + int(floor(loc_ddaf2)));
+        loc_542fb.x = clamp(loc_542fb.x, 0, int(BiomeBlendingParameters.z) - 1);
+        loc_542fb.y = clamp(loc_542fb.y, 0, int(BiomeBlendingParameters.z) - 1);
+        int loc_f1489 = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb, 0).x * 255.0));
+        int loc_73e2a = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(1, 0), 0).x * 255.0));
+        int loc_eaf0b = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(0, 1), 0).x * 255.0));
+        int loc_b7a42 = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(1), 0).x * 255.0));
+        highp float loc_01a09 = fract(loc_ab857);
+        highp float loc_9e036 = fract(loc_ddaf2);
+        highp vec4 loc_7acdf = vec4((1.0 - loc_01a09) * (1.0 - loc_9e036), loc_01a09 * (1.0 - loc_9e036), (1.0 - loc_01a09) * loc_9e036, loc_01a09 * loc_9e036);
+        highp vec4 loc_c6eaa = loc_7acdf;
+        highp vec4 loc_1b4b8 = loc_7acdf;
+        highp vec4 loc_afb1c = loc_7acdf;
+        highp vec4 loc_a08d9 = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceParameters * loc_c6eaa.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceParameters * loc_c6eaa.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceParameters * loc_c6eaa.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceParameters * loc_c6eaa.w);
+        highp vec4 loc_0770f = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceWaveParameters * loc_1b4b8.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceWaveParameters * loc_1b4b8.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceWaveParameters * loc_1b4b8.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceWaveParameters * loc_1b4b8.w);
+        highp vec4 loc_cd64d = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceOctaveParameters * loc_afb1c.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceOctaveParameters * loc_afb1c.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceOctaveParameters * loc_afb1c.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceOctaveParameters * loc_afb1c.w);
+        arg_27e9a = loc_a08d9.x;
+        arg_a66d0 = loc_a08d9.y;
+        arg_5b991 = loc_a08d9.z;
+        arg_11702 = loc_a08d9.w;
+        arg_85f79 = loc_0770f.x;
+        arg_62dbf = loc_0770f.y;
+        arg_6c048 = loc_cd64d.x;
+        arg_12931 = loc_cd64d.y;
+        arg_89c42 = loc_cd64d.z;
+        arg_5d066 = loc_cd64d.w;
+        return;
+    }
+    arg_27e9a = WaterSurfaceParameters.x;
+    arg_a66d0 = WaterSurfaceParameters.y;
+    arg_5b991 = WaterSurfaceParameters.z;
+    arg_11702 = WaterSurfaceParameters.w;
+    arg_85f79 = WaterSurfaceWaveParameters.x;
+    arg_62dbf = WaterSurfaceWaveParameters.y;
+    arg_6c048 = WaterSurfaceOctaveParameters.x;
+    arg_12931 = WaterSurfaceOctaveParameters.y;
+    arg_89c42 = WaterSurfaceOctaveParameters.z;
+    arg_5d066 = WaterSurfaceOctaveParameters.w;
+}
 void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout highp float arg_95241) {
     if (arg_0840d > arg_f7959)
     {
@@ -300,114 +370,125 @@ void main() {
     highp float var_0e0cd;
     highp float var_5431f;
     func_a72a6(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_b3851);
-    highp vec3 var_f75be;
+    highp float var_84772;
+    highp float var_afa04;
+    highp float var_32de0;
+    highp float var_50295;
+    highp float var_13f6b;
+    highp float var_e5452;
+    highp float var_c9298;
+    highp float var_63531;
+    highp float var_28912;
+    highp float var_7fae3;
+    func_20c38(var_7fae3, var_28912, var_63531, var_c9298, var_e5452, var_13f6b, var_50295, var_32de0, var_afa04, var_84772);
+    highp vec3 var_1343e;
     if (WaterSurfaceEnabled.x > 0.0)
     {
         highp float var_3037b = ViewPositionAndTime.w * 0.5;
-        highp vec2 var_e9692 = (v_worldPos - WorldOrigin.xyz).xz;
-        highp vec2 var_3f96c = var_e9692;
-        highp float var_62111;
-        highp float var_1a358;
-        highp vec2 var_83bc9;
-        var_83bc9 = var_e9692;
-        var_1a358 = 0.0;
-        var_62111 = 0.0;
-        highp float var_1e6d3;
-        highp float var_5b855;
-        highp vec2 var_78332;
-        highp float var_c6efd;
-        highp float var_e00d5;
-        highp float var_04897;
-        highp float var_81cca;
-        uint var_9e692 = 0u;
-        highp float var_b4da0 = 0.0;
-        highp float var_eef05 = WaterSurfaceWaveParameters.x;
-        highp float var_2e5ba = WaterSurfaceParameters.x;
-        highp float var_59076 = 1.0;
-        for (; var_9e692 < uint(WaterSurfaceParameters.y); var_59076 = var_c6efd, var_2e5ba = var_e00d5, var_83bc9 = var_78332, var_eef05 = var_04897, var_b4da0 = var_81cca, var_1a358 = var_5b855, var_62111 = var_1e6d3, var_9e692++)
+        highp vec2 var_db8aa = (v_worldPos - WorldOrigin.xyz).xz;
+        highp vec2 var_17fa3 = var_db8aa;
+        highp float var_82f84;
+        highp float var_af08e;
+        highp vec2 var_2ef0e;
+        var_2ef0e = var_db8aa;
+        var_af08e = 0.0;
+        var_82f84 = 0.0;
+        highp float var_d9f2a;
+        highp float var_38665;
+        highp vec2 var_e296e;
+        highp float var_1721e;
+        highp float var_c2e94;
+        highp float var_feadc;
+        highp float var_deb76;
+        uint var_0ff26 = 0u;
+        highp float var_71294 = 0.0;
+        highp float var_b8c75 = var_e5452;
+        highp float var_c3b5f = var_7fae3;
+        highp float var_4422c = 1.0;
+        for (; var_0ff26 < uint(var_28912); var_4422c = var_1721e, var_c3b5f = var_c2e94, var_2ef0e = var_e296e, var_b8c75 = var_feadc, var_71294 = var_deb76, var_af08e = var_38665, var_82f84 = var_d9f2a, var_0ff26++)
         {
-            highp vec2 var_ac536 = vec2(sin(var_b4da0), cos(var_b4da0));
-            highp float var_885b5 = (dot(var_ac536, var_83bc9) * var_2e5ba) + (var_3037b * var_eef05);
-            highp float var_1c0fd = pow((sin(var_885b5) + 1.0) * 0.5, WaterSurfaceWaveParameters.y);
-            highp vec2 var_11048 = vec2(var_1c0fd, (var_1c0fd * cos(var_885b5)) * (-1.0));
-            var_1e6d3 = var_62111 + (var_11048.x * var_59076);
-            var_5b855 = var_1a358 + var_59076;
-            var_78332 = var_83bc9 + (((var_ac536 * var_11048.y) * var_59076) * WaterSurfaceOctaveParameters.x);
-            var_c6efd = mix(var_59076, 0.0, WaterSurfaceOctaveParameters.y);
-            var_e00d5 = var_2e5ba * WaterSurfaceOctaveParameters.z;
-            var_04897 = var_eef05 * WaterSurfaceOctaveParameters.w;
-            var_81cca = var_b4da0 + 1.39900004863739013671875;
+            highp vec2 var_3ac84 = vec2(sin(var_71294), cos(var_71294));
+            highp float var_93224 = (dot(var_3ac84, var_2ef0e) * var_c3b5f) + (var_3037b * var_b8c75);
+            highp float var_29a12 = pow((sin(var_93224) + 1.0) * 0.5, var_13f6b);
+            highp vec2 var_221b8 = vec2(var_29a12, (var_29a12 * cos(var_93224)) * (-1.0));
+            var_d9f2a = var_82f84 + (var_221b8.x * var_4422c);
+            var_38665 = var_af08e + var_4422c;
+            var_e296e = var_2ef0e + (((var_3ac84 * var_221b8.y) * var_4422c) * var_50295);
+            var_1721e = mix(var_4422c, 0.0, var_32de0);
+            var_c2e94 = var_c3b5f * var_afa04;
+            var_feadc = var_b8c75 * var_84772;
+            var_deb76 = var_71294 + 1.39900004863739013671875;
         }
-        highp vec3 var_17739 = vec3(var_3f96c.x, (var_62111 / var_1a358) * WaterSurfaceParameters.z, var_3f96c.y);
-        highp float var_bf0bb;
-        highp float var_6cef1;
-        highp vec2 var_c2935;
-        var_c2935 = var_e9692 - vec2(WaterSurfaceParameters.w, 0.0);
-        var_6cef1 = 0.0;
-        var_bf0bb = 0.0;
-        highp float var_0303e;
-        highp float var_a3722;
-        highp vec2 var_1b55e;
-        highp float var_9ca59;
-        highp float var_6df95;
-        highp float var_15226;
-        highp float var_633fd;
-        uint var_2ca1d = 0u;
-        highp float var_01a31 = 0.0;
-        highp float var_3441d = WaterSurfaceWaveParameters.x;
-        highp float var_b4368 = WaterSurfaceParameters.x;
-        highp float var_563a6 = 1.0;
-        for (; var_2ca1d < uint(WaterSurfaceParameters.y); var_563a6 = var_9ca59, var_b4368 = var_6df95, var_c2935 = var_1b55e, var_3441d = var_15226, var_01a31 = var_633fd, var_6cef1 = var_a3722, var_bf0bb = var_0303e, var_2ca1d++)
+        highp vec3 var_47405 = vec3(var_17fa3.x, (var_82f84 / var_af08e) * var_63531, var_17fa3.y);
+        highp float var_2b4ee;
+        highp float var_38c87;
+        highp vec2 var_cbc38;
+        var_cbc38 = var_db8aa - vec2(var_c9298, 0.0);
+        var_38c87 = 0.0;
+        var_2b4ee = 0.0;
+        highp float var_6090e;
+        highp float var_c3e6b;
+        highp vec2 var_c361b;
+        highp float var_acbf1;
+        highp float var_5712c;
+        highp float var_c8f66;
+        highp float var_e0c56;
+        uint var_a50de = 0u;
+        highp float var_07f85 = 0.0;
+        highp float var_d7ca3 = var_e5452;
+        highp float var_671a8 = var_7fae3;
+        highp float var_f78b2 = 1.0;
+        for (; var_a50de < uint(var_28912); var_f78b2 = var_acbf1, var_671a8 = var_5712c, var_cbc38 = var_c361b, var_d7ca3 = var_c8f66, var_07f85 = var_e0c56, var_38c87 = var_c3e6b, var_2b4ee = var_6090e, var_a50de++)
         {
-            highp vec2 var_1c18a = vec2(sin(var_01a31), cos(var_01a31));
-            highp float var_99be2 = (dot(var_1c18a, var_c2935) * var_b4368) + (var_3037b * var_3441d);
-            highp float var_056e0 = pow((sin(var_99be2) + 1.0) * 0.5, WaterSurfaceWaveParameters.y);
-            highp vec2 var_03816 = vec2(var_056e0, (var_056e0 * cos(var_99be2)) * (-1.0));
-            var_0303e = var_bf0bb + (var_03816.x * var_563a6);
-            var_a3722 = var_6cef1 + var_563a6;
-            var_1b55e = var_c2935 + (((var_1c18a * var_03816.y) * var_563a6) * WaterSurfaceOctaveParameters.x);
-            var_9ca59 = mix(var_563a6, 0.0, WaterSurfaceOctaveParameters.y);
-            var_6df95 = var_b4368 * WaterSurfaceOctaveParameters.z;
-            var_15226 = var_3441d * WaterSurfaceOctaveParameters.w;
-            var_633fd = var_01a31 + 1.39900004863739013671875;
+            highp vec2 var_547d9 = vec2(sin(var_07f85), cos(var_07f85));
+            highp float var_0051f = (dot(var_547d9, var_cbc38) * var_671a8) + (var_3037b * var_d7ca3);
+            highp float var_83598 = pow((sin(var_0051f) + 1.0) * 0.5, var_13f6b);
+            highp vec2 var_3ef36 = vec2(var_83598, (var_83598 * cos(var_0051f)) * (-1.0));
+            var_6090e = var_2b4ee + (var_3ef36.x * var_f78b2);
+            var_c3e6b = var_38c87 + var_f78b2;
+            var_c361b = var_cbc38 + (((var_547d9 * var_3ef36.y) * var_f78b2) * var_50295);
+            var_acbf1 = mix(var_f78b2, 0.0, var_32de0);
+            var_5712c = var_671a8 * var_afa04;
+            var_c8f66 = var_d7ca3 * var_84772;
+            var_e0c56 = var_07f85 + 1.39900004863739013671875;
         }
-        highp float var_29438;
-        highp float var_2cc45;
-        highp vec2 var_e6e11;
-        var_e6e11 = var_e9692 + vec2(0.0, WaterSurfaceParameters.w);
-        var_2cc45 = 0.0;
-        var_29438 = 0.0;
-        highp float var_c5940;
-        highp float var_fb35b;
-        highp vec2 var_f4997;
-        highp float var_c3808;
-        highp float var_203ec;
-        highp float var_40c87;
-        highp float var_9d271;
-        uint var_392e0 = 0u;
-        highp float var_b733c = 0.0;
-        highp float var_e2c14 = WaterSurfaceWaveParameters.x;
-        highp float var_9e727 = WaterSurfaceParameters.x;
-        highp float var_47b45 = 1.0;
-        for (; var_392e0 < uint(WaterSurfaceParameters.y); var_47b45 = var_c3808, var_9e727 = var_203ec, var_e6e11 = var_f4997, var_e2c14 = var_40c87, var_b733c = var_9d271, var_2cc45 = var_fb35b, var_29438 = var_c5940, var_392e0++)
+        highp float var_9f652;
+        highp float var_1f9c0;
+        highp vec2 var_0cccf;
+        var_0cccf = var_db8aa + vec2(0.0, var_c9298);
+        var_1f9c0 = 0.0;
+        var_9f652 = 0.0;
+        highp float var_19150;
+        highp float var_d5aed;
+        highp vec2 var_a6b58;
+        highp float var_8f034;
+        highp float var_6e9d6;
+        highp float var_94331;
+        highp float var_f1ae6;
+        uint var_afc8f = 0u;
+        highp float var_4a2b4 = 0.0;
+        highp float var_6a7fe = var_e5452;
+        highp float var_21493 = var_7fae3;
+        highp float var_3e15d = 1.0;
+        for (; var_afc8f < uint(var_28912); var_3e15d = var_8f034, var_21493 = var_6e9d6, var_0cccf = var_a6b58, var_6a7fe = var_94331, var_4a2b4 = var_f1ae6, var_1f9c0 = var_d5aed, var_9f652 = var_19150, var_afc8f++)
         {
-            highp vec2 var_4a483 = vec2(sin(var_b733c), cos(var_b733c));
-            highp float var_1996d = (dot(var_4a483, var_e6e11) * var_9e727) + (var_3037b * var_e2c14);
-            highp float var_2db20 = pow((sin(var_1996d) + 1.0) * 0.5, WaterSurfaceWaveParameters.y);
-            highp vec2 var_d4af9 = vec2(var_2db20, (var_2db20 * cos(var_1996d)) * (-1.0));
-            var_c5940 = var_29438 + (var_d4af9.x * var_47b45);
-            var_fb35b = var_2cc45 + var_47b45;
-            var_f4997 = var_e6e11 + (((var_4a483 * var_d4af9.y) * var_47b45) * WaterSurfaceOctaveParameters.x);
-            var_c3808 = mix(var_47b45, 0.0, WaterSurfaceOctaveParameters.y);
-            var_203ec = var_9e727 * WaterSurfaceOctaveParameters.z;
-            var_40c87 = var_e2c14 * WaterSurfaceOctaveParameters.w;
-            var_9d271 = var_b733c + 1.39900004863739013671875;
+            highp vec2 var_beff8 = vec2(sin(var_4a2b4), cos(var_4a2b4));
+            highp float var_ae2ba = (dot(var_beff8, var_0cccf) * var_21493) + (var_3037b * var_6a7fe);
+            highp float var_74e08 = pow((sin(var_ae2ba) + 1.0) * 0.5, var_13f6b);
+            highp vec2 var_f90b3 = vec2(var_74e08, (var_74e08 * cos(var_ae2ba)) * (-1.0));
+            var_19150 = var_9f652 + (var_f90b3.x * var_3e15d);
+            var_d5aed = var_1f9c0 + var_3e15d;
+            var_a6b58 = var_0cccf + (((var_beff8 * var_f90b3.y) * var_3e15d) * var_50295);
+            var_8f034 = mix(var_3e15d, 0.0, var_32de0);
+            var_6e9d6 = var_21493 * var_afa04;
+            var_94331 = var_6a7fe * var_84772;
+            var_f1ae6 = var_4a2b4 + 1.39900004863739013671875;
         }
-        var_f75be = normalize(mix(v_normal, normalize(cross(var_17739 - vec3(var_3f96c.x - WaterSurfaceParameters.w, (var_bf0bb / var_6cef1) * WaterSurfaceParameters.z, var_3f96c.y), var_17739 - vec3(var_3f96c.x, (var_29438 / var_2cc45) * WaterSurfaceParameters.z, var_3f96c.y + WaterSurfaceParameters.w))), vec3(v_normal.y)));
+        var_1343e = normalize(mix(v_normal, normalize(cross(var_47405 - vec3(var_17fa3.x - var_c9298, (var_2b4ee / var_38c87) * var_63531, var_17fa3.y), var_47405 - vec3(var_17fa3.x, (var_9f652 / var_1f9c0) * var_63531, var_17fa3.y + var_c9298))), vec3(v_normal.y)));
     }
     else
     {
-        var_f75be = var_b3851;
+        var_1343e = var_b3851;
     }
     highp vec4 var_e30b2 = vec4(texture(s_MatTexture, v_texcoord0).xyz, 1.0);
     highp vec2 var_ea830 = v_lightmapUV;
@@ -415,7 +496,7 @@ void main() {
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
     var_6de71.w = var_7aa46;
-    highp vec3 var_089df = normalize(var_f75be);
+    highp vec3 var_089df = normalize(var_1343e);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
     highp vec2 var_5a694;

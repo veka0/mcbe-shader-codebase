@@ -62,7 +62,7 @@ void func_7a080(inout bool arg_3514b, inout highp vec3 arg_6cf39) {
         return;
     }
 }
-void func_21d92(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout highp vec3 arg_8417c, inout highp vec4 arg_0418b, inout int arg_eb797, inout highp float arg_cf4e3) {
+void func_61263(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout highp vec3 arg_8417c, inout highp vec4 arg_0418b, inout int arg_eb797, inout highp float arg_cf4e3) {
     highp vec3 loc_99271 = normalize(reflect(normalize(arg_4185b), normalize((u_view * vec4(normalize(normalize(vec3(arg_0126e.x, arg_0126e.y, arg_8417c.z))), 0.0)).xyz)));
     highp vec3 loc_ac142 = arg_4185b + (loc_99271 * SSRRayMarchingParams.z);
     highp vec3 loc_999a9 = loc_ac142;
@@ -134,36 +134,49 @@ void func_21d92(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout hi
         loc_165e0 = loc_6c458.z;
     }
     highp vec3 loc_a20bd = vec3(loc_52170, loc_1029f, loc_165e0);
-    int loc_7f413 = min(int(min(min(loc_a20bd.x, loc_a20bd.y), loc_a20bd.z)), int(SSRRayMarchingParams.x));
+    int loc_ca178 = min(int(min(min(loc_a20bd.x, loc_a20bd.y), loc_a20bd.z)), int(SSRRayMarchingParams.x));
     highp vec3 loc_34e0b = vec3(0.0);
     highp vec3 loc_bc119 = loc_feb5c;
     highp float loc_e9327 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_bc119.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-    highp float loc_153a4;
-    int loc_7f26d;
-    highp vec3 loc_90bb9;
-    int loc_55806 = 1;
-    highp float loc_f4b0e = loc_e9327;
-    for (; loc_55806 <= loc_7f413; loc_f4b0e = loc_153a4, loc_55806++)
+    int loc_83e87;
+    highp vec3 loc_477c0;
+    loc_477c0 = vec3(0.0);
+    loc_83e87 = -1;
+    bool loc_dc696;
+    int loc_34ff7;
+    highp float loc_66d32;
+    int loc_acfc4;
+    highp vec3 loc_511a5;
+    int loc_386b5 = 1;
+    bool loc_802b4 = false;
+    highp float loc_f7a27 = loc_e9327;
+    for (; (loc_386b5 <= loc_ca178) && (!loc_802b4); loc_f7a27 = loc_66d32, loc_477c0 = loc_511a5, loc_83e87 = loc_acfc4, loc_802b4 = loc_dc696, loc_386b5 = loc_34ff7)
     {
-        highp vec3 loc_82463 = loc_feb5c + (loc_58f30 * float(loc_55806));
+        highp vec3 loc_82463 = loc_feb5c + (loc_58f30 * float(loc_386b5));
         highp vec3 loc_a160b = loc_82463;
-        loc_153a4 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_a160b.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-        highp float loc_2931a = ((-(((2.0 * CameraData.y) * CameraData.x) / (((((texture(s_GbufferDepth, loc_82463.xy).x * 2.0) - 1.0) * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-        if ((loc_2931a <= loc_153a4) && (loc_f4b0e <= (loc_2931a + (SSRFadingParamsAndThickness.w * loc_2931a))))
+        loc_66d32 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_a160b.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
+        highp float loc_35944 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((((texture(s_GbufferDepth, loc_82463.xy).x * 2.0) - 1.0) * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
+        loc_dc696 = (loc_35944 <= loc_66d32) && (loc_f7a27 <= (loc_35944 + (SSRFadingParamsAndThickness.w * loc_35944)));
+        if (loc_dc696)
         {
-            loc_90bb9 = loc_82463;
-            loc_7f26d = loc_55806;
-            break;
+            loc_511a5 = loc_82463;
+            loc_acfc4 = loc_386b5;
         }
+        else
+        {
+            loc_511a5 = loc_477c0;
+            loc_acfc4 = loc_83e87;
+        }
+        loc_34ff7 = loc_386b5 + 1;
     }
-    loc_34e0b = loc_90bb9;
-    if (loc_7f26d < 1)
+    loc_34e0b = loc_477c0;
+    if (loc_83e87 < 1)
     {
         arg_0418b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
-    highp float loc_8e3e2 = float(loc_7f26d - 1);
-    highp float loc_1f44e = float(loc_7f26d);
+    highp float loc_8e3e2 = float(loc_83e87 - 1);
+    highp float loc_1f44e = float(loc_83e87);
     highp float loc_39c99;
     highp vec3 loc_22e67;
     loc_22e67 = loc_34e0b;
@@ -214,7 +227,7 @@ void func_21d92(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout hi
     }
     highp vec3 loc_2be11 = loc_6b26b;
     loc_6b26b = vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z);
-    arg_0418b = vec4(loc_34e0b.xy, loc_34e0b.z, min(min(min((1.0 - loc_215a9.x) * (1.0 - loc_215a9.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, loc_39c99 / float(loc_7f413))), clamp(1.0 - dot(normalize(normalize(vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z))), normalize((u_invView * vec4(loc_99271, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_cf4e3, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
+    arg_0418b = vec4(loc_34e0b.xy, loc_34e0b.z, min(min(min((1.0 - loc_215a9.x) * (1.0 - loc_215a9.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, loc_39c99 / float(loc_ca178))), clamp(1.0 - dot(normalize(normalize(vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z))), normalize((u_invView * vec4(loc_99271, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_cf4e3, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
 }
 void main() {
     highp vec4 var_eb4c0 = texture(s_GbufferRoughness, v_texcoord0.xy);
@@ -255,7 +268,7 @@ void main() {
         highp vec3 var_83f17 = var_f857f;
         var_f857f = vec3(var_e3359.x, var_e3359.y, var_83f17.z);
         highp vec4 var_82fd4;
-        func_21d92(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
+        func_61263(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
         var_53578 = var_82fd4;
     }
     bgfx_FragColor = var_53578;

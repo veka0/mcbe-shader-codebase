@@ -15,7 +15,6 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -23,16 +22,13 @@
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 8, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 9, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 10, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 7, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
-* - uniform vec4 BiomeBlendingLastUpdatePosition;
-* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
@@ -102,6 +98,7 @@
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WorldOrigin;
 */
@@ -138,8 +135,8 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_12727 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec4 var_24fab = u_viewProj * vec4(var_12727.xyz, 1.0);
-    var_24fab.z = clamp(var_24fab.z, 0.0, 1.0);
+    vec4 var_f6566 = u_viewProj * vec4(var_12727.xyz, 1.0);
+    var_f6566.z = clamp(var_f6566.z, -1.0, 1.0);
     v_adjacentClouds = 0;
     v_color0 = vec4(0.0);
     v_ndcPosition = vec3(0.0);
@@ -147,5 +144,5 @@ void main() {
     v_texcoord0 = vec2(0.0);
     v_tilePosition = vec2(0.0);
     v_worldPos = var_12727.xyz;
-    gl_Position = var_24fab;
+    gl_Position = var_f6566;
 }
