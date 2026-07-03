@@ -7,6 +7,10 @@
 * - CLUSTER_LIGHTS_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* AngularRefinement:
+* - ANGULAR_REFINEMENT__OFF (not used)
+* - ANGULAR_REFINEMENT__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -20,6 +24,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 LightsPerCluster;
+* - uniform vec4 PointLightPreCalcValues;
 */
 
 void main() {

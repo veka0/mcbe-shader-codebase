@@ -79,6 +79,7 @@
 * - uniform vec4 PointLightDiffuseFadeOutParameters;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
+* - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
@@ -541,8 +542,8 @@ void main() {
     highp vec4 var_e87e0 = u_proj * var_930c5;
     highp vec4 var_b8928 = var_e87e0;
     highp vec3 var_12830 = var_e87e0.xyz / vec3(var_b8928.w);
-    highp vec3 var_9f8ad = normalize(var_256a8);
-    highp vec4 var_e14aa = vec4(var_9f8ad, 0.0);
+    highp vec3 var_b4b34 = normalize(var_256a8);
+    highp vec4 var_e14aa = vec4(var_b4b34, 0.0);
     highp vec3 var_9c296 = var_e14aa.xyz;
     highp vec3 var_b6566 = (u_view * var_e14aa).xyz;
     highp vec3 var_5c650 = var_930c5.xyz;
@@ -579,14 +580,14 @@ void main() {
     {
         var_94c07 = var_ff669;
     }
-    highp float var_713e6;
+    highp float var_c90aa;
     if (var_94c07)
     {
-        var_713e6 = pow((texture(s_CausticsTexture, vec3((v_worldPos - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_9f8ad.y, 0.0, 1.0), float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+        var_c90aa = pow((texture(s_CausticsTexture, vec3((v_worldPos - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_b4b34.y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
     }
     else
     {
-        var_713e6 = 1.0;
+        var_c90aa = 1.0;
     }
     highp float var_62b20 = clamp(((var_5cb92.y * 16.0) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
     highp float var_106e2 = length(var_5c650);
@@ -609,7 +610,7 @@ void main() {
         }
         highp vec3 var_0edfc;
         highp vec3 var_5ea35;
-        func_7abc7(var_5cb92, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_9c296, var_8bbda, var_713e6, var_380bf, var_3d3f0, var_8b2f4, var_71ea7, var_89ee6, var_797a6);
+        func_7abc7(var_5cb92, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_9c296, var_8bbda, var_c90aa, var_380bf, var_3d3f0, var_8b2f4, var_71ea7, var_89ee6, var_797a6);
         var_45347 = var_5ea35;
         var_d476b = var_0edfc;
     }

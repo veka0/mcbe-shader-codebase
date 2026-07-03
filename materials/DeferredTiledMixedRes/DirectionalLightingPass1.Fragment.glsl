@@ -86,6 +86,7 @@
 * - uniform vec4 PointLightDiffuseFadeOutParameters;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
+* - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
@@ -460,13 +461,13 @@ void main() {
     }
     highp vec3 var_e6b69 = var_b0cb0;
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
-    highp vec3 var_cd5fc = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
-    highp vec3 var_7abf1 = normalize((u_view * vec4(var_cd5fc, 0.0)).xyz);
+    highp vec3 var_55f35 = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
+    highp vec3 var_7abf1 = normalize((u_view * vec4(var_55f35, 0.0)).xyz);
     highp vec4 var_0ac6d = texture(s_ColorMetalnessSubsurface, var_195ea);
     highp vec4 var_4ac0e = var_0ac6d;
     highp float var_403ab = clamp(2.007874011993408203125 * (var_4ac0e.w - 0.501960813999176025390625), 0.0, 1.0);
     highp vec4 var_6afb1 = texture(s_EmissiveAmbientLinearRoughness, var_195ea);
-    highp vec3 var_4d8e0 = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
+    highp vec3 var_ff3a3 = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_bd17c = var_20845.xyz;
     highp vec3 var_34cb3 = vec3(0.039999999105930328369140625 * (1.0 - var_403ab)) + (pow(max(var_0ac6d.xyz, vec3(0.0)), vec3(2.2000000476837158203125)) * var_403ab);
     bool var_ff669 = CausticsParameters.x != 0.0;
@@ -479,14 +480,14 @@ void main() {
     {
         var_94c07 = var_ff669;
     }
-    highp float var_e6944;
+    highp float var_05371;
     if (var_94c07)
     {
-        var_e6944 = pow((texture(s_CausticsTexture, vec3((var_4d8e0 - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_cd5fc.y, 0.0, 1.0), float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+        var_05371 = pow((texture(s_CausticsTexture, vec3((var_ff3a3 - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_55f35.y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
     }
     else
     {
-        var_e6944 = 1.0;
+        var_05371 = 1.0;
     }
     highp vec3 var_1253e = -(var_bd17c / vec3(length(var_bd17c) + 9.9999997473787516355514526367188e-05));
     highp float var_69455 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_4ac0e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
@@ -498,11 +499,11 @@ void main() {
     }
     else
     {
-        var_f7261 = var_4d8e0;
+        var_f7261 = var_ff3a3;
     }
     highp vec3 var_58b41;
     highp vec3 var_74ca9;
-    func_c0ce0(var_6afb1, var_74ca9, var_58b41, var_7abf1, var_f7261, var_cd5fc, var_761c1, var_e6944, var_1253e, var_34cb3, var_403ab, var_69455);
+    func_c0ce0(var_6afb1, var_74ca9, var_58b41, var_7abf1, var_f7261, var_55f35, var_761c1, var_05371, var_1253e, var_34cb3, var_403ab, var_69455);
     bgfx_FragData[0] = vec4(var_74ca9, 1.0);
     bgfx_FragData[1] = vec4(var_58b41, 1.0);
 }

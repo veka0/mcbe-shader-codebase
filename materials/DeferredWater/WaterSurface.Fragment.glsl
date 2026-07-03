@@ -81,6 +81,7 @@
 * - uniform vec4 PointLightDiffuseFadeOutParameters;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
+* - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
@@ -132,7 +133,7 @@ struct LightData {
 };
 
 int var_e7b23;
-layout(binding = 15, std430) buffer s_zLights { Light zLights[]; } var_43d7b;
+layout(binding = 15, std430) buffer s_zLights { Light zLights[]; } var_caa57;
 layout(binding = 14, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_419d0;
 #endif
 uniform highp mat4 CascadesShadowProj[8];
@@ -167,8 +168,6 @@ uniform highp vec4 CloudShadowsVisible;
 #ifdef POINT_LIGHT_SHADING__ON
 uniform highp vec4 ClusterDepthBounds;
 uniform highp vec4 ClusterDimensions;
-uniform highp vec4 ClusterNearFarWidthHeight;
-uniform highp vec4 ClusterSize;
 #endif
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -196,6 +195,7 @@ uniform highp vec4 PointLightAttenuationWindow;
 uniform highp vec4 PointLightAttenuationWindowEnabled;
 uniform highp vec4 PointLightDiffuseFadeOutParameters;
 uniform highp vec4 PointLightNdLFloor;
+uniform highp vec4 PointLightPreCalcValues;
 uniform highp vec4 PointLightShadowParams1;
 uniform highp vec4 PointLightSpecularFadeOutParameters;
 #endif
@@ -531,60 +531,38 @@ void func_b2538(inout highp vec4 arg_6739f, inout highp vec3 arg_b6d8c, inout hi
     arg_b6d8c = (((((((vec3(0.0199999995529651641845703125) + (vec3(0.980000019073486328125) * ((loc_afe8c * loc_afe8c) * loc_b6403))) * (loc_96073 / ((loc_53226 * loc_53226) * 3.1415927410125732421875))) * ((loc_c3997 / (((loc_c3997 * (1.0 - loc_1c1ce)) + loc_1c1ce) + 9.9999997473787516355514526367188e-05)) * (loc_f4016 / (((loc_f4016 * (1.0 - loc_1c1ce)) + loc_1c1ce) + 9.9999997473787516355514526367188e-05)))) / vec3(((4.0 * loc_f4016) * loc_c3997) + 9.9999997473787516355514526367188e-05)) * loc_f4016) * loc_7c8be) * (((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_1d9d1.w) * 1.0) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight.x)) * DiffuseSpecularEmissiveAmbientTermToggles.y;
 }
 #ifdef POINT_LIGHT_SHADING__ON
-void func_5d077(inout highp float arg_958de, inout highp vec2 arg_e6843, inout highp float arg_33edf, inout highp vec2 arg_410bb, inout highp vec3 arg_e0671) {
-    if (arg_958de < arg_e6843.x)
+void func_06412(inout highp vec3 arg_8d32a, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
+    highp vec3 loc_f1110 = arg_8d32a;
+    highp vec3 loc_75f4e = ClusterDimensions.xyz;
+    highp vec2 loc_7c1c9 = ClusterDepthBounds.xy;
+    highp vec4 loc_c5992 = PointLightPreCalcValues;
+    highp float loc_ac0eb = -loc_f1110.z;
+    highp float loc_9e40d = loc_ac0eb * ClusterDepthBounds.z;
+    highp float loc_fbce7 = loc_9e40d * ClusterDepthBounds.w;
+    highp float loc_bee80;
+    if (loc_ac0eb < loc_7c1c9.x)
     {
-        arg_33edf = -1.0;
-        return;
-    }
-    bool loc_4e95c = arg_958de >= arg_e6843.x;
-    bool loc_6742e;
-    if (loc_4e95c)
-    {
-        loc_6742e = arg_958de <= arg_410bb.x;
-    }
-    else
-    {
-        loc_6742e = loc_4e95c;
-    }
-    if (loc_6742e)
-    {
-        arg_33edf = 0.0;
-        return;
-    }
-    bool loc_78834 = arg_958de > arg_410bb.x;
-    bool loc_c9362;
-    if (loc_78834)
-    {
-        loc_c9362 = arg_958de <= arg_410bb.y;
+        loc_bee80 = 0.0;
     }
     else
     {
-        loc_c9362 = loc_78834;
+        highp float loc_a71e8;
+        if (loc_ac0eb < loc_7c1c9.y)
+        {
+            loc_a71e8 = 1.0;
+        }
+        else
+        {
+            loc_a71e8 = min(floor(clamp((log2(loc_ac0eb) - loc_c5992.z) * loc_c5992.x, 0.0, 1.0) * (loc_75f4e.z - 2.0)) + 2.0, loc_75f4e.z - 1.0);
+        }
+        loc_bee80 = loc_a71e8;
     }
-    if (loc_c9362)
-    {
-        arg_33edf = 1.0;
-        return;
-    }
-    arg_33edf = floor((log2(arg_958de / arg_410bb.y) * ((arg_e0671.z - 2.0) / log2(arg_e6843.y / arg_410bb.y))) + 2.0);
-}
-void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
-    highp float loc_28341 = -arg_9f603.z;
-    highp vec2 loc_72053 = v_texcoord0.xy;
-    highp vec3 loc_fd394 = ClusterDimensions.xyz;
-    highp vec2 loc_703d4 = ClusterNearFarWidthHeight.zw;
-    highp vec2 loc_d7b5c = ClusterSize.xy;
-    highp vec2 loc_909cb = ClusterNearFarWidthHeight.xy;
-    highp vec2 loc_eee23 = ClusterDepthBounds.xy;
-    highp float loc_5de3f;
-    func_5d077(loc_28341, loc_909cb, loc_5de3f, loc_eee23, loc_fd394);
-    highp vec3 loc_60667 = vec3(floor((loc_72053.x * loc_703d4.x) / loc_d7b5c.x), floor((loc_72053.y * loc_703d4.y) / loc_d7b5c.y), loc_5de3f);
-    bool loc_ce27d = loc_60667.x < 0.0;
+    highp vec3 loc_05e3f = vec3(min(floor(clamp((loc_f1110.x + loc_fbce7) / (2.0 * loc_fbce7), 0.0, 1.0) * loc_75f4e.x), loc_75f4e.x - 1.0), min(floor(clamp((loc_f1110.y + loc_9e40d) / (2.0 * loc_9e40d), 0.0, 1.0) * loc_75f4e.y), loc_75f4e.y - 1.0), loc_bee80);
+    bool loc_ce27d = loc_05e3f.x < 0.0;
     bool loc_f15a5;
     if (!loc_ce27d)
     {
-        loc_f15a5 = loc_60667.y < 0.0;
+        loc_f15a5 = loc_05e3f.y < 0.0;
     }
     else
     {
@@ -593,7 +571,7 @@ void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     bool loc_7bab6;
     if (!loc_f15a5)
     {
-        loc_7bab6 = loc_60667.z < 0.0;
+        loc_7bab6 = loc_05e3f.z < 0.0;
     }
     else
     {
@@ -602,7 +580,7 @@ void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     bool loc_a526b;
     if (!loc_7bab6)
     {
-        loc_a526b = loc_60667.x >= ClusterDimensions.x;
+        loc_a526b = loc_05e3f.x >= ClusterDimensions.x;
     }
     else
     {
@@ -611,7 +589,7 @@ void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     bool loc_6d7c9;
     if (!loc_a526b)
     {
-        loc_6d7c9 = loc_60667.y >= ClusterDimensions.y;
+        loc_6d7c9 = loc_05e3f.y >= ClusterDimensions.y;
     }
     else
     {
@@ -620,7 +598,7 @@ void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     bool loc_fc058;
     if (!loc_6d7c9)
     {
-        loc_fc058 = loc_60667.z >= ClusterDimensions.z;
+        loc_fc058 = loc_05e3f.z >= ClusterDimensions.z;
     }
     else
     {
@@ -633,18 +611,18 @@ void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
         arg_d7f4c = false;
         return;
     }
-    int loc_14533 = int((loc_60667.x + (loc_60667.y * ClusterDimensions.x)) + ((loc_60667.z * ClusterDimensions.x) * ClusterDimensions.y)) * int(ClusterDimensions.w);
+    int loc_14533 = int((loc_05e3f.x + (loc_05e3f.y * ClusterDimensions.x)) + ((loc_05e3f.z * ClusterDimensions.x) * ClusterDimensions.y)) * int(ClusterDimensions.w);
     arg_e45b8 = loc_14533 + int(ClusterDimensions.w);
     arg_fadf1 = loc_14533;
     arg_d7f4c = true;
 }
 void func_8fc55(inout int arg_0ec26, inout highp float arg_9eee0, inout highp vec3 arg_aee55, inout highp vec3 arg_1111c) {
-    if (var_43d7b.zLights[arg_0ec26].shadowProbeIndex < 0)
+    if (var_caa57.zLights[arg_0ec26].shadowProbeIndex < 0)
     {
         arg_9eee0 = 1.0;
         return;
     }
-    highp vec3 loc_44ea9 = arg_aee55 - var_43d7b.zLights[arg_0ec26].position.xyz;
+    highp vec3 loc_44ea9 = arg_aee55 - var_caa57.zLights[arg_0ec26].position.xyz;
     highp vec3 loc_b2243 = abs(loc_44ea9);
     bool loc_ab77c = loc_b2243.x >= loc_b2243.y;
     bool loc_ca7f9;
@@ -691,7 +669,7 @@ void func_8fc55(inout int arg_0ec26, inout highp float arg_9eee0, inout highp ve
         loc_13db4.y *= (-1.0);
     }
     highp float loc_591c8;
-    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_13db4, float(var_43d7b.zLights[arg_0ec26].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_02fd5.z)
+    if (((textureLod(s_PointLightShadowTextureArray, vec4(loc_13db4, float(var_caa57.zLights[arg_0ec26].shadowProbeIndex)), 0.0).x * 2.0) - 1.0) >= loc_02fd5.z)
     {
         loc_591c8 = 1.0;
     }
@@ -708,7 +686,7 @@ void func_046a1(inout int arg_2f306, inout highp float arg_43b7a, inout highp ve
         arg_0a2b9 = vec3(0.0);
         return;
     }
-    highp vec3 loc_8dfd7 = var_43d7b.zLights[arg_2f306].position.xyz - arg_29ac4;
+    highp vec3 loc_8dfd7 = var_caa57.zLights[arg_2f306].position.xyz - arg_29ac4;
     highp vec3 loc_8cb9b = loc_8dfd7;
     highp float loc_c64bb;
     if (ManhattanDistAttenuationEnabled.x > 0.0)
@@ -720,7 +698,7 @@ void func_046a1(inout int arg_2f306, inout highp float arg_43b7a, inout highp ve
     {
         loc_c64bb = dot(loc_8dfd7, loc_8dfd7);
     }
-    if (loc_c64bb >= (var_43d7b.zLights[arg_2f306].position.w * var_43d7b.zLights[arg_2f306].position.w))
+    if (loc_c64bb >= (var_caa57.zLights[arg_2f306].position.w * var_caa57.zLights[arg_2f306].position.w))
     {
         arg_43b7a = 1.0;
         arg_0a2b9 = vec3(0.0);
@@ -737,7 +715,7 @@ void func_046a1(inout int arg_2f306, inout highp float arg_43b7a, inout highp ve
     {
         loc_a011d = 1.0;
     }
-    highp float loc_4c5a5 = loc_c64bb / ((var_43d7b.zLights[arg_2f306].position.w * var_43d7b.zLights[arg_2f306].position.w) + 9.9999997473787516355514526367188e-05);
+    highp float loc_4c5a5 = loc_c64bb / ((var_caa57.zLights[arg_2f306].position.w * var_caa57.zLights[arg_2f306].position.w) + 9.9999997473787516355514526367188e-05);
     highp float loc_fcfce = clamp(1.0 - (loc_4c5a5 * loc_4c5a5), 0.0, 1.0);
     highp float loc_e1ff6 = (1.0 / max(loc_c64bb, 9.9999997473787516355514526367188e-05)) * (loc_fcfce * loc_fcfce);
     highp float loc_ae18a;
@@ -750,9 +728,9 @@ void func_046a1(inout int arg_2f306, inout highp float arg_43b7a, inout highp ve
         loc_ae18a = loc_e1ff6;
     }
     arg_43b7a = loc_a011d;
-    arg_0a2b9 = (var_43d7b.zLights[arg_2f306].color.xyz * var_43d7b.zLights[arg_2f306].color.w) * loc_ae18a;
+    arg_0a2b9 = (var_caa57.zLights[arg_2f306].color.xyz * var_caa57.zLights[arg_2f306].color.w) * loc_ae18a;
 }
-void func_4ae80(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg_3289d, inout highp vec3 arg_1418f, inout highp vec3 arg_fea00, inout highp vec3 arg_c5372, inout highp vec3 arg_061f9, inout highp vec4 arg_33915, inout highp vec3 arg_f6a53, inout highp vec3 arg_4f9dc, inout highp vec3 arg_8bccf) {
+void func_7c01f(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg_3289d, inout highp vec3 arg_33c3b, inout highp vec3 arg_c5372, inout highp vec3 arg_061f9, inout highp vec4 arg_33915, inout highp vec3 arg_f6a53, inout highp vec3 arg_4f9dc, inout highp vec3 arg_8bccf) {
     if (!(arg_9a2b4 || arg_b6724))
     {
         arg_3289d = vec3(0.0);
@@ -761,7 +739,7 @@ void func_4ae80(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     bool loc_a0bb1;
     int loc_79315;
     int loc_822f5;
-    func_f0232(arg_1418f, loc_822f5, loc_79315, loc_a0bb1);
+    func_06412(arg_33c3b, loc_822f5, loc_79315, loc_a0bb1);
     if (!loc_a0bb1)
     {
         arg_3289d = vec3(0.0);
@@ -777,7 +755,7 @@ void func_4ae80(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
         {
             break;
         }
-        highp vec3 loc_c1aab = normalize((u_view * vec4(var_43d7b.zLights[loc_f153e].position.xyz, 1.0)).xyz - arg_fea00);
+        highp vec3 loc_c1aab = normalize((u_view * vec4(var_caa57.zLights[loc_f153e].position.xyz, 1.0)).xyz - arg_33c3b);
         highp vec3 loc_20211;
         if (arg_b6724)
         {
@@ -834,13 +812,13 @@ void func_4ae80(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     }
     arg_3289d = loc_79fad;
 }
-void func_c0c9d(inout highp vec3 arg_4f139, inout highp vec3 arg_d5e4d, inout highp vec3 arg_bd432, inout highp vec3 arg_b40e7, inout highp vec3 arg_3f4a8, inout highp vec3 arg_1ede1, inout highp vec3 arg_a9ada, inout highp vec4 arg_cd082, inout highp vec3 arg_02667) {
+void func_1a758(inout highp vec3 arg_4f139, inout highp vec3 arg_d5e4d, inout highp vec3 arg_24250, inout highp vec3 arg_b40e7, inout highp vec3 arg_7191d, inout highp vec3 arg_9b157, inout highp vec3 arg_e0647, inout highp vec4 arg_143ce, inout highp vec3 arg_83a2c) {
     if (!(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z != 0.0))
     {
         arg_4f139 = arg_d5e4d;
         return;
     }
-    highp vec3 loc_88b27 = arg_bd432;
+    highp vec3 loc_88b27 = arg_24250;
     highp float loc_7639d;
     if (ManhattanDistAttenuationEnabled.x > 0.0)
     {
@@ -848,7 +826,7 @@ void func_c0c9d(inout highp vec3 arg_4f139, inout highp vec3 arg_d5e4d, inout hi
     }
     else
     {
-        loc_7639d = length(arg_bd432);
+        loc_7639d = length(arg_24250);
     }
     bool loc_464cb = PointLightSpecularFadeOutParameters.x > 0.0;
     highp float loc_f4966;
@@ -861,39 +839,38 @@ void func_c0c9d(inout highp vec3 arg_4f139, inout highp vec3 arg_d5e4d, inout hi
         loc_f4966 = 0.0;
     }
     bool loc_49ba4 = !loc_464cb;
-    bool loc_2b389;
+    bool loc_a1eb6;
     if (!loc_49ba4)
     {
-        loc_2b389 = loc_464cb && (loc_7639d < PointLightSpecularFadeOutParameters.y);
+        loc_a1eb6 = loc_464cb && (loc_7639d < PointLightSpecularFadeOutParameters.y);
     }
     else
     {
-        loc_2b389 = loc_49ba4;
+        loc_a1eb6 = loc_49ba4;
     }
     bool loc_6ebf5 = PointLightDiffuseFadeOutParameters.x > 0.0;
     bool loc_70859 = !loc_6ebf5;
-    bool loc_a196a;
+    bool loc_35c37;
     if (!loc_70859)
     {
-        loc_a196a = loc_6ebf5 && (loc_7639d < PointLightDiffuseFadeOutParameters.y);
+        loc_35c37 = loc_6ebf5 && (loc_7639d < PointLightDiffuseFadeOutParameters.y);
     }
     else
     {
-        loc_a196a = loc_70859;
+        loc_35c37 = loc_70859;
     }
-    highp vec3 loc_bf801;
+    highp vec3 loc_80145;
     if (int(QuantizationParameters.y) > 0)
     {
-        loc_bf801 = arg_b40e7;
+        loc_80145 = arg_b40e7;
     }
     else
     {
-        loc_bf801 = arg_3f4a8;
+        loc_80145 = arg_7191d;
     }
-    highp vec3 loc_2d8f4 = arg_bd432;
-    highp vec3 loc_f3788;
-    func_4ae80(loc_2b389, loc_a196a, loc_f3788, loc_2d8f4, arg_bd432, arg_1ede1, arg_a9ada, arg_cd082, arg_3f4a8, loc_bf801, arg_02667);
-    arg_4f139 = arg_d5e4d + (loc_f3788 * (1.0 - loc_f4966));
+    highp vec3 loc_7d0c6;
+    func_7c01f(loc_a1eb6, loc_35c37, loc_7d0c6, arg_24250, arg_9b157, arg_e0647, arg_143ce, arg_7191d, loc_80145, arg_83a2c);
+    arg_4f139 = arg_d5e4d + (loc_7d0c6 * (1.0 - loc_f4966));
 }
 #endif
 void func_4efb5(inout highp float arg_592e1, inout highp float arg_38961) {
@@ -991,7 +968,7 @@ void main() {
     func_b2538(var_d58c9, var_c27b4, var_ba5f8, var_7ace7, var_73ad8, var_cd224, var_603d9);
 #ifdef POINT_LIGHT_SHADING__ON
     highp vec3 var_5071d;
-    func_c0c9d(var_5071d, var_c27b4, var_1245c, var_c301d, var_f29fe, var_ba5f8, var_603d9, var_d58c9, var_73ad8);
+    func_1a758(var_5071d, var_c27b4, var_1245c, var_c301d, var_f29fe, var_ba5f8, var_603d9, var_d58c9, var_73ad8);
 #endif
     highp float var_e08b9 = clamp(((var_d58c9.z * 16.0) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
     highp float var_523df = clamp(1.0 - max(dot(var_603d9, var_ba5f8), 0.0), 0.0, 1.0);
