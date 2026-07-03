@@ -72,6 +72,7 @@ uniform highp vec4 ColorGrading_Saturation_Shadows;
 uniform highp vec4 ColorGrading_Temperature_Params;
 uniform highp vec4 ExposureCompensation;
 uniform highp vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
+uniform highp vec4 GenericTonemapperCrosstalkParams;
 uniform highp vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform highp vec4 RasterizedColorEnabled;
 uniform highp vec4 TonemapParams0;
@@ -424,7 +425,7 @@ void main() {
         var_4a042 = LuminanceMinMaxAndWhitePointAndMinWhitePoint.z;
     }
     highp float var_cc29b = (0.180000007152557373046875 / var_b9f0e) * var_482cd;
-    highp vec3 var_285fc = var_bfb98 * var_cc29b;
+    highp vec3 var_1f38f = var_bfb98 * var_cc29b;
     highp vec3 var_97858;
     if (TonemapParams0.y >= 0.5)
     {
@@ -434,22 +435,22 @@ void main() {
         highp vec3 var_f1975;
         if (var_fde43 == 1)
         {
-            var_f1975 = (var_285fc * (vec3(1.0) + (var_285fc / vec3(var_8a41a)))) / (vec3(1.0) + var_285fc);
+            var_f1975 = (var_1f38f * (vec3(1.0) + (var_1f38f / vec3(var_8a41a)))) / (vec3(1.0) + var_1f38f);
         }
         else
         {
             highp vec3 var_3a319;
             if (var_fde43 == 2)
             {
-                highp float var_78bd9 = dot(var_285fc, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-                var_3a319 = var_285fc * (((var_78bd9 * (1.0 + (var_78bd9 / var_8a41a))) / (1.0 + var_78bd9)) / var_78bd9);
+                highp float var_78bd9 = dot(var_1f38f, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+                var_3a319 = var_1f38f * (((var_78bd9 * (1.0 + (var_78bd9 / var_8a41a))) / (1.0 + var_78bd9)) / var_78bd9);
             }
             else
             {
                 highp vec3 var_b9221;
                 if (var_fde43 == 3)
                 {
-                    highp vec3 var_8c311 = var_285fc * 2.0;
+                    highp vec3 var_8c311 = var_1f38f * 2.0;
                     highp vec3 var_cb3d4 = vec3(var_8a41a);
                     var_b9221 = ((((var_8c311 * ((var_8c311 * 0.1500000059604644775390625) + vec3(0.0500000007450580596923828125))) + vec3(0.0040000001899898052215576171875)) / ((var_8c311 * ((var_8c311 * 0.1500000059604644775390625) + vec3(0.5))) + vec3(0.060000002384185791015625))) - vec3(0.066666662693023681640625)) * (vec3(1.0) / ((((var_cb3d4 * ((var_cb3d4 * 0.1500000059604644775390625) + vec3(0.0500000007450580596923828125))) + vec3(0.0040000001899898052215576171875)) / ((var_cb3d4 * ((var_cb3d4 * 0.1500000059604644775390625) + vec3(0.5))) + vec3(0.060000002384185791015625))) - vec3(0.066666662693023681640625)));
                 }
@@ -458,25 +459,25 @@ void main() {
                     highp vec3 var_ab2cf;
                     if (var_fde43 == 4)
                     {
-                        highp vec3 var_07287 = transpose(mat3(vec3(0.59719002246856689453125, 0.354579985141754150390625, 0.048229999840259552001953125), vec3(0.075999997556209564208984375, 0.908339977264404296875, 0.0156599991023540496826171875), vec3(0.0284000001847743988037109375, 0.13382999598979949951171875, 0.837769985198974609375))) * var_285fc;
+                        highp vec3 var_07287 = transpose(mat3(vec3(0.59719002246856689453125, 0.354579985141754150390625, 0.048229999840259552001953125), vec3(0.075999997556209564208984375, 0.908339977264404296875, 0.0156599991023540496826171875), vec3(0.0284000001847743988037109375, 0.13382999598979949951171875, 0.837769985198974609375))) * var_1f38f;
                         var_ab2cf = clamp(transpose(mat3(vec3(1.60475003719329833984375, -0.5310800075531005859375, -0.0736699998378753662109375), vec3(-0.10208000242710113525390625, 1.108129978179931640625, -0.00604999996721744537353515625), vec3(-0.00326999998651444911956787109375, -0.07276000082492828369140625, 1.0760200023651123046875))) * (((var_07287 * (var_07287 + vec3(0.02457859925925731658935546875))) - vec3(9.0537003416102379560470581054688e-05)) / ((var_07287 * ((var_07287 * 0.98372900485992431640625) + vec3(0.4329510033130645751953125))) + vec3(0.23808099329471588134765625))), vec3(0.0), vec3(1.0));
                     }
                     else
                     {
-                        highp vec3 var_ee8a2;
+                        highp vec3 var_60265;
                         if (var_fde43 == 5)
                         {
-                            highp vec3 var_29097 = var_285fc;
-                            highp float var_829b3 = max(var_29097.x, max(var_29097.y, var_29097.z));
-                            highp float var_f9bf5 = pow(var_829b3, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.x);
-                            highp float var_b9ec4 = var_f9bf5 / ((GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.y * var_f9bf5) + GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.z);
-                            var_ee8a2 = mix(var_285fc / vec3(var_829b3), vec3(1.0), vec3(pow(var_b9ec4, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.w))) * var_b9ec4;
+                            highp vec3 var_29097 = var_1f38f;
+                            highp float var_d00e4 = max(var_29097.x, max(var_29097.y, var_29097.z));
+                            highp float var_f9bf5 = pow(var_d00e4, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.x);
+                            highp float var_1a9cc = var_f9bf5 / ((GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.y * var_f9bf5) + GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.z);
+                            var_60265 = pow(mix(pow(var_1f38f / vec3(var_d00e4), vec3(1.0 / GenericTonemapperCrosstalkParams.x)), vec3(1.0), vec3(pow(var_1a9cc, GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk.w))), vec3(GenericTonemapperCrosstalkParams.x)) * var_1a9cc;
                         }
                         else
                         {
-                            var_ee8a2 = var_285fc / (vec3(1.0) + var_285fc);
+                            var_60265 = var_1f38f / (vec3(1.0) + var_1f38f);
                         }
-                        var_ab2cf = var_ee8a2;
+                        var_ab2cf = var_60265;
                     }
                     var_b9221 = var_ab2cf;
                 }

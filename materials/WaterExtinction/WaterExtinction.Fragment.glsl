@@ -4,13 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - FALLBACK_PASS (not used)
 * - WATER_EXTINCTION_PASS (not used)
-* - WATER_SURFACE_PASS (not used)
-*
-* PointLightShading:
-* - POINT_LIGHT_SHADING__OFF (not used)
-* - POINT_LIGHT_SHADING__ON (not used)
 *
 * Available Resources:
 *
@@ -18,9 +12,6 @@
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform lowp sampler2D s_ColorMetalnessSubsurface;
-* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
-* - uniform lowp sampler2D s_Normal;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -28,14 +19,12 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
 * - uniform lowp sampler2D s_WaterDepth;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 9, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 3, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 4, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
-* - uniform vec4 AtmosphericScattering;
-* - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BiomeBlendingLastUpdatePosition;
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -64,15 +53,10 @@
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
-* - uniform vec4 FogAndDistanceControl;
-* - uniform vec4 FogColor;
-* - uniform vec4 FogSkyBlend;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
-* - uniform vec4 MoonColor;
-* - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
@@ -86,15 +70,9 @@
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
-* - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
-* - uniform vec4 SkyHorizonColor;
-* - uniform vec4 SkyZenithColor;
-* - uniform vec4 SubPixelOffset;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
-* - uniform vec4 SunColor;
-* - uniform vec4 SunDir;
 * - uniform vec4 Time;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -119,7 +97,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_96e8f;
+layout(binding = 9, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_48860;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -156,7 +134,7 @@ void func_6a0d0(inout highp vec4 arg_5dc29, inout highp vec4 arg_073df) {
         highp float loc_01a09 = fract(loc_ab857);
         highp float loc_9e036 = fract(loc_ddaf2);
         highp vec4 loc_2717d = vec4((1.0 - loc_01a09) * (1.0 - loc_9e036), loc_01a09 * (1.0 - loc_9e036), (1.0 - loc_01a09) * loc_9e036, loc_01a09 * loc_9e036);
-        arg_073df = (((var_96e8f.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0, 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.x) + (var_96e8f.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1, 0), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.y)) + (var_96e8f.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(0, 1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.z)) + (var_96e8f.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.w);
+        arg_073df = (((var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0, 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.x) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1, 0), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.y)) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(0, 1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.z)) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.w);
         return;
     }
     arg_073df = WaterExtinctionCoefficients;

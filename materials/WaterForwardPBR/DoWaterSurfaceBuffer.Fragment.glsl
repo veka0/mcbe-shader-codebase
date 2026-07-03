@@ -150,7 +150,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 5, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_81302;
+layout(binding = 5, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_19767;
 layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_06448;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
@@ -173,7 +173,7 @@ in highp vec3 v_tangent;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
-void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76) {
+void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76) {
     if (v_pbrTextureId == 65535)
     {
         arg_6a625 = 0.0;
@@ -183,21 +183,33 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_59055 = vec2(var_81302.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_81302.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_39ca3 = vec2(var_81302.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_81302.PBRData[v_pbrTextureId].colourToNormalUvBias1);
-    highp vec3 loc_b4ff6;
-    if ((var_81302.PBRData[v_pbrTextureId].flags & 4) == 4)
+    highp vec2 loc_5c197 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_3ee66 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec3 loc_c8345;
+    if ((var_19767.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
-        loc_b4ff6 = (texture(s_MatTexture, (v_texcoord0 * loc_59055) + loc_39ca3).xyz * 2.0) - vec3(1.0);
+        highp vec2 loc_01aa0 = (v_texcoord0 * loc_5c197) + loc_3ee66;
+        highp vec3 loc_f7401 = vec3(0.0, 0.0, 1.0);
+        highp vec2 loc_e5c3f = loc_01aa0 * vec2(textureSize(s_MatTexture, 0));
+        highp vec2 loc_bb3fa = dFdx(loc_e5c3f);
+        highp vec2 loc_23f8b = dFdy(loc_e5c3f);
+        highp float loc_cbf73 = max(0.0, 0.5 * log2(max(dot(loc_bb3fa, loc_bb3fa), dot(loc_23f8b, loc_23f8b))));
+        if (loc_cbf73 <= 1.0)
+        {
+            highp vec3 loc_644cc = (textureLod(s_MatTexture, loc_01aa0, loc_cbf73).xyz * 2.0) - vec3(1.0);
+            loc_f7401 = loc_644cc;
+            loc_f7401 = normalize(vec3((loc_644cc.xy * (1.0 / loc_f7401.z)) * (1.0 - clamp(loc_cbf73 * loc_cbf73, 0.0, 1.0)), 1.0));
+        }
+        loc_c8345 = loc_f7401;
     }
     else
     {
         highp vec3 loc_9252d;
-        if ((var_81302.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_19767.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
-            highp vec2 loc_218fe = (v_texcoord0 * loc_59055) + loc_39ca3;
+            highp vec2 loc_218fe = (v_texcoord0 * loc_5c197) + loc_3ee66;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_81302.PBRData[v_pbrTextureId].maxMipNormal - var_81302.PBRData[v_pbrTextureId].maxMipColour, var_81302.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_19767.PBRData[v_pbrTextureId].maxMipNormal - var_19767.PBRData[v_pbrTextureId].maxMipColour, var_19767.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -248,23 +260,23 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         {
             loc_9252d = vec3(0.0, 0.0, 1.0);
         }
-        loc_b4ff6 = loc_9252d;
+        loc_c8345 = loc_9252d;
     }
     highp float loc_659d6;
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_81302.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_19767.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_81302.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_81302.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_81302.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_81302.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_81302.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_19767.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_81302.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -273,10 +285,10 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_81302.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_81302.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_81302.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_81302.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_19767.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_19767.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_19767.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
@@ -291,7 +303,7 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     arg_9eee0 = loc_659d6;
     arg_a50e1 = loc_00c14;
     arg_d2a5b = loc_d7d8a;
-    arg_51e76 = transpose(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(loc_93b23)))) * loc_b4ff6;
+    arg_51e76 = transpose(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(loc_93b23)))) * loc_c8345;
 }
 void func_8ab59(inout bool arg_5e3ed) {
     if (BiomeBlendingParameters.x > 0.0)
@@ -368,7 +380,7 @@ void main() {
     highp float var_8ed44;
     highp float var_0e0cd;
     highp float var_5431f;
-    func_a72a6(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_b3851);
+    func_9052b(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_b3851);
     highp float var_84772;
     highp float var_afa04;
     highp float var_32de0;

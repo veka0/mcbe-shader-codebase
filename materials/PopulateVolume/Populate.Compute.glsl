@@ -99,8 +99,8 @@
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
-* - uniform vec4 SkyAmbientSamplesConfig;
 * - uniform vec4 SkyHorizonColor;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SkyZenithColor;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
@@ -166,6 +166,7 @@ layout(binding = 6, std430) buffer s_zLightLookupArray { LightData zLightLookupA
 #endif
 layout(location = 0, binding = 0, rgba16f) uniform writeonly highp image2DArray s_CurrentLightingBuffer;
 uniform highp sampler2D s_BiomeBlendingMap;
+uniform highp sampler2D s_ScreenSpaceWaterBackFaceDepthAndNormal;
 uniform highp sampler2D s_ScreenSpaceWaterFrontFaceDepthAndNormal;
 uniform highp sampler2DArray s_PreviousLightingBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
@@ -220,7 +221,7 @@ uniform vec4 QuantizationParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 uniform vec4 SkyAmbientLightColorIntensity;
-uniform vec4 SkyAmbientSamplesConfig;
+uniform vec4 SkySamplesConfig;
 uniform vec4 TemporalSettings;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
@@ -337,16 +338,16 @@ void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
 #ifdef POINT_LIGHT_SHADING__OFF
-void func_73158() {
-    int loc_b5e48 = int(GlobalInvocationID.x);
-    int loc_45941 = int(GlobalInvocationID.y);
+void func_987b7() {
+    int loc_84ff0 = int(GlobalInvocationID.x);
+    int loc_b5bd2 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
-    if (((loc_b5e48 >= int(VolumeDimensions.x)) || (loc_45941 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
+    if (((loc_84ff0 >= int(VolumeDimensions.x)) || (loc_b5bd2 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_8b342 = ((vec3(float(loc_b5e48), float(loc_45941), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
-    vec3 loc_1fa0b = loc_8b342;
+    vec3 loc_8b342 = ((vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_b4177 = loc_8b342;
     vec3 loc_777c2 = loc_8b342;
     vec2 loc_b796d = VolumeNearFar.xy;
     float loc_fcce6 = (exp(4.0 * loc_777c2.z) - 1.0) * 0.0186573602259159088134765625;
@@ -356,16 +357,35 @@ void func_73158() {
     vec3 loc_caed6 = loc_e8a8c.xyz / vec3(loc_dc33a.w);
     vec3 loc_45310 = loc_caed6;
     vec3 loc_16a16 = (u_view * vec4(loc_caed6, 1.0)).xyz;
-    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_b5e48, loc_45941), 0).xy;
-    float loc_e737b = smoothstep(-0.5, 0.5, ((((loc_1fa0b.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
-    float loc_343cf;
-    if (CameraUnderwaterAndWaterSurfaceBiasAndFalloff.x != 0.0)
+    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
+    vec2 loc_e585f = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
+    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
+    float loc_8fa9c;
+    if (loc_f2b43 >= 0.0)
     {
-        loc_343cf = 1.0 - loc_e737b;
+        float loc_efd00;
+        if ((loc_b4177.z - loc_e585f.x) >= 0.0)
+        {
+            loc_efd00 = 0.0;
+        }
+        else
+        {
+            loc_efd00 = loc_f2b43;
+        }
+        loc_8fa9c = loc_efd00;
     }
     else
     {
-        loc_343cf = loc_e737b;
+        loc_8fa9c = loc_f2b43;
+    }
+    float loc_343cf;
+    if (CameraUnderwaterAndWaterSurfaceBiasAndFalloff.x != 0.0)
+    {
+        loc_343cf = 1.0 - loc_8fa9c;
+    }
+    else
+    {
+        loc_343cf = loc_8fa9c;
     }
     vec4 loc_4397b;
     func_aa346(loc_caed6, loc_4397b);
@@ -376,24 +396,24 @@ void func_73158() {
     float loc_ab2d8 = clamp((((loc_9fe9d / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) * FogAndDistanceControl.y, 0.0, 1.0);
     vec3 loc_d93dd = mix(mix((AirAlbedoExtinction.xyz * loc_ebd19) * AirAlbedoExtinction.w, loc_4397b.xyz * loc_12f1c.w, vec3(loc_343cf)), vec3(0.0), vec3(loc_ab2d8));
     float loc_8068a = mix(mix(loc_ebd19 * AirAlbedoExtinction.w, loc_12f1c.w, loc_343cf), 0.0, loc_ab2d8);
-    vec2 loc_3bb72 = AmbientContribution.xy;
-    if (SkyAmbientSamplesConfig.x > 0.5)
+    vec2 loc_a50e8 = vec2(0.0, AmbientContribution.y);
+    if (SkySamplesConfig.x > 0.5)
     {
-        vec3 loc_30e99 = loc_8b342;
-        loc_30e99.y = 1.0 - loc_30e99.y;
-        if (SkyAmbientSamplesConfig.y > 0.5)
+        vec3 loc_08c5f = loc_8b342;
+        loc_08c5f.y = 1.0 - loc_08c5f.y;
+        if (SkySamplesConfig.y > 0.5)
         {
-            loc_30e99.z -= SkyAmbientSamplesConfig.z;
+            loc_08c5f.z -= SkySamplesConfig.z;
         }
-        loc_30e99.z = (exp(4.0 * loc_30e99.z) - 1.0) * 0.0186573602259159088134765625;
-        loc_3bb72 = textureLod(s_SkyAmbientSamples, loc_30e99, 0.0).xy;
+        loc_08c5f.z = (exp(4.0 * loc_08c5f.z) - 1.0) * 0.0186573602259159088134765625;
+        loc_a50e8 = textureLod(s_SkyAmbientSamples, loc_08c5f, 0.0).xy;
     }
-    vec3 loc_222bb = ((loc_d93dd * 0.079577468335628509521484375) * max(((BlockBaseAmbientLightColorIntensity.xyz * loc_3bb72.x) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * loc_3bb72.y) * SkyAmbientLightColorIntensity.w), vec3(AmbientContribution.z))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    vec3 loc_222bb = ((loc_d93dd * 0.079577468335628509521484375) * max(((BlockBaseAmbientLightColorIntensity.xyz * loc_a50e8.x) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * loc_a50e8.y) * SkyAmbientLightColorIntensity.w), vec3(AmbientContribution.z))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
     bool loc_5b439 = !(DirectionalLightSkyLightHeuristicToggles.y != 0.0);
     bool loc_7e26a;
     if (!loc_5b439)
     {
-        loc_7e26a = abs(loc_3bb72.y) > 9.9999997473787516355514526367188e-05;
+        loc_7e26a = abs(loc_a50e8.y) > 9.9999997473787516355514526367188e-05;
     }
     else
     {
@@ -586,7 +606,7 @@ void func_73158() {
     }
     if (TemporalSettings.x > 0.0)
     {
-        vec3 loc_dfafd = (vec3(float(loc_b5e48), float(loc_45941), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_dfafd = (vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
         vec3 loc_e9300 = loc_dfafd;
         vec2 loc_9d396 = VolumeNearFar.xy;
         float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
@@ -607,11 +627,11 @@ void func_73158() {
         float loc_53f43 = (loc_96ba4.z * float(loc_57985.z)) - 0.5;
         int loc_25a80 = clamp(int(loc_53f43), 0, loc_57985.z - 2);
         vec3 loc_34735 = VolumeDimensions.xyz * loc_33e20;
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_b5e48, loc_45941, loc_beae9), mix(vec4(loc_7175c, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), mix(vec4(loc_7175c, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
     }
     else
     {
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_b5e48, loc_45941, loc_beae9), vec4(loc_7175c, loc_8068a));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), vec4(loc_7175c, loc_8068a));
     }
 }
 #endif
@@ -863,16 +883,16 @@ void func_2d333(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     }
     arg_534d1 = loc_ceaba;
 }
-void func_c2c4e() {
-    int loc_b5e48 = int(GlobalInvocationID.x);
-    int loc_45941 = int(GlobalInvocationID.y);
+void func_4b4dc() {
+    int loc_84ff0 = int(GlobalInvocationID.x);
+    int loc_b5bd2 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
-    if (((loc_b5e48 >= int(VolumeDimensions.x)) || (loc_45941 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
+    if (((loc_84ff0 >= int(VolumeDimensions.x)) || (loc_b5bd2 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_5d62d = ((vec3(float(loc_b5e48), float(loc_45941), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
-    vec3 loc_1fa0b = loc_5d62d;
+    vec3 loc_5d62d = ((vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_b4177 = loc_5d62d;
     vec3 loc_777c2 = loc_5d62d;
     vec2 loc_b796d = VolumeNearFar.xy;
     float loc_fcce6 = (exp(4.0 * loc_777c2.z) - 1.0) * 0.0186573602259159088134765625;
@@ -882,16 +902,35 @@ void func_c2c4e() {
     vec3 loc_04f2b = loc_e8a8c.xyz / vec3(loc_dc33a.w);
     vec3 loc_45310 = loc_04f2b;
     vec3 loc_3ced2 = (u_view * vec4(loc_04f2b, 1.0)).xyz;
-    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_b5e48, loc_45941), 0).xy;
-    float loc_e737b = smoothstep(-0.5, 0.5, ((((loc_1fa0b.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
-    float loc_343cf;
-    if (CameraUnderwaterAndWaterSurfaceBiasAndFalloff.x != 0.0)
+    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
+    vec2 loc_e585f = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
+    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
+    float loc_8fa9c;
+    if (loc_f2b43 >= 0.0)
     {
-        loc_343cf = 1.0 - loc_e737b;
+        float loc_efd00;
+        if ((loc_b4177.z - loc_e585f.x) >= 0.0)
+        {
+            loc_efd00 = 0.0;
+        }
+        else
+        {
+            loc_efd00 = loc_f2b43;
+        }
+        loc_8fa9c = loc_efd00;
     }
     else
     {
-        loc_343cf = loc_e737b;
+        loc_8fa9c = loc_f2b43;
+    }
+    float loc_343cf;
+    if (CameraUnderwaterAndWaterSurfaceBiasAndFalloff.x != 0.0)
+    {
+        loc_343cf = 1.0 - loc_8fa9c;
+    }
+    else
+    {
+        loc_343cf = loc_8fa9c;
     }
     vec4 loc_4397b;
     func_aa346(loc_04f2b, loc_4397b);
@@ -902,25 +941,25 @@ void func_c2c4e() {
     float loc_ab2d8 = clamp((((loc_1595d / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) * FogAndDistanceControl.y, 0.0, 1.0);
     vec3 loc_b58be = mix(mix((AirAlbedoExtinction.xyz * loc_ebd19) * AirAlbedoExtinction.w, loc_4397b.xyz * loc_12f1c.w, vec3(loc_343cf)), vec3(0.0), vec3(loc_ab2d8));
     float loc_8068a = mix(mix(loc_ebd19 * AirAlbedoExtinction.w, loc_12f1c.w, loc_343cf), 0.0, loc_ab2d8);
-    vec2 loc_3bb72 = AmbientContribution.xy;
-    if (SkyAmbientSamplesConfig.x > 0.5)
+    vec2 loc_a50e8 = vec2(0.0, AmbientContribution.y);
+    if (SkySamplesConfig.x > 0.5)
     {
-        vec3 loc_30e99 = loc_5d62d;
-        loc_30e99.y = 1.0 - loc_30e99.y;
-        if (SkyAmbientSamplesConfig.y > 0.5)
+        vec3 loc_08c5f = loc_5d62d;
+        loc_08c5f.y = 1.0 - loc_08c5f.y;
+        if (SkySamplesConfig.y > 0.5)
         {
-            loc_30e99.z -= SkyAmbientSamplesConfig.z;
+            loc_08c5f.z -= SkySamplesConfig.z;
         }
-        loc_30e99.z = (exp(4.0 * loc_30e99.z) - 1.0) * 0.0186573602259159088134765625;
-        loc_3bb72 = textureLod(s_SkyAmbientSamples, loc_30e99, 0.0).xy;
+        loc_08c5f.z = (exp(4.0 * loc_08c5f.z) - 1.0) * 0.0186573602259159088134765625;
+        loc_a50e8 = textureLod(s_SkyAmbientSamples, loc_08c5f, 0.0).xy;
     }
-    vec3 loc_222bb = ((loc_b58be * 0.079577468335628509521484375) * max(((BlockBaseAmbientLightColorIntensity.xyz * loc_3bb72.x) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * loc_3bb72.y) * SkyAmbientLightColorIntensity.w), vec3(AmbientContribution.z))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    vec3 loc_222bb = ((loc_b58be * 0.079577468335628509521484375) * max(((BlockBaseAmbientLightColorIntensity.xyz * loc_a50e8.x) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * loc_a50e8.y) * SkyAmbientLightColorIntensity.w), vec3(AmbientContribution.z))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
     vec3 loc_fb58a = -(loc_3ced2 / vec3(loc_1595d));
     bool loc_5b439 = !(DirectionalLightSkyLightHeuristicToggles.y != 0.0);
     bool loc_7e26a;
     if (!loc_5b439)
     {
-        loc_7e26a = abs(loc_3bb72.y) > 9.9999997473787516355514526367188e-05;
+        loc_7e26a = abs(loc_a50e8.y) > 9.9999997473787516355514526367188e-05;
     }
     else
     {
@@ -1156,7 +1195,7 @@ void func_c2c4e() {
     }
     if (TemporalSettings.x > 0.0)
     {
-        vec3 loc_dfafd = (vec3(float(loc_b5e48), float(loc_45941), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_dfafd = (vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
         vec3 loc_e9300 = loc_dfafd;
         vec2 loc_9d396 = VolumeNearFar.xy;
         float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
@@ -1177,20 +1216,20 @@ void func_c2c4e() {
         float loc_53f43 = (loc_96ba4.z * float(loc_57985.z)) - 0.5;
         int loc_25a80 = clamp(int(loc_53f43), 0, loc_57985.z - 2);
         vec3 loc_34735 = VolumeDimensions.xyz * loc_33e20;
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_b5e48, loc_45941, loc_beae9), mix(vec4(loc_0bece, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), mix(vec4(loc_0bece, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
     }
     else
     {
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_b5e48, loc_45941, loc_beae9), vec4(loc_0bece, loc_8068a));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), vec4(loc_0bece, loc_8068a));
     }
 }
 #endif
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
 #ifdef POINT_LIGHT_SHADING__OFF
-    func_73158();
+    func_987b7();
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-    func_c2c4e();
+    func_4b4dc();
 #endif
 }
