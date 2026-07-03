@@ -117,11 +117,11 @@ void main() {
     {
         var_85e60 = var_ae1d1;
     }
-    highp vec4 var_9ca41 = vec4(var_85e60, var_ce33f.w);
+    highp vec4 var_b9572 = vec4(var_85e60, var_ce33f.w);
     if (PreExposureEnabled.x > 0.0)
     {
-        highp vec3 var_843e4 = var_9ca41.xyz * (0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x);
-        var_9ca41 = vec4(var_843e4.x, var_843e4.y, var_843e4.z, var_9ca41.w);
+        highp vec3 var_02f69 = var_b9572.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_b9572 = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_b9572.w);
     }
-    bgfx_FragColor = vec4(var_9ca41.xyz, var_9ca41.w);
+    bgfx_FragColor = vec4(var_b9572.xyz, var_b9572.w);
 }

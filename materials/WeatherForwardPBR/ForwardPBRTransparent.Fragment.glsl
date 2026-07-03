@@ -333,7 +333,7 @@ void main() {
     {
         var_7e3dc = mix(var_6873b, FogColor.xyz, vec3(clamp((((var_d9c9d / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0)));
     }
-    highp vec3 var_15d6e;
+    highp vec3 var_94e72;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
@@ -346,20 +346,20 @@ void main() {
         int var_b2370 = clamp(int(var_eb2d5), 0, var_dbde4.z - 2);
         highp vec4 var_5363d = mix(textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370 + 1)), 0.0), vec4(clamp(var_eb2d5 - float(var_b2370), 0.0, 1.0)));
         highp vec4 var_67b96 = var_5363d;
-        var_15d6e = var_5363d.xyz + (var_7e3dc * var_67b96.w);
+        var_94e72 = var_5363d.xyz + (var_7e3dc * var_67b96.w);
     }
     else
     {
-        var_15d6e = var_7e3dc;
+        var_94e72 = var_7e3dc;
     }
-    highp vec3 var_907b1;
+    highp vec3 var_3dc3f;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_907b1 = var_15d6e * (0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x);
+        var_3dc3f = var_94e72 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_907b1 = var_15d6e;
+        var_3dc3f = var_94e72;
     }
-    bgfx_FragColor = vec4(var_907b1.x, var_907b1.y, var_907b1.z, vec4(var_69f75, var_69f75, var_69f75, var_4d4a7.w * var_5d463.y).w);
+    bgfx_FragColor = vec4(var_3dc3f.x, var_3dc3f.y, var_3dc3f.z, vec4(var_69f75, var_69f75, var_69f75, var_4d4a7.w * var_5d463.y).w);
 }

@@ -60,7 +60,7 @@ void func_7a080(inout bool arg_3514b, inout highp vec3 arg_6cf39) {
         return;
     }
 }
-void func_2350f(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout highp vec3 arg_d2d2d, inout highp vec4 arg_ae71b, inout int arg_eb797, inout highp float arg_b12bb) {
+void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout highp vec3 arg_d2d2d, inout highp vec4 arg_ae71b, inout int arg_eb797, inout highp float arg_b12bb) {
     highp vec3 loc_54878 = reflect(normalize(arg_8ff75), normalize((u_view * vec4(normalize(normalize(vec3(arg_26f8d.x, arg_26f8d.y, arg_d2d2d.z))), 0.0)).xyz));
     highp vec3 loc_ac142 = arg_8ff75 + (loc_54878 * SSRRayMarchingParams.z);
     highp vec3 loc_999a9 = loc_ac142;
@@ -137,7 +137,7 @@ void func_2350f(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
     highp vec3 loc_bc119 = loc_feb5c;
     highp float loc_e9327 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_bc119.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
     highp float loc_339dc;
-    int loc_7c05e;
+    int loc_7dcb5;
     highp vec3 loc_3ee51;
     int loc_cadec = 1;
     highp float loc_4f5e1 = loc_e9327;
@@ -153,25 +153,25 @@ void func_2350f(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
             if (loc_4f5e1 < loc_f2cf8)
             {
                 loc_3ee51 = loc_3a27d;
-                loc_7c05e = loc_cadec;
+                loc_7dcb5 = loc_cadec;
                 break;
             }
             else
             {
                 loc_3ee51 = vec3(0.0);
-                loc_7c05e = -1;
+                loc_7dcb5 = -1;
                 break;
             }
         }
     }
     loc_2b544 = loc_3ee51;
-    if (loc_7c05e < 0)
+    if (loc_7dcb5 < 1)
     {
         arg_ae71b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
-    highp float loc_8e3e2 = float(loc_7c05e - 1);
-    highp float loc_1f44e = float(loc_7c05e);
+    highp float loc_8e3e2 = float(loc_7dcb5 - 1);
+    highp float loc_1f44e = float(loc_7dcb5);
     highp float loc_d8fa7;
     highp vec3 loc_1281f;
     loc_1281f = loc_2b544;
@@ -249,7 +249,7 @@ void main() {
         highp vec3 var_83f17 = var_f857f;
         var_f857f = vec3(var_e3359.x, var_e3359.y, var_83f17.z);
         highp vec4 var_82fd4;
-        func_2350f(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
+        func_d2fad(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
         var_53578 = var_82fd4;
     }
     bgfx_FragColor = var_53578;

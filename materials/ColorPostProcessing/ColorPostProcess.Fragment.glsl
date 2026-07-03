@@ -77,20 +77,20 @@ in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_97017 = texture(s_ColorTexture, v_texcoord0);
-    highp vec3 var_60b24 = var_97017.xyz;
-    highp vec3 var_559db;
+    highp vec3 var_f0fbb = var_97017.xyz;
+    highp vec3 var_625f7;
     if (TonemapParams0.z > 0.0)
     {
-        var_559db = var_60b24 / vec3(0.180000007152557373046875 / texture(s_PreExposureLuminance, vec2(0.5)).x);
+        var_625f7 = var_f0fbb / vec3((0.180000007152557373046875 / texture(s_PreExposureLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_559db = var_60b24;
+        var_625f7 = var_f0fbb;
     }
     highp vec3 var_8c2ae;
     if (TonemapParams0.y <= 0.5)
     {
-        var_8c2ae = pow(max(var_559db, vec3(0.0)), vec3(0.4545454680919647216796875));
+        var_8c2ae = pow(max(var_625f7, vec3(0.0)), vec3(0.4545454680919647216796875));
     }
     else
     {
@@ -124,7 +124,7 @@ void main() {
             }
             var_4627d = var_2b74e;
         }
-        highp float var_26db5 = dot(var_559db, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+        highp float var_26db5 = dot(var_625f7, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         bool var_04a39 = ColorGrading_Contrast_Midtones.w > 0.0;
         bool var_609b6;
         if (var_04a39)
@@ -202,7 +202,7 @@ void main() {
             var_266d0 = var_a0b12;
         }
         highp vec3 var_82d76 = vec3(ColorGrading_Contrast_Highlights.w * var_89116);
-        highp vec3 var_038f6 = clamp(var_82d76 * pow(max(var_559db, vec3(0.0)) / var_82d76, var_266d0), vec3(0.0), vec3(OutputTextureMaxValue.x));
+        highp vec3 var_038f6 = clamp(var_82d76 * pow(max(var_625f7, vec3(0.0)) / var_82d76, var_266d0), vec3(0.0), vec3(OutputTextureMaxValue.x));
         bool var_a1a03 = ColorGrading_Contrast_Midtones.w > 0.0;
         bool var_988cd;
         if (var_a1a03)

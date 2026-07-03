@@ -222,10 +222,10 @@ void main() {
     {
         var_6ea28 = var_7e3dc;
     }
-    highp vec3 var_cccc2;
+    highp vec3 var_1177a;
     if (CurrentFace.x == 3.0)
     {
-        var_cccc2 = var_6ea28 * SkyProbeUVFadeParameters.w;
+        var_1177a = var_6ea28 * SkyProbeUVFadeParameters.w;
     }
     else
     {
@@ -239,18 +239,18 @@ void main() {
         {
             var_4163f = var_6ea28;
         }
-        var_cccc2 = var_4163f;
+        var_1177a = var_4163f;
     }
-    highp vec3 var_79f99;
+    highp vec3 var_52fa8;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_79f99 = var_cccc2 * 0.180000007152557373046875;
+        var_52fa8 = var_1177a * 0.18010000884532928466796875;
     }
     else
     {
-        var_79f99 = var_cccc2;
+        var_52fa8 = var_1177a;
     }
-    var_38911 = vec4(var_79f99.x, var_79f99.y, var_79f99.z, var_38911.w);
+    var_38911 = vec4(var_52fa8.x, var_52fa8.y, var_52fa8.z, var_38911.w);
     var_38911.w = 1.0;
     bgfx_FragColor = var_38911;
 }

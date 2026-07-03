@@ -121,15 +121,15 @@ void main() {
     }
     highp vec2 var_1dbf8 = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
     highp float var_ab09d = (clamp(var_1dbf8.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06);
-    highp vec3 var_64c89 = var_7d410 * var_ab09d;
-    highp vec3 var_5b783;
+    highp vec3 var_e8651 = var_7d410 * var_ab09d;
+    highp vec3 var_68eab;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_5b783 = var_64c89 * 0.180000007152557373046875;
+        var_68eab = var_e8651 * 0.18010000884532928466796875;
     }
     else
     {
-        var_5b783 = var_64c89;
+        var_68eab = var_e8651;
     }
-    bgfx_FragColor = vec4(var_5b783, max(var_ab09d, SkyProbeUVFadeParameters.z));
+    bgfx_FragColor = vec4(var_68eab, max(var_ab09d, SkyProbeUVFadeParameters.z));
 }

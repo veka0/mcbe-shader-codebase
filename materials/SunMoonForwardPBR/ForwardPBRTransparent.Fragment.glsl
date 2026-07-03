@@ -101,7 +101,7 @@ layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_86892 = texture(s_SunMoonTexture, v_texcoord0);
     highp vec3 var_f733f = (SunMoonColor.xyz * var_86892.xyz) * SunMoonColor.w;
-    highp vec3 var_627e2;
+    highp vec3 var_75d4a;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
@@ -113,20 +113,20 @@ void main() {
         highp float var_eb2d5 = (var_9bf69.z * float(var_dbde4.z)) - 0.5;
         int var_b2370 = clamp(int(var_eb2d5), 0, var_dbde4.z - 2);
         highp vec4 var_36b18 = mix(textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370 + 1)), 0.0), vec4(clamp(var_eb2d5 - float(var_b2370), 0.0, 1.0)));
-        var_627e2 = var_f733f * var_36b18.w;
+        var_75d4a = var_f733f * var_36b18.w;
     }
     else
     {
-        var_627e2 = var_f733f;
+        var_75d4a = var_f733f;
     }
-    highp vec3 var_59607;
+    highp vec3 var_cc26e;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_59607 = var_627e2 * (0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x);
+        var_cc26e = var_75d4a * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_59607 = var_627e2;
+        var_cc26e = var_75d4a;
     }
-    bgfx_FragColor = vec4(var_59607, 1.0);
+    bgfx_FragColor = vec4(var_cc26e, 1.0);
 }

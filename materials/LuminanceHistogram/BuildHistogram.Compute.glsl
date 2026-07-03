@@ -70,17 +70,17 @@ void main() {
     if (var_4a46b)
     {
         vec2 var_0d03f = vec2(ivec2(int(var_58b5b), int(var_9f84d))) / ScreenSize.xy;
-        vec3 var_1f609 = textureLod(s_GameColor, var_0d03f, 0.0).xyz;
-        vec3 var_e70aa;
+        vec3 var_43b49 = textureLod(s_GameColor, var_0d03f, 0.0).xyz;
+        vec3 var_8a584;
         if (PreExposureEnabled.x > 0.0)
         {
-            var_e70aa = var_1f609 / vec3(0.180000007152557373046875 / textureLod(s_PreviousFrameAverageLuminance, vec2(0.5), 0.0).x);
+            var_8a584 = var_43b49 / vec3((0.180000007152557373046875 / textureLod(s_PreviousFrameAverageLuminance, vec2(0.5), 0.0).x) + 9.9999997473787516355514526367188e-05);
         }
         else
         {
-            var_e70aa = var_1f609;
+            var_8a584 = var_43b49;
         }
-        float var_378d8 = dot(var_e70aa, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+        float var_378d8 = dot(var_8a584, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         uint var_9eefc;
         func_caa06(var_378d8, var_9eefc);
         vec2 var_529a3 = var_0d03f - vec2(0.5);
