@@ -19,13 +19,13 @@
 
 precision mediump float;
 precision highp int;
+vec3 var_8add6;
 uniform highp sampler2D s_Texture0;
 uniform highp sampler2D s_Texture1;
 uniform highp vec4 PrimProps0;
 in highp vec4 v_additional;
 in highp vec4 v_color;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-vec3 var_8add6;
 void main() {
     highp vec4 var_c2563 = v_additional;
     highp vec4 var_ef0c7 = v_color;

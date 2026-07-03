@@ -115,7 +115,6 @@ in vec4 i_data3;
 #endif
 flat out int v_adjacentClouds;
 out vec4 v_color0;
-out vec3 v_ndcPosition;
 out vec3 v_normal;
 out vec2 v_texcoord0;
 out vec2 v_tilePosition;
@@ -139,7 +138,6 @@ void main() {
     var_f6566.z = clamp(var_f6566.z, -1.0, 1.0);
     v_adjacentClouds = 0;
     v_color0 = vec4(0.0);
-    v_ndcPosition = vec3(0.0);
     v_normal = vec3(0.0);
     v_texcoord0 = vec2(0.0);
     v_tilePosition = vec2(0.0);

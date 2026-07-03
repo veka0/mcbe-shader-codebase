@@ -149,6 +149,7 @@ uniform highp vec4 SSRParameters;
 uniform highp vec4 SceneResolutionAndRecipResolution;
 #endif
 uniform highp vec4 SubPixelOffset;
+uniform highp vec4 ViewportScale;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -215,12 +216,10 @@ void main() {
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
     highp vec3 var_ea248 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
-    highp vec3 var_e3d8f = var_3ee7d.xyz;
-    highp vec3 var_eebcb = dFdx(var_e3d8f);
-    highp vec3 var_211c8 = dFdy(var_e3d8f);
-    highp vec3 var_5acf5 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_c6246 = var_3ee7d.xyz;
+    highp vec3 var_a45f7 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
     highp vec3 var_7d782 = mod(var_ea248, vec3(QuantizationParameters.z));
-    highp vec3 var_204a2 = (var_ea248 - (var_7d782 - (var_5acf5 * dot(var_7d782, var_5acf5)))) + WorldOrigin.xyz;
+    highp vec3 var_204a2 = (var_ea248 - (var_7d782 - (var_a45f7 * dot(var_7d782, var_a45f7)))) + WorldOrigin.xyz;
     highp vec2 var_745cb = var_b7ade.xy;
     highp vec3 var_b0cb0 = vec3(var_b7ade.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
@@ -266,13 +265,23 @@ void main() {
     highp float var_eca07 = clamp(((var_8c7de.z * 16.0) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
     highp float var_0c7d8 = ((var_eca07 * var_eca07) * var_eca07) * IBLParameters.x;
     highp float var_e6705 = length(var_f529b);
+    bool var_404a8 = SSRParameters.x != 0.0;
+    bool var_b9d95;
+    if (var_404a8)
+    {
+        var_b9d95 = IBLParameters.x != 0.0;
+    }
+    else
+    {
+        var_b9d95 = var_404a8;
+    }
     highp vec3 var_3f03f;
-    if (SSRParameters.x != 0.0)
+    if (var_b9d95)
     {
         bool var_46a60 = PreExposureEnabled.x > 0.0;
-        highp vec2 var_fcc55 = (var_599e1.xy + vec2(1.0)) * 0.5;
-        var_fcc55.y = 1.0 - var_fcc55.y;
-        var_fcc55 = vec2(var_fcc55.x, 1.0 - var_fcc55.y);
+        highp vec2 var_bcb12 = (var_599e1.xy + vec2(1.0)) * 0.5;
+        var_bcb12.y = 1.0 - var_bcb12.y;
+        var_bcb12 = vec2(var_bcb12.x, 1.0 - var_bcb12.y);
         highp vec3 var_7c2f6;
         highp vec3 var_bdee4;
         if (QuantizationParameters.w > 0.0)
@@ -286,7 +295,7 @@ void main() {
             highp float var_83bc9 = var_9b904.y;
             highp vec2 var_95d93 = vec2(var_74cec, 1.0 - var_83bc9);
             var_9b904 = var_95d93;
-            var_fcc55 = var_95d93;
+            var_bcb12 = var_95d93;
             var_bdee4 = (u_view * vec4(var_204a2, 1.0)).xyz;
             var_7c2f6 = var_204a2;
         }
@@ -295,11 +304,11 @@ void main() {
             var_bdee4 = var_f529b;
             var_7c2f6 = var_21abf;
         }
-        highp vec4 var_fb4ec = texture(s_SSRTexture, var_fcc55);
+        highp vec4 var_87e47 = texture(s_SSRTexture, var_bcb12 * ViewportScale.xy);
         if (var_46a60)
         {
-            highp vec3 var_417eb = var_fb4ec.xyz / vec3((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
-            var_fb4ec = vec4(var_417eb.x, var_417eb.y, var_417eb.z, var_fb4ec.w);
+            highp vec3 var_417eb = var_87e47.xyz / vec3((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
+            var_87e47 = vec4(var_417eb.x, var_417eb.y, var_417eb.z, var_87e47.w);
         }
         highp vec3 var_a56d9 = reflect(normalize(var_7c2f6 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_b623b);
         highp float var_0f441;
@@ -351,7 +360,7 @@ void main() {
         highp vec2 var_e6546 = vec2(clamp(dot(var_19823, -normalize(var_bdee4)), 0.0, 1.0), var_8c7de.w);
         var_e6546.y = 1.0 - var_e6546.y;
         highp vec2 var_f1a1e = texture(s_BrdfLUT, var_e6546).xy;
-        var_3f03f = mix(var_83a0f, var_fb4ec.xyz, vec3(var_fb4ec.w * SSRParameters.y)) * ((var_b12e6 * var_f1a1e.x) + vec3(var_f1a1e.y));
+        var_3f03f = mix(var_83a0f, var_87e47.xyz, vec3(var_87e47.w * SSRParameters.y)) * ((var_b12e6 * var_f1a1e.x) + vec3(var_f1a1e.y));
     }
     else
     {

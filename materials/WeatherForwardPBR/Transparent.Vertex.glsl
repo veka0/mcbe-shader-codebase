@@ -172,12 +172,11 @@ void main() {
     vec4 var_6e0e6 = u_modelViewProj * vec4(var_596e7 + (Velocity.xyz * Dimensions.y), 1.0);
     vec4 var_fe173 = var_6e0e6;
     vec2 var_67f44 = (var_6e0e6.xy / vec2(var_fe173.w)) - (var_12b3c.xy / vec2(var_8dd4e.w));
-    vec4 var_8c8da = mix(var_6e0e6, var_12b3c, vec4(var_49187.y));
-    vec2 var_32261 = var_8c8da.xy + ((normalize(vec2(-var_67f44.y, var_67f44.x)) * (0.5 - var_49187.x)) * Dimensions.x);
-    vec4 var_e0c3e = vec4(var_32261.x, var_32261.y, var_8c8da.z, var_8c8da.w);
-    vec4 var_b4024 = var_e0c3e;
+    vec4 var_defd3 = mix(var_6e0e6, var_12b3c, vec4(var_49187.y));
+    vec2 var_4cdd6 = var_defd3.xy + ((normalize(vec2(-var_67f44.y, var_67f44.x)) * (0.5 - var_49187.x)) * Dimensions.x);
+    vec4 var_36755 = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
     v_color0 = a_color0;
-    v_fog = vec4(FogColor.xyz, clamp(((var_b4024.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_fog = vec4(FogColor.xyz, clamp(((var_36755.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_occlusionHeight = (var_91624.y + (ViewPosition.y - 0.5)) * 0.0039215688593685626983642578125;
     v_occlusionUV = ((var_596e7.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);
 #ifdef NO_VARIETY__OFF
@@ -192,5 +191,5 @@ void main() {
 #ifdef INSTANCING__ON
     v_worldPos = (var_59d11 * vec4(a_position, 1.0)).xyz;
 #endif
-    gl_Position = var_e0c3e;
+    gl_Position = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
 }

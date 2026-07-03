@@ -125,6 +125,7 @@
 
 precision mediump float;
 precision highp int;
+float var_aaae6;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
@@ -139,7 +140,6 @@ in highp vec4 v_color0;
 in highp vec3 v_prevWorldPos;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
-float var_aaae6;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_517fd = v_color0;

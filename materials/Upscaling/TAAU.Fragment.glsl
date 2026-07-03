@@ -23,7 +23,7 @@
 * - uniform vec4 RecipDisplayResolution;
 * - uniform vec4 RenderResolution;
 * - uniform vec4 ResolutionRatiosAndFPEpsilon;
-* - uniform vec4 SubPixelJitter;
+* - uniform vec4 SubPixelJitterAndValidHistory;
 * - uniform vec4 TAAUpscalingParameters;
 */
 
@@ -36,23 +36,23 @@ uniform highp vec4 DisplayResolution;
 uniform highp vec4 RecipDisplayResolution;
 uniform highp vec4 RenderResolution;
 uniform highp vec4 ResolutionRatiosAndFPEpsilon;
-uniform highp vec4 SubPixelJitter;
+uniform highp vec4 SubPixelJitterAndValidHistory;
 uniform highp vec4 TAAUpscalingParameters;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec2 var_c0f1b = DisplayResolution.xy * v_texcoord0;
-    uint var_c27a1 = uint(var_c0f1b.x);
-    uint var_1463d = uint(var_c0f1b.y);
-    highp vec2 var_55832 = ((vec2(float(var_c27a1) + 0.5, float(var_1463d) + 0.5) * ResolutionRatiosAndFPEpsilon.x) - vec2(SubPixelJitter.x, -SubPixelJitter.y)) - vec2(0.5);
-    highp vec2 var_56e6a = var_55832;
+    uint var_0c083 = uint(var_c0f1b.x);
+    uint var_52540 = uint(var_c0f1b.y);
+    highp vec2 var_9d8ec = ((vec2(float(var_0c083) + 0.5, float(var_52540) + 0.5) * ResolutionRatiosAndFPEpsilon.x) - vec2(SubPixelJitterAndValidHistory.x, -SubPixelJitterAndValidHistory.y)) - vec2(0.5);
+    highp vec2 var_56e6a = var_9d8ec;
     ivec2 var_2c3be = ivec2(int(round(var_56e6a.x)), int(round(var_56e6a.y)));
-    highp vec4 var_b18e6 = texelFetch(s_InputFinalColor, var_2c3be, 0);
+    highp vec4 var_119b3 = texelFetch(s_InputFinalColor, var_2c3be, 0);
     highp vec2 var_eab04;
     highp vec3 var_01fa5;
     highp vec3 var_24173;
-    var_24173 = var_b18e6.xyz * var_b18e6.xyz;
-    var_01fa5 = var_b18e6.xyz;
+    var_24173 = var_119b3.xyz * var_119b3.xyz;
+    var_01fa5 = var_119b3.xyz;
     var_eab04 = texelFetch(s_InputBufferMotionVectors, var_2c3be, 0).zw;
     highp vec3 var_c3970;
     highp vec3 var_268f2;
@@ -103,36 +103,37 @@ void main() {
     highp vec2 var_6a6cb = var_eab04 * RenderResolution.xy;
     highp vec3 var_9ea21 = var_01fa5 * vec3(0.111111111938953399658203125);
     highp vec3 var_15974 = sqrt(max(vec3(0.0), (var_24173 * vec3(0.111111111938953399658203125)) - (var_9ea21 * var_9ea21)));
-    highp float var_8954e = smoothstep(0.0, 1.0, sqrt(dot(var_6a6cb, var_6a6cb)));
-    highp float var_80b18 = mix(TAAUpscalingParameters.y, TAAUpscalingParameters.x, var_8954e);
+    highp float var_55075 = smoothstep(0.0, 1.0, sqrt(dot(var_6a6cb, var_6a6cb)));
+    highp float var_80b18 = mix(TAAUpscalingParameters.y, TAAUpscalingParameters.x, var_55075);
     highp vec3 var_5ae17 = var_9ea21 - (var_15974 * var_80b18);
     highp vec3 var_ad110 = var_9ea21 + (var_15974 * var_80b18);
-    highp vec2 var_589d9 = clamp(vec2(float(var_c27a1) + 0.5, float(var_1463d) + 0.5) - (var_6a6cb * ResolutionRatiosAndFPEpsilon.y), vec2(0.0), DisplayResolution.xy - vec2(1.0));
+    highp vec2 var_589d9 = clamp(vec2(float(var_0c083) + 0.5, float(var_52540) + 0.5) - (var_6a6cb * ResolutionRatiosAndFPEpsilon.y), vec2(0.0), DisplayResolution.xy - vec2(1.0));
     highp vec2 var_fc97f = floor(var_589d9 - vec2(0.5));
     highp vec2 var_dcdb2 = var_fc97f + vec2(0.5);
     highp vec2 var_23409 = clamp(var_589d9 - var_dcdb2, vec2(0.0), vec2(1.0));
     highp vec2 var_57836 = var_23409 * var_23409;
     highp vec2 var_571fa = var_57836 * var_23409;
     highp vec2 var_d4010 = var_57836 - ((var_571fa + var_23409) * 0.5);
-    highp vec2 var_c1a04 = var_d4010;
+    highp vec2 var_c67d5 = var_d4010;
     highp vec2 var_4024f = ((var_571fa * 1.5) - (var_57836 * 2.5)) + vec2(1.0);
     highp vec2 var_9857d = (var_571fa - var_57836) * 0.5;
-    highp vec2 var_a1d94 = var_9857d;
+    highp vec2 var_b0290 = var_9857d;
     highp vec2 var_dd35c = ((vec2(1.0) - var_d4010) - var_4024f) - var_9857d;
     highp vec2 var_3c8bb = var_4024f + var_dd35c;
-    highp vec2 var_7ed75 = var_3c8bb;
-    highp vec2 var_6032f = (var_fc97f + vec2(-0.5)) * RecipDisplayResolution.xy;
-    highp vec2 var_93a5a = (var_dcdb2 + (var_dd35c / var_3c8bb)) * RecipDisplayResolution.xy;
-    highp vec2 var_3e506 = (var_fc97f + vec2(2.5)) * RecipDisplayResolution.xy;
-    highp vec3 var_99678 = max(vec3(0.0), ((((((((textureLod(s_InputTAAHistory, vec2(var_6032f.x, var_6032f.y), 0.0).xyz * (var_c1a04.x * var_c1a04.y)) + (textureLod(s_InputTAAHistory, vec2(var_6032f.x, var_93a5a.y), 0.0).xyz * (var_c1a04.x * var_7ed75.y))) + (textureLod(s_InputTAAHistory, vec2(var_6032f.x, var_3e506.y), 0.0).xyz * (var_c1a04.x * var_a1d94.y))) + (textureLod(s_InputTAAHistory, vec2(var_93a5a.x, var_6032f.y), 0.0).xyz * (var_7ed75.x * var_c1a04.y))) + (textureLod(s_InputTAAHistory, vec2(var_93a5a.x, var_93a5a.y), 0.0).xyz * (var_7ed75.x * var_7ed75.y))) + (textureLod(s_InputTAAHistory, vec2(var_93a5a.x, var_3e506.y), 0.0).xyz * (var_7ed75.x * var_a1d94.y))) + (textureLod(s_InputTAAHistory, vec2(var_3e506.x, var_6032f.y), 0.0).xyz * (var_a1d94.x * var_c1a04.y))) + (textureLod(s_InputTAAHistory, vec2(var_3e506.x, var_93a5a.y), 0.0).xyz * (var_a1d94.x * var_7ed75.y))) + (textureLod(s_InputTAAHistory, vec2(var_3e506.x, var_3e506.y), 0.0).xyz * (var_a1d94.x * var_a1d94.y)));
-    highp vec3 var_aae60;
+    highp vec2 var_440e4 = var_3c8bb;
+    highp vec2 var_c3361 = (var_fc97f + vec2(-0.5)) * RecipDisplayResolution.xy;
+    highp vec2 var_cb2ce = (var_dcdb2 + (var_dd35c / var_3c8bb)) * RecipDisplayResolution.xy;
+    highp vec2 var_cd521 = (var_fc97f + vec2(2.5)) * RecipDisplayResolution.xy;
+    highp vec3 var_b4acb = (((((textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_c3361.y), 0.0).xyz * (var_c67d5.x * var_c67d5.y)) + (textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_cb2ce.y), 0.0).xyz * (var_c67d5.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_cd521.y), 0.0).xyz * (var_c67d5.x * var_b0290.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_c3361.y), 0.0).xyz * (var_440e4.x * var_c67d5.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_cb2ce.y), 0.0).xyz * (var_440e4.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_cd521.y), 0.0).xyz * (var_440e4.x * var_b0290.y));
+    highp vec3 var_34a79 = max(vec3(0.0), ((var_b4acb + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_c3361.y), 0.0).xyz * (var_b0290.x * var_c67d5.y))) + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_cb2ce.y), 0.0).xyz * (var_b0290.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_cd521.y), 0.0).xyz * (var_b0290.x * var_b0290.y)));
+    highp vec3 var_fe83b;
     if (TAAUpscalingParameters.z != 0.0)
     {
-        bool var_5b456 = any(greaterThan(var_99678, var_ad110));
+        bool var_5b456 = any(greaterThan(var_34a79, var_ad110));
         bool var_4b3a6;
         if (!var_5b456)
         {
-            var_4b3a6 = any(lessThan(var_99678, var_5ae17));
+            var_4b3a6 = any(lessThan(var_34a79, var_5ae17));
         }
         else
         {
@@ -143,8 +144,8 @@ void main() {
         {
             highp vec3 var_bc1a4 = var_5ae17;
             highp vec3 var_263c9 = var_ad110;
-            highp vec3 var_16c6d = var_99678;
-            highp vec3 var_2b95b = var_b18e6.xyz - var_99678;
+            highp vec3 var_16c6d = var_34a79;
+            highp vec3 var_2b95b = var_119b3.xyz - var_34a79;
             highp vec3 var_699c1 = var_2b95b;
             highp float var_7747b = length(var_2b95b);
             if (var_7747b > 0.0)
@@ -250,30 +251,30 @@ void main() {
                 highp vec3 var_1f3f4;
                 if (var_b6607 > 0.0)
                 {
-                    var_1f3f4 = var_99678 + (var_699c1 * vec3(var_b6607));
+                    var_1f3f4 = var_34a79 + (var_699c1 * vec3(var_b6607));
                 }
                 else
                 {
-                    var_1f3f4 = var_99678 + (var_699c1 * vec3(var_10f5f));
+                    var_1f3f4 = var_34a79 + (var_699c1 * vec3(var_10f5f));
                 }
                 var_eda31 = var_1f3f4;
             }
             else
             {
-                var_eda31 = min(var_ad110, max(var_5ae17, var_99678));
+                var_eda31 = min(var_ad110, max(var_5ae17, var_34a79));
             }
             var_a4d0b = var_eda31;
         }
         else
         {
-            var_a4d0b = var_99678;
+            var_a4d0b = var_34a79;
         }
-        var_aae60 = var_a4d0b;
+        var_fe83b = var_a4d0b;
     }
     else
     {
-        var_aae60 = min(var_ad110, max(var_5ae17, var_99678));
+        var_fe83b = min(var_ad110, max(var_5ae17, var_34a79));
     }
-    highp vec2 var_60f23 = var_55832 - vec2(var_2c3be);
-    bgfx_FragColor = vec4(mix(var_aae60, var_b18e6.xyz, vec3(max(var_8954e, clamp(1.0 - (ResolutionRatiosAndFPEpsilon.y * dot(var_60f23, var_60f23)), 0.0500000007450580596923828125, 1.0)) * 0.100000001490116119384765625)), 0.0);
+    highp vec2 var_d7d42 = var_9d8ec - vec2(var_2c3be);
+    bgfx_FragColor = vec4(mix(var_fe83b, var_119b3.xyz, vec3((SubPixelJitterAndValidHistory.z != 0.0) ? (max(var_55075, clamp(1.0 - (ResolutionRatiosAndFPEpsilon.y * dot(var_d7d42, var_d7d42)), 0.0500000007450580596923828125, 1.0)) * 0.100000001490116119384765625) : 1.0)), 0.0);
 }

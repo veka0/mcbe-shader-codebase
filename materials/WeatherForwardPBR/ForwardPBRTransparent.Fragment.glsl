@@ -120,6 +120,7 @@
 
 precision mediump float;
 precision highp int;
+float var_69f75;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_model[4];
@@ -158,7 +159,6 @@ in highp vec2 v_occlusionUV;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-float var_69f75;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
 void func_7355d(inout highp vec2 arg_f694b) {
     highp vec4 loc_175e8 = texture(s_OcclusionTexture, v_occlusionUV);

@@ -108,7 +108,6 @@ uniform mat4 u_model[4];
 #endif
 uniform mat4 u_proj;
 uniform mat4 u_view;
-uniform mat4 u_viewProj;
 uniform vec4 CloudColor;
 uniform vec4 CloudLightingToggles;
 uniform vec4 SubPixelOffset;
@@ -124,7 +123,6 @@ in vec4 i_data3;
 #endif
 flat out int v_adjacentClouds;
 out vec4 v_color0;
-out vec3 v_ndcPosition;
 out vec3 v_normal;
 out vec2 v_texcoord0;
 out vec2 v_tilePosition;
@@ -132,7 +130,7 @@ out vec3 v_worldPos;
 void main() {
     int var_5b856 = int(a_texcoord4);
 #ifdef INSTANCING__OFF
-    vec4 var_00404 = u_model[0] * vec4(a_position, 1.0);
+    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -143,11 +141,9 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_00404 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec4 var_2c813 = u_viewProj * vec4(var_00404.xyz, 1.0);
     vec2 var_62d4f = vec2(0.0);
-    vec4 var_52536 = var_2c813;
     mat4 var_be69c = u_proj;
     var_be69c[2].x += SubPixelOffset.x;
     var_be69c[2].y -= SubPixelOffset.y;
@@ -168,10 +164,9 @@ void main() {
     }
     v_adjacentClouds = var_0f149;
     v_color0 = vec4(var_71df9.x, var_71df9.y, var_71df9.z, CloudColor.w);
-    v_ndcPosition = var_2c813.xyz / vec3(var_52536.w);
     v_normal = var_a2482;
     v_texcoord0 = a_texcoord0;
     v_tilePosition = var_62d4f;
-    v_worldPos = var_00404.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_00404.xyz, 1.0));
+    v_worldPos = var_a67a8.xyz;
+    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

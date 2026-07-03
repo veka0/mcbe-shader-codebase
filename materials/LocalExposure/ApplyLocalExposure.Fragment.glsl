@@ -22,6 +22,7 @@
 * - uniform vec4 LuminanceRangeParams;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 RecipSceneResolution;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;

@@ -26,10 +26,12 @@
 precision mediump float;
 precision highp int;
 uniform highp sampler2D s_BlurPyramidTexture;
+uniform highp vec4 ViewportScale;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_fc471 = v_texcoord0;
-    highp vec2 var_e9fce = vec2(4.0 * abs(dFdx(var_fc471.x)), 4.0 * abs(dFdy(var_fc471.y)));
-    bgfx_FragColor = (((((((texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(0.5 * var_e9fce.x, 0.5 * var_e9fce.y)) * 0.16599999368190765380859375) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2((-0.5) * var_e9fce.x, 0.5 * var_e9fce.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(0.5 * var_e9fce.x, (-0.5) * var_e9fce.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2((-0.5) * var_e9fce.x, (-0.5) * var_e9fce.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_e9fce.x, var_e9fce.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_e9fce.x, var_e9fce.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_e9fce.x, -var_e9fce.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_e9fce.x, -var_e9fce.y)) * 0.082999996840953826904296875);
+    highp vec2 var_85833 = (floor(ViewportScale.zw * ViewportScale.xy) - vec2(0.5)) / ViewportScale.zw;
+    highp vec2 var_90cde = (ViewportScale.xy * 4.0) * (vec2(0.5) / ViewportScale.zw);
+    highp vec4 var_da016 = ((((((texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(0.5 * var_90cde.x, 0.5 * var_90cde.y), var_85833)) * 0.16599999368190765380859375) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2((-0.5) * var_90cde.x, 0.5 * var_90cde.y), var_85833)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(0.5 * var_90cde.x, (-0.5) * var_90cde.y), var_85833)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2((-0.5) * var_90cde.x, (-0.5) * var_90cde.y), var_85833)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_90cde.x, var_90cde.y), var_85833)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_90cde.x, var_90cde.y), var_85833)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_90cde.x, -var_90cde.y), var_85833)) * 0.082999996840953826904296875);
+    bgfx_FragColor = var_da016 + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_90cde.x, -var_90cde.y), var_85833)) * 0.082999996840953826904296875);
 }
