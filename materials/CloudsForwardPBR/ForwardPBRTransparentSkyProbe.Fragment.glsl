@@ -16,7 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 2, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 3, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -170,7 +170,7 @@ void main() {
     {
         var_3613e = mix(var_c0f63, FogColor.xyz, vec3(var_7bc6e));
     }
-    highp vec3 var_fbe3e;
+    highp vec3 var_4bd87;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
@@ -183,21 +183,21 @@ void main() {
         int var_b2370 = clamp(int(var_eb2d5), 0, var_dbde4.z - 2);
         highp vec4 var_5363d = mix(textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370 + 1)), 0.0), vec4(clamp(var_eb2d5 - float(var_b2370), 0.0, 1.0)));
         highp vec4 var_67b96 = var_5363d;
-        var_fbe3e = var_5363d.xyz + (var_3613e * var_67b96.w);
+        var_4bd87 = var_5363d.xyz + (var_3613e * var_67b96.w);
     }
     else
     {
-        var_fbe3e = var_3613e;
+        var_4bd87 = var_3613e;
     }
     highp vec2 var_2f1c8 = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
-    highp vec3 var_c9e2f;
+    highp vec3 var_0e410;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_c9e2f = var_fbe3e * 0.18010000884532928466796875;
+        var_0e410 = var_4bd87 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_c9e2f = var_fbe3e;
+        var_0e410 = var_4bd87;
     }
-    bgfx_FragColor = vec4(var_c9e2f, ((clamp(var_2f1c8.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06)) * var_c6de7.w);
+    bgfx_FragColor = vec4(var_0e410, ((clamp(var_2f1c8.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06)) * var_c6de7.w);
 }

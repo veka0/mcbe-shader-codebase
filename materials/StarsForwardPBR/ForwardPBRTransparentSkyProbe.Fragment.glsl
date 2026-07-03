@@ -14,7 +14,7 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 1, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 2, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -124,11 +124,11 @@ void main() {
     highp vec4 var_4da2c = vec4(var_85e60, var_ce33f.w);
     highp vec2 var_23dcb = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
     highp vec3 var_e69c0 = var_4da2c.xyz * ((clamp(var_23dcb.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
-    highp vec4 var_0326f = vec4(var_e69c0.x, var_e69c0.y, var_e69c0.z, var_4da2c.w);
+    highp vec4 var_9ec58 = vec4(var_e69c0.x, var_e69c0.y, var_e69c0.z, var_4da2c.w);
     if (PreExposureEnabled.x > 0.0)
     {
-        highp vec3 var_968cc = var_0326f.xyz * 0.18010000884532928466796875;
-        var_0326f = vec4(var_968cc.x, var_968cc.y, var_968cc.z, var_0326f.w);
+        highp vec3 var_701a1 = var_9ec58.xyz * 0.0033142860047519207000732421875;
+        var_9ec58 = vec4(var_701a1.x, var_701a1.y, var_701a1.z, var_9ec58.w);
     }
-    bgfx_FragColor = vec4(var_0326f.xyz, var_0326f.w);
+    bgfx_FragColor = vec4(var_9ec58.xyz, var_9ec58.w);
 }

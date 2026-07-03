@@ -16,7 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };

@@ -36,7 +36,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 2, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 3, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_MatTexture;
@@ -170,11 +170,11 @@ uniform highp mat4 u_model[4];
 uniform highp mat4 u_proj;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_BrdfLUT;
-uniform highp sampler2D s_CausticsTexture;
 #ifdef USE_TEXTURES__ON
 uniform highp sampler2D s_MatTexture;
 #endif
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
+uniform highp sampler2DArray s_CausticsTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
 uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -1226,20 +1226,25 @@ void main() {
             highp float var_83bc9 = var_9b904.y;
             highp vec2 var_7c780 = vec2(var_74cec, 1.0 - var_83bc9);
             var_9b904 = var_7c780;
-            highp vec2 var_a6509 = var_7c780 * CausticsParameters.y;
-            highp float var_71399;
+            highp vec2 var_76b19 = var_7c780 * CausticsParameters.y;
+            highp float var_3e30b;
             if (CausticsTextureParameters.x != 0.0)
             {
-                var_a6509 = vec2(var_a6509.x - floor(var_a6509.x), var_a6509.y - floor(var_a6509.y));
-                var_a6509.y = CausticsTextureParameters.y + (var_a6509.y * (CausticsTextureParameters.z - CausticsTextureParameters.y));
-                var_71399 = texture(s_CausticsTexture, var_a6509).x * 2.0;
+                highp float var_135a8 = var_76b19.x;
+                highp float var_6a7fe = var_76b19.x;
+                highp float var_63ebc = var_135a8 - floor(var_6a7fe);
+                highp float var_d5fea = var_76b19.y;
+                highp float var_efc51 = var_76b19.y;
+                highp float var_a12ce = var_d5fea - floor(var_efc51);
+                var_76b19 = vec2(var_63ebc, var_a12ce);
+                var_3e30b = texture(s_CausticsTexture, vec3(var_63ebc, var_a12ce, CausticsTextureParameters.y)).x * 2.0;
             }
             else
             {
                 highp float var_25f77;
                 highp float var_879d8;
                 highp vec2 var_e71da;
-                var_e71da = var_a6509;
+                var_e71da = var_76b19;
                 var_879d8 = 0.0;
                 var_25f77 = 0.0;
                 highp float var_57178;
@@ -1268,9 +1273,9 @@ void main() {
                     var_7620f = var_a026e * WaterSurfaceOctaveParameters.w;
                     var_ae16d = var_12e07 + 1.39900004863739013671875;
                 }
-                var_71399 = var_25f77 / var_879d8;
+                var_3e30b = var_25f77 / var_879d8;
             }
-            var_ac788 = pow(var_71399, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+            var_ac788 = pow(var_3e30b, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
         }
         else
         {
@@ -1328,20 +1333,25 @@ void main() {
             highp float var_f2637 = var_5f3df.y;
             highp vec2 var_f8276 = vec2(var_b4854, 1.0 - var_f2637);
             var_5f3df = var_f8276;
-            highp vec2 var_ed595 = var_f8276 * CausticsParameters.y;
-            highp float var_e7a0d;
+            highp vec2 var_ca86d = var_f8276 * CausticsParameters.y;
+            highp float var_1a30b;
             if (CausticsTextureParameters.x != 0.0)
             {
-                var_ed595 = vec2(var_ed595.x - floor(var_ed595.x), var_ed595.y - floor(var_ed595.y));
-                var_ed595.y = CausticsTextureParameters.y + (var_ed595.y * (CausticsTextureParameters.z - CausticsTextureParameters.y));
-                var_e7a0d = texture(s_CausticsTexture, var_ed595).x * 2.0;
+                highp float var_cc82f = var_ca86d.x;
+                highp float var_6cffd = var_ca86d.x;
+                highp float var_de63e = var_cc82f - floor(var_6cffd);
+                highp float var_1ddcf = var_ca86d.y;
+                highp float var_ca4f1 = var_ca86d.y;
+                highp float var_daf47 = var_1ddcf - floor(var_ca4f1);
+                var_ca86d = vec2(var_de63e, var_daf47);
+                var_1a30b = texture(s_CausticsTexture, vec3(var_de63e, var_daf47, CausticsTextureParameters.y)).x * 2.0;
             }
             else
             {
                 highp float var_1bd34;
                 highp float var_3dcb9;
                 highp vec2 var_0b7eb;
-                var_0b7eb = var_ed595;
+                var_0b7eb = var_ca86d;
                 var_3dcb9 = 0.0;
                 var_1bd34 = 0.0;
                 highp float var_c112c;
@@ -1370,9 +1380,9 @@ void main() {
                     var_c72ba = var_0ee2f * WaterSurfaceOctaveParameters.w;
                     var_07226 = var_0881a + 1.39900004863739013671875;
                 }
-                var_e7a0d = var_1bd34 / var_3dcb9;
+                var_1a30b = var_1bd34 / var_3dcb9;
             }
-            var_7e3b5 = pow(var_e7a0d, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+            var_7e3b5 = pow(var_1a30b, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
         }
         else
         {
@@ -1581,17 +1591,17 @@ void main() {
         highp float var_543bd = 1.0 - MERSUniforms.z;
         highp float var_59d83 = (1.0 - (var_543bd * var_543bd)) * (IBLParameters.y - 1.0);
         int var_ae27f = int(LastSpecularIBLIdx.x);
-        highp vec3 var_96496 = mix(textureLod(s_SpecularIBLRecords, vec4(var_7914f, float((var_ae27f + 2) % 3)), var_59d83).xyz, textureLod(s_SpecularIBLRecords, vec4(var_7914f, float(var_ae27f)), var_59d83).xyz, vec3(IBLParameters.w));
-        highp vec3 var_60fd8;
+        highp vec3 var_67eb4 = mix(textureLod(s_SpecularIBLRecords, vec4(var_7914f, float((var_ae27f + 2) % 3)), var_59d83).xyz, textureLod(s_SpecularIBLRecords, vec4(var_7914f, float(var_ae27f)), var_59d83).xyz, vec3(IBLParameters.w));
+        highp vec3 var_99477;
         if (PreExposureEnabled.x > 0.0)
         {
-            var_60fd8 = var_96496 * vec3(5.552470684051513671875);
+            var_99477 = var_67eb4 * vec3(301.72412109375);
         }
         else
         {
-            var_60fd8 = var_96496;
+            var_99477 = var_67eb4;
         }
-        highp vec3 var_87e12 = (var_60fd8 * (((var_995a5 * var_995a5) * var_995a5) * IBLParameters.x)) * IBLParameters.z;
+        highp vec3 var_87e12 = (var_99477 * (((var_995a5 * var_995a5) * var_995a5) * IBLParameters.x)) * IBLParameters.z;
         highp vec3 var_da3af;
         if (DiffuseSpecularEmissiveAmbientTermToggles.w != 0.0)
         {

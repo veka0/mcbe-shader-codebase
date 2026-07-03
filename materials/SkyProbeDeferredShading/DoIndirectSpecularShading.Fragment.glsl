@@ -16,7 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
@@ -251,17 +251,17 @@ void main() {
         highp float var_f6d0e = 1.0 - var_9da41.w;
         highp float var_59d83 = (1.0 - (var_f6d0e * var_f6d0e)) * (IBLParameters.y - 1.0);
         int var_ae27f = int(LastSpecularIBLIdx.x);
-        highp vec3 var_96496 = mix(textureLod(s_SpecularIBLRecords, vec4(var_a5d2d, float((var_ae27f + 2) % 3)), var_59d83).xyz, textureLod(s_SpecularIBLRecords, vec4(var_a5d2d, float(var_ae27f)), var_59d83).xyz, vec3(IBLParameters.w));
-        highp vec3 var_68904;
+        highp vec3 var_67eb4 = mix(textureLod(s_SpecularIBLRecords, vec4(var_a5d2d, float((var_ae27f + 2) % 3)), var_59d83).xyz, textureLod(s_SpecularIBLRecords, vec4(var_a5d2d, float(var_ae27f)), var_59d83).xyz, vec3(IBLParameters.w));
+        highp vec3 var_bdf29;
         if (var_46a60)
         {
-            var_68904 = var_96496 * vec3(5.552470684051513671875);
+            var_bdf29 = var_67eb4 * vec3(301.72412109375);
         }
         else
         {
-            var_68904 = var_96496;
+            var_bdf29 = var_67eb4;
         }
-        highp vec3 var_8c1ad = (var_68904 * var_0c7d8) * IBLParameters.z;
+        highp vec3 var_8c1ad = (var_bdf29 * var_0c7d8) * IBLParameters.z;
         highp vec3 var_464b8;
         if (DiffuseSpecularEmissiveAmbientTermToggles.w != 0.0)
         {
@@ -315,17 +315,17 @@ void main() {
             highp float var_e38f7 = 1.0 - var_9da41.w;
             highp float var_f9267 = (1.0 - (var_e38f7 * var_e38f7)) * (IBLParameters.y - 1.0);
             int var_0a0b1 = int(LastSpecularIBLIdx.x);
-            highp vec3 var_249bf = mix(textureLod(s_SpecularIBLRecords, vec4(var_bc3e5, float((var_0a0b1 + 2) % 3)), var_f9267).xyz, textureLod(s_SpecularIBLRecords, vec4(var_bc3e5, float(var_0a0b1)), var_f9267).xyz, vec3(IBLParameters.w));
-            highp vec3 var_2b961;
+            highp vec3 var_63ae8 = mix(textureLod(s_SpecularIBLRecords, vec4(var_bc3e5, float((var_0a0b1 + 2) % 3)), var_f9267).xyz, textureLod(s_SpecularIBLRecords, vec4(var_bc3e5, float(var_0a0b1)), var_f9267).xyz, vec3(IBLParameters.w));
+            highp vec3 var_eaaca;
             if (PreExposureEnabled.x > 0.0)
             {
-                var_2b961 = var_249bf * vec3(5.552470684051513671875);
+                var_eaaca = var_63ae8 * vec3(301.72412109375);
             }
             else
             {
-                var_2b961 = var_249bf;
+                var_eaaca = var_63ae8;
             }
-            highp vec3 var_265a6 = (var_2b961 * var_0c7d8) * IBLParameters.z;
+            highp vec3 var_265a6 = (var_eaaca * var_0c7d8) * IBLParameters.z;
             highp vec3 var_0d46b;
             if (DiffuseSpecularEmissiveAmbientTermToggles.w != 0.0)
             {

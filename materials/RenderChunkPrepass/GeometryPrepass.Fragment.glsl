@@ -30,7 +30,6 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
-* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
@@ -64,9 +63,6 @@ layout(binding = 2, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_1
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
-#ifdef SEASONS__OFF
-uniform highp vec4 AmbientOcclusionParameters;
-#endif
 #ifdef SEASONS__ON
 uniform highp sampler2D s_SeasonsTexture;
 #endif
@@ -213,19 +209,19 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-    highp vec4 var_f0bdd = v_color0;
-    highp vec4 var_78efb = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_8fed3 = v_color0;
+    highp vec4 var_1b720 = texture(s_MatTexture, v_texcoord0);
 #ifdef SEASONS__OFF
-    highp vec4 var_f910b = var_78efb;
-    highp vec3 var_c5724 = (var_f910b.xyz * v_color0.xyz).xyz * ((AmbientOcclusionParameters.x + (AmbientOcclusionParameters.y * pow(var_f0bdd.w, AmbientOcclusionParameters.w))) * AmbientOcclusionParameters.z);
-    var_78efb = vec4(var_c5724.x, var_c5724.y, var_c5724.z, var_f910b.w);
+    highp vec3 var_82cf8 = var_1b720.xyz * v_color0.xyz;
+    var_1b720 = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_1b720.w);
+    var_1b720.w *= var_8fed3.w;
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_78efb.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_f0bdd.w);
-    highp vec4 var_2648f = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_78efb.w);
+    highp vec3 var_2b07f = (var_1b720.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_8fed3.w);
+    highp vec4 var_2648f = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_1b720.w);
     var_2648f.w = 1.0;
-    var_78efb = var_2648f;
+    var_1b720 = var_2648f;
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
@@ -234,13 +230,13 @@ void main() {
     highp float var_5431f;
     func_a72a6(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
-    highp vec4 var_b71d9 = vec4(var_c5724, var_78efb.w);
+    highp vec4 var_53507 = vec4(var_1b720.xyz, var_1b720.w);
 #endif
 #ifdef SEASONS__ON
-    highp vec4 var_b71d9 = vec4(var_2648f.xyz, var_78efb.w);
+    highp vec4 var_53507 = vec4(var_2648f.xyz, var_1b720.w);
 #endif
     highp vec2 var_ea830 = v_lightmapUV;
-    highp vec4 var_6de71 = vec4(var_b71d9.x, var_b71d9.y, var_b71d9.z, var_b71d9.w);
+    highp vec4 var_6de71 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
     var_6de71.w = var_7aa46;

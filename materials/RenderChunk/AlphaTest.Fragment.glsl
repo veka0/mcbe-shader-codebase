@@ -30,7 +30,6 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
-* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 GlobalRoughness;
@@ -56,33 +55,28 @@ in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_ba39c = v_color0;
-    highp vec4 var_fac35 = texture(s_MatTexture, v_texcoord0);
-    if (var_fac35.w < 0.5)
+#ifdef SEASONS__ON
+    highp vec4 var_6c86c = v_color0;
+#endif
+    highp vec4 var_950e4 = texture(s_MatTexture, v_texcoord0);
+    if (var_950e4.w < 0.5)
     {
         discard;
     }
 #ifdef SEASONS__OFF
-    highp vec3 var_206de = (var_fac35.xyz * v_color0.xyz).xyz * var_ba39c.w;
-    var_fac35 = vec4(var_206de.x, var_206de.y, var_206de.z, var_fac35.w);
+    highp vec4 var_15f8b = var_950e4;
+    highp vec3 var_26419 = var_15f8b.xyz * v_color0.xyz;
+    var_950e4 = vec4(var_26419.x, var_26419.y, var_26419.z, var_15f8b.w);
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_fac35.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_ba39c.w);
-    highp vec4 var_1f6c1 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_fac35.w);
+    highp vec3 var_2b07f = (var_950e4.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_6c86c.w);
+    highp vec4 var_26419 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_950e4.w);
+    var_26419.w = 1.0;
+    var_950e4 = var_26419;
 #endif
-#ifdef SEASONS__OFF
-    var_fac35.w = 1.0;
-#endif
-#ifdef SEASONS__ON
-    var_1f6c1.w = 1.0;
-    var_fac35 = var_1f6c1;
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_1f6c1.xyz, var_fac35.w);
-#endif
-#ifdef SEASONS__OFF
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_fac35.xyz, var_fac35.w);
-#endif
+    highp vec4 var_16cd7 = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_26419.xyz, var_950e4.w);
     highp vec4 var_67e99 = v_fog;
-    highp vec3 var_2a3e1 = mix(var_d81ae.xyz, FogColor.xyz, vec3(var_67e99.w));
-    bgfx_FragColor = vec4(var_2a3e1.x, var_2a3e1.y, var_2a3e1.z, var_d81ae.w);
+    highp vec3 var_2a3e1 = mix(var_16cd7.xyz, FogColor.xyz, vec3(var_67e99.w));
+    bgfx_FragColor = vec4(var_2a3e1.x, var_2a3e1.y, var_2a3e1.z, var_16cd7.w);
 }

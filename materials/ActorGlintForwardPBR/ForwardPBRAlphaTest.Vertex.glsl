@@ -33,7 +33,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 2, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 3, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_MERSTexture;
@@ -160,6 +160,7 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
 uniform vec4 UVAnimation;
+uniform vec4 UVScale;
 in float a_indices;
 in vec4 a_color0;
 in vec4 a_normal;
@@ -181,6 +182,22 @@ centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
     int var_c8e27 = int(a_indices);
+    float var_97211 = sin(UVAnimation.z);
+    float var_ce25b = cos(UVAnimation.z);
+    vec2 var_98b8b = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_ce25b, -var_97211), vec2(var_97211, var_ce25b));
+    var_98b8b.x += UVAnimation.x;
+    vec2 var_eb807 = var_98b8b;
+    vec2 var_e0bbc = var_eb807 + vec2(0.5);
+    var_98b8b = var_e0bbc;
+    vec2 var_1a9e2 = var_e0bbc * UVScale.xy;
+    float var_89ba8 = sin(UVAnimation.w);
+    float var_104e7 = cos(UVAnimation.w);
+    vec2 var_65238 = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_104e7, -var_89ba8), vec2(var_89ba8, var_104e7));
+    var_65238.x += UVAnimation.y;
+    vec2 var_0ef75 = var_65238;
+    vec2 var_a930f = var_0ef75 + vec2(0.5);
+    var_65238 = var_a930f;
+    vec2 var_fa5b0 = var_a930f * UVScale.xy;
     mat4 var_c7bcb = u_model[0] * Bones[var_c8e27];
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -202,11 +219,11 @@ void main() {
     vec4 var_4c816 = a_tangent;
     v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
     v_color0 = a_color0;
-    v_layerUv = vec4(0.0);
+    v_layerUv = vec4(var_1a9e2.x, var_1a9e2.y, var_fa5b0.x, var_fa5b0.y);
     v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
+    v_texcoord0 = a_texcoord0;
     v_worldPos = var_abb3b.xyz;
     gl_Position = var_be69c * (u_view * vec4(var_abb3b.xyz, 1.0));
 }

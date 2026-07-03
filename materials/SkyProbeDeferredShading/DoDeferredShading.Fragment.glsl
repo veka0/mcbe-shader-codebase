@@ -16,7 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
@@ -233,10 +233,10 @@ void main() {
     }
     highp vec4 var_2c40b = var_35476;
     highp vec3 var_57de7 = var_35476.xyz + (mix(((mix(var_ce195, vec3(dot(var_ce195, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_d5758.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x, var_1d2c8.xyz, vec3(var_f6a93.w)) * var_2c40b.w);
-    highp vec3 var_9e28c;
+    highp vec3 var_a3b9e;
     if (CurrentFace.x == 3.0)
     {
-        var_9e28c = var_57de7 * SkyProbeUVFadeParameters.z;
+        var_a3b9e = var_57de7 * SkyProbeUVFadeParameters.z;
     }
     else
     {
@@ -250,18 +250,18 @@ void main() {
         {
             var_d4483 = var_57de7;
         }
-        var_9e28c = var_d4483;
+        var_a3b9e = var_d4483;
     }
-    highp vec3 var_52fa8;
+    highp vec3 var_0ed56;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_52fa8 = var_9e28c * 0.18010000884532928466796875;
+        var_0ed56 = var_a3b9e * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_52fa8 = var_9e28c;
+        var_0ed56 = var_a3b9e;
     }
-    var_38911 = vec4(var_52fa8.x, var_52fa8.y, var_52fa8.z, var_38911.w);
+    var_38911 = vec4(var_0ed56.x, var_0ed56.y, var_0ed56.z, var_38911.w);
     var_38911.w = 1.0;
     bgfx_FragColor = var_38911;
 }

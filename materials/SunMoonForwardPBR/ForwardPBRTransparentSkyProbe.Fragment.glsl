@@ -14,7 +14,7 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 1, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 2, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -105,7 +105,7 @@ layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_86892 = texture(s_SunMoonTexture, v_texcoord0);
     highp vec3 var_f733f = (SunMoonColor.xyz * var_86892.xyz) * SunMoonColor.w;
-    highp vec3 var_84c25;
+    highp vec3 var_d5208;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
@@ -117,21 +117,21 @@ void main() {
         highp float var_eb2d5 = (var_9bf69.z * float(var_dbde4.z)) - 0.5;
         int var_b2370 = clamp(int(var_eb2d5), 0, var_dbde4.z - 2);
         highp vec4 var_36b18 = mix(textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370 + 1)), 0.0), vec4(clamp(var_eb2d5 - float(var_b2370), 0.0, 1.0)));
-        var_84c25 = var_f733f * var_36b18.w;
+        var_d5208 = var_f733f * var_36b18.w;
     }
     else
     {
-        var_84c25 = var_f733f;
+        var_d5208 = var_f733f;
     }
     highp vec2 var_2d4a7 = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
-    highp vec3 var_06910;
+    highp vec3 var_c41e6;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_06910 = var_84c25 * 0.18010000884532928466796875;
+        var_c41e6 = var_d5208 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_06910 = var_84c25;
+        var_c41e6 = var_d5208;
     }
-    bgfx_FragColor = vec4(var_06910, (clamp(var_2d4a7.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
+    bgfx_FragColor = vec4(var_c41e6, (clamp(var_2d4a7.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
 }
