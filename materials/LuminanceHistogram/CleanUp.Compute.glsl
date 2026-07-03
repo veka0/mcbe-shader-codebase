@@ -10,6 +10,10 @@
 * - CLEAN_UP_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128
+* - THREAD_LIMIT__NATIVE
+*
 * Available Resources:
 *
 * Buffers:
@@ -30,12 +34,18 @@
 * - uniform vec4 ScreenSize;
 */
 
+#ifdef THREAD_LIMIT__LIMITED_AT128
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+#endif
+#ifdef THREAD_LIMIT__NATIVE
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+#endif
 struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_bf956;
+layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_609c4;
 void main() {
-    var_bf956.CurFrameLuminanceHistogram[gl_LocalInvocationIndex].count = 0u;
+    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
+    var_609c4.CurFrameLuminanceHistogram[(GlobalInvocationID.y * 16u) + GlobalInvocationID.x].count = 0u;
 }

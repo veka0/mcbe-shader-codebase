@@ -56,6 +56,8 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapEnabled[2];
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapIndices[2];
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
@@ -193,6 +195,8 @@ uniform highp vec4 ClusterDimensions;
 uniform highp vec4 ClusterNearFarWidthHeight;
 uniform highp vec4 ClusterSize;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+uniform highp vec4 DirectionalLightExplicitCascadedShadowMapEnabled[2];
+uniform highp vec4 DirectionalLightExplicitCascadedShadowMapIndices[2];
 uniform highp vec4 DirectionalLightSkyLightHeuristicToggles;
 uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 uniform highp vec4 DirectionalLightSourceIsSun[2];
@@ -571,8 +575,80 @@ void func_cb3cb(inout int arg_4fc1c, inout highp vec3 arg_f8577, inout highp vec
     arg_a2d38 = loc_0e1bf;
     arg_ee338 = -1;
 }
-void func_c7788(inout int arg_9852b, inout highp float arg_7a26d, inout int arg_c1240, inout highp vec4 arg_5b51a, inout highp float arg_e6df6) {
-    if (arg_9852b < 0)
+void func_103b2(inout highp float arg_5b759, inout int arg_11220, inout highp float arg_ce9c6) {
+    bool loc_7827b = arg_5b759 == 0.0;
+    bool loc_1d12d;
+    if (loc_7827b)
+    {
+        loc_1d12d = DirectionalLightExplicitCascadedShadowMapEnabled[arg_11220].x != 0.0;
+    }
+    else
+    {
+        loc_1d12d = loc_7827b;
+    }
+    if (loc_1d12d)
+    {
+        arg_ce9c6 = DirectionalLightExplicitCascadedShadowMapIndices[arg_11220].x;
+        return;
+    }
+    else
+    {
+        bool loc_b84d7 = arg_5b759 == 1.0;
+        bool loc_41739;
+        if (loc_b84d7)
+        {
+            loc_41739 = DirectionalLightExplicitCascadedShadowMapEnabled[arg_11220].y != 0.0;
+        }
+        else
+        {
+            loc_41739 = loc_b84d7;
+        }
+        if (loc_41739)
+        {
+            arg_ce9c6 = DirectionalLightExplicitCascadedShadowMapIndices[arg_11220].y;
+            return;
+        }
+        else
+        {
+            bool loc_2ff3a = arg_5b759 == 2.0;
+            bool loc_7eef5;
+            if (loc_2ff3a)
+            {
+                loc_7eef5 = DirectionalLightExplicitCascadedShadowMapEnabled[arg_11220].z != 0.0;
+            }
+            else
+            {
+                loc_7eef5 = loc_2ff3a;
+            }
+            if (loc_7eef5)
+            {
+                arg_ce9c6 = DirectionalLightExplicitCascadedShadowMapIndices[arg_11220].z;
+                return;
+            }
+            else
+            {
+                bool loc_6013b = arg_5b759 == 3.0;
+                bool loc_035f1;
+                if (loc_6013b)
+                {
+                    loc_035f1 = DirectionalLightExplicitCascadedShadowMapEnabled[arg_11220].w != 0.0;
+                }
+                else
+                {
+                    loc_035f1 = loc_6013b;
+                }
+                if (loc_035f1)
+                {
+                    arg_ce9c6 = DirectionalLightExplicitCascadedShadowMapIndices[arg_11220].w;
+                    return;
+                }
+            }
+        }
+    }
+    arg_ce9c6 = -1.0;
+}
+void func_acec5(inout int arg_a398d, inout highp float arg_7a26d, inout int arg_da0e3, inout highp vec4 arg_5b51a, inout highp float arg_e6df6) {
+    if (arg_a398d < 0)
     {
         arg_7a26d = 1.0;
         return;
@@ -584,33 +660,44 @@ void func_c7788(inout int arg_9852b, inout highp float arg_7a26d, inout int arg_
     }
     else
     {
-        loc_6760f = clamp(int(ShadowPCFWidth[arg_c1240] + 0.5), 1, 9);
+        loc_6760f = clamp(int(ShadowPCFWidth[arg_da0e3] + 0.5), 1, 9);
     }
-    int loc_ddf3c = loc_6760f / 2;
-    highp vec2 loc_45a5e = ((vec2(arg_5b51a.x, arg_5b51a.y) * 0.5) + vec2(0.5)) * CascadeShadowResolutions[arg_c1240];
+    int loc_7cc8c = loc_6760f / 2;
+    highp vec2 loc_124e3 = ((vec2(arg_5b51a.x, arg_5b51a.y) * 0.5) + vec2(0.5)) * CascadeShadowResolutions[arg_da0e3];
     highp float loc_aa6c4 = (arg_5b51a.z * 0.5) + 0.5;
-    loc_45a5e.y += (1.0 - CascadeShadowResolutions[arg_c1240]);
+    loc_124e3.y += (1.0 - CascadeShadowResolutions[arg_da0e3]);
     highp float loc_9af5f;
     loc_9af5f = 0.0;
     highp float loc_1a54a;
-    for (int loc_d02e0 = 0; loc_d02e0 < loc_6760f; loc_9af5f = loc_1a54a, loc_d02e0++)
+    for (int loc_a2bca = 0; loc_a2bca < loc_6760f; loc_9af5f = loc_1a54a, loc_a2bca++)
     {
         loc_1a54a = loc_9af5f;
         highp float loc_8e08a;
-        for (int loc_e5309 = 0; loc_e5309 < loc_6760f; loc_1a54a = loc_8e08a, loc_e5309++)
+        for (int loc_95e89 = 0; loc_95e89 < loc_6760f; loc_1a54a = loc_8e08a, loc_95e89++)
         {
-            highp vec3 loc_4e606 = vec3(loc_45a5e + ((vec2(float(loc_e5309 - loc_ddf3c) + 0.5, float(loc_d02e0 - loc_ddf3c) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadeShadowResolutions[arg_c1240]), (float(arg_9852b) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(arg_c1240));
-            highp vec4 loc_28934 = textureGather(s_ShadowCascades, loc_4e606);
-            highp vec4 loc_bbed9 = loc_28934;
+            highp float loc_18f34 = float(arg_da0e3);
+            highp float loc_1e85b;
+            func_103b2(loc_18f34, arg_a398d, loc_1e85b);
+            highp vec2 loc_8598d = loc_124e3 + ((vec2(float(loc_95e89 - loc_7cc8c) + 0.5, float(loc_a2bca - loc_7cc8c) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadeShadowResolutions[arg_da0e3]);
+            highp vec4 loc_ffd8e = textureGather(s_ShadowCascades, vec3(loc_8598d, (float(arg_a398d) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + float(arg_da0e3)));
+            if (loc_1e85b >= 0.0)
+            {
+                highp vec4 loc_e8b1b = textureGather(s_ShadowCascades, vec3(loc_8598d, (float(arg_a398d) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w) + loc_1e85b));
+                highp vec4 loc_6187c = loc_e8b1b;
+                if (loc_ffd8e.x < loc_6187c.x)
+                {
+                    loc_ffd8e = loc_e8b1b;
+                }
+            }
             if (ShadowQuantizationParameters.x != 0.0)
             {
-                loc_8e08a = loc_1a54a + float(loc_bbed9.w >= (loc_aa6c4 - arg_e6df6));
+                loc_8e08a = loc_1a54a + float(loc_ffd8e.w >= (loc_aa6c4 - arg_e6df6));
             }
             else
             {
-                highp vec4 loc_27ff4 = step(vec4(loc_aa6c4 - arg_e6df6), loc_28934);
-                highp vec2 loc_127fb = fract((loc_4e606.xy * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
-                loc_8e08a = loc_1a54a + mix(mix(loc_27ff4.w, loc_27ff4.z, loc_127fb.x), mix(loc_27ff4.x, loc_27ff4.y, loc_127fb.x), loc_127fb.y);
+                highp vec4 loc_27ff4 = step(vec4(loc_aa6c4 - arg_e6df6), loc_ffd8e);
+                highp vec2 loc_5c3e1 = fract((loc_8598d * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
+                loc_8e08a = loc_1a54a + mix(mix(loc_27ff4.w, loc_27ff4.z, loc_5c3e1.x), mix(loc_27ff4.x, loc_27ff4.y, loc_5c3e1.x), loc_5c3e1.y);
             }
         }
     }
@@ -720,7 +807,7 @@ void func_cb84c(inout highp vec2 arg_ea738, inout highp vec3 arg_534d1, inout hi
                 highp float loc_0ee24 = ShadowBias[loc_ffb6a] + (ShadowSlopeBias[loc_ffb6a] * clamp(sqrt(1.0 - (loc_7b050 * loc_7b050)) / loc_7b050, 0.0, 1.0));
                 int loc_be19b = int(DirectionalLightSourceShadowCascadeNumber[loc_bdc24].x);
                 highp float loc_222e2;
-                func_c7788(loc_be19b, loc_222e2, loc_ffb6a, loc_b19db, loc_0ee24);
+                func_acec5(loc_be19b, loc_222e2, loc_ffb6a, loc_b19db, loc_0ee24);
                 highp float loc_ad256;
                 if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0)
                 {

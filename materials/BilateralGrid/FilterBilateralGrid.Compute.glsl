@@ -8,6 +8,12 @@
 * - CLEAR_BILATERAL_GRID_PASS (not used)
 * - FILTER_BILATERAL_GRID_PASS (not used)
 *
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128
+* - THREAD_LIMIT__LIMITED_AT256
+* - THREAD_LIMIT__LIMITED_AT64 (not used)
+* - THREAD_LIMIT__NATIVE
+*
 * Available Resources:
 *
 * Buffers:
@@ -25,7 +31,15 @@
 * - uniform vec4 SceneResolutionAndRecipSceneResolution;
 */
 
+#ifdef THREAD_LIMIT__LIMITED_AT128
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 2) in;
+#endif
+#ifdef THREAD_LIMIT__LIMITED_AT256
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 4) in;
+#endif
+#ifdef THREAD_LIMIT__NATIVE
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+#endif
 struct GridCell {
     uint weight;
     uint value;

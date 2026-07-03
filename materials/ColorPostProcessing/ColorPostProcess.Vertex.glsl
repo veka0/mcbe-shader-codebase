@@ -27,6 +27,7 @@
 * - uniform vec4 ColorGrading_Gamma_Midtones;
 * - uniform vec4 ColorGrading_Gamma_PlayerUI;
 * - uniform vec4 ColorGrading_Gamma_Shadows;
+* - uniform vec4 ColorGrading_Misc;
 * - uniform vec4 ColorGrading_Offset_Highlights;
 * - uniform vec4 ColorGrading_Offset_Midtones;
 * - uniform vec4 ColorGrading_Offset_Shadows;

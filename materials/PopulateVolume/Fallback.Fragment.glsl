@@ -7,6 +7,11 @@
 * - FALLBACK_PASS (not used)
 * - POPULATE_PASS (not used)
 *
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128 (not used)
+* - THREAD_LIMIT__LIMITED_AT256 (not used)
+* - THREAD_LIMIT__NATIVE (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -43,6 +48,8 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapEnabled[2];
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapIndices[2];
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];

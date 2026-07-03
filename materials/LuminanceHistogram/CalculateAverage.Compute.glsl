@@ -10,6 +10,10 @@
 * - CLEAN_UP_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128 (not used)
+* - THREAD_LIMIT__NATIVE (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -36,16 +40,17 @@ struct Histogram {
 };
 
 layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_071df;
-layout(location = 0, binding = 2, r32f) uniform highp image2D s_AdaptedFrameAverageLuminance;
+layout(location = 0, binding = 2, r32f) uniform writeonly highp image2D s_AdaptedFrameAverageLuminance;
 uniform highp sampler2D s_CustomWeight;
+uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform vec4 Adaptation;
 uniform vec4 AdaptiveParameters;
 uniform vec4 EnableCustomWeight;
 uniform vec4 LogLuminanceRange;
 uniform vec4 MinLogLuminance;
 void main() {
-    vec4 var_9d783 = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0));
-    float var_d38b8 = var_9d783.x;
+    vec4 var_32d99 = textureLod(s_PreviousFrameAverageLuminance, vec2(0.5), 0.0);
+    float var_d38b8 = var_32d99.x;
     float var_cbb07;
     float var_cfa77;
     var_cfa77 = 0.0;
