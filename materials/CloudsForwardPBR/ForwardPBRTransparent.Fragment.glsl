@@ -40,7 +40,10 @@
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform vec4 CloudColor;
+* - uniform vec4 CloudLightingToggles;
+* - uniform vec4 CloudLightingUniforms;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -80,7 +83,6 @@
 * - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
-* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;

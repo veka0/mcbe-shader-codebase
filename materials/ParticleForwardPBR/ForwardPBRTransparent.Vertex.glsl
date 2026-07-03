@@ -41,6 +41,7 @@
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -77,7 +78,6 @@
 * - uniform vec4 MERSUniforms;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MaterialID;
-* - uniform vec4 NdLFloor;
 * - uniform vec4 PBRTextureFlags;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;

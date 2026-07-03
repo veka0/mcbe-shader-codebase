@@ -54,6 +54,7 @@
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -93,7 +94,6 @@
 * - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
-* - uniform vec4 NdLFloor;
 * - uniform vec4 OcclusionHeightOffset;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
@@ -296,11 +296,11 @@ void main() {
     }
     highp vec2 var_34b44 = var_3c0b9;
     highp vec4 var_72ee5 = var_4d4a7;
-    highp vec4 var_d6689 = vec4(1.0);
+    highp vec4 var_9d793 = vec4(0.0);
     highp float var_8c94b = var_34b44.x * var_34b44.x;
     highp vec4 var_44bfc = SkyAmbientLightColorIntensity;
     highp float var_55200 = var_34b44.y * var_34b44.y;
-    highp vec3 var_22085 = (var_5ea60 * var_fbc8d.xyz) + (max(((clamp(vec3(var_8c94b + (var_d6689.x * var_d6689.w), (var_8c94b * ((((var_8c94b * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_d6689.y * var_d6689.w), (var_8c94b * (((var_8c94b * var_8c94b) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_d6689.z * var_d6689.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix((var_55200 * var_55200) * var_34b44.y, (var_34b44.y * var_34b44.y) * var_34b44.y, CameraLightIntensity.y)) * var_44bfc.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_72ee5.xyz);
+    highp vec3 var_22085 = (var_5ea60 * var_fbc8d.xyz) + (max(((clamp(vec3(var_8c94b + (var_9d793.x * var_9d793.w), (var_8c94b * ((((var_8c94b * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_9d793.y * var_9d793.w), (var_8c94b * (((var_8c94b * var_8c94b) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_9d793.z * var_9d793.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix((var_55200 * var_55200) * var_34b44.y, (var_34b44.y * var_34b44.y) * var_34b44.y, CameraLightIntensity.y)) * var_44bfc.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_72ee5.xyz);
     var_4d4a7 = vec4(var_22085.x, var_22085.y, var_22085.z, var_72ee5.w);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;

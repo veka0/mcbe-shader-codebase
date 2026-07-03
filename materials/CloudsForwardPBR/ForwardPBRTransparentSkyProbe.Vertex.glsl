@@ -40,7 +40,10 @@
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform vec4 CloudColor;
+* - uniform vec4 CloudLightingToggles;
+* - uniform vec4 CloudLightingUniforms;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -80,7 +83,6 @@
 * - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
-* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
@@ -129,9 +131,12 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
+flat out int v_adjacentClouds;
 out vec4 v_color0;
 out vec3 v_ndcPosition;
+out vec3 v_normal;
 out vec2 v_texcoord0;
+out vec2 v_tilePosition;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
@@ -154,9 +159,12 @@ void main() {
     var_be69c[2].x += SubPixelOffset.x;
     var_be69c[2].y -= SubPixelOffset.y;
     vec3 var_71df9 = clamp(CloudColor.xyz * a_color0.xyz, vec3(0.0), vec3(1.0));
+    v_adjacentClouds = 0;
     v_color0 = vec4(var_71df9.x, var_71df9.y, var_71df9.z, CloudColor.w);
     v_ndcPosition = var_2c813.xyz / vec3(var_52536.w);
+    v_normal = vec3(0.0);
     v_texcoord0 = a_texcoord0;
+    v_tilePosition = vec2(0.0);
     v_worldPos = var_00404.xyz;
     gl_Position = var_be69c * (u_view * vec4(var_00404.xyz, 1.0));
 }

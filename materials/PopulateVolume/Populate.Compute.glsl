@@ -47,6 +47,7 @@
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -85,7 +86,6 @@
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
-* - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
@@ -167,6 +167,7 @@ uniform vec4 AmbientContribution;
 uniform vec4 BlockBaseAmbientLightColorIntensity;
 uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
 uniform vec4 CascadeShadowResolutions;
+uniform vec4 ClusterDepthBounds;
 uniform vec4 ClusterDimensions;
 uniform vec4 ClusterNearFarWidthHeight;
 uniform vec4 ClusterSize;
@@ -627,33 +628,54 @@ void func_6eb8c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     }
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
-void func_0210e(inout float arg_6def2, inout vec2 arg_3fa1b, inout float arg_d7c97, inout vec3 arg_36c0c, inout vec3 arg_1915d) {
-    if (arg_6def2 < arg_3fa1b.x)
+void func_57d96(inout float arg_958de, inout vec2 arg_e6843, inout float arg_33edf, inout vec2 arg_410bb, inout vec3 arg_e0671) {
+    if (arg_958de < arg_e6843.x)
     {
-        arg_d7c97 = -1.0;
+        arg_33edf = -1.0;
         return;
     }
-    if ((arg_6def2 >= arg_3fa1b.x) && (arg_6def2 <= 1.0))
+    bool loc_4e95c = arg_958de >= arg_e6843.x;
+    bool loc_6742e;
+    if (loc_4e95c)
     {
-        arg_d7c97 = 0.0;
+        loc_6742e = arg_958de <= arg_410bb.x;
+    }
+    else
+    {
+        loc_6742e = loc_4e95c;
+    }
+    if (loc_6742e)
+    {
+        arg_33edf = 0.0;
         return;
     }
-    if ((arg_6def2 > 1.0) && (arg_6def2 <= 1.5))
+    bool loc_78834 = arg_958de > arg_410bb.x;
+    bool loc_c9362;
+    if (loc_78834)
     {
-        arg_d7c97 = 1.0;
+        loc_c9362 = arg_958de <= arg_410bb.y;
+    }
+    else
+    {
+        loc_c9362 = loc_78834;
+    }
+    if (loc_c9362)
+    {
+        arg_33edf = 1.0;
         return;
     }
-    arg_d7c97 = floor((log2(arg_36c0c.z * (-0.666666686534881591796875)) * ((arg_1915d.z - 2.0) / log2(arg_3fa1b.y * 0.666666686534881591796875))) + 2.0);
+    arg_33edf = floor((log2(arg_958de / arg_410bb.y) * ((arg_e0671.z - 2.0) / log2(arg_e6843.y / arg_410bb.y))) + 2.0);
 }
-void func_4147b(inout vec3 arg_bfa93, inout vec3 arg_580a2, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
-    float loc_3b38e = -arg_bfa93.z;
+void func_86391(inout vec3 arg_176e1, inout vec3 arg_580a2, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
+    float loc_3b38e = -arg_176e1.z;
     vec2 loc_0d359 = arg_580a2.xy;
     vec3 loc_29493 = ClusterDimensions.xyz;
     vec2 loc_69b41 = ClusterNearFarWidthHeight.zw;
     vec2 loc_f1d2d = ClusterSize.xy;
     vec2 loc_2a810 = ClusterNearFarWidthHeight.xy;
+    vec2 loc_7d455 = ClusterDepthBounds.xy;
     float loc_3b169;
-    func_0210e(loc_3b38e, loc_2a810, loc_3b169, arg_bfa93, loc_29493);
+    func_57d96(loc_3b38e, loc_2a810, loc_3b169, loc_7d455, loc_29493);
     vec3 loc_20923 = vec3(floor((loc_0d359.x * loc_69b41.x) / loc_f1d2d.x), floor((loc_0d359.y * loc_69b41.y) / loc_f1d2d.y), loc_3b169);
     bool loc_ce27d = loc_20923.x < 0.0;
     bool loc_f15a5;
@@ -829,7 +851,7 @@ void func_ceeb4(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     bool loc_9f3ca;
     int loc_9b40b;
     int loc_fbf40;
-    func_4147b(arg_dc0ef, arg_96daa, loc_fbf40, loc_9b40b, loc_9f3ca);
+    func_86391(arg_dc0ef, arg_96daa, loc_fbf40, loc_9b40b, loc_9f3ca);
     if (!loc_9f3ca)
     {
         arg_534d1 = vec3(0.0);

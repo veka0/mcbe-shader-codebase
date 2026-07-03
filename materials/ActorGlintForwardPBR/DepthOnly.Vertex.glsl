@@ -64,6 +64,7 @@
 * - uniform vec4 CausticsTextureParameters;
 * - uniform vec4 ChangeColor;
 * - uniform mat4 CloudShadowProj;
+* - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
@@ -110,7 +111,6 @@
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 MultiplicativeTintColor;
-* - uniform vec4 NdLFloor;
 * - uniform vec4 OverlayColor;
 * - uniform vec4 PBRTextureFlags;
 * - uniform mat4 PlayerShadowProj;
