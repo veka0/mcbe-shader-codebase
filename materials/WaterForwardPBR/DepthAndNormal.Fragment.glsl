@@ -6,7 +6,6 @@
 * Passes:
 * - DEPTH_AND_NORMAL_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
-* - DO_WATER_EXTINCTION_PASS (not used)
 * - DO_WATER_SHADING_PASS (not used)
 * - DO_WATER_SURFACE_BUFFER_PASS (not used)
 *
@@ -61,7 +60,6 @@
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceIsSun[2];
 * - uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 * - uniform vec4 DirectionalLightSourceShadowDirection[2];
@@ -73,10 +71,8 @@
 * - uniform mat4 DirectionalLightSourceShadowProj1[2];
 * - uniform mat4 DirectionalLightSourceShadowProj2[2];
 * - uniform mat4 DirectionalLightSourceShadowProj3[2];
-* - uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 * - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-* - uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -102,12 +98,12 @@
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowBias;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
-* - uniform vec4 ShadowPrecisionRoundingParameters;
-* - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;

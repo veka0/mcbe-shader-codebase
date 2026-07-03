@@ -51,7 +51,6 @@
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceIsSun[2];
 * - uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 * - uniform vec4 DirectionalLightSourceShadowDirection[2];
@@ -63,10 +62,8 @@
 * - uniform mat4 DirectionalLightSourceShadowProj1[2];
 * - uniform mat4 DirectionalLightSourceShadowProj2[2];
 * - uniform mat4 DirectionalLightSourceShadowProj3[2];
-* - uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 * - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-* - uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -88,13 +85,13 @@
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SSRParameters;
 * - uniform vec4 ShadowBias;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
-* - uniform vec4 ShadowPrecisionRoundingParameters;
-* - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
@@ -158,8 +155,8 @@ uniform highp vec4 PointLightDiffuseFadeOutParameters;
 uniform highp vec4 PointLightShadowParams1;
 uniform highp vec4 PointLightSpecularFadeOutParameters;
 uniform highp vec4 PreExposureEnabled;
-uniform highp vec4 ShadowPrecisionRoundingParameters;
-uniform highp vec4 ShadowQuantizationParameters;
+uniform highp vec4 QuantizationParameters;
+uniform highp vec4 QuantizationPrecisionRoundingParameters;
 uniform highp vec4 SkyAmbientLightColorIntensity;
 uniform highp vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform highp vec4 WorldOrigin;
@@ -559,23 +556,23 @@ void main() {
     highp float var_38f9f = clamp(2.007874011993408203125 * (var_4ac0e.w - 0.501960813999176025390625), 0.0, 1.0);
     highp vec4 var_bad03 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0);
     highp vec3 var_477fc = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
-    highp vec3 var_59961 = var_20845.xyz;
+    highp vec3 var_31004 = var_20845.xyz;
     highp vec3 var_b67af = pow(max(var_124e5.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
     highp vec3 var_66183 = vec3(0.039999999105930328369140625 * (1.0 - var_38f9f)) + (var_b67af * var_38f9f);
     highp vec3 var_45a07 = vec3(v_projPosition.xy, var_f1f1d);
-    highp vec3 var_17138;
-    if (ShadowQuantizationParameters.y > 0.0)
+    highp vec3 var_94d76;
+    if (QuantizationParameters.y > 0.0)
     {
-        highp vec3 var_d7047 = var_477fc - WorldOrigin.xyz;
-        highp vec3 var_371a2 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_59961)), normalize(dFdy(var_59961)))), 0.0)).xyz) / vec3(ShadowPrecisionRoundingParameters.x)) * ShadowPrecisionRoundingParameters.x);
-        highp vec3 var_73ac8 = mod(var_d7047, vec3(ShadowQuantizationParameters.z));
-        var_17138 = (round((var_d7047 - (var_73ac8 - (var_371a2 * dot(var_73ac8, var_371a2)))) / vec3(ShadowPrecisionRoundingParameters.y)) * ShadowPrecisionRoundingParameters.y) + WorldOrigin.xyz;
+        highp vec3 var_b074b = var_477fc - WorldOrigin.xyz;
+        highp vec3 var_48aa7 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_31004)), normalize(dFdy(var_31004)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+        highp vec3 var_c01aa = mod(var_b074b, vec3(QuantizationParameters.z));
+        var_94d76 = (round((var_b074b - (var_c01aa - (var_48aa7 * dot(var_c01aa, var_48aa7)))) / vec3(QuantizationPrecisionRoundingParameters.y)) * QuantizationPrecisionRoundingParameters.y) + WorldOrigin.xyz;
     }
     else
     {
-        var_17138 = var_477fc;
+        var_94d76 = var_477fc;
     }
-    highp vec3 var_a6325 = -(var_59961 / vec3(length(var_59961) + 9.9999997473787516355514526367188e-05));
+    highp vec3 var_a6325 = -(var_31004 / vec3(length(var_31004) + 9.9999997473787516355514526367188e-05));
     highp float var_4d025 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_4ac0e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
     highp float var_2a1b2;
     highp vec4 var_9a0a9;
@@ -583,7 +580,7 @@ void main() {
     highp vec3 var_9e38b;
     if (var_45a07.z != 1.0)
     {
-        highp vec3 var_850d6 = var_59961;
+        highp vec3 var_850d6 = var_31004;
         highp float var_a89c0;
         if (ManhattanDistAttenuationEnabled.x > 0.0)
         {
@@ -591,7 +588,7 @@ void main() {
         }
         else
         {
-            var_a89c0 = length(var_59961);
+            var_a89c0 = length(var_31004);
         }
         bool var_3ca7e = PointLightSpecularFadeOutParameters.x > 0.0;
         highp float var_b5de8;
@@ -633,11 +630,11 @@ void main() {
         {
             var_5423d = var_fc9d4;
         }
-        highp vec3 var_cdcc9 = var_59961;
+        highp vec3 var_cdcc9 = var_31004;
         highp vec4 var_e4833;
         highp vec3 var_4d42e;
         highp vec3 var_25d78;
-        func_eddbd(var_bf718, var_5423d, var_25d78, var_4d42e, var_e4833, var_cdcc9, var_59961, var_c0b1d, var_a6325, var_bad03, var_66183, var_b67af, var_38f9f, var_4d025, var_477fc, var_17138, var_12b45);
+        func_eddbd(var_bf718, var_5423d, var_25d78, var_4d42e, var_e4833, var_cdcc9, var_31004, var_c0b1d, var_a6325, var_bad03, var_66183, var_b67af, var_38f9f, var_4d025, var_477fc, var_94d76, var_12b45);
         var_9e38b = var_25d78 * (1.0 - var_e5d7b);
         var_d75ad = var_4d42e * (1.0 - var_b5de8);
         var_9a0a9 = var_e4833;

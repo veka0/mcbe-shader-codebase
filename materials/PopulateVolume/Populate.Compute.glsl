@@ -53,7 +53,6 @@
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceIsSun[2];
 * - uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 * - uniform vec4 DirectionalLightSourceShadowDirection[2];
@@ -65,10 +64,8 @@
 * - uniform mat4 DirectionalLightSourceShadowProj1[2];
 * - uniform mat4 DirectionalLightSourceShadowProj2[2];
 * - uniform mat4 DirectionalLightSourceShadowProj3[2];
-* - uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 * - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-* - uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -94,12 +91,12 @@
 * - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PreExposureEnabled;
 * - uniform mat4 PrevInvProj;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowBias;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
-* - uniform vec4 ShadowPrecisionRoundingParameters;
-* - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
@@ -188,11 +185,11 @@ uniform vec4 ManhattanDistAttenuationEnabled;
 uniform vec4 PointLightAttenuationWindow;
 uniform vec4 PointLightAttenuationWindowEnabled;
 uniform vec4 PointLightDiffuseFadeOutParameters;
+uniform vec4 QuantizationParameters;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 ShadowBias;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 uniform vec4 ShadowPCFWidth;
-uniform vec4 ShadowQuantizationParameters;
 uniform vec4 SkyAmbientLightColorIntensity;
 uniform vec4 TemporalSettings;
 uniform vec4 VolumeDimensions;
@@ -494,14 +491,14 @@ void func_a62da(inout float arg_5b759, inout int arg_11220, inout float arg_ce9c
     }
     arg_ce9c6 = -1.0;
 }
-void func_1658f(inout int arg_786f6, inout float arg_7a26d, inout int arg_2c140, inout vec4 arg_ce1c7) {
+void func_dd822(inout int arg_786f6, inout float arg_7a26d, inout int arg_2c140, inout vec4 arg_ce1c7) {
     if (arg_786f6 < 0)
     {
         arg_7a26d = 1.0;
         return;
     }
     int loc_01130;
-    if (ShadowQuantizationParameters.x != 0.0)
+    if (QuantizationParameters.x != 0.0)
     {
         loc_01130 = 1;
     }
@@ -536,7 +533,7 @@ void func_1658f(inout int arg_786f6, inout float arg_7a26d, inout int arg_2c140,
                     loc_5a91a = loc_ff407;
                 }
             }
-            if (ShadowQuantizationParameters.x != 0.0)
+            if (QuantizationParameters.x != 0.0)
             {
                 loc_c9e88 = loc_190ec + float(loc_5a91a.w >= (loc_28bbd - ShadowBias[arg_2c140]));
             }
@@ -550,13 +547,13 @@ void func_1658f(inout int arg_786f6, inout float arg_7a26d, inout int arg_2c140,
     }
     arg_7a26d = loc_e55e0 / float(loc_01130 * loc_01130);
 }
-void func_3b5d1(inout vec3 arg_9b0e1, inout float arg_7a26d) {
+void func_6eb8c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     vec4 loc_1c259 = PlayerShadowProj * vec4(arg_9b0e1, 1.0);
     loc_1c259.z -= ShadowBias.x;
     loc_1c259.z = min(loc_1c259.z, 1.0);
     vec2 loc_5ae5f = ((vec2(loc_1c259.x, loc_1c259.y) * 0.5) + vec2(0.5)) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
     int loc_64b28;
-    if (ShadowQuantizationParameters.x != 0.0)
+    if (QuantizationParameters.x != 0.0)
     {
         loc_64b28 = 1;
     }
@@ -611,7 +608,7 @@ void func_3b5d1(inout vec3 arg_9b0e1, inout float arg_7a26d) {
         {
             vec2 loc_9d099 = loc_5ae5f + ((vec2(float(loc_d3328 - loc_a4d0e) + 0.5, float(loc_e3b31 - loc_a4d0e) + 0.5) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
             vec3 loc_dc571 = vec3(loc_9d099.x, loc_9d099.y, (DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * 2.0) + 1.0);
-            if (ShadowQuantizationParameters.x != 0.0)
+            if (QuantizationParameters.x != 0.0)
             {
                 loc_5e275 = loc_edd8a + float(textureLod(s_ShadowCascades, loc_dc571, 0.0).x >= loc_1c259.z);
             }
@@ -851,7 +848,7 @@ void func_ceeb4(inout vec3 arg_dc0ef, inout vec3 arg_96daa, inout vec3 arg_534d1
     }
     arg_534d1 = loc_ceaba;
 }
-void func_4472d() {
+void func_cc693() {
     int loc_b5e48 = int(GlobalInvocationID.x);
     int loc_45941 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
@@ -920,12 +917,12 @@ void func_4472d() {
                 {
                     int loc_c603b = int(DirectionalLightSourceShadowCascadeNumber[loc_ddd6b].x);
                     float loc_53776;
-                    func_1658f(loc_c603b, loc_53776, loc_e65af, loc_d1f6d);
+                    func_dd822(loc_c603b, loc_53776, loc_e65af, loc_d1f6d);
                     float loc_33c7f;
                     if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0)
                     {
                         float loc_0ae52;
-                        func_3b5d1(loc_35d28, loc_0ae52);
+                        func_6eb8c(loc_35d28, loc_0ae52);
                         loc_33c7f = min(loc_53776, loc_0ae52);
                     }
                     else
@@ -951,7 +948,7 @@ void func_4472d() {
                         loc_57064.z -= (ShadowBias.x / loc_57064.w);
                         vec2 loc_421f7 = ((vec2(loc_57064.x, loc_57064.y) * 0.5) + vec2(0.5)) * CascadeShadowResolutions.x;
                         int loc_b80c6;
-                        if (ShadowQuantizationParameters.x != 0.0)
+                        if (QuantizationParameters.x != 0.0)
                         {
                             loc_b80c6 = 1;
                         }
@@ -972,7 +969,7 @@ void func_4472d() {
                             for (int loc_09d40 = 0; loc_09d40 < loc_b80c6; loc_7f700 = loc_13c41, loc_09d40++)
                             {
                                 vec3 loc_6703e = vec3(loc_421f7 + ((vec2(float(loc_09d40 - loc_0ef5b) + 0.5, float(loc_bf1b2 - loc_0ef5b) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadeShadowResolutions.x), DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.w * 2.0);
-                                if (ShadowQuantizationParameters.x != 0.0)
+                                if (QuantizationParameters.x != 0.0)
                                 {
                                     loc_13c41 = loc_7f700 + float(textureLod(s_ShadowCascades, loc_6703e, 0.0).x >= loc_57064.z);
                                 }
@@ -1097,5 +1094,5 @@ void func_4472d() {
 }
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_4472d();
+    func_cc693();
 }
