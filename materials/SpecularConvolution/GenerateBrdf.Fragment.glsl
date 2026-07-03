@@ -15,6 +15,7 @@
 *
 * Uniforms:
 * - uniform vec4 ConvolutionParameters;
+* - uniform vec4 ConvolutionType;
 * - uniform vec4 CurrentFace;
 */
 

@@ -67,6 +67,7 @@
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform vec4 PointLightDiffuseFadeOutParameters;
+* - uniform mat4 PointLightInvProj;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;

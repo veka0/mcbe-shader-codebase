@@ -37,7 +37,6 @@
 * - uniform vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 * - uniform vec4 GenericTonemapperCrosstalkParams;
 * - uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
-* - uniform vec4 OutputTextureMaxValue;
 * - uniform vec4 RasterizedColorEnabled;
 * - uniform vec4 RenderMode;
 * - uniform vec4 ScreenSize;

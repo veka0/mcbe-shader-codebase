@@ -6,6 +6,7 @@
 * Passes:
 * - BUILD_HISTOGRAM_PASS (not used)
 * - CALCULATE_AVERAGE_PASS (not used)
+* - CALCULATE_AVERAGE_FRAGMENT_PASS (not used)
 * - CLEAN_UP_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
@@ -43,6 +44,8 @@ uniform vec4 EnableCustomWeight;
 uniform vec4 LogLuminanceRange;
 uniform vec4 MinLogLuminance;
 void main() {
+    vec4 var_9d783 = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0));
+    float var_d38b8 = var_9d783.x;
     float var_cbb07;
     float var_cfa77;
     var_cfa77 = 0.0;
@@ -68,10 +71,8 @@ void main() {
     float var_25b57;
     if (Adaptation.x > 0.5)
     {
-        vec4 var_cfbfd = imageLoad(s_AdaptedFrameAverageLuminance, ivec2(0));
-        float var_dcde4 = var_cfbfd.x;
         float var_d944e;
-        if (var_edc68 > var_dcde4)
+        if (var_edc68 > var_d38b8)
         {
             var_d944e = AdaptiveParameters.y;
         }
@@ -79,7 +80,7 @@ void main() {
         {
             var_d944e = AdaptiveParameters.z;
         }
-        var_25b57 = var_dcde4 + ((var_edc68 - var_dcde4) * (1.0 - exp(((-Adaptation.y) * AdaptiveParameters.x) * var_d944e)));
+        var_25b57 = var_d38b8 + ((var_edc68 - var_d38b8) * (1.0 - exp(((-Adaptation.y) * AdaptiveParameters.x) * var_d944e)));
     }
     else
     {

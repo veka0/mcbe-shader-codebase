@@ -6,6 +6,7 @@
 * Passes:
 * - BUILD_HISTOGRAM_PASS (not used)
 * - CALCULATE_AVERAGE_PASS (not used)
+* - CALCULATE_AVERAGE_FRAGMENT_PASS (not used)
 * - CLEAN_UP_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
