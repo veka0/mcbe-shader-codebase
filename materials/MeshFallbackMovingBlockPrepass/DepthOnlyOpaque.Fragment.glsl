@@ -52,7 +52,6 @@
 * - uniform vec4 MaterialID;
 * - uniform vec4 OverlayColor;
 * - uniform vec4 PBRTextureFlags;
-* - uniform mat4 PrevWorld;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 ViewPositionAndTime;

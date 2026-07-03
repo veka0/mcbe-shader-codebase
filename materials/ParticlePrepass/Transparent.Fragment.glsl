@@ -15,7 +15,7 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_MERTexture;
+* - uniform lowp sampler2D s_MERSTexture;
 * - uniform lowp sampler2D s_NormalTexture;
 * - uniform lowp sampler2D s_ParticleTexture;
 *

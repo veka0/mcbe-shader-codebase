@@ -17,7 +17,7 @@
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform lowp sampler2D s_MERTexture;
+* - uniform lowp sampler2D s_MERSTexture;
 * - uniform lowp sampler2D s_NormalTexture;
 * - layout(binding = 4, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_ParticleTexture;
@@ -122,7 +122,7 @@ uniform highp mat4 u_model[4];
 uniform highp mat4 u_proj;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_BrdfLUT;
-uniform highp sampler2D s_MERTexture;
+uniform highp sampler2D s_MERSTexture;
 uniform highp sampler2D s_NormalTexture;
 uniform highp sampler2D s_ParticleTexture;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
@@ -512,25 +512,37 @@ void main() {
     highp vec3 var_9debc = mix(var_c11b4.xyz, v_fog.xyz, vec3(var_6ca24.w));
     highp vec4 var_10e34 = vec4(var_9debc.x, var_9debc.y, var_9debc.z, var_c11b4.w);
     highp vec3 var_71ea7 = pow(max(var_9debc.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
-    int var_f3b79 = int(PBRTextureFlags.x);
+    int var_bec18 = int(PBRTextureFlags.x);
     highp float var_89ee6;
     highp float var_7515c;
     highp float var_3d3f0;
-    if ((var_f3b79 & 1) == 1)
+    highp float var_90d31;
+    if ((var_bec18 & 1) == 1)
     {
-        highp vec3 var_f3e08 = texture(s_MERTexture, v_texcoord0).xyz;
-        var_3d3f0 = var_f3e08.z;
-        var_7515c = var_f3e08.y;
-        var_89ee6 = var_f3e08.x;
+        highp vec4 var_4035b = texture(s_MERSTexture, v_texcoord0);
+        highp float var_b362d;
+        if ((var_bec18 & 2) == 2)
+        {
+            var_b362d = var_4035b.w;
+        }
+        else
+        {
+            var_b362d = MERSUniforms.w;
+        }
+        var_90d31 = var_b362d;
+        var_3d3f0 = var_4035b.z;
+        var_7515c = var_4035b.y;
+        var_89ee6 = var_4035b.x;
     }
     else
     {
+        var_90d31 = MERSUniforms.w;
         var_3d3f0 = MERSUniforms.z;
         var_7515c = MERSUniforms.y;
         var_89ee6 = MERSUniforms.x;
     }
     highp vec3 var_256a8;
-    if ((var_f3b79 & 4) == 4)
+    if ((var_bec18 & 4) == 4)
     {
         var_256a8 = (u_model[0] * vec4((texture(s_NormalTexture, v_texcoord0).xyz * 2.0) - vec3(1.0), 0.0)).xyz;
     }
@@ -597,7 +609,7 @@ void main() {
     if (var_5bd0a.z != 1.0)
     {
         highp vec3 var_380bf = -(var_5c650 / vec3(length(var_5c650) + 9.9999997473787516355514526367188e-05));
-        highp float var_797a6 = MERSUniforms.w * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
+        highp float var_48500 = var_90d31 * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
         highp vec3 var_8bbda = var_5c650;
         highp vec3 var_a3c91;
         if (int(QuantizationParameters.y) > 0)
@@ -610,7 +622,7 @@ void main() {
         }
         highp vec3 var_0edfc;
         highp vec3 var_5ea35;
-        func_7abc7(var_5cb92, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_9c296, var_8bbda, var_c90aa, var_380bf, var_3d3f0, var_8b2f4, var_71ea7, var_89ee6, var_797a6);
+        func_7abc7(var_5cb92, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_9c296, var_8bbda, var_c90aa, var_380bf, var_3d3f0, var_8b2f4, var_71ea7, var_89ee6, var_48500);
         var_45347 = var_5ea35;
         var_d476b = var_0edfc;
     }
