@@ -25,7 +25,7 @@ layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec2 var_b50ee = v_extraParams;
     highp vec4 var_4fed6;
-    if (int(ShaderType.x) == 14)
+    if (14.0 == ShaderType.x)
     {
         highp vec2 var_d2dc6 = dFdx(v_extraParams);
         highp vec2 var_88eb9 = dFdy(v_extraParams);
@@ -37,7 +37,7 @@ void main() {
     else
     {
         highp vec4 var_3556e;
-        if (int(ShaderType.x) == 11)
+        if (11.0 == ShaderType.x)
         {
             var_3556e = PrimProps0 * min(1.0, (1.0 - abs((var_b50ee.y * PrimProps1.y) - PrimProps1.z)) * PrimProps1.x);
         }

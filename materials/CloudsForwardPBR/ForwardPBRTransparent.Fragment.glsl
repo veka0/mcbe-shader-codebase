@@ -117,7 +117,6 @@ uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp samplerCubeArray s_SpecularIBLRecords;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
-uniform highp vec4 BlockBaseAmbientLightColorIntensity;
 uniform highp vec4 CloudLightingToggles;
 uniform highp vec4 CloudLightingUniforms;
 uniform highp vec4 ConvolutionType;
@@ -162,7 +161,7 @@ void func_1e7c4(inout highp vec3 arg_ee209, inout highp vec4 arg_78b9f) {
 void main() {
     highp vec4 var_2b722 = v_color0;
     highp float var_7bc6e = clamp(max((length(v_worldPos) / DistanceControl.x) - 0.89999997615814208984375, 0.0), 0.0, 1.0);
-    highp vec3 var_fe9c8 = (v_color0.xyz * ((BlockBaseAmbientLightColorIntensity.xyz * BlockBaseAmbientLightColorIntensity.w) + (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    highp vec3 var_0c7de = (v_color0.xyz * (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w;
     highp vec3 var_49eaf;
     if (CloudLightingToggles.z != 0.0)
     {
@@ -655,11 +654,11 @@ void main() {
                 var_70b43 = var_8d09c;
             }
             highp float var_6d8a6 = (1.0 + (CloudLightingUniforms.y * CloudLightingUniforms.y)) + ((2.0 * CloudLightingUniforms.y) * dot(var_1b8d5, -normalize(var_9248a.xyz)));
-            var_33a04 = var_fe9c8 + (((var_e6692 * ((0.079577468335628509521484375 * (1.0 - (CloudLightingUniforms.y * CloudLightingUniforms.y))) / (var_6d8a6 * sqrt(var_6d8a6)))) * exp((-clamp(var_70b43, 0.0, 16.0)) * CloudLightingUniforms.w)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_b7db1 * 0.5)));
+            var_33a04 = var_0c7de + (((var_e6692 * ((0.079577468335628509521484375 * (1.0 - (CloudLightingUniforms.y * CloudLightingUniforms.y))) / (var_6d8a6 * sqrt(var_6d8a6)))) * exp((-clamp(var_70b43, 0.0, 16.0)) * CloudLightingUniforms.w)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_b7db1 * 0.5)));
         }
         else
         {
-            var_33a04 = var_fe9c8;
+            var_33a04 = var_0c7de;
         }
         highp vec3 var_87f5a;
         if (CloudLightingToggles.x != 0.0)
@@ -733,7 +732,7 @@ void main() {
     }
     else
     {
-        var_49eaf = var_fe9c8;
+        var_49eaf = var_0c7de;
     }
     highp vec3 var_3613e;
     if (AtmosphericScatteringToggles.x != 0.0)

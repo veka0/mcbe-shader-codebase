@@ -89,6 +89,7 @@
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
+* - uniform vec4 LightingEnabledAndAdaptiveEmissive;
 * - uniform vec4 MERSUniforms;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MaterialID;
