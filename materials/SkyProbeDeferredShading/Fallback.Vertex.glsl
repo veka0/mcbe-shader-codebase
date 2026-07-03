@@ -4,9 +4,13 @@
 * Available Macros:
 *
 * Passes:
+* - ATMOSPHERICS_PASS (not used)
+* - DIRECTIONAL_EMISSIVE_COMBINED_PASS (not used)
+* - DISCRETE_INDIRECT_COMBINED_PASS (not used)
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
+* - VOLUMETRIC_SCATTERING_PASS (not used)
 *
 * Available Resources:
 *

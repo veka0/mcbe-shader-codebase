@@ -112,7 +112,48 @@
 
 precision mediump float;
 precision highp int;
+uniform highp mat4 u_invProj;
+uniform highp sampler2D s_PreviousFrameAverageLuminance;
+uniform highp sampler2D s_SceneDepth;
+uniform highp sampler2DArray s_ScatteringBuffer;
+uniform highp vec4 PreExposureEnabled;
+uniform highp vec4 VolumeDimensions;
+uniform highp vec4 VolumeNearFar;
+uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+in highp vec3 v_projPosition;
+in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    bgfx_FragColor = vec4(0.0);
+    highp vec4 var_d6549 = texture(s_SceneDepth, v_texcoord0);
+    highp float var_8501c = (var_d6549.x * 2.0) - 1.0;
+    highp vec4 var_0d5c1;
+    if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
+    {
+        highp vec2 var_65315 = VolumeNearFar.xy;
+        highp vec2 var_64811 = (vec3(v_projPosition.xy, var_8501c).xy + vec2(1.0)) * 0.5;
+        highp vec4 var_cf4b5 = u_invProj * vec4(v_projPosition.xy, var_8501c, 1.0);
+        highp float var_8cf8f = var_64811.x;
+        ivec3 var_dbde4 = ivec3(VolumeDimensions.xyz);
+        highp vec3 var_9bf69 = vec3(var_8cf8f, var_64811.y, log((53.598148345947265625 * ((((-var_cf4b5.z) / var_cf4b5.w) - var_65315.x) / (var_65315.y - var_65315.x))) + 1.0) * 0.25);
+        highp float var_14f4f = (var_9bf69.z * float(var_dbde4.z)) - 0.5;
+        int var_0e80b = clamp(int(var_14f4f), 0, var_dbde4.z - 2);
+        var_0d5c1 = mix(textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_64811.y, float(var_0e80b)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_64811.y, float(var_0e80b + 1)), 0.0), vec4(clamp(var_14f4f - float(var_0e80b), 0.0, 1.0)));
+    }
+    else
+    {
+        var_0d5c1 = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    highp vec4 var_fe408 = var_0d5c1;
+    highp vec4 var_c45a6;
+    if (PreExposureEnabled.x > 0.0)
+    {
+        highp vec3 var_02f69 = var_0d5c1.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_c45a6 = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_0d5c1.w);
+    }
+    else
+    {
+        var_c45a6 = var_0d5c1;
+    }
+    var_fe408 = var_c45a6;
+    bgfx_FragColor = vec4(var_c45a6.xyz, 1.0 - var_fe408.w);
 }
