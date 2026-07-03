@@ -11,6 +11,9 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
+*
+* Uniforms:
+* - uniform vec4 ViewportScale;
 */
 
 in vec3 a_position;

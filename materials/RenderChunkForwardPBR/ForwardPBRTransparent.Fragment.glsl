@@ -108,6 +108,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
 * - uniform vec4 ViewPositionAndTime;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -1140,26 +1141,22 @@ void func_3da12(inout highp vec2 arg_c3b89, inout highp float arg_1615d, inout h
 void main() {
     highp vec4 var_8fed3 = v_color0;
     highp vec2 var_e9e82 = v_lightmapUV;
-    highp vec4 var_f3426 = texture(s_MatTexture, v_texcoord0);
-    if (var_f3426.w < 0.5)
-    {
-        discard;
-    }
+    highp vec4 var_9d7e2 = texture(s_MatTexture, v_texcoord0);
 #ifdef SEASONS__OFF
-    highp vec3 var_82cf8 = var_f3426.xyz * v_color0.xyz;
-    var_f3426 = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_f3426.w);
-    var_f3426.w *= var_8fed3.w;
+    highp vec3 var_82cf8 = var_9d7e2.xyz * v_color0.xyz;
+    var_9d7e2 = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_9d7e2.w);
+    var_9d7e2.w *= var_8fed3.w;
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_f3426.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_8fed3.w);
-    highp vec4 var_2df10 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_f3426.w);
+    highp vec3 var_2b07f = (var_9d7e2.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_8fed3.w);
+    highp vec4 var_2df10 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_9d7e2.w);
     var_2df10.w = 1.0;
-    var_f3426 = var_2df10;
+    var_9d7e2 = var_2df10;
     highp vec3 var_468ed = pow(max(var_2df10.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
 #endif
 #ifdef SEASONS__OFF
-    highp vec3 var_468ed = pow(max(var_f3426.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
+    highp vec3 var_468ed = pow(max(var_9d7e2.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
 #endif
     highp vec3 var_d2ce2;
     highp float var_5e5e9;
@@ -1504,5 +1501,5 @@ void main() {
     {
         var_cb832 = var_4c4c1;
     }
-    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_f3426.w).w);
+    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_9d7e2.w).w);
 }

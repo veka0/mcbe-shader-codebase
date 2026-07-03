@@ -150,6 +150,7 @@
 * - uniform vec4 TintedAlphaTestEnabled;
 * - uniform vec4 UVAnimation;
 * - uniform vec4 UseAlphaRewrite;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;

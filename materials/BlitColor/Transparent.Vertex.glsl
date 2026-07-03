@@ -13,6 +13,7 @@
 *
 * Uniforms:
 * - uniform vec4 TintColor;
+* - uniform vec4 ViewportScale;
 */
 
 uniform mat4 u_modelViewProj;

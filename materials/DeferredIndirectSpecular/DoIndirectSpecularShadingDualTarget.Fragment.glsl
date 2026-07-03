@@ -106,6 +106,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -154,7 +155,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void func_bf1d3(inout highp vec4 arg_978be, inout highp float arg_f1ce2, inout highp vec3 arg_ec4b7, inout highp vec4 arg_85834) {
     highp vec4 loc_3b0cb = vec4(0.0, 0.0, 0.0, 1.0);
@@ -179,11 +180,12 @@ void func_c7492(inout highp vec4 arg_978be, inout highp float arg_f1ce2, inout h
     arg_85834 = vec4(loc_ab91d, 1.0);
 }
 void main() {
-    highp vec2 var_6599e = (floor(v_texcoord0 * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
-    highp vec4 var_42da2 = texture(s_Normal, var_6599e);
-    highp vec2 var_07479 = var_42da2.xy;
-    highp vec4 var_4f0e2 = texture(s_SceneDepth, var_6599e);
-    highp float var_48a47 = (var_4f0e2.x * 2.0) - 1.0;
+    highp vec2 var_c8bfb = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
+    highp vec4 var_af032 = texture(s_Normal, var_c8bfb.xy);
+    highp vec2 var_07479 = var_af032.xy;
+    highp vec2 var_195ea = var_c8bfb.xy;
+    highp vec4 var_4435a = texture(s_SceneDepth, var_c8bfb.xy);
+    highp float var_48a47 = (var_4435a.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_48a47, 1.0);
     highp mat4 var_3460a = u_invProj;
     highp float var_eb413 = var_df846.x;
@@ -216,7 +218,7 @@ void main() {
     highp vec3 var_7d782 = mod(var_ea248, vec3(QuantizationParameters.z));
     highp vec3 var_204a2 = (var_ea248 - (var_7d782 - (var_5acf5 * dot(var_7d782, var_5acf5)))) + WorldOrigin.xyz;
     highp vec2 var_3ccf7 = var_07479;
-    highp vec3 var_b0cb0 = vec3(var_42da2.xy, (1.0 - abs(var_3ccf7.x)) - abs(var_3ccf7.y));
+    highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_3ccf7.x)) - abs(var_3ccf7.y));
     highp vec2 var_c65e0;
     if (var_b0cb0.z < 0.0)
     {
@@ -230,10 +232,10 @@ void main() {
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
     highp vec3 var_b623b = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
     highp vec3 var_19823 = normalize((u_view * vec4(var_b623b, 0.0)).xyz);
-    highp vec4 var_0ac6d = texture(s_ColorMetalnessSubsurface, var_6599e);
+    highp vec4 var_0ac6d = texture(s_ColorMetalnessSubsurface, var_195ea);
     highp vec4 var_ee5ba = var_0ac6d;
     highp float var_6c7cf = clamp(2.007874011993408203125 * (var_ee5ba.w - 0.501960813999176025390625), 0.0, 1.0);
-    highp vec4 var_07dcb = texture(s_EmissiveAmbientLinearRoughness, var_6599e);
+    highp vec4 var_07dcb = texture(s_EmissiveAmbientLinearRoughness, var_195ea);
     highp vec3 var_21abf = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_f529b = var_20845.xyz;
     highp vec3 var_e3992 = vec3(v_projPosition.xy, var_48a47);

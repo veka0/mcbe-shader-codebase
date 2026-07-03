@@ -103,6 +103,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TemporalSettings;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;

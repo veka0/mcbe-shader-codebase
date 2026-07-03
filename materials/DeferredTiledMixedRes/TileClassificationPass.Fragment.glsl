@@ -105,6 +105,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TilingParams;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -125,16 +126,16 @@ uniform highp sampler2D s_NormalsAndDepthLighting;
 uniform highp vec4 CascadesPerSet;
 uniform highp vec4 SceneResolutionAndRecipResolution;
 uniform highp vec4 TilingParams;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_612dd = ceil(SceneResolutionAndRecipResolution.xyxy * (1.0 / TilingParams.x));
-    highp vec2 var_39b60 = vec2(1.0) / var_612dd.zw;
-    highp vec2 var_3ab12 = v_texcoord0;
-    var_3ab12.y = 1.0 - var_3ab12.y;
-    highp vec2 var_72245 = var_3ab12;
-    highp vec2 var_621e9 = (floor(var_72245 * var_612dd.xy) + vec2(0.5)) * var_39b60.xy;
-    var_3ab12 = var_621e9;
+    highp vec4 var_76944 = ceil(SceneResolutionAndRecipResolution.xyxy * (1.0 / TilingParams.x));
+    highp vec2 var_d1338 = vec2(1.0) / var_76944.zw;
+    highp vec2 var_75ec0 = v_texcoord0.xy;
+    var_75ec0.y = 1.0 - var_75ec0.y;
+    highp vec2 var_72245 = var_75ec0;
+    highp vec2 var_621e9 = (floor(var_72245 * var_76944.xy) + vec2(0.5)) * var_d1338.xy;
+    var_75ec0 = var_621e9;
     highp vec4 var_9ee6b = texture(s_NormalsAndDepthLighting, var_621e9);
     highp vec4 var_75f56 = var_9ee6b;
     bool var_6ab7d = var_75f56.x < 0.99993801116943359375;
@@ -151,12 +152,12 @@ void main() {
     if (var_e8ba3)
     {
         highp vec2 var_81347 = vec2(1.00050008296966552734375) - (vec2(0.5) / (var_9ee6b.xy * 999.75));
-        var_3ab12 = v_texcoord0;
-        highp vec2 var_63cf7 = floor(v_texcoord0 * var_612dd.xy) * var_39b60.xy;
-        highp vec2 var_006f5 = var_63cf7 + (vec2(1.0, 0.0) * var_39b60.xy);
-        highp vec2 var_5b7a9 = var_63cf7 + var_39b60.xy;
-        highp vec2 var_416d9 = var_63cf7 + (vec2(0.0, 1.0) * var_39b60.xy);
-        highp vec3 var_e33af = vec3(var_63cf7, var_81347.x);
+        var_75ec0 = v_texcoord0.xy;
+        highp vec2 var_969ef = floor(v_texcoord0.xy * var_76944.xy) * var_d1338.xy;
+        highp vec2 var_006f5 = var_969ef + (vec2(1.0, 0.0) * var_d1338.xy);
+        highp vec2 var_5b7a9 = var_969ef + var_d1338.xy;
+        highp vec2 var_416d9 = var_969ef + (vec2(0.0, 1.0) * var_d1338.xy);
+        highp vec3 var_e33af = vec3(var_969ef, var_81347.x);
         highp vec2 var_0ee67 = (var_e33af.xy * 2.0) - vec2(1.0);
         highp vec3 var_5a97e = vec3(var_0ee67.x, var_0ee67.y, var_e33af.z);
         highp vec4 var_92af5 = vec4(var_0ee67, var_5a97e.z, 1.0);
@@ -220,7 +221,7 @@ void main() {
         highp vec4 var_ad3ec = var_27587 / vec4(var_9e7a6);
         var_45215 = var_ad3ec;
         highp vec4 var_73920 = u_invView * vec4(var_ad3ec.xyz, 1.0);
-        highp vec3 var_d8750 = vec3(var_63cf7, var_81347.y);
+        highp vec3 var_d8750 = vec3(var_969ef, var_81347.y);
         highp vec2 var_5f88e = (var_d8750.xy * 2.0) - vec2(1.0);
         highp vec3 var_552c7 = vec3(var_5f88e.x, var_5f88e.y, var_d8750.z);
         highp vec4 var_e2763 = vec4(var_5f88e, var_552c7.z, 1.0);

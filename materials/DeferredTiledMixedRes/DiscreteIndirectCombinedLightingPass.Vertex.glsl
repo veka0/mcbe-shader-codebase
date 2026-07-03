@@ -105,6 +105,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TilingParams;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -117,20 +118,22 @@
 */
 
 uniform highp sampler2D s_NormalsAndDepthLighting;
+uniform vec4 ViewportScale;
 in vec3 a_position;
 in vec2 a_texcoord0;
 in vec4 a_texcoord1;
 out vec3 v_projPosition;
-out vec2 v_texcoord0;
+out vec4 v_texcoord0;
 out vec4 v_tileCoords;
 void main() {
     vec4 var_c3366 = vec4(a_position, 1.0);
     vec2 var_19dcd = (var_c3366.xy * 2.0) - vec2(1.0);
     vec2 var_00970 = (a_position.xy * 2.0) - vec2(1.0);
+    vec2 var_828cb = a_texcoord0 * ViewportScale.xy;
     vec4 var_6fcae = a_texcoord1;
     var_6fcae.w = texelFetch(s_NormalsAndDepthLighting, ivec2(a_texcoord1.xy), 0).x;
     v_projPosition = vec3(var_00970.x, var_00970.y, a_position.z);
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = vec4(var_828cb.x, var_828cb.y, a_texcoord0.x, a_texcoord0.y);
     v_tileCoords = var_6fcae;
     gl_Position = vec4(var_19dcd.x, var_19dcd.y, var_c3366.z, var_c3366.w);
 }

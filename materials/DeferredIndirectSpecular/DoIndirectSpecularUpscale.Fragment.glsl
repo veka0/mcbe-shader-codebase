@@ -106,6 +106,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -130,17 +131,17 @@ uniform highp vec4 DownsampleResolutionAndRecipResolution;
 uniform highp vec4 LightingUpscaleParams;
 #endif
 in highp vec3 v_projPosition;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
 #ifdef UPSCALING__OFF
-    highp vec3 var_70458 = vec3(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0).x * 2.0) - 1.0);
+    highp vec3 var_e0f0d = vec3(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0.xy).x * 2.0) - 1.0);
 #endif
 #ifdef UPSCALING__ON
-    highp vec4 var_158bd = texture(s_Normal, v_texcoord0);
-    highp vec4 var_76be7 = texture(s_SceneDepth, v_texcoord0);
-    highp vec2 var_745cb = var_158bd.xy;
-    highp vec3 var_b0cb0 = vec3(var_158bd.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
+    highp vec4 var_99c96 = texture(s_Normal, v_texcoord0.xy);
+    highp vec4 var_fef01 = texture(s_SceneDepth, v_texcoord0.xy);
+    highp vec2 var_745cb = var_99c96.xy;
+    highp vec3 var_b0cb0 = vec3(var_99c96.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
     if (var_b0cb0.z < 0.0)
     {
@@ -153,26 +154,26 @@ void main() {
     highp vec3 var_e6b69 = var_b0cb0;
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
     highp vec3 var_57949 = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
-    highp vec3 var_66b50 = vec3(v_projPosition.xy, (var_76be7.x * 2.0) - 1.0);
-    highp vec3 var_70458 = var_66b50;
+    highp vec3 var_66b50 = vec3(v_projPosition.xy, (var_fef01.x * 2.0) - 1.0);
+    highp vec3 var_e0f0d = var_66b50;
 #endif
-    highp vec3 var_30a1c;
-    if (var_70458.z != 1.0)
+    highp vec3 var_50157;
+    if (var_e0f0d.z != 1.0)
     {
 #ifdef UPSCALING__OFF
-        var_30a1c = texture(s_SpecularLighting, v_texcoord0).xyz;
+        var_50157 = texture(s_SpecularLighting, v_texcoord0.xy).xyz;
 #endif
 #ifdef UPSCALING__ON
         highp vec3 var_84f2b = var_66b50;
         highp float var_7dd1a = (var_84f2b.z * 0.5) + 0.5;
-        highp vec2 var_70c43 = (floor((v_texcoord0 * DownsampleResolutionAndRecipResolution.xy) - vec2(0.5)) + vec2(0.5)) * DownsampleResolutionAndRecipResolution.zw;
-        highp vec2 var_76592[4] = vec2[](var_70c43, var_70c43 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw), var_70c43 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw), var_70c43 + DownsampleResolutionAndRecipResolution.zw);
-        highp vec2 var_db58b = fract((v_texcoord0 - var_70c43) * DownsampleResolutionAndRecipResolution.xy);
+        highp vec2 var_3fd73 = (floor((v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy) - vec2(0.5)) + vec2(0.5)) * DownsampleResolutionAndRecipResolution.zw;
+        highp vec2 var_76592[4] = vec2[](var_3fd73, var_3fd73 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + DownsampleResolutionAndRecipResolution.zw);
+        highp vec2 var_5d6bf = fract((v_texcoord0.xy - var_3fd73) * DownsampleResolutionAndRecipResolution.xy);
         highp vec4 var_cf9a1 = vec4(0.0);
-        var_cf9a1.x = (1.0 - var_db58b.x) * (1.0 - var_db58b.y);
-        var_cf9a1.y = var_db58b.x * (1.0 - var_db58b.y);
-        var_cf9a1.z = (1.0 - var_db58b.x) * var_db58b.y;
-        var_cf9a1.w = var_db58b.x * var_db58b.y;
+        var_cf9a1.x = (1.0 - var_5d6bf.x) * (1.0 - var_5d6bf.y);
+        var_cf9a1.y = var_5d6bf.x * (1.0 - var_5d6bf.y);
+        var_cf9a1.z = (1.0 - var_5d6bf.x) * var_5d6bf.y;
+        var_cf9a1.w = var_5d6bf.x * var_5d6bf.y;
         highp vec4 var_5b2be = var_cf9a1;
         highp vec4 var_eacb9 = vec4(0.0);
         for (int var_a8556 = 0; var_a8556 < 4; var_a8556++)
@@ -201,12 +202,12 @@ void main() {
         highp vec4 var_6f1ec = mix(vec4(var_76592[0], var_76592[2]), vec4(var_76592[1], var_76592[3]), var_eacb9.yyww / var_4df2b.xxyy);
         highp vec2 var_b1bec = var_4df2b;
         highp vec2 var_8a5ed = var_4df2b / vec2(var_b1bec.x + var_b1bec.y);
-        var_30a1c = (texture(s_SpecularLighting, var_6f1ec.xy).xyz * var_8a5ed.x) + (texture(s_SpecularLighting, var_6f1ec.zw).xyz * var_8a5ed.y);
+        var_50157 = (texture(s_SpecularLighting, var_6f1ec.xy).xyz * var_8a5ed.x) + (texture(s_SpecularLighting, var_6f1ec.zw).xyz * var_8a5ed.y);
 #endif
     }
     else
     {
-        var_30a1c = vec3(0.0);
+        var_50157 = vec3(0.0);
     }
-    bgfx_FragColor = vec4(var_30a1c, 1.0);
+    bgfx_FragColor = vec4(var_50157, 1.0);
 }

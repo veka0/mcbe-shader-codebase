@@ -21,8 +21,8 @@
 * Uniforms:
 * - uniform vec4 MipResolutionAndRecipResolution;
 * - uniform vec4 PreviousMipResolutionAndRecipResolution;
-* - uniform vec4 RenderMode;
 * - uniform vec4 ScreenSize;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
@@ -33,11 +33,11 @@ uniform highp sampler2D s_PreviousMip2;
 uniform highp sampler2D s_PreviousMip;
 uniform highp vec4 MipResolutionAndRecipResolution;
 uniform highp vec4 PreviousMipResolutionAndRecipResolution;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec2 var_26afd = floor(v_texcoord0 * MipResolutionAndRecipResolution.xy) * MipResolutionAndRecipResolution.zw;
-    highp vec4 var_daf29 = texture(s_PreviousMip, var_26afd);
+    highp vec2 var_fe63b = floor(v_texcoord0.xy * MipResolutionAndRecipResolution.xy) * MipResolutionAndRecipResolution.zw;
+    highp vec4 var_daf29 = texture(s_PreviousMip, var_fe63b);
     highp vec4 var_a5a02;
     var_a5a02.x = var_daf29.x;
 #ifdef MODE__MIP
@@ -48,31 +48,31 @@ void main() {
     highp vec4 var_54906;
     var_54906.x = var_daf29.w;
 #endif
-    var_daf29 = texture(s_PreviousMip, var_26afd + (vec2(1.0, 0.0) * PreviousMipResolutionAndRecipResolution.zw));
+    var_daf29 = texture(s_PreviousMip, var_fe63b + (vec2(1.0, 0.0) * PreviousMipResolutionAndRecipResolution.zw));
     var_a5a02.y = var_daf29.x;
 #ifdef MODE__MIP
     var_5e74d.y = var_daf29.y;
     var_749fe.y = var_daf29.z;
     var_54906.y = var_daf29.w;
 #endif
-    var_daf29 = texture(s_PreviousMip, var_26afd + PreviousMipResolutionAndRecipResolution.zw);
+    var_daf29 = texture(s_PreviousMip, var_fe63b + PreviousMipResolutionAndRecipResolution.zw);
     var_a5a02.z = var_daf29.x;
 #ifdef MODE__MIP
     var_5e74d.z = var_daf29.y;
     var_749fe.z = var_daf29.z;
     var_54906.z = var_daf29.w;
 #endif
-    var_daf29 = texture(s_PreviousMip, var_26afd + (vec2(0.0, 1.0) * PreviousMipResolutionAndRecipResolution.zw));
+    var_daf29 = texture(s_PreviousMip, var_fe63b + (vec2(0.0, 1.0) * PreviousMipResolutionAndRecipResolution.zw));
     var_a5a02.w = var_daf29.x;
 #ifdef MODE__INITIALIZE
-    highp vec4 var_d84f7 = texture(s_PreviousMip2, var_26afd);
+    highp vec4 var_d84f7 = texture(s_PreviousMip2, var_fe63b);
     highp vec4 var_54906;
     var_54906.x = var_d84f7.z;
-    var_d84f7 = texture(s_PreviousMip2, var_26afd + (vec2(1.0, 0.0) * PreviousMipResolutionAndRecipResolution.zw));
+    var_d84f7 = texture(s_PreviousMip2, var_fe63b + (vec2(1.0, 0.0) * PreviousMipResolutionAndRecipResolution.zw));
     var_54906.y = var_d84f7.z;
-    var_d84f7 = texture(s_PreviousMip2, var_26afd + PreviousMipResolutionAndRecipResolution.zw);
+    var_d84f7 = texture(s_PreviousMip2, var_fe63b + PreviousMipResolutionAndRecipResolution.zw);
     var_54906.z = var_d84f7.z;
-    var_d84f7 = texture(s_PreviousMip2, var_26afd + (vec2(0.0, 1.0) * PreviousMipResolutionAndRecipResolution.zw));
+    var_d84f7 = texture(s_PreviousMip2, var_fe63b + (vec2(0.0, 1.0) * PreviousMipResolutionAndRecipResolution.zw));
 #endif
 #ifdef MODE__MIP
     var_5e74d.w = var_daf29.y;

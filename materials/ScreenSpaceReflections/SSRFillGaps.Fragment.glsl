@@ -24,50 +24,50 @@
 *
 * Uniforms:
 * - uniform vec4 CameraData;
-* - uniform vec4 RenderMode;
 * - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
 * - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
 precision highp int;
 uniform highp sampler2D s_InputTexture;
 uniform highp vec4 ScreenSize;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec2 var_dbb06 = ScreenSize.zw;
-    highp vec4 var_f5b35 = texture(s_InputTexture, v_texcoord0);
-    if (!(var_f5b35.w >= 0.0))
+    highp vec2 var_e8909 = ScreenSize.zw;
+    highp vec4 var_d1dd3 = texture(s_InputTexture, v_texcoord0.xy);
+    if (!(var_d1dd3.w >= 0.0))
     {
 #ifdef EXTENDED_GAP_FILL__OFF
-        highp vec4 var_de8f0 = texture(s_InputTexture, v_texcoord0 + vec2(0.0, var_dbb06.y));
+        highp vec4 var_b481d = texture(s_InputTexture, v_texcoord0.xy + vec2(0.0, var_e8909.y));
 #endif
 #ifdef EXTENDED_GAP_FILL__ON
-        highp vec2 var_31fd1 = vec2(0.0, var_dbb06.y);
-        highp vec4 var_de8f0 = texture(s_InputTexture, v_texcoord0 + var_31fd1);
-        if (!(var_de8f0.w >= 0.0))
+        highp vec2 var_5be3e = vec2(0.0, var_e8909.y);
+        highp vec4 var_b481d = texture(s_InputTexture, v_texcoord0.xy + var_5be3e);
+        if (!(var_b481d.w >= 0.0))
         {
-            var_de8f0 = texture(s_InputTexture, v_texcoord0 + (var_31fd1 * 2.0));
+            var_b481d = texture(s_InputTexture, v_texcoord0.xy + (var_5be3e * 2.0));
         }
 #endif
-        highp vec4 var_ca8d5 = var_de8f0;
+        highp vec4 var_ca8d5 = var_b481d;
 #ifdef EXTENDED_GAP_FILL__OFF
-        highp vec4 var_9fb36 = texture(s_InputTexture, v_texcoord0 + vec2(0.0, -var_dbb06.y));
+        highp vec4 var_3262b = texture(s_InputTexture, v_texcoord0.xy + vec2(0.0, -var_e8909.y));
 #endif
 #ifdef EXTENDED_GAP_FILL__ON
-        highp vec2 var_d45cd = vec2(0.0, -var_dbb06.y);
-        highp vec4 var_9fb36 = texture(s_InputTexture, v_texcoord0 + var_d45cd);
-        if (!(var_9fb36.w >= 0.0))
+        highp vec2 var_14e8a = vec2(0.0, -var_e8909.y);
+        highp vec4 var_3262b = texture(s_InputTexture, v_texcoord0.xy + var_14e8a);
+        if (!(var_3262b.w >= 0.0))
         {
-            var_9fb36 = texture(s_InputTexture, v_texcoord0 + (var_d45cd * 2.0));
+            var_3262b = texture(s_InputTexture, v_texcoord0.xy + (var_14e8a * 2.0));
         }
 #endif
-        highp vec4 var_db61b = var_9fb36;
+        highp vec4 var_db61b = var_3262b;
         bool var_64c0c = var_ca8d5.w >= 0.0;
         bool var_8cdf6;
         if (var_64c0c)
@@ -80,8 +80,8 @@ void main() {
         }
         if (var_8cdf6)
         {
-            var_f5b35 = (var_de8f0 + var_9fb36) * 0.5;
+            var_d1dd3 = (var_b481d + var_3262b) * 0.5;
         }
     }
-    bgfx_FragColor = var_f5b35;
+    bgfx_FragColor = var_d1dd3;
 }

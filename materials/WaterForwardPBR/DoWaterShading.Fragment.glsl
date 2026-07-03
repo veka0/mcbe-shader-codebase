@@ -109,6 +109,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
 * - uniform vec4 ViewPositionAndTime;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -218,6 +219,7 @@ uniform highp vec4 SkyZenithColor;
 uniform highp vec4 SunColor;
 uniform highp vec4 SunDir;
 uniform highp vec4 ViewPositionAndTime;
+uniform highp vec4 ViewportScale;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -655,9 +657,9 @@ void func_5d077(inout highp float arg_958de, inout highp vec2 arg_e6843, inout h
     }
     arg_33edf = floor((log2(arg_958de / arg_410bb.y) * ((arg_e0671.z - 2.0) / log2(arg_e6843.y / arg_410bb.y))) + 2.0);
 }
-void func_258b6(inout highp vec3 arg_9f603, inout highp vec3 arg_1a26b, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
+void func_39684(inout highp vec3 arg_9f603, inout highp vec3 arg_6a18e, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
     highp float loc_28341 = -arg_9f603.z;
-    highp vec2 loc_25da3 = (arg_1a26b.xy + vec2(1.0)) * vec2(0.5);
+    highp vec2 loc_6ed76 = ((arg_6a18e.xy + vec2(1.0)) * vec2(0.5)) * ViewportScale.xy;
     highp vec3 loc_fd394 = ClusterDimensions.xyz;
     highp vec2 loc_703d4 = ClusterNearFarWidthHeight.zw;
     highp vec2 loc_d7b5c = ClusterSize.xy;
@@ -665,7 +667,7 @@ void func_258b6(inout highp vec3 arg_9f603, inout highp vec3 arg_1a26b, inout in
     highp vec2 loc_eee23 = ClusterDepthBounds.xy;
     highp float loc_5de3f;
     func_5d077(loc_28341, loc_909cb, loc_5de3f, loc_eee23, loc_fd394);
-    highp vec3 loc_60667 = vec3(floor((loc_25da3.x * loc_703d4.x) / loc_d7b5c.x), floor((loc_25da3.y * loc_703d4.y) / loc_d7b5c.y), loc_5de3f);
+    highp vec3 loc_60667 = vec3(floor((loc_6ed76.x * loc_703d4.x) / loc_d7b5c.x), floor((loc_6ed76.y * loc_703d4.y) / loc_d7b5c.y), loc_5de3f);
     bool loc_ce27d = loc_60667.x < 0.0;
     bool loc_f15a5;
     if (!loc_ce27d)
@@ -847,7 +849,7 @@ void func_cd825(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     bool loc_9f3ca;
     int loc_9b40b;
     int loc_fbf40;
-    func_258b6(arg_dc0ef, arg_96daa, loc_fbf40, loc_9b40b, loc_9f3ca);
+    func_39684(arg_dc0ef, arg_96daa, loc_fbf40, loc_9b40b, loc_9f3ca);
     if (!loc_9f3ca)
     {
         arg_3289d = vec3(0.0);

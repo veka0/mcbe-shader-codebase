@@ -105,6 +105,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TilingParams;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -131,24 +132,24 @@ uniform highp vec4 WaterSurfaceParameters;
 uniform highp vec4 WaterSurfaceWaveParameters;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
-    highp vec4 var_158bd = texture(s_Normal, v_texcoord0);
-    highp vec4 var_ed586 = vec4(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0).x * 2.0) - 1.0, 1.0);
+    highp vec4 var_99c96 = texture(s_Normal, v_texcoord0.xy);
+    highp vec4 var_365e3 = vec4(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
     highp mat4 var_3460a = u_invProj;
-    highp float var_eb413 = var_ed586.x;
-    highp float var_ac116 = var_ed586.y;
-    highp float var_f2b7c = var_ed586.w;
-    highp float var_0357c = var_ed586.z;
-    highp float var_2c821 = var_ed586.w;
+    highp float var_eb413 = var_365e3.x;
+    highp float var_ac116 = var_365e3.y;
+    highp float var_f2b7c = var_365e3.w;
+    highp float var_0357c = var_365e3.z;
+    highp float var_2c821 = var_365e3.w;
     highp vec4 var_9666f = vec4(var_eb413 * var_3460a[0].x, var_ac116 * var_3460a[1].y, var_f2b7c * var_3460a[3].z, (var_0357c * var_3460a[2].w) + (var_2c821 * var_3460a[3].w));
-    var_ed586 = var_9666f;
-    highp float var_d799e = var_ed586.w;
+    var_365e3 = var_9666f;
+    highp float var_d799e = var_365e3.w;
     highp vec4 var_6feb5 = var_9666f / vec4(var_d799e);
-    var_ed586 = var_6feb5;
-    highp vec2 var_745cb = var_158bd.xy;
-    highp vec3 var_b0cb0 = vec3(var_158bd.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
+    var_365e3 = var_6feb5;
+    highp vec2 var_745cb = var_99c96.xy;
+    highp vec3 var_b0cb0 = vec3(var_99c96.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_638fe;
     if (var_b0cb0.z < 0.0)
     {

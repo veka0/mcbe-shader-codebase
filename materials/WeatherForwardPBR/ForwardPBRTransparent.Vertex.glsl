@@ -113,6 +113,7 @@
 * - uniform vec4 UVOffsetAndScale;
 * - uniform vec4 Velocity;
 * - uniform vec4 ViewPosition;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
