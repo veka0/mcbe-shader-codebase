@@ -4,6 +4,8 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
@@ -35,6 +37,7 @@
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
 *
 * Uniforms:
+* - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;

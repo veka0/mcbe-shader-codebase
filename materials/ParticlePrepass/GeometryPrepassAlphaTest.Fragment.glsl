@@ -69,18 +69,19 @@ void func_343f7(inout highp float arg_8dfc0, inout highp float arg_38773) {
     }
 }
 void main() {
-    highp vec4 var_e966b = v_color0;
+    highp vec4 var_462d1 = v_color0;
     highp vec4 var_6ca24 = v_fog;
-    highp vec4 var_4f8bf = texture(s_ParticleTexture, v_texcoord0) * vec4(v_color0.xyz, var_e966b.w);
+    highp vec4 var_d71e7 = texture(s_ParticleTexture, v_texcoord0);
+    highp vec4 var_bdc42 = var_d71e7;
     bool var_c9230;
-    func_fd1b4(var_4f8bf, var_c9230);
+    func_fd1b4(var_bdc42, var_c9230);
     if (var_c9230)
     {
         discard;
     }
-    highp vec4 var_592a0 = var_4f8bf;
-    highp vec3 var_17844 = mix(var_592a0.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    var_4f8bf = vec4(var_17844.x, var_17844.y, var_17844.z, var_592a0.w);
+    highp vec4 var_c11b4 = var_d71e7 * vec4(v_color0.xyz, var_462d1.w);
+    highp vec3 var_2cb07 = mix(var_c11b4.xyz, v_fog.xyz, vec3(var_6ca24.w));
+    highp vec4 var_89833 = vec4(var_2cb07.x, var_2cb07.y, var_2cb07.z, var_c11b4.w);
     int var_f3b79 = int(PBRTextureFlags.x);
     highp float var_7fda0;
     highp float var_833ea;
@@ -107,7 +108,7 @@ void main() {
     {
         var_256a8 = v_normal;
     }
-    highp vec4 var_39c01 = vec4(var_17844, var_4f8bf.w);
+    highp vec4 var_39c01 = vec4(var_2cb07, var_89833.w);
     highp vec2 var_f3dd7 = v_ambientLight;
     highp vec4 var_6de71 = vec4(var_39c01.x, var_39c01.y, var_39c01.z, var_39c01.w);
     highp float var_e206e;

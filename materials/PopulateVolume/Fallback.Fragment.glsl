@@ -27,6 +27,7 @@
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
 * - uniform vec4 AmbientContribution;
+* - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;

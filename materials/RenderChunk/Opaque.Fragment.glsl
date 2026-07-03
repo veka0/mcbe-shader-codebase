@@ -30,6 +30,7 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 GlobalRoughness;
@@ -55,26 +56,23 @@ in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_228e4 = v_color0;
-    highp vec4 var_e16d7 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_ba39c = v_color0;
+    highp vec4 var_631c3 = texture(s_MatTexture, v_texcoord0);
 #ifdef SEASONS__OFF
-    highp vec3 var_0255a = var_e16d7.xyz * v_color0.xyz;
+    highp vec3 var_3c3fa = (var_631c3.xyz * v_color0.xyz).xyz * var_ba39c.w;
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_0255a = (var_e16d7.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_228e4.w);
+    highp vec3 var_3c3fa = (var_631c3.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_ba39c.w);
 #endif
-    highp vec4 var_db98d = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_e16d7.w);
-#ifdef SEASONS__OFF
-    var_db98d.w = var_228e4.w;
-#endif
+    highp vec4 var_595f7 = vec4(var_3c3fa.x, var_3c3fa.y, var_3c3fa.z, var_631c3.w);
+    var_595f7.w = 1.0;
 #ifdef SEASONS__ON
-    var_db98d.w = 1.0;
-    highp vec4 var_99b2d = var_db98d;
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_db98d.xyz, var_99b2d.w);
+    highp vec4 var_99b2d = var_595f7;
+    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_595f7.xyz, var_99b2d.w);
 #endif
 #ifdef SEASONS__OFF
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_db98d.xyz, var_db98d.w);
+    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_595f7.xyz, var_595f7.w);
 #endif
     highp vec4 var_67e99 = v_fog;
     highp vec3 var_2a3e1 = mix(var_d81ae.xyz, FogColor.xyz, vec3(var_67e99.w));

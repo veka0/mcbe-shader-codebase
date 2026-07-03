@@ -8,9 +8,6 @@
 *
 * Available Resources:
 *
-* Buffers:
-* - uniform lowp sampler2D s_RasterColor;
-*
 * Uniforms:
 * - uniform vec4 ClipPlanes;
 * - uniform vec4 DebugMode;

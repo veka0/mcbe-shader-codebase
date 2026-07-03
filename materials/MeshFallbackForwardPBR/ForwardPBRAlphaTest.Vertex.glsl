@@ -44,6 +44,7 @@
 *
 * Uniforms:
 * - uniform vec4 Ambient;
+* - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;

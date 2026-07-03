@@ -24,6 +24,7 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 *
 * Uniforms:
+* - uniform vec4 AmbientLightParams;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;

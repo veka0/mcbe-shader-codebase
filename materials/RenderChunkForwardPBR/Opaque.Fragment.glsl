@@ -39,6 +39,8 @@
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
 *
 * Uniforms:
+* - uniform vec4 AmbientLightParams;
+* - uniform vec4 AmbientOcclusionParameters;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
