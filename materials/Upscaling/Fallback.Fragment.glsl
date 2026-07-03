@@ -4,8 +4,6 @@
 * Available Macros:
 *
 * Passes:
-* - BI_LINEAR_COMPUTE_PASS (not used)
-* - BI_LINEAR_DRAW_PASS (not used)
 * - FALLBACK_PASS (not used)
 * - TAAU_PASS (not used)
 *
@@ -15,7 +13,6 @@
 * - uniform lowp sampler2D s_InputBufferMotionVectors;
 * - uniform lowp sampler2D s_InputFinalColor;
 * - uniform lowp sampler2D s_InputTAAHistory;
-* - uniform lowp sampler2D s_UpscalingOutput;
 *
 * Uniforms:
 * - uniform mat4 CurrentViewProjectionMatrixUniform;
