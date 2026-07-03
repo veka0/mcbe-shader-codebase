@@ -47,7 +47,6 @@
 * - layout(binding = 9, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
-* - uniform vec4 Ambient;
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
@@ -128,7 +127,6 @@
 * - uniform vec4 WorldOrigin;
 */
 
-uniform mat4 u_modelView;
 uniform mat4 u_model[4];
 uniform mat4 u_viewProj;
 in vec4 a_color0;
@@ -169,7 +167,7 @@ void main() {
     v_prevWorldPos = (u_model[0] * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_viewSpaceNormal = (u_modelView * vec4(a_normal.xyz, 0.0)).xyz;
+    v_viewSpaceNormal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_worldPos = var_9b079.xyz;
     gl_Position = u_viewProj * vec4(var_9b079.xyz, 1.0);
 }

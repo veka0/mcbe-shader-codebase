@@ -1195,8 +1195,8 @@ void main() {
     highp vec4 var_e87e0 = u_proj * var_9f386;
     highp vec4 var_b8928 = var_e87e0;
     highp vec3 var_12830 = var_e87e0.xyz / vec3(var_b8928.w);
-    highp vec3 var_e61e0 = normalize(var_76f62);
-    highp vec4 var_e72e2 = vec4(var_e61e0, 1.0);
+    highp vec3 var_b4b34 = normalize(var_76f62);
+    highp vec4 var_e14aa = vec4(var_b4b34, 0.0);
     highp vec3 var_f8af5 = var_9f386.xyz;
     highp vec3 var_239fe = v_worldPos - WorldOrigin.xyz;
     highp vec3 var_eebcb = dFdx(var_f8af5);
@@ -1204,8 +1204,8 @@ void main() {
     highp vec3 var_5acf5 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
     highp vec3 var_7d782 = mod(var_239fe, vec3(QuantizationParameters.z));
     highp vec3 var_14922 = (var_239fe - (var_7d782 - (var_5acf5 * dot(var_7d782, var_5acf5)))) + WorldOrigin.xyz;
-    highp vec3 var_6c01a = var_e72e2.xyz;
-    highp vec3 var_cde66 = (u_view * var_e72e2).xyz;
+    highp vec3 var_6c01a = var_e14aa.xyz;
+    highp vec3 var_cde66 = (u_view * var_e14aa).xyz;
     highp vec3 var_c1070 = vec3(0.039999999105930328369140625 * (1.0 - var_8e635)) + (var_bfe06 * var_8e635);
     bool var_ff669 = CausticsParameters.x != 0.0;
     bool var_94c07;
@@ -1220,7 +1220,7 @@ void main() {
     highp float var_b82c9;
     if (var_94c07)
     {
-        var_b82c9 = pow((texture(s_CausticsTexture, vec3((v_worldPos - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_e61e0.y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
+        var_b82c9 = pow((texture(s_CausticsTexture, vec3((v_worldPos - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(var_b4b34.y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
     }
     else
     {
