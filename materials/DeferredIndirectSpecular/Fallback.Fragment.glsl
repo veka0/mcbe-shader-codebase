@@ -51,11 +51,11 @@
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
-* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform vec4 DirectionalLightSourceShadowDirection[2];
-* - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
-* - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform mat4 DirectionalLightSourceCausticsViewProj;
+* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+* - uniform vec4 DirectionalLightSourceShadowDirection;
+* - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;

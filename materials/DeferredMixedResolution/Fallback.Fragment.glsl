@@ -9,6 +9,10 @@
 * - FALLBACK_PASS (not used)
 * - SURFACE_RADIANCE_UPSCALE_PASS (not used)
 *
+* Upscaling:
+* - UPSCALING__OFF (not used)
+* - UPSCALING__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -52,11 +56,11 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
-* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform vec4 DirectionalLightSourceShadowDirection[2];
-* - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
-* - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform mat4 DirectionalLightSourceCausticsViewProj;
+* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+* - uniform vec4 DirectionalLightSourceShadowDirection;
+* - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;

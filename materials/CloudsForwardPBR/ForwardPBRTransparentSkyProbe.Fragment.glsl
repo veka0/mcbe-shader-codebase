@@ -54,11 +54,11 @@
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
-* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform vec4 DirectionalLightSourceShadowDirection[2];
-* - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
-* - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform mat4 DirectionalLightSourceCausticsViewProj;
+* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+* - uniform vec4 DirectionalLightSourceShadowDirection;
+* - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 DistanceControl;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -122,9 +122,9 @@ uniform highp vec4 CloudLightingToggles;
 uniform highp vec4 CloudLightingUniforms;
 uniform highp vec4 ConvolutionType;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-uniform highp vec4 DirectionalLightSourceWorldSpaceDirection[2];
-uniform highp vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
+uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+uniform highp vec4 DirectionalLightSourceWorldSpaceDirection;
+uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 uniform highp vec4 DistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
@@ -164,7 +164,7 @@ void main() {
     highp vec4 var_c6de7 = v_color0;
     highp float var_7bc6e = clamp(max((length(v_worldPos) / DistanceControl.x) - 0.89999997615814208984375, 0.0), 0.0, 1.0);
     highp vec3 var_c0f63 = (v_color0.xyz * ((BlockBaseAmbientLightColorIntensity.xyz * BlockBaseAmbientLightColorIntensity.w) + (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
-    highp vec3 var_9a43c;
+    highp vec3 var_700df;
     if (AtmosphericScatteringToggles.x != 0.0)
     {
         highp vec3 var_0e72c;
@@ -189,62 +189,301 @@ void main() {
         {
             var_0e72c = var_c0f63;
         }
-        var_9a43c = var_0e72c;
+        var_700df = var_0e72c;
     }
     else
     {
-        var_9a43c = mix(var_c0f63, FogColor.xyz, vec3(var_7bc6e));
+        var_700df = mix(var_c0f63, FogColor.xyz, vec3(var_7bc6e));
     }
     highp vec3 var_4f849;
     if (CloudLightingToggles.z != 0.0)
     {
         highp vec4 var_9f216 = vec4(v_normal, 0.0);
-        highp vec4 var_101e0 = u_view * var_9f216;
-        highp vec4 var_9fd18 = u_view * vec4(v_worldPos, 1.0);
-        highp vec3 var_2d0e6 = v_worldPos;
-        int var_c08a4 = int(DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.y);
-        highp vec3 var_5f5fc;
-        var_5f5fc = var_9a43c;
-        highp vec3 var_53c92;
-        for (int var_4eab1 = 0; var_4eab1 < var_c08a4; var_5f5fc = var_53c92, var_4eab1++)
+        highp vec4 var_17732 = u_view * var_9f216;
+        highp vec4 var_9248a = u_view * vec4(v_worldPos, 1.0);
+        highp vec3 var_4ce2e = v_worldPos;
+        highp vec3 var_425d9 = normalize(v_worldPos);
+        highp vec3 var_62a97 = var_425d9;
+        highp vec2 var_6b2bc = v_tilePosition;
+        highp vec3 var_c6126 = normalize(v_worldPos);
+        highp float var_eed6f;
+        if (var_c6126.y > 0.0)
         {
-            highp vec3 var_556fa = normalize(v_worldPos);
-            highp vec3 var_b4998 = var_556fa;
-            highp vec2 var_1a23c = v_tilePosition;
-            highp vec3 var_135ed = normalize(v_worldPos);
-            highp float var_58a68;
-            if (var_135ed.y > 0.0)
+            var_eed6f = min(16.0, (196.3300018310546875 - (var_4ce2e.y - WorldOrigin.y)) / var_c6126.y);
+        }
+        else
+        {
+            highp float var_e8e33;
+            if (var_c6126.y < 0.0)
             {
-                var_58a68 = min(16.0, (196.3300018310546875 - (var_2d0e6.y - WorldOrigin.y)) / var_135ed.y);
+                var_e8e33 = min(16.0, (192.3300018310546875 - (var_4ce2e.y - WorldOrigin.y)) / var_c6126.y);
             }
             else
             {
-                highp float var_f6b58;
-                if (var_135ed.y < 0.0)
+                var_e8e33 = 16.0;
+            }
+            var_eed6f = var_e8e33;
+        }
+        highp float var_06cad;
+        bool var_00a51;
+        if (var_c6126.z > 0.0)
+        {
+            var_00a51 = (v_adjacentClouds & 64) != int(0u);
+            var_06cad = (16.0 - var_6b2bc.y) / var_c6126.z;
+        }
+        else
+        {
+            highp float var_f0568;
+            bool var_10f17;
+            if (var_c6126.z < 0.0)
+            {
+                var_10f17 = (v_adjacentClouds & 2) != int(0u);
+                var_f0568 = (-var_6b2bc.y) / var_c6126.z;
+            }
+            else
+            {
+                var_10f17 = false;
+                var_f0568 = 16.0;
+            }
+            var_00a51 = var_10f17;
+            var_06cad = var_f0568;
+        }
+        highp float var_743c0;
+        bool var_08006;
+        if (var_c6126.x > 0.0)
+        {
+            var_08006 = (v_adjacentClouds & 16) != int(0u);
+            var_743c0 = (16.0 - var_6b2bc.x) / var_c6126.x;
+        }
+        else
+        {
+            highp float var_2c6e4;
+            bool var_ede0c;
+            if (var_c6126.x < 0.0)
+            {
+                var_ede0c = (v_adjacentClouds & 8) != int(0u);
+                var_2c6e4 = (-var_6b2bc.x) / var_c6126.x;
+            }
+            else
+            {
+                var_ede0c = false;
+                var_2c6e4 = 16.0;
+            }
+            var_08006 = var_ede0c;
+            var_743c0 = var_2c6e4;
+        }
+        bool var_887fe;
+        highp float var_05227;
+        if (var_743c0 > var_06cad)
+        {
+            bool var_6e598;
+            highp float var_2ad09;
+            if (!var_00a51)
+            {
+                var_2ad09 = min(var_eed6f, var_06cad);
+                var_6e598 = false;
+            }
+            else
+            {
+                var_2ad09 = var_eed6f;
+                var_6e598 = true;
+            }
+            var_05227 = var_2ad09;
+            var_887fe = var_6e598;
+        }
+        else
+        {
+            bool var_51cf3;
+            highp float var_a4b3a;
+            if (var_743c0 < var_06cad)
+            {
+                bool var_3171c;
+                highp float var_175e5;
+                if (!var_08006)
                 {
-                    var_f6b58 = min(16.0, (192.3300018310546875 - (var_2d0e6.y - WorldOrigin.y)) / var_135ed.y);
+                    var_175e5 = min(var_eed6f, var_743c0);
+                    var_3171c = false;
                 }
                 else
                 {
-                    var_f6b58 = 16.0;
+                    var_175e5 = var_eed6f;
+                    var_3171c = true;
                 }
-                var_58a68 = var_f6b58;
+                var_a4b3a = var_175e5;
+                var_51cf3 = var_3171c;
+            }
+            else
+            {
+                var_a4b3a = var_eed6f;
+                var_51cf3 = true;
+            }
+            var_05227 = var_a4b3a;
+            var_887fe = var_51cf3;
+        }
+        highp float var_a6829;
+        if (var_887fe)
+        {
+            bool var_65a08 = var_c6126.x > 0.0;
+            bool var_bc5cb;
+            if (var_65a08)
+            {
+                var_bc5cb = var_c6126.z > 0.0;
+            }
+            else
+            {
+                var_bc5cb = var_65a08;
+            }
+            highp float var_bb445;
+            if (var_bc5cb)
+            {
+                highp float var_83e75;
+                if (!((v_adjacentClouds & 128) != int(0u)))
+                {
+                    var_83e75 = min(var_05227, max(var_743c0, var_06cad));
+                }
+                else
+                {
+                    var_83e75 = var_05227;
+                }
+                var_bb445 = var_83e75;
+            }
+            else
+            {
+                bool var_a2fb0 = var_c6126.x > 0.0;
+                bool var_70c51;
+                if (var_a2fb0)
+                {
+                    var_70c51 = var_c6126.z < 0.0;
+                }
+                else
+                {
+                    var_70c51 = var_a2fb0;
+                }
+                highp float var_b521d;
+                if (var_70c51)
+                {
+                    highp float var_a1d18;
+                    if (!((v_adjacentClouds & 4) != int(0u)))
+                    {
+                        var_a1d18 = min(var_05227, max(var_743c0, var_06cad));
+                    }
+                    else
+                    {
+                        var_a1d18 = var_05227;
+                    }
+                    var_b521d = var_a1d18;
+                }
+                else
+                {
+                    bool var_fee36 = var_c6126.x < 0.0;
+                    bool var_bd78b;
+                    if (var_fee36)
+                    {
+                        var_bd78b = var_c6126.z > 0.0;
+                    }
+                    else
+                    {
+                        var_bd78b = var_fee36;
+                    }
+                    highp float var_2d2e7;
+                    if (var_bd78b)
+                    {
+                        highp float var_3022e;
+                        if (!((v_adjacentClouds & 32) != int(0u)))
+                        {
+                            var_3022e = min(var_05227, max(var_743c0, var_06cad));
+                        }
+                        else
+                        {
+                            var_3022e = var_05227;
+                        }
+                        var_2d2e7 = var_3022e;
+                    }
+                    else
+                    {
+                        bool var_4801e = var_c6126.x < 0.0;
+                        bool var_e9e76;
+                        if (var_4801e)
+                        {
+                            var_e9e76 = var_c6126.z < 0.0;
+                        }
+                        else
+                        {
+                            var_e9e76 = var_4801e;
+                        }
+                        highp float var_e94ae;
+                        if (var_e9e76)
+                        {
+                            highp float var_23d85;
+                            if (!((v_adjacentClouds & 1) != int(0u)))
+                            {
+                                var_23d85 = min(var_05227, max(var_743c0, var_06cad));
+                            }
+                            else
+                            {
+                                var_23d85 = var_05227;
+                            }
+                            var_e94ae = var_23d85;
+                        }
+                        else
+                        {
+                            var_e94ae = var_05227;
+                        }
+                        var_2d2e7 = var_e94ae;
+                    }
+                    var_b521d = var_2d2e7;
+                }
+                var_bb445 = var_b521d;
+            }
+            var_a6829 = var_bb445;
+        }
+        else
+        {
+            var_a6829 = var_05227;
+        }
+        highp float var_b7db1 = clamp(var_a6829, 0.0, 16.0);
+        highp vec3 var_1b8d5 = normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz);
+        highp vec4 var_83dd0 = DirectionalLightSourceDiffuseColorAndIlluminance;
+        highp vec3 var_e6692 = (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_83dd0.w) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight.x;
+        highp vec3 var_33a04;
+        if (CloudLightingToggles.y != 0.0)
+        {
+            highp float var_a27f2 = var_4ce2e.y + ((var_62a97.y * var_b7db1) * 0.5);
+            highp vec2 var_f07ec = v_tilePosition + ((var_425d9.xz * var_b7db1) * 0.5);
+            highp vec3 var_41fbc = normalize(DirectionalLightSourceWorldSpaceDirection.xyz);
+            highp float var_955fa;
+            if (var_41fbc.y > 0.0)
+            {
+                var_955fa = min(16.0, (196.3300018310546875 - (var_a27f2 - WorldOrigin.y)) / var_41fbc.y);
+            }
+            else
+            {
+                highp float var_72997;
+                if (var_41fbc.y < 0.0)
+                {
+                    var_72997 = min(16.0, (192.3300018310546875 - (var_a27f2 - WorldOrigin.y)) / var_41fbc.y);
+                }
+                else
+                {
+                    var_72997 = 16.0;
+                }
+                var_955fa = var_72997;
             }
             highp float var_cedac;
             bool var_20358;
-            if (var_135ed.z > 0.0)
+            if (var_41fbc.z > 0.0)
             {
                 var_20358 = (v_adjacentClouds & 64) != int(0u);
-                var_cedac = (16.0 - var_1a23c.y) / var_135ed.z;
+                var_cedac = (16.0 - var_f07ec.y) / var_41fbc.z;
             }
             else
             {
                 highp float var_07cbe;
                 bool var_24c8a;
-                if (var_135ed.z < 0.0)
+                if (var_41fbc.z < 0.0)
                 {
                     var_24c8a = (v_adjacentClouds & 2) != int(0u);
-                    var_07cbe = (-var_1a23c.y) / var_135ed.z;
+                    var_07cbe = (-var_f07ec.y) / var_41fbc.z;
                 }
                 else
                 {
@@ -256,19 +495,19 @@ void main() {
             }
             highp float var_5a819;
             bool var_b720c;
-            if (var_135ed.x > 0.0)
+            if (var_41fbc.x > 0.0)
             {
                 var_b720c = (v_adjacentClouds & 16) != int(0u);
-                var_5a819 = (16.0 - var_1a23c.x) / var_135ed.x;
+                var_5a819 = (16.0 - var_f07ec.x) / var_41fbc.x;
             }
             else
             {
                 highp float var_34373;
                 bool var_ec04d;
-                if (var_135ed.x < 0.0)
+                if (var_41fbc.x < 0.0)
                 {
                     var_ec04d = (v_adjacentClouds & 8) != int(0u);
-                    var_34373 = (-var_1a23c.x) / var_135ed.x;
+                    var_34373 = (-var_f07ec.x) / var_41fbc.x;
                 }
                 else
                 {
@@ -282,136 +521,136 @@ void main() {
             highp float var_8d09c;
             if (var_5a819 > var_cedac)
             {
-                bool var_3171c;
-                highp float var_175e5;
+                bool var_e5c2f;
+                highp float var_9564b;
                 if (!var_20358)
                 {
-                    var_175e5 = min(var_58a68, var_cedac);
-                    var_3171c = false;
+                    var_9564b = min(var_955fa, var_cedac);
+                    var_e5c2f = false;
                 }
                 else
                 {
-                    var_175e5 = var_58a68;
-                    var_3171c = true;
+                    var_9564b = var_955fa;
+                    var_e5c2f = true;
                 }
-                var_8d09c = var_175e5;
-                var_78fb0 = var_3171c;
+                var_8d09c = var_9564b;
+                var_78fb0 = var_e5c2f;
             }
             else
             {
                 bool var_2b703;
-                highp float var_b521d;
+                highp float var_aa4b8;
                 if (var_5a819 < var_cedac)
                 {
                     bool var_0061a;
                     highp float var_ab896;
                     if (!var_b720c)
                     {
-                        var_ab896 = min(var_58a68, var_5a819);
+                        var_ab896 = min(var_955fa, var_5a819);
                         var_0061a = false;
                     }
                     else
                     {
-                        var_ab896 = var_58a68;
+                        var_ab896 = var_955fa;
                         var_0061a = true;
                     }
-                    var_b521d = var_ab896;
+                    var_aa4b8 = var_ab896;
                     var_2b703 = var_0061a;
                 }
                 else
                 {
-                    var_b521d = var_58a68;
+                    var_aa4b8 = var_955fa;
                     var_2b703 = true;
                 }
-                var_8d09c = var_b521d;
+                var_8d09c = var_aa4b8;
                 var_78fb0 = var_2b703;
             }
-            highp float var_32ac6;
+            highp float var_70b43;
             if (var_78fb0)
             {
-                bool var_a2fb0 = var_135ed.x > 0.0;
+                bool var_3a872 = var_41fbc.x > 0.0;
                 bool var_003ec;
-                if (var_a2fb0)
+                if (var_3a872)
                 {
-                    var_003ec = var_135ed.z > 0.0;
+                    var_003ec = var_41fbc.z > 0.0;
                 }
                 else
                 {
-                    var_003ec = var_a2fb0;
+                    var_003ec = var_3a872;
                 }
-                highp float var_aa4b8;
+                highp float var_91110;
                 if (var_003ec)
                 {
-                    highp float var_a1d18;
+                    highp float var_b101b;
                     if (!((v_adjacentClouds & 128) != int(0u)))
                     {
-                        var_a1d18 = min(var_8d09c, max(var_5a819, var_cedac));
+                        var_b101b = min(var_8d09c, max(var_5a819, var_cedac));
                     }
                     else
                     {
-                        var_a1d18 = var_8d09c;
+                        var_b101b = var_8d09c;
                     }
-                    var_aa4b8 = var_a1d18;
+                    var_91110 = var_b101b;
                 }
                 else
                 {
-                    bool var_90ee1 = var_135ed.x > 0.0;
+                    bool var_90ee1 = var_41fbc.x > 0.0;
                     bool var_eecb5;
                     if (var_90ee1)
                     {
-                        var_eecb5 = var_135ed.z < 0.0;
+                        var_eecb5 = var_41fbc.z < 0.0;
                     }
                     else
                     {
                         var_eecb5 = var_90ee1;
                     }
-                    highp float var_2d2e7;
+                    highp float var_efc5d;
                     if (var_eecb5)
                     {
-                        highp float var_3022e;
+                        highp float var_22b49;
                         if (!((v_adjacentClouds & 4) != int(0u)))
                         {
-                            var_3022e = min(var_8d09c, max(var_5a819, var_cedac));
+                            var_22b49 = min(var_8d09c, max(var_5a819, var_cedac));
                         }
                         else
                         {
-                            var_3022e = var_8d09c;
+                            var_22b49 = var_8d09c;
                         }
-                        var_2d2e7 = var_3022e;
+                        var_efc5d = var_22b49;
                     }
                     else
                     {
-                        bool var_4801e = var_135ed.x < 0.0;
+                        bool var_8f61e = var_41fbc.x < 0.0;
                         bool var_501b8;
-                        if (var_4801e)
+                        if (var_8f61e)
                         {
-                            var_501b8 = var_135ed.z > 0.0;
+                            var_501b8 = var_41fbc.z > 0.0;
                         }
                         else
                         {
-                            var_501b8 = var_4801e;
+                            var_501b8 = var_8f61e;
                         }
-                        highp float var_e94ae;
+                        highp float var_4a43d;
                         if (var_501b8)
                         {
-                            highp float var_23d85;
+                            highp float var_27789;
                             if (!((v_adjacentClouds & 32) != int(0u)))
                             {
-                                var_23d85 = min(var_8d09c, max(var_5a819, var_cedac));
+                                var_27789 = min(var_8d09c, max(var_5a819, var_cedac));
                             }
                             else
                             {
-                                var_23d85 = var_8d09c;
+                                var_27789 = var_8d09c;
                             }
-                            var_e94ae = var_23d85;
+                            var_4a43d = var_27789;
                         }
                         else
                         {
-                            bool var_e0787 = var_135ed.x < 0.0;
+                            bool var_e0787 = var_41fbc.x < 0.0;
                             bool var_e9ab2;
                             if (var_e0787)
                             {
-                                var_e9ab2 = var_135ed.z < 0.0;
+                                var_e9ab2 = var_41fbc.z < 0.0;
                             }
                             else
                             {
@@ -435,282 +674,37 @@ void main() {
                             {
                                 var_97871 = var_8d09c;
                             }
-                            var_e94ae = var_97871;
+                            var_4a43d = var_97871;
                         }
-                        var_2d2e7 = var_e94ae;
+                        var_efc5d = var_4a43d;
                     }
-                    var_aa4b8 = var_2d2e7;
+                    var_91110 = var_efc5d;
                 }
-                var_32ac6 = var_aa4b8;
+                var_70b43 = var_91110;
             }
             else
             {
-                var_32ac6 = var_8d09c;
+                var_70b43 = var_8d09c;
             }
-            highp float var_9d1a0 = clamp(var_32ac6, 0.0, 16.0);
-            highp vec3 var_ca516 = normalize((u_view * DirectionalLightSourceWorldSpaceDirection[var_4eab1]).xyz);
-            highp vec4 var_a1ef9 = DirectionalLightSourceDiffuseColorAndIlluminance[var_4eab1];
-            highp vec3 var_dc3e5 = (DirectionalLightSourceDiffuseColorAndIlluminance[var_4eab1].xyz * var_a1ef9.w) * DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight.x;
-            highp vec3 var_a7128;
-            if (CloudLightingToggles.y != 0.0)
-            {
-                highp float var_27913 = var_2d0e6.y + ((var_b4998.y * var_9d1a0) * 0.5);
-                highp vec2 var_c97d6 = v_tilePosition + ((var_556fa.xz * var_9d1a0) * 0.5);
-                highp vec3 var_eec3e = normalize(DirectionalLightSourceWorldSpaceDirection[var_4eab1].xyz);
-                highp float var_d8641;
-                if (var_eec3e.y > 0.0)
-                {
-                    var_d8641 = min(16.0, (196.3300018310546875 - (var_27913 - WorldOrigin.y)) / var_eec3e.y);
-                }
-                else
-                {
-                    highp float var_b13a4;
-                    if (var_eec3e.y < 0.0)
-                    {
-                        var_b13a4 = min(16.0, (192.3300018310546875 - (var_27913 - WorldOrigin.y)) / var_eec3e.y);
-                    }
-                    else
-                    {
-                        var_b13a4 = 16.0;
-                    }
-                    var_d8641 = var_b13a4;
-                }
-                highp float var_99e4e;
-                bool var_d1934;
-                if (var_eec3e.z > 0.0)
-                {
-                    var_d1934 = (v_adjacentClouds & 64) != int(0u);
-                    var_99e4e = (16.0 - var_c97d6.y) / var_eec3e.z;
-                }
-                else
-                {
-                    highp float var_2c872;
-                    bool var_8fcdf;
-                    if (var_eec3e.z < 0.0)
-                    {
-                        var_8fcdf = (v_adjacentClouds & 2) != int(0u);
-                        var_2c872 = (-var_c97d6.y) / var_eec3e.z;
-                    }
-                    else
-                    {
-                        var_8fcdf = false;
-                        var_2c872 = 16.0;
-                    }
-                    var_d1934 = var_8fcdf;
-                    var_99e4e = var_2c872;
-                }
-                highp float var_c95f5;
-                bool var_ad9a4;
-                if (var_eec3e.x > 0.0)
-                {
-                    var_ad9a4 = (v_adjacentClouds & 16) != int(0u);
-                    var_c95f5 = (16.0 - var_c97d6.x) / var_eec3e.x;
-                }
-                else
-                {
-                    highp float var_50aa9;
-                    bool var_81c07;
-                    if (var_eec3e.x < 0.0)
-                    {
-                        var_81c07 = (v_adjacentClouds & 8) != int(0u);
-                        var_50aa9 = (-var_c97d6.x) / var_eec3e.x;
-                    }
-                    else
-                    {
-                        var_81c07 = false;
-                        var_50aa9 = 16.0;
-                    }
-                    var_ad9a4 = var_81c07;
-                    var_c95f5 = var_50aa9;
-                }
-                bool var_bc843;
-                highp float var_0a2a8;
-                if (var_c95f5 > var_99e4e)
-                {
-                    bool var_1116c;
-                    highp float var_db2f3;
-                    if (!var_d1934)
-                    {
-                        var_db2f3 = min(var_d8641, var_99e4e);
-                        var_1116c = false;
-                    }
-                    else
-                    {
-                        var_db2f3 = var_d8641;
-                        var_1116c = true;
-                    }
-                    var_0a2a8 = var_db2f3;
-                    var_bc843 = var_1116c;
-                }
-                else
-                {
-                    bool var_66f75;
-                    highp float var_efc5d;
-                    if (var_c95f5 < var_99e4e)
-                    {
-                        bool var_09879;
-                        highp float var_95f6d;
-                        if (!var_ad9a4)
-                        {
-                            var_95f6d = min(var_d8641, var_c95f5);
-                            var_09879 = false;
-                        }
-                        else
-                        {
-                            var_95f6d = var_d8641;
-                            var_09879 = true;
-                        }
-                        var_efc5d = var_95f6d;
-                        var_66f75 = var_09879;
-                    }
-                    else
-                    {
-                        var_efc5d = var_d8641;
-                        var_66f75 = true;
-                    }
-                    var_0a2a8 = var_efc5d;
-                    var_bc843 = var_66f75;
-                }
-                highp float var_d2403;
-                if (var_bc843)
-                {
-                    bool var_0ffab = var_eec3e.x > 0.0;
-                    bool var_bd78b;
-                    if (var_0ffab)
-                    {
-                        var_bd78b = var_eec3e.z > 0.0;
-                    }
-                    else
-                    {
-                        var_bd78b = var_0ffab;
-                    }
-                    highp float var_1376d;
-                    if (var_bd78b)
-                    {
-                        highp float var_22b49;
-                        if (!((v_adjacentClouds & 128) != int(0u)))
-                        {
-                            var_22b49 = min(var_0a2a8, max(var_c95f5, var_99e4e));
-                        }
-                        else
-                        {
-                            var_22b49 = var_0a2a8;
-                        }
-                        var_1376d = var_22b49;
-                    }
-                    else
-                    {
-                        bool var_85ad0 = var_eec3e.x > 0.0;
-                        bool var_e9e76;
-                        if (var_85ad0)
-                        {
-                            var_e9e76 = var_eec3e.z < 0.0;
-                        }
-                        else
-                        {
-                            var_e9e76 = var_85ad0;
-                        }
-                        highp float var_4a43d;
-                        if (var_e9e76)
-                        {
-                            highp float var_27789;
-                            if (!((v_adjacentClouds & 4) != int(0u)))
-                            {
-                                var_27789 = min(var_0a2a8, max(var_c95f5, var_99e4e));
-                            }
-                            else
-                            {
-                                var_27789 = var_0a2a8;
-                            }
-                            var_4a43d = var_27789;
-                        }
-                        else
-                        {
-                            bool var_00b48 = var_eec3e.x < 0.0;
-                            bool var_16c3b;
-                            if (var_00b48)
-                            {
-                                var_16c3b = var_eec3e.z > 0.0;
-                            }
-                            else
-                            {
-                                var_16c3b = var_00b48;
-                            }
-                            highp float var_0f4db;
-                            if (var_16c3b)
-                            {
-                                highp float var_da5e9;
-                                if (!((v_adjacentClouds & 32) != int(0u)))
-                                {
-                                    var_da5e9 = min(var_0a2a8, max(var_c95f5, var_99e4e));
-                                }
-                                else
-                                {
-                                    var_da5e9 = var_0a2a8;
-                                }
-                                var_0f4db = var_da5e9;
-                            }
-                            else
-                            {
-                                bool var_4da2a = var_eec3e.x < 0.0;
-                                bool var_b7b36;
-                                if (var_4da2a)
-                                {
-                                    var_b7b36 = var_eec3e.z < 0.0;
-                                }
-                                else
-                                {
-                                    var_b7b36 = var_4da2a;
-                                }
-                                highp float var_9f1e1;
-                                if (var_b7b36)
-                                {
-                                    highp float var_9caf5;
-                                    if (!((v_adjacentClouds & 1) != int(0u)))
-                                    {
-                                        var_9caf5 = min(var_0a2a8, max(var_c95f5, var_99e4e));
-                                    }
-                                    else
-                                    {
-                                        var_9caf5 = var_0a2a8;
-                                    }
-                                    var_9f1e1 = var_9caf5;
-                                }
-                                else
-                                {
-                                    var_9f1e1 = var_0a2a8;
-                                }
-                                var_0f4db = var_9f1e1;
-                            }
-                            var_4a43d = var_0f4db;
-                        }
-                        var_1376d = var_4a43d;
-                    }
-                    var_d2403 = var_1376d;
-                }
-                else
-                {
-                    var_d2403 = var_0a2a8;
-                }
-                highp float var_dd6af = (1.0 + (CloudLightingUniforms.y * CloudLightingUniforms.y)) + ((2.0 * CloudLightingUniforms.y) * dot(var_ca516, -normalize(var_9fd18.xyz)));
-                var_a7128 = var_5f5fc + (((var_dc3e5 * ((0.079577468335628509521484375 * (1.0 - (CloudLightingUniforms.y * CloudLightingUniforms.y))) / (var_dd6af * sqrt(var_dd6af)))) * exp((-clamp(var_d2403, 0.0, 16.0)) * CloudLightingUniforms.w)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_9d1a0 * 0.5)));
-            }
-            else
-            {
-                var_a7128 = var_5f5fc;
-            }
-            if (CloudLightingToggles.x != 0.0)
-            {
-                highp vec3 var_49a35 = var_101e0.xyz;
-                highp float var_c6b55 = 1.0 + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y;
-                highp float var_904fa = 1.0 + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y;
-                highp vec3 var_344a7 = v_color0.xyz * 1.0;
-                var_53c92 = var_a7128 + (((((var_344a7 * vec3(0.3183098733425140380859375)) * max((dot(var_49a35, var_ca516) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (var_c6b55 * var_c6b55), 0.0)) + (((var_344a7 * vec3(0.3183098733425140380859375)) * max((dot(-var_49a35, var_ca516) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (var_904fa * var_904fa), 0.0)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_9d1a0)))) * var_dc3e5) * DiffuseSpecularEmissiveAmbientTermToggles.x);
-            }
-            else
-            {
-                var_53c92 = var_a7128;
-            }
+            highp float var_6d8a6 = (1.0 + (CloudLightingUniforms.y * CloudLightingUniforms.y)) + ((2.0 * CloudLightingUniforms.y) * dot(var_1b8d5, -normalize(var_9248a.xyz)));
+            var_33a04 = var_700df + (((var_e6692 * ((0.079577468335628509521484375 * (1.0 - (CloudLightingUniforms.y * CloudLightingUniforms.y))) / (var_6d8a6 * sqrt(var_6d8a6)))) * exp((-clamp(var_70b43, 0.0, 16.0)) * CloudLightingUniforms.w)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_b7db1 * 0.5)));
+        }
+        else
+        {
+            var_33a04 = var_700df;
+        }
+        highp vec3 var_87f5a;
+        if (CloudLightingToggles.x != 0.0)
+        {
+            highp vec3 var_5b0e8 = var_17732.xyz;
+            highp float var_627ce = 1.0 + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y;
+            highp float var_2c7aa = 1.0 + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y;
+            highp vec3 var_08896 = v_color0.xyz * 1.0;
+            var_87f5a = var_33a04 + (((((var_08896 * vec3(0.3183098733425140380859375)) * max((dot(var_5b0e8, var_1b8d5) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (var_627ce * var_627ce), 0.0)) + (((var_08896 * vec3(0.3183098733425140380859375)) * max((dot(-var_5b0e8, var_1b8d5) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (var_2c7aa * var_2c7aa), 0.0)) * (1.0 - smoothstep(0.0, CloudLightingUniforms.x, var_b7db1)))) * var_e6692) * DiffuseSpecularEmissiveAmbientTermToggles.x);
+        }
+        else
+        {
+            var_87f5a = var_33a04;
         }
         highp vec3 var_0a3e8;
         if (QuantizationParameters.w > 0.0)
@@ -719,7 +713,7 @@ void main() {
         }
         else
         {
-            var_0a3e8 = var_9fd18.xyz;
+            var_0a3e8 = var_9248a.xyz;
         }
         highp vec3 var_285a7 = reflect(normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_9f216.xyz);
         highp float var_cd843;
@@ -764,14 +758,14 @@ void main() {
         {
             var_399f7 = var_f423f;
         }
-        highp vec2 var_0aa09 = vec2(clamp(dot(var_101e0.xyz, -normalize(var_0a3e8)), 0.0, 1.0), 1.0);
+        highp vec2 var_0aa09 = vec2(clamp(dot(var_17732.xyz, -normalize(var_0a3e8)), 0.0, 1.0), 1.0);
         var_0aa09.y = 1.0 - var_0aa09.y;
         highp vec2 var_663e3 = texture(s_BrdfLUT, var_0aa09).xy;
-        var_4f849 = var_5f5fc + ((var_399f7 * ((vec3(0.039999999105930328369140625) * var_663e3.x) + vec3(var_663e3.y))) * CloudLightingUniforms.z);
+        var_4f849 = var_87f5a + ((var_399f7 * ((vec3(0.039999999105930328369140625) * var_663e3.x) + vec3(var_663e3.y))) * CloudLightingUniforms.z);
     }
     else
     {
-        var_4f849 = var_9a43c;
+        var_4f849 = var_700df;
     }
     highp vec3 var_4bd87;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
