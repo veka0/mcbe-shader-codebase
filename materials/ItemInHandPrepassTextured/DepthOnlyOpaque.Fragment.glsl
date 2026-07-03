@@ -25,6 +25,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
+* - layout(binding = 1, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 *
 * Uniforms:
 * - uniform vec4 ChangeColor;

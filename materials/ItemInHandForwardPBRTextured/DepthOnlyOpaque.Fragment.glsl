@@ -30,6 +30,7 @@
 * - layout(binding = 2, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 3, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_MatTexture;
+* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -41,6 +42,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;
 * - uniform vec4 CausticsParameters;
@@ -100,8 +102,9 @@
 * - uniform mat4 PrevWorld;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowBias;
-* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
+* - uniform vec4 ShadowPrecisionRoundingParameters;
 * - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;

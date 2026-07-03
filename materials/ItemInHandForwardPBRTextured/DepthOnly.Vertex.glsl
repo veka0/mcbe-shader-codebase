@@ -30,6 +30,7 @@
 * - layout(binding = 2, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 3, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_MatTexture;
+* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -41,6 +42,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;
 * - uniform vec4 CausticsParameters;
@@ -100,8 +102,9 @@
 * - uniform mat4 PrevWorld;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowBias;
-* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
+* - uniform vec4 ShadowPrecisionRoundingParameters;
 * - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
@@ -143,8 +146,10 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+flat out int v_frontFacing;
 out vec4 v_mers;
 out vec3 v_normal;
+flat out int v_pbrTextureId;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
@@ -170,8 +175,10 @@ void main() {
     var_be69c[2].y -= SubPixelOffset.y;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_color0 = a_color0;
+    v_frontFacing = 0;
     v_mers = a_texcoord8;
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
+    v_pbrTextureId = 0;
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
