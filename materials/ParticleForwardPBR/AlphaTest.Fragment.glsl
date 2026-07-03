@@ -20,18 +20,21 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_MERTexture;
 * - uniform lowp sampler2D s_NormalTexture;
+* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_ParticleTexture;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 11, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 12, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 13, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 12, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 13, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 14, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
+* - uniform vec4 AtmosphericScattering;
+* - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BiomeBlendingLastUpdatePosition;
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -61,6 +64,7 @@
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
+* - uniform vec4 FogSkyBlend;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -69,6 +73,8 @@
 * - uniform vec4 MERSUniforms;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MaterialID;
+* - uniform vec4 MoonColor;
+* - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform vec4 PBRTextureFlags;
 * - uniform mat4 PlayerShadowProj;
@@ -83,14 +89,23 @@
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
+* - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
+* - uniform vec4 SkyHorizonColor;
+* - uniform vec4 SkyZenithColor;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
+* - uniform vec4 SunColor;
+* - uniform vec4 SunDir;
 * - uniform vec4 Time;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterExtinctionCoefficients;
+* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceOctaveParameters;
+* - uniform vec4 WaterSurfaceParameters;
+* - uniform vec4 WaterSurfaceWaveParameters;
 * - uniform vec4 WorldOrigin;
 */
 
