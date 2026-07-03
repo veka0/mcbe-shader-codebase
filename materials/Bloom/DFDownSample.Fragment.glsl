@@ -1,0 +1,37 @@
+#version 310 es
+
+/*
+* Available Macros:
+*
+* Passes:
+* - BLOOM_BLEND_PASS (not used)
+* - BLOOM_HIGH_PASS (not used)
+* - DF_DOWN_SAMPLE_PASS (not used)
+* - DF_DOWN_SAMPLE_WITH_DEPTH_EROSION_PASS (not used)
+* - DF_UP_SAMPLE_PASS (not used)
+*
+* Available Resources:
+*
+* Buffers:
+* - uniform lowp sampler2D s_BlurPyramidTexture;
+* - uniform lowp sampler2D s_DepthTexture;
+* - uniform lowp sampler2D s_HDRi;
+* - uniform lowp sampler2D s_RasterColor;
+*
+* Uniforms:
+* - uniform vec4 BloomParams1;
+* - uniform vec4 BloomParams2;
+* - uniform vec4 RenderMode;
+* - uniform vec4 ScreenSize;
+*/
+
+precision mediump float;
+precision highp int;
+uniform highp sampler2D s_BlurPyramidTexture;
+in highp vec2 v_texcoord0;
+layout(location = 0) out highp vec4 bgfx_FragColor;
+void main() {
+    highp vec2 var_a00a8 = v_texcoord0;
+    highp vec2 var_9977d = vec2(1.5 * abs(dFdx(var_a00a8.x)), 1.5 * abs(dFdy(var_a00a8.y)));
+    bgfx_FragColor = ((((texture(s_BlurPyramidTexture, v_texcoord0) * 0.5) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_9977d.x, var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_9977d.x, var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_9977d.x, -var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_9977d.x, -var_9977d.y)) * 0.125);
+}
