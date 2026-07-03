@@ -4,28 +4,43 @@
 * Available Macros:
 *
 * Passes:
-* - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
+* - CAUSTICS_MULTIPLIER_PASS (not used)
+* - DIRECTIONAL_LIGHTING_PASS (not used)
+* - DIRECTIONAL_LIGHTING_PASS0_PASS (not used)
+* - DIRECTIONAL_LIGHTING_PASS1_PASS (not used)
+* - DISCRETE_INDIRECT_COMBINED_LIGHTING_PASS (not used)
 * - FALLBACK_PASS (not used)
+* - SURFACE_RADIANCE_UPSCALE_PASS (not used)
+* - TILE_CLASSIFICATION_PASS (not used)
+*
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
+* Upscaling:
+* - UPSCALING__OFF (not used)
+* - UPSCALING__ON (not used)
 *
 * Available Resources:
 *
 * Buffers:
 * - uniform lowp sampler2D s_BiomeBlendingMap;
-* - uniform lowp sampler2D s_BrdfLUT;
+* - uniform lowp sampler2D s_CausticsMultiplier;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
+* - uniform lowp sampler2D s_DiffuseLighting;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
+* - uniform lowp sampler2D s_NormalsAndDepthLighting;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
-* - uniform lowp sampler2D s_SSRTexture;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform highp sampler2DArray s_ShadowCascades;
-* - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - uniform lowp sampler2D s_SpecularLighting;
+* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -48,7 +63,6 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
-* - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
@@ -56,14 +70,13 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
-* - uniform vec4 IBLParameters;
-* - uniform vec4 IBLSkyFadeParameters;
-* - uniform vec4 LastSpecularIBLIdx;
+* - uniform vec4 LightingUpscaleParams;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
@@ -81,7 +94,7 @@
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
-* - uniform vec4 SSRParameters;
+* - uniform vec4 SceneResolutionAndRecipResolution;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
@@ -90,6 +103,7 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
+* - uniform vec4 TilingParams;
 * - uniform vec4 Time;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -102,15 +116,32 @@
 * - uniform vec4 WorldOrigin;
 */
 
+uniform highp sampler2D s_NormalsAndDepthLighting;
 in vec3 a_position;
 in vec2 a_texcoord0;
+in vec4 a_texcoord1;
 out vec3 v_projPosition;
 out vec2 v_texcoord0;
+out vec4 v_tileCoords;
 void main() {
-    vec4 var_c3366 = vec4(a_position, 1.0);
-    vec2 var_19dcd = (var_c3366.xy * 2.0) - vec2(1.0);
+    vec4 var_1e92d = vec4(a_position, 1.0);
+    vec2 var_26141 = (var_1e92d.xy * 2.0) - vec2(1.0);
     vec2 var_00970 = (a_position.xy * 2.0) - vec2(1.0);
+    vec4 var_ee788 = texelFetch(s_NormalsAndDepthLighting, ivec2(a_texcoord1.xy), 0);
+    float var_331d0 = var_ee788.x;
+    vec4 var_3fc81 = a_texcoord1;
+    var_3fc81.w = var_331d0;
+    vec4 var_735c8;
+    if (!(abs(floor(var_331d0 * 255.0)) <= 0.00012399999832268804311752319335938))
+    {
+        var_735c8 = vec4(0.0);
+    }
+    else
+    {
+        var_735c8 = vec4(var_26141.x, var_26141.y, var_1e92d.z, var_1e92d.w);
+    }
     v_projPosition = vec3(var_00970.x, var_00970.y, a_position.z);
     v_texcoord0 = a_texcoord0;
-    gl_Position = vec4(var_19dcd.x, var_19dcd.y, var_c3366.z, var_c3366.w);
+    v_tileCoords = var_3fc81;
+    gl_Position = var_735c8;
 }

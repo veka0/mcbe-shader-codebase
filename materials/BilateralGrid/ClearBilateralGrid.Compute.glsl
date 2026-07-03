@@ -25,8 +25,8 @@
 *
 * Uniforms:
 * - uniform vec4 BilateralFilterParams;
-* - uniform vec4 BilateralGridParams;
 * - uniform vec4 GridDimensions;
+* - uniform vec4 LuminanceRangeParams;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 SceneResolutionAndRecipSceneResolution;
 */

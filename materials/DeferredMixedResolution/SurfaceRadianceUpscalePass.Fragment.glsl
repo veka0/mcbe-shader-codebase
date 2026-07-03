@@ -4,6 +4,7 @@
 * Available Macros:
 *
 * Passes:
+* - CAUSTICS_MULTIPLIER_PASS (not used)
 * - DIRECTIONAL_LIGHTING_PASS (not used)
 * - DISCRETE_INDIRECT_COMBINED_LIGHTING_PASS (not used)
 * - FALLBACK_PASS (not used)
@@ -21,6 +22,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BiomeBlendingMap;
+* - uniform lowp sampler2D s_CausticsMultiplier;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_DiffuseLighting;
@@ -33,9 +35,9 @@
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler2D s_SpecularLighting;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -89,7 +91,6 @@
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
-* - uniform vec4 SceneNearFar;
 * - uniform vec4 SceneResolutionAndRecipResolution;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;

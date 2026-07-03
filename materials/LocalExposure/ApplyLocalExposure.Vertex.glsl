@@ -17,9 +17,9 @@
 * - uniform lowp sampler2D s_SceneColor;
 *
 * Uniforms:
-* - uniform vec4 BilateralGridParams;
 * - uniform vec4 GaussianBlurParams;
 * - uniform vec4 LocalExposureParams;
+* - uniform vec4 LuminanceRangeParams;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 RecipSceneResolution;
 */

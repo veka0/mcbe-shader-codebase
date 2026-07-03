@@ -4,8 +4,18 @@
 * Available Macros:
 *
 * Passes:
-* - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_DUAL_TARGET_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_SINGLE_TARGET_PASS (not used)
+* - DO_INDIRECT_SPECULAR_UPSCALE_PASS (not used)
 * - FALLBACK_PASS (not used)
+*
+* Mode:
+* - MODE__DEFAULT (not used)
+* - MODE__MIXED_RES (not used)
+*
+* Upscaling:
+* - UPSCALING__OFF (not used)
+* - UPSCALING__ON (not used)
 *
 * Available Resources:
 *
@@ -16,6 +26,7 @@
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
+* - uniform lowp sampler2D s_NormalsAndDepthLighting;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SSRTexture;
@@ -23,9 +34,10 @@
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - uniform lowp sampler2D s_SpecularLighting;
+* - layout(binding = 15, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 16, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 17, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -56,6 +68,7 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -64,6 +77,7 @@
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
+* - uniform vec4 LightingUpscaleParams;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
@@ -82,6 +96,7 @@
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SSRParameters;
+* - uniform vec4 SceneResolutionAndRecipResolution;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
