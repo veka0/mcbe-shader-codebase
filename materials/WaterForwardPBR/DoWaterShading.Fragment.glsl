@@ -1325,20 +1325,21 @@ void main() {
     {
         var_2ab3a = var_51929;
     }
-    highp vec3 var_b92b9;
+    highp vec3 var_cd05b;
     if (var_679de > 0)
     {
-        var_b92b9 = -var_2ab3a;
+        var_cd05b = -var_2ab3a;
     }
     else
     {
-        var_b92b9 = var_2ab3a;
+        var_cd05b = var_2ab3a;
     }
+    highp vec3 var_75d1d = normalize(var_cd05b);
     highp vec4 var_83731 = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_b8928 = var_83731;
     highp vec3 var_4169c = var_83731.xyz / vec3(var_b8928.w);
     highp vec3 var_92622 = (u_view * vec4(v_worldPos, 1.0)).xyz;
-    highp vec3 var_7e29b = (u_view * vec4(var_b92b9, 1.0)).xyz;
+    highp vec3 var_7e29b = (u_view * vec4(var_75d1d, 1.0)).xyz;
     highp vec3 var_5bd0a = var_4169c;
     highp vec3 var_083c2;
     if (var_5bd0a.z != 1.0)
@@ -1359,7 +1360,7 @@ void main() {
         highp vec3 var_163cf = var_92622;
         highp vec2 var_a7574 = vec2(1.0);
         highp vec3 var_9aeed;
-        func_a1aaf(var_df530, var_9aeed, var_7e29b, var_f0ea0, var_b92b9, var_163cf, var_352c1, var_75a5d, var_a7574);
+        func_a1aaf(var_df530, var_9aeed, var_7e29b, var_f0ea0, var_75d1d, var_163cf, var_352c1, var_75a5d, var_a7574);
         highp vec3 var_850d6 = var_92622;
         highp float var_ae4c3;
         if (ManhattanDistAttenuationEnabled.x > 0.0)
@@ -1403,7 +1404,7 @@ void main() {
         }
         highp vec3 var_35ff2 = var_92622;
         highp vec3 var_3589b;
-        func_d0074(var_32b7d, var_ff142, var_3589b, var_35ff2, var_4169c, var_92622, var_7e29b, var_352c1, var_75a5d, var_f0ea0, var_b92b9);
+        func_d0074(var_32b7d, var_ff142, var_3589b, var_35ff2, var_4169c, var_92622, var_7e29b, var_352c1, var_75a5d, var_f0ea0, var_75d1d);
         var_083c2 = var_9aeed + (var_3589b * (1.0 - var_f999d));
     }
     else
@@ -1411,7 +1412,7 @@ void main() {
         var_083c2 = vec3(0.0);
     }
     highp float var_0f69a = clamp(((var_df530.y * 16.0) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
-    highp float var_11376 = clamp(1.0 - max(dot(var_c1b4f, var_b92b9), 0.0), 0.0, 1.0);
+    highp float var_11376 = clamp(1.0 - max(dot(var_c1b4f, var_75d1d), 0.0), 0.0, 1.0);
     highp float var_d573f = var_11376 * var_11376;
     highp vec4 var_234cf = vec4(0.0, 0.0, 0.0, 1.0);
     highp float var_79a06 = var_df530.x * var_df530.x;
@@ -1516,7 +1517,7 @@ void main() {
     if (var_679de > 0)
     {
         highp float var_9af11;
-        if (max(dot(var_b92b9, refract(normalize(normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)), -var_b92b9, 1.3329999446868896484375)), 0.0) > 0.0)
+        if (max(dot(var_75d1d, refract(normalize(normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)), -var_75d1d, 1.3329999446868896484375)), 0.0) > 0.0)
         {
             var_9af11 = 0.0;
         }
