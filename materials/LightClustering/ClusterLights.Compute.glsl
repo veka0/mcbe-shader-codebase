@@ -11,7 +11,7 @@
 *
 * Buffers:
 * - layout(binding = 1, std430) buffer s_ExtendsBuffer { LightExtends s_Extends[]; };
-* - layout(binding = 0, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
+* - layout(binding = 0, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
 *
 * Uniforms:
 * - uniform vec4 CameraFarPlane;
@@ -42,8 +42,8 @@ struct LightData {
     float lookup;
 };
 
-layout(binding = 1, std430) buffer s_Extends { LightExtends Extends[]; } var_63228;
-layout(binding = 0, std430) buffer s_LightLookupArray { LightData LightLookupArray[]; } var_26955;
+layout(binding = 1, std430) buffer s_Extends { LightExtends Extends[]; } var_c436b;
+layout(binding = 0, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_8ea63;
 uniform vec4 CameraFarPlane;
 uniform vec4 ClusterDepthBounds;
 uniform vec4 ClusterDimensions;
@@ -68,12 +68,12 @@ void func_aecb3(inout float arg_4298c, inout float arg_e0023, inout vec2 arg_a8b
     }
     arg_e0023 = exp2(((log2(arg_a8b7b.y / arg_ced28.y) * (arg_58281 + (-1.5))) / (ClusterDimensions.z - 2.0)) + log2(arg_ced28.y));
 }
-void func_73e50() {
+void func_8f344() {
     float loc_24753 = float(GlobalInvocationID.x);
     float loc_bc44b = float(GlobalInvocationID.y);
     float loc_1141f = float(GlobalInvocationID.z);
     int loc_6f4b5 = int(ClusterDimensions.w);
-    int loc_aa6c6 = int(LightsPerCluster.x);
+    int loc_a217b = int(LightsPerCluster.x);
     bool loc_2313e = loc_24753 >= ClusterDimensions.x;
     bool loc_069b0;
     if (!loc_2313e)
@@ -97,7 +97,7 @@ void func_73e50() {
     {
         return;
     }
-    int loc_faa56 = int((loc_24753 + (loc_bc44b * ClusterDimensions.x)) + ((loc_1141f * ClusterDimensions.x) * ClusterDimensions.y));
+    int loc_026da = int((loc_24753 + (loc_bc44b * ClusterDimensions.x)) + ((loc_1141f * ClusterDimensions.x) * ClusterDimensions.y));
     float loc_e119b = loc_1141f + 0.5;
     vec2 loc_79283 = ClusterNearFarWidthHeight.xy;
     vec2 loc_7d455 = ClusterDepthBounds.xy;
@@ -105,16 +105,16 @@ void func_73e50() {
     func_aecb3(loc_e119b, loc_babe4, loc_79283, loc_7d455, loc_1141f);
     float loc_8aa53 = loc_babe4 / CameraFarPlane.z;
     vec3 loc_e90de = vec3(((((loc_24753 + 0.5) * ClusterSize.x) - (ClusterNearFarWidthHeight.z * 0.5)) / ClusterNearFarWidthHeight.z) * (CameraFarPlane.x * loc_8aa53), ((((loc_bc44b + 0.5) * ClusterSize.y) - (ClusterNearFarWidthHeight.w * 0.5)) / ClusterNearFarWidthHeight.w) * (CameraFarPlane.y * loc_8aa53), -loc_babe4);
-    int loc_c6dc4;
-    loc_c6dc4 = 0;
+    int loc_25246;
+    loc_25246 = 0;
     LightContribution loc_73e0b[64];
     int loc_e8108;
-    for (int loc_0c57c = 0; loc_0c57c < loc_6f4b5; loc_c6dc4 = loc_e8108, loc_0c57c++)
+    for (int loc_0c57c = 0; loc_0c57c < loc_6f4b5; loc_25246 = loc_e8108, loc_0c57c++)
     {
-        vec4 loc_e9fdb = var_63228.Extends[loc_0c57c].pos;
-        int loc_e25b3 = var_63228.Extends[loc_0c57c].index;
-        vec4 loc_30d7f = var_63228.Extends[loc_0c57c]._min;
-        vec4 loc_035a0 = var_63228.Extends[loc_0c57c]._max;
+        vec4 loc_e9fdb = var_c436b.Extends[loc_0c57c].pos;
+        int loc_51439 = var_c436b.Extends[loc_0c57c].index;
+        vec4 loc_30d7f = var_c436b.Extends[loc_0c57c]._min;
+        vec4 loc_035a0 = var_c436b.Extends[loc_0c57c]._max;
         bool loc_25a54 = loc_1141f < loc_30d7f.z;
         bool loc_a8060;
         if (!loc_25a54)
@@ -127,7 +127,7 @@ void func_73e50() {
         }
         if (loc_a8060)
         {
-            loc_e8108 = loc_c6dc4;
+            loc_e8108 = loc_25246;
             continue;
         }
         bool loc_9f6d7 = loc_bc44b < loc_30d7f.y;
@@ -142,7 +142,7 @@ void func_73e50() {
         }
         if (loc_c8987)
         {
-            loc_e8108 = loc_c6dc4;
+            loc_e8108 = loc_25246;
             continue;
         }
         bool loc_35843 = loc_24753 < loc_30d7f.x;
@@ -157,15 +157,15 @@ void func_73e50() {
         }
         if (loc_85c37)
         {
-            loc_e8108 = loc_c6dc4;
+            loc_e8108 = loc_25246;
             continue;
         }
         float loc_d9ac7 = length(loc_e9fdb.xyz - loc_e90de);
-        bool loc_c1fd8 = loc_c6dc4 >= loc_aa6c6;
+        bool loc_c1fd8 = loc_25246 >= loc_a217b;
         bool loc_0799d;
         if (loc_c1fd8)
         {
-            loc_0799d = loc_d9ac7 >= loc_73e0b[loc_c6dc4 - 1].contribution;
+            loc_0799d = loc_d9ac7 >= loc_73e0b[loc_25246 - 1].contribution;
         }
         else
         {
@@ -173,14 +173,14 @@ void func_73e50() {
         }
         if (loc_0799d)
         {
-            loc_e8108 = loc_c6dc4;
+            loc_e8108 = loc_25246;
             continue;
         }
         int loc_8aa6b;
         loc_8aa6b = 0;
         int loc_9b799;
         int loc_a0258;
-        for (int loc_8b5f4 = loc_c6dc4; loc_8aa6b < loc_8b5f4; loc_8b5f4 = loc_a0258, loc_8aa6b = loc_9b799)
+        for (int loc_8b5f4 = loc_25246; loc_8aa6b < loc_8b5f4; loc_8b5f4 = loc_a0258, loc_8aa6b = loc_9b799)
         {
             int loc_bdce6 = (loc_8aa6b + loc_8b5f4) / 2;
             if (loc_73e0b[loc_bdce6].contribution < loc_d9ac7)
@@ -195,40 +195,40 @@ void func_73e50() {
             }
         }
         int loc_10073;
-        if (loc_c6dc4 < loc_aa6c6)
+        if (loc_25246 < loc_a217b)
         {
-            int loc_890eb = loc_c6dc4 - 1;
+            int loc_890eb = loc_25246 - 1;
             for (int loc_df430 = loc_890eb; loc_df430 >= loc_8aa6b; loc_df430--)
             {
                 loc_73e0b[loc_df430 + 1] = loc_73e0b[loc_df430];
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
-            loc_73e0b[loc_8aa6b].indexInLookUp = loc_c6dc4;
-            var_26955.LightLookupArray[(loc_faa56 * loc_aa6c6) + loc_c6dc4].lookup = float(loc_e25b3);
-            loc_10073 = loc_c6dc4 + 1;
+            loc_73e0b[loc_8aa6b].indexInLookUp = loc_25246;
+            var_8ea63.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = float(loc_51439);
+            loc_10073 = loc_25246 + 1;
         }
         else
         {
-            int loc_a422d = loc_aa6c6 - 1;
-            int loc_afad4 = loc_73e0b[loc_a422d].indexInLookUp;
-            int loc_eb4bc = loc_aa6c6 - 2;
+            int loc_a422d = loc_a217b - 1;
+            int loc_ce739 = loc_73e0b[loc_a422d].indexInLookUp;
+            int loc_eb4bc = loc_a217b - 2;
             for (int loc_2b888 = loc_eb4bc; loc_2b888 >= loc_8aa6b; loc_2b888--)
             {
                 loc_73e0b[loc_2b888 + 1] = loc_73e0b[loc_2b888];
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
-            loc_73e0b[loc_8aa6b].indexInLookUp = loc_afad4;
-            var_26955.LightLookupArray[(loc_faa56 * loc_aa6c6) + loc_afad4].lookup = float(loc_e25b3);
-            loc_10073 = loc_c6dc4;
+            loc_73e0b[loc_8aa6b].indexInLookUp = loc_ce739;
+            var_8ea63.zLightLookupArray[(loc_026da * loc_a217b) + loc_ce739].lookup = float(loc_51439);
+            loc_10073 = loc_25246;
         }
         loc_e8108 = loc_10073;
     }
-    if (loc_c6dc4 < loc_aa6c6)
+    if (loc_25246 < loc_a217b)
     {
-        var_26955.LightLookupArray[(loc_faa56 * loc_aa6c6) + loc_c6dc4].lookup = -1.0;
+        var_8ea63.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = -1.0;
     }
 }
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_73e50();
+    func_8f344();
 }
