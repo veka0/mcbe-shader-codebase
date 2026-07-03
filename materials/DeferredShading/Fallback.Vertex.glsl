@@ -18,7 +18,7 @@
 * - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 5, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_Normal;
-* - uniform highp sampler2DArray s_PointLightShadowTextureArray;
+* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SSRTexture;
 * - uniform highp sampler2DArray s_ScatteringBuffer;

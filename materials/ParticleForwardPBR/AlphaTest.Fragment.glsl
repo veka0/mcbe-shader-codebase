@@ -22,7 +22,7 @@
 * - uniform lowp sampler2D s_MERTexture;
 * - uniform lowp sampler2D s_NormalTexture;
 * - uniform lowp sampler2D s_ParticleTexture;
-* - uniform highp sampler2DArray s_PointLightShadowTextureArray;
+* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
