@@ -47,7 +47,6 @@
 * - uniform mat4 CubemapRotation;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;

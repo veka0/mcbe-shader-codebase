@@ -7,6 +7,10 @@
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -52,7 +56,6 @@
 * - uniform vec4 CurrentFace;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
@@ -195,16 +198,16 @@ void main() {
     {
         var_68aa1 = var_2b2d2;
     }
-    highp vec3 var_aacc4;
+    highp vec3 var_d9480;
     if (var_68aa1)
     {
-        highp vec4 var_2fd23 = vec4(1.0);
-        highp vec4 var_8490a = SkyAmbientLightColorIntensity;
-        var_aacc4 = max(((clamp(vec3(1.0 + (var_2fd23.x * var_2fd23.w), 1.0 + (var_2fd23.y * var_2fd23.w), 1.0 + (var_2fd23.z * var_2fd23.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_8490a.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
+        highp vec4 var_0e954 = vec4(1.0);
+        highp vec4 var_4c0ec = SkyAmbientLightColorIntensity;
+        var_d9480 = max((clamp(vec3(1.0 + (var_0e954.x * var_0e954.w), 1.0 + (var_0e954.y * var_0e954.w), 1.0 + (var_0e954.z * var_0e954.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_4c0ec.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
     }
     else
     {
-        var_aacc4 = vec3(0.0);
+        var_d9480 = vec3(0.0);
     }
     highp vec3 var_1bb57;
     highp float var_bdb1d;
@@ -217,7 +220,7 @@ void main() {
             highp vec3 var_fe67e;
             if (AtmosphericScatteringToggles.y != 0.0)
             {
-                var_fe67e = FogColor.xyz * max(var_aacc4, vec3(1.0));
+                var_fe67e = FogColor.xyz * max(var_d9480, vec3(1.0));
             }
             else
             {

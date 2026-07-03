@@ -10,6 +10,10 @@
 * - FALLBACK_PASS (not used)
 * - VOLUMETRIC_SCATTERING_PASS (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -50,7 +54,6 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;

@@ -9,6 +9,10 @@
 * - FALLBACK_PASS (not used)
 * - SURFACE_RADIANCE_UPSCALE_PASS (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * Upscaling:
 * - UPSCALING__OFF (not used)
 * - UPSCALING__ON (not used)
@@ -56,7 +60,6 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;

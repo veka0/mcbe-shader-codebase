@@ -66,7 +66,6 @@
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 Dimensions;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
@@ -275,15 +274,15 @@ void main() {
     func_195f6(var_3c0b9);
 #endif
     highp vec2 var_5d463 = var_3c0b9;
-    highp vec4 var_3d513 = var_3b155;
-    highp vec4 var_aa1dd = DirectionalLightSourceDiffuseColorAndIlluminance;
-    highp vec2 var_391c1 = var_3c0b9;
-    highp vec4 var_9bce4 = vec4(0.0);
-    highp float var_c5d28 = var_391c1.x * var_391c1.x;
-    highp vec4 var_de30a = SkyAmbientLightColorIntensity;
-    highp float var_5e8a3 = var_391c1.y * var_391c1.y;
-    highp vec3 var_48dea = (((((var_3d513.xyz * vec3(0.3183098733425140380859375)) * DiffuseSpecularEmissiveAmbientTermToggles.x) * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_aa1dd.w) * 1.0)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight.x) * var_3d513.xyz) + (max(((clamp(vec3(var_c5d28 + (var_9bce4.x * var_9bce4.w), (var_c5d28 * ((((var_c5d28 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_9bce4.y * var_9bce4.w), (var_c5d28 * (((var_c5d28 * var_c5d28) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_9bce4.z * var_9bce4.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix((var_5e8a3 * var_5e8a3) * var_391c1.y, (var_391c1.y * var_391c1.y) * var_391c1.y, CameraLightIntensity.y)) * var_de30a.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_3d513.xyz);
-    var_3b155 = vec4(var_48dea.x, var_48dea.y, var_48dea.z, var_3d513.w);
+    highp vec4 var_9a675 = var_3b155;
+    highp vec4 var_31b5c = DirectionalLightSourceDiffuseColorAndIlluminance;
+    highp vec2 var_409bf = var_3c0b9;
+    highp vec4 var_afbf5 = vec4(0.0);
+    highp float var_89ff2 = var_409bf.x * var_409bf.x;
+    highp vec4 var_699b7 = SkyAmbientLightColorIntensity;
+    highp float var_a366d = var_409bf.y * var_409bf.y;
+    highp vec3 var_3f109 = (((((var_9a675.xyz * vec3(0.3183098733425140380859375)) * DiffuseSpecularEmissiveAmbientTermToggles.x) * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_31b5c.w) * 1.0)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight.x) * var_9a675.xyz) + (max((clamp(vec3(var_89ff2 + (var_afbf5.x * var_afbf5.w), (var_89ff2 * ((((var_89ff2 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_afbf5.y * var_afbf5.w), (var_89ff2 * (((var_89ff2 * var_89ff2) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_afbf5.z * var_afbf5.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_a366d * var_a366d) * var_409bf.y, (var_409bf.y * var_409bf.y) * var_409bf.y, CameraLightIntensity.y)) * var_699b7.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_9a675.xyz);
+    var_3b155 = vec4(var_3f109.x, var_3f109.y, var_3f109.z, var_9a675.w);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
     if (var_9b186)
@@ -303,16 +302,16 @@ void main() {
     {
         var_68aa1 = var_2b2d2;
     }
-    highp vec3 var_aacc4;
+    highp vec3 var_d9480;
     if (var_68aa1)
     {
-        highp vec4 var_2fd23 = vec4(1.0);
-        highp vec4 var_8490a = SkyAmbientLightColorIntensity;
-        var_aacc4 = max(((clamp(vec3(1.0 + (var_2fd23.x * var_2fd23.w), 1.0 + (var_2fd23.y * var_2fd23.w), 1.0 + (var_2fd23.z * var_2fd23.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_8490a.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
+        highp vec4 var_0e954 = vec4(1.0);
+        highp vec4 var_4c0ec = SkyAmbientLightColorIntensity;
+        var_d9480 = max((clamp(vec3(1.0 + (var_0e954.x * var_0e954.w), 1.0 + (var_0e954.y * var_0e954.w), 1.0 + (var_0e954.z * var_0e954.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_4c0ec.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
     }
     else
     {
-        var_aacc4 = vec3(0.0);
+        var_d9480 = vec3(0.0);
     }
     highp vec3 var_95db2 = normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     highp vec3 var_1bb57;
@@ -326,7 +325,7 @@ void main() {
             highp vec3 var_fe67e;
             if (AtmosphericScatteringToggles.y != 0.0)
             {
-                var_fe67e = FogColor.xyz * max(var_aacc4, vec3(1.0));
+                var_fe67e = FogColor.xyz * max(var_d9480, vec3(1.0));
             }
             else
             {
@@ -378,7 +377,7 @@ void main() {
         var_806d9 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_eb669 = var_806d9;
-    highp vec3 var_6e838 = var_806d9.xyz + (mix(var_48dea.xyz, var_81ddf.xyz, vec3(var_ba616.w)) * var_eb669.w);
+    highp vec3 var_6e838 = var_806d9.xyz + (mix(var_3f109.xyz, var_81ddf.xyz, vec3(var_ba616.w)) * var_eb669.w);
     highp vec3 var_3dc3f;
     if (PreExposureEnabled.x > 0.0)
     {

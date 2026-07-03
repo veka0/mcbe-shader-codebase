@@ -36,6 +36,7 @@
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MaterialID;
+* - uniform vec4 MeshContext;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 ViewPositionAndTime;
@@ -48,6 +49,7 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 MeshContext;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
@@ -91,33 +93,35 @@ void main() {
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
     vec3 var_1c444 = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
 #endif
-    vec4 var_625bc = a_color0;
+    vec4 var_9d5b1 = a_color0;
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec3 var_eb4e0 = var_1c444 + vec3(0.5);
     vec3 var_f280f = normalize(var_eb4e0 - ViewPositionAndTime.xyz);
     vec3 var_d3ea2 = normalize(cross(vec3(0.0, 1.0, 0.0), var_f280f));
     vec3 var_c39b1 = a_color0.xyz;
     vec3 var_b5c08 = var_eb4e0 - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
-    float var_4a0f0 = length(ViewPositionAndTime.xyz - var_b5c08);
+    float var_e3e0a = length(ViewPositionAndTime.xyz - var_b5c08);
 #endif
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    float var_4a0f0 = length(ViewPositionAndTime.xyz - var_1c444);
+    float var_e3e0a = length(ViewPositionAndTime.xyz - var_1c444);
 #endif
+    vec4 var_ade36 = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
     mat4 var_dd47a = u_proj;
     var_dd47a[2].x += SubPixelOffset.x;
     var_dd47a[2].y -= SubPixelOffset.y;
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    vec4 var_4e22b = a_color0;
+    vec4 var_ca76d = a_color0;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    vec4 var_4e22b = vec4(1.0);
+    vec4 var_ca76d = vec4(1.0);
 #endif
-    if (var_625bc.w < 0.949999988079071044921875)
+    if (var_9d5b1.w < 0.949999988079071044921875)
     {
-        var_4e22b.w = mix(var_625bc.w, 1.0, clamp(var_4a0f0 / FogAndDistanceControl.w, 0.0, 1.0));
+        vec4 var_cb46d = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
+        var_ca76d.w = mix(var_9d5b1.w, 1.0, clamp(var_e3e0a / var_cb46d.w, 0.0, 1.0));
     }
-    v_color0 = var_4e22b;
-    v_fog = vec4(FogColor.xyz, clamp((((var_4a0f0 / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_color0 = var_ca76d;
+    v_fog = vec4(FogColor.xyz, clamp((((var_e3e0a / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
     v_lightmapUV = a_texcoord1;
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_1c444;
