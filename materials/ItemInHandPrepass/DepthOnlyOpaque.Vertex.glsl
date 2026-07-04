@@ -57,6 +57,7 @@ out vec3 v_bitangent;
 out vec4 v_color0;
 out vec4 v_mers;
 out vec3 v_normal;
+flat out int v_pbrTextureId;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
@@ -84,6 +85,7 @@ void main() {
     v_color0 = a_color0;
     v_mers = a_texcoord8;
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
+    v_pbrTextureId = 0;
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;

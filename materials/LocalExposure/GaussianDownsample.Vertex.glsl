@@ -11,11 +11,13 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AverageLuminance;
-* - uniform lowp sampler2D s_DownsampledLuminance;
+* - uniform lowp sampler2D s_DownsampledLogLuminance;
+* - uniform lowp sampler3D s_FilteredBilateralGrid;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SceneColor;
 *
 * Uniforms:
+* - uniform vec4 BilateralGridParams;
 * - uniform vec4 GaussianBlurParams;
 * - uniform vec4 LocalExposureParams;
 * - uniform vec4 PreExposureEnabled;

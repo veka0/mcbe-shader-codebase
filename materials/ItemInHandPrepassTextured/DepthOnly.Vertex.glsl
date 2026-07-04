@@ -25,6 +25,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
+* - layout(binding = 1, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 *
 * Uniforms:
 * - uniform vec4 ChangeColor;
@@ -56,8 +57,10 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+flat out int v_frontFacing;
 out vec4 v_mers;
 out vec3 v_normal;
+flat out int v_pbrTextureId;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
@@ -79,8 +82,10 @@ void main() {
 #endif
     v_bitangent = vec3(0.0);
     v_color0 = vec4(0.0);
+    v_frontFacing = 0;
     v_mers = vec4(0.0);
     v_normal = vec3(0.0);
+    v_pbrTextureId = 0;
     v_prevWorldPos = vec3(0.0);
     v_tangent = vec3(0.0);
     v_texcoord0 = vec2(0.0);

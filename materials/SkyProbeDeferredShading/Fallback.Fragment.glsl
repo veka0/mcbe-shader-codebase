@@ -4,15 +4,19 @@
 * Available Macros:
 *
 * Passes:
+* - ATMOSPHERICS_PASS (not used)
+* - DIRECTIONAL_EMISSIVE_COMBINED_PASS (not used)
+* - DISCRETE_INDIRECT_COMBINED_PASS (not used)
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
+* - VOLUMETRIC_SCATTERING_PASS (not used)
 *
 * Available Resources:
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
 * - layout(binding = 4, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
@@ -31,6 +35,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;
 * - uniform vec4 CausticsParameters;
@@ -41,6 +46,7 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 CurrentFace;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 * - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
@@ -82,8 +88,9 @@
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SSRParameters;
 * - uniform vec4 ShadowBias;
-* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
+* - uniform vec4 ShadowPrecisionRoundingParameters;
 * - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;

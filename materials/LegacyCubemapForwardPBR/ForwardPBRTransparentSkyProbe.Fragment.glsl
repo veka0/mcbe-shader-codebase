@@ -14,7 +14,7 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_CausticsTexture;
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - layout(binding = 1, std430) buffer s_LightLookupArrayBuffer { LightData s_LightLookupArray[]; };
 * - layout(binding = 2, std430) buffer s_LightsBuffer { Light s_Lights[]; };
 * - uniform lowp sampler2D s_MatTexture;
@@ -26,6 +26,7 @@
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadeShadowResolutions;
 * - uniform vec4 CausticsParameters;
@@ -36,6 +37,7 @@
 * - uniform vec4 ClusterSize;
 * - uniform mat4 CubemapRotation;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
 * - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
@@ -70,8 +72,9 @@
 * - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 ShadowBias;
-* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSize;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
+* - uniform vec4 ShadowPrecisionRoundingParameters;
 * - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
@@ -131,15 +134,15 @@ void main() {
         var_f79a5 = var_33407;
     }
     highp vec2 var_ae031 = ((v_clipPosition.xyz / vec3(var_a3e18.w)).xy + vec2(1.0)) * vec2(0.5);
-    highp vec3 var_44902 = var_f79a5 * ((clamp(var_ae031.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
-    highp vec3 var_04dc0;
+    highp vec3 var_12f16 = var_f79a5 * ((clamp(var_ae031.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
+    highp vec3 var_78713;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_04dc0 = var_44902 * 0.18010000884532928466796875;
+        var_78713 = var_12f16 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_04dc0 = var_44902;
+        var_78713 = var_12f16;
     }
-    bgfx_FragColor = vec4(var_04dc0, max(var_2ee7a.w, SkyProbeUVFadeParameters.z));
+    bgfx_FragColor = vec4(var_78713, max(var_2ee7a.w, SkyProbeUVFadeParameters.z));
 }

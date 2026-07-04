@@ -76,14 +76,16 @@ void main() {
         highp vec3 var_9b4ae = var_109c0;
         highp vec3 var_7aacc = (var_109c0 * (2.0 * dot(var_eb3d3, var_109c0))) - var_eb3d3;
         highp float var_8c821 = clamp(var_7aacc.z, 0.0, 1.0);
-        highp float var_d27ad = clamp(dot(var_eb3d3, var_109c0), 0.0, 1.0);
+        highp float var_16929 = clamp(dot(var_eb3d3, var_109c0), 0.0, 1.0);
         if (var_8c821 > 0.0)
         {
             highp float var_7c701 = (var_66eed.y * var_66eed.y) * 0.5;
-            highp float var_8a442 = (((var_66eed.x / (((var_66eed.x * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05)) * (var_8c821 / (((var_8c821 * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05))) * var_d27ad) / (clamp(var_9b4ae.z, 0.0, 1.0) * var_66eed.x);
-            highp float var_52ef3 = pow(1.0 - var_d27ad, 5.0);
-            var_36767 = var_54144 + (var_52ef3 * var_8a442);
-            var_49334 = var_a4178 + ((1.0 - var_52ef3) * var_8a442);
+            highp float var_8a442 = (((var_66eed.x / (((var_66eed.x * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05)) * (var_8c821 / (((var_8c821 * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05))) * var_16929) / (clamp(var_9b4ae.z, 0.0, 1.0) * var_66eed.x);
+            highp float var_ac0d0 = 1.0 - var_16929;
+            highp float var_a0dea = var_ac0d0 * var_ac0d0;
+            highp float var_6d628 = (var_a0dea * var_a0dea) * var_ac0d0;
+            var_36767 = var_54144 + (var_6d628 * var_8a442);
+            var_49334 = var_a4178 + ((1.0 - var_6d628) * var_8a442);
         }
         else
         {

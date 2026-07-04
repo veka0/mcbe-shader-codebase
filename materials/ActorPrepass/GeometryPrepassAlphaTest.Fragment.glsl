@@ -120,28 +120,40 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-#ifdef MASKED_MULTITEXTURE__OFF
-    highp vec4 var_6a69a = MatColor * texture(s_MatTexture, v_texcoord0);
+#if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
+    highp vec4 var_e462f = MatColor * texture(s_MatTexture, v_texcoord0);
+#endif
+#if defined(MASKED_MULTITEXTURE__OFF) && !defined(EMISSIVE__EMISSIVE)
+    highp vec4 var_32d02 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
 #ifdef MASKED_MULTITEXTURE__ON
-    highp vec4 var_ade26 = texture(s_MatTexture1, v_texcoord0);
-    highp vec4 var_76534 = var_ade26;
-    highp vec4 var_6a69a = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
+    highp vec4 var_7fef3 = texture(s_MatTexture1, v_texcoord0);
+    highp vec4 var_0b7d3 = var_7fef3;
+#endif
+#if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
+    highp vec4 var_32d02 = var_e462f;
+#endif
+#if defined(MASKED_MULTITEXTURE__ON) && !defined(EMISSIVE__EMISSIVE)
+    highp vec4 var_32d02 = mix(var_7fef3, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_0b7d3.x + var_0b7d3.y) + var_0b7d3.z) * (1.0 - var_0b7d3.w)) > 0.0)));
+#endif
+#if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__ON)
+    highp vec4 var_e462f = mix(var_7fef3, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_0b7d3.x + var_0b7d3.y) + var_0b7d3.z) * (1.0 - var_0b7d3.w)) > 0.0)));
+    highp vec4 var_32d02 = var_e462f;
 #endif
 #ifdef EMISSIVE__EMISSIVE
-    if (dot(vec4(var_6a69a.xyz, mix(var_6a69a.w, var_6a69a.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x)
+    if (dot(vec4(var_e462f.xyz, mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x)
 #endif
 #ifdef EMISSIVE__EMISSIVE_ONLY
-    highp float var_a8620 = mix(var_6a69a.w, var_6a69a.w * OverlayColor.w, TintedAlphaTestEnabled.x);
+    highp float var_a8620 = mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x);
     bool var_e7bf9 = var_a8620 < ActorFPEpsilon.x;
     bool var_330ac;
     if (!var_e7bf9)
 #endif
 #if defined(EMISSIVE__OFF) && !defined(CHANGE_COLOR__OFF)
-    if (mix(var_6a69a.w, var_6a69a.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x)
+    if (mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x)
 #endif
 #if defined(CHANGE_COLOR__OFF) && defined(EMISSIVE__OFF)
-    if (mix(var_6a69a.w, var_6a69a.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5)
+    if (mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5)
 #endif
     {
 #ifdef EMISSIVE__EMISSIVE_ONLY
@@ -157,23 +169,23 @@ void main() {
         discard;
     }
 #ifdef CHANGE_COLOR__MULTI
-    highp vec2 var_459de = var_6a69a.xy;
-    highp vec3 var_1099e = mix((var_6a69a.xxx * ChangeColor.xyz).xyz, var_6a69a.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_459de.y)));
-    highp vec4 var_8c1c4 = vec4(var_1099e.x, var_1099e.y, var_1099e.z, var_6a69a.w);
+    highp vec2 var_459de = var_32d02.xy;
+    highp vec3 var_1099e = mix((var_32d02.xxx * ChangeColor.xyz).xyz, var_32d02.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_459de.y)));
+    highp vec4 var_6ee95 = vec4(var_1099e.x, var_1099e.y, var_1099e.z, var_32d02.w);
 #endif
 #ifndef CHANGE_COLOR__MULTI
-    highp vec4 var_8c1c4 = var_6a69a;
+    highp vec4 var_6ee95 = var_32d02;
 #endif
 #ifdef CHANGE_COLOR__ON
     highp vec4 var_8a135 = ChangeColor;
-    highp vec3 var_fba6e = mix(var_6a69a.xyz, var_6a69a.xyz * ChangeColor.xyz, vec3(var_8c1c4.w));
-    var_8c1c4 = vec4(var_fba6e.x, var_fba6e.y, var_fba6e.z, var_6a69a.w);
-    var_8c1c4.w *= var_8a135.w;
+    highp vec3 var_fba6e = mix(var_32d02.xyz, var_32d02.xyz * ChangeColor.xyz, vec3(var_6ee95.w));
+    var_6ee95 = vec4(var_fba6e.x, var_fba6e.y, var_fba6e.z, var_32d02.w);
+    var_6ee95.w *= var_8a135.w;
 #endif
-    var_8c1c4.w = max(UseAlphaRewrite.x, var_8c1c4.w);
-    var_6a69a = var_8c1c4;
-    highp vec3 var_f710c = mix((var_8c1c4.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_8c1c4.w);
+    var_6ee95.w = max(UseAlphaRewrite.x, var_6ee95.w);
+    var_32d02 = var_6ee95;
+    highp vec3 var_f710c = mix((var_32d02.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_32d02.w);
     int var_f71fc = int(PBRTextureFlags.x);
     highp float var_f7888;
     highp float var_5e9c5;
@@ -203,18 +215,18 @@ void main() {
         var_5e9c5 = EmissiveUniform.x;
         var_f7888 = MetalnessUniform.x;
     }
-    highp vec3 var_1cf97;
+    highp vec3 var_76f62;
     if ((var_f71fc & 4) == 4)
     {
-        var_1cf97 = normalize(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal))) * ((texture(s_NormalTexture, v_texcoord0).xyz * 2.0) - vec3(1.0)));
+        var_76f62 = normalize(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal)) * ((texture(s_NormalTexture, v_texcoord0).xyz * 2.0) - vec3(1.0)));
     }
     else
     {
-        highp vec3 var_aef9e;
+        highp vec3 var_0d7aa;
         if ((var_f71fc & 8) == 8)
         {
             highp vec2 var_ac6af = v_texcoord0;
-            highp vec3 var_cf411 = vec3(0.0, 0.0, 1.0);
+            highp vec3 var_73501 = vec3(0.0, 0.0, 1.0);
             highp vec2 var_2b303 = var_ac6af;
             highp vec2 var_4dc97 = var_2b303 * vec2(textureSize(s_NormalTexture, 0));
             highp vec2 var_700bf = fract(var_4dc97);
@@ -239,7 +251,7 @@ void main() {
             }
             highp vec2 var_97412 = var_2054b;
             ivec2 var_85f5c = ivec2(clamp(vec2(var_6748a.x - 0.083333335816860198974609375, var_6748a.x + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-            var_cf411.x = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
+            var_73501.x = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
             highp vec2 var_d2f6f;
             if (var_6748a.x > 0.5)
             {
@@ -251,25 +263,25 @@ void main() {
             }
             var_97412 = var_d2f6f;
             var_85f5c = ivec2(clamp(vec2(var_6748a.y - 0.083333335816860198974609375, var_6748a.y + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-            var_cf411.y = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
-            var_cf411.z = 0.25;
-            highp vec3 var_822b4 = normalize(var_cf411);
+            var_73501.y = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
+            var_73501.z = 0.25;
+            highp vec3 var_822b4 = normalize(var_73501);
             highp vec2 var_2df8f = var_822b4.xy * 1.0;
-            var_cf411 = vec3(var_2df8f.x, var_2df8f.y, var_822b4.z);
-            var_aef9e = normalize(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal))) * var_cf411);
+            var_73501 = vec3(var_2df8f.x, var_2df8f.y, var_822b4.z);
+            var_0d7aa = normalize(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal)) * var_73501);
         }
         else
         {
-            var_aef9e = v_normal;
+            var_0d7aa = v_normal;
         }
-        var_1cf97 = var_aef9e;
+        var_76f62 = var_0d7aa;
     }
     highp vec4 var_39c01 = vec4(var_f710c, var_89833.w);
     highp vec4 var_6de71 = vec4(var_39c01.x, var_39c01.y, var_39c01.z, var_39c01.w);
     highp float var_7aa46;
     func_fb7ab(var_f7888, var_da7e2, var_7aa46);
     var_6de71.w = var_7aa46;
-    highp vec3 var_089df = normalize(var_1cf97);
+    highp vec3 var_089df = normalize(var_76f62);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
     highp vec2 var_5a694;

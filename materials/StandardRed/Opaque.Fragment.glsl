@@ -46,10 +46,10 @@ in highp vec4 v_viewSpacePosition;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec3 var_164ee = texture(s_MatTexture, v_texcoord0).xyz;
-    highp vec3 var_1221a = LightDiffuseColorAndIlluminance.xyz * LightDiffuseColorAndIlluminance.w;
-    highp vec3 var_69510 = normalize(v_viewSpaceNormal);
-    highp vec3 var_20363 = normalize(-(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz);
+    highp vec3 var_5f309 = texture(s_MatTexture, v_texcoord0).xyz;
+    highp vec3 var_81e7a = LightDiffuseColorAndIlluminance.xyz * LightDiffuseColorAndIlluminance.w;
+    highp vec3 var_3ae03 = normalize(v_viewSpaceNormal);
+    highp vec3 var_ebd8e = normalize(-(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz);
     highp vec4 var_d67eb = ShadowTransform * vec4(v_worldPos, 1.0);
     var_d67eb.z = (var_d67eb.z * 0.5) + 0.5;
     highp float var_a9306 = (var_d67eb.z / var_d67eb.w) - 0.00025000001187436282634735107421875;
@@ -74,6 +74,6 @@ void main() {
     highp float var_70ce5 = (float(var_227ca) * 2.0) + 1.0;
     highp vec2 var_82501 = ShadowTexel.xy * 16.0;
     highp vec2 var_c7b22 = smoothstep(vec2(0.0), var_82501, var_0387e) * (vec2(1.0) - smoothstep(vec2(1.0) - var_82501, vec2(1.0), var_0387e));
-    highp float var_7fff1 = ((var_970ab / (var_70ce5 * var_70ce5)) * var_c7b22.x) * var_c7b22.y;
-    bgfx_FragColor = vec4((((LightAmbientColorAndIntensity.xyz * LightAmbientColorAndIntensity.w) * var_164ee) + (((var_1221a * clamp(dot(var_69510, var_20363), 0.0, 1.0)) * var_164ee) * (1.0 - var_7fff1))) + ((var_1221a * clamp(0.17050252854824066162109375 * pow(clamp(dot(var_69510, normalize(var_20363 + normalize(-v_viewSpacePosition.xyz))), 0.0, 1.0), 0.455475330352783203125), 0.0, 1.0)) * (1.0 - var_7fff1)), 1.0);
+    highp float var_1bf0e = ((var_970ab / (var_70ce5 * var_70ce5)) * var_c7b22.x) * var_c7b22.y;
+    bgfx_FragColor = vec4((((LightAmbientColorAndIntensity.xyz * LightAmbientColorAndIntensity.w) * var_5f309) + (((var_81e7a * clamp(dot(var_3ae03, var_ebd8e), 0.0, 1.0)) * var_5f309) * (1.0 - var_1bf0e))) + ((var_81e7a * clamp(0.17050254344940185546875 * pow(clamp(dot(var_3ae03, normalize(var_ebd8e + normalize(-v_viewSpacePosition.xyz))), 0.0, 1.0), 0.4554755687713623046875), 0.0, 1.0)) * (1.0 - var_1bf0e)), 1.0);
 }

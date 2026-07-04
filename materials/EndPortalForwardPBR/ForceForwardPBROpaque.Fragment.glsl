@@ -4,6 +4,7 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORCE_FORWARD_PBR_OPAQUE_PASS (not used)
 *
 * Instancing:
