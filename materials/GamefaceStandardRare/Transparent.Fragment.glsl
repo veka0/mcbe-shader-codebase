@@ -161,9 +161,10 @@ void main() {
                             var_54ab8.z = dot(var_729fe, Data_PS[var_ac3c2 + 3]);
                             var_54ab8.w = dot(var_729fe, Data_PS[var_ac3c2 + 4]);
                             highp vec4 var_ea70f = var_54ab8;
-                            highp vec4 var_c1b28 = var_ea70f + Data_PS[var_ac3c2 + 5];
-                            var_54ab8 = var_c1b28;
-                            var_54ab8.w = mix(((0.2125999927520751953125 * var_c1b28.x) + (0.715200006961822509765625 * var_c1b28.y)) + (0.072200000286102294921875 * var_c1b28.z), var_54ab8.w, var_a33c5.z);
+                            highp vec4 var_288d5 = var_ea70f + Data_PS[var_ac3c2 + 5];
+                            var_54ab8 = var_288d5;
+                            highp vec3 var_635fc = var_288d5.xyz;
+                            var_54ab8.w = mix(((0.2125999927520751953125 * var_635fc.x) + (0.715200006961822509765625 * var_635fc.y)) + (0.072200000286102294921875 * var_635fc.z), var_54ab8.w, var_a33c5.z);
                             highp float var_9f710 = var_54ab8.w;
                             var_54ab8.w = 1.0;
                             var_df5f8 = (var_9f710 * var_a33c5.w) * clamp(var_333b6.z, 0.0, 1.0);

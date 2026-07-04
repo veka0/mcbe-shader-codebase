@@ -233,8 +233,8 @@ void main() {
     {
         discard;
     }
-    highp vec4 var_ab9d7 = var_3bf1c;
     int var_f71fc = int(PBRTextureFlags.x);
+    highp vec4 var_ab9d7 = var_3bf1c;
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;

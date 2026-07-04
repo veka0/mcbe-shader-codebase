@@ -150,6 +150,7 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+    int var_75c93 = int(PBRTextureFlags.x);
 #ifdef MASKED_MULTITEXTURE__OFF
     highp vec4 var_2f716 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
@@ -200,27 +201,55 @@ void main() {
     var_dd488.w = max(0.0, var_dd488.w);
     var_2f716 = var_dd488;
     highp vec4 var_24765 = var_dd488;
-    for (int var_f2336 = 0; var_f2336 < int(PatternCount.x); var_f2336++)
+    bool var_4bad2;
+    var_4bad2 = true;
+    bool var_882cd;
+    for (int var_55d98 = 0; var_55d98 < int(PatternCount.x); var_4bad2 = var_882cd, var_55d98++)
     {
-        highp vec4 var_96930 = texture(s_MatTexture2, (PatternUVOffsetsAndScales[var_f2336].zw * v_texcoord0) + PatternUVOffsetsAndScales[var_f2336].xy) * PatternColors[var_f2336];
-        highp vec4 var_df244 = var_96930;
-        var_24765 = mix(var_24765, var_96930, vec4(var_df244.w));
+        highp vec4 var_96930 = texture(s_MatTexture2, (PatternUVOffsetsAndScales[var_55d98].zw * v_texcoord0) + PatternUVOffsetsAndScales[var_55d98].xy) * PatternColors[var_55d98];
+        highp vec4 var_b767e = var_96930;
+        var_24765 = mix(var_24765, var_96930, vec4(var_b767e.w));
+        bool var_36460;
+        if (var_4bad2)
+        {
+            var_36460 = var_b767e.w > 0.5;
+        }
+        else
+        {
+            var_36460 = var_4bad2;
+        }
+        if (var_36460)
+        {
+            var_882cd = false;
+        }
+        else
+        {
+            var_882cd = var_4bad2;
+        }
     }
     var_24765.w = 1.0;
+    int var_d49ca;
+    if (var_4bad2 == false)
+    {
+        var_d49ca = var_75c93 & (-2);
+    }
+    else
+    {
+        var_d49ca = var_75c93;
+    }
     highp vec4 var_2b5c5 = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
     highp vec4 var_51875 = vec4(var_2b5c5.xyz * var_2b5c5.xyz, abs(var_2b5c5.w)) + vec4(mix((var_24765.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)), 0.0);
     var_51875.w = var_24765.w;
     highp vec4 var_1d587 = var_51875;
-    int var_f71fc = int(PBRTextureFlags.x);
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;
     highp float var_da7e2;
-    if ((var_f71fc & 1) == 1)
+    if ((var_d49ca & 1) == 1)
     {
         highp vec4 var_4035b = texture(s_MERSTexture, v_texcoord0);
         highp float var_ae1fa;
-        if ((var_f71fc & 2) == 2)
+        if ((var_d49ca & 2) == 2)
         {
             var_ae1fa = var_4035b.w;
         }
@@ -241,14 +270,14 @@ void main() {
         var_f7888 = MetalnessUniform.x;
     }
     highp vec3 var_76f62;
-    if ((var_f71fc & 4) == 4)
+    if ((var_d49ca & 4) == 4)
     {
         var_76f62 = normalize(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal)) * ((texture(s_NormalTexture, v_texcoord0).xyz * 2.0) - vec3(1.0)));
     }
     else
     {
         highp vec3 var_0d7aa;
-        if ((var_f71fc & 8) == 8)
+        if ((var_d49ca & 8) == 8)
         {
             highp vec2 var_ac6af = v_texcoord0;
             highp vec3 var_73501 = vec3(0.0, 0.0, 1.0);

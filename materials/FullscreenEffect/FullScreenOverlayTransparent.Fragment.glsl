@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - RASTERIZED_TRANSPARENT_PASS (not used)
+* - FULL_SCREEN_OVERLAY_TRANSPARENT_PASS (not used)
 *
 * AlphaTest:
 * - ALPHA_TEST__OFF

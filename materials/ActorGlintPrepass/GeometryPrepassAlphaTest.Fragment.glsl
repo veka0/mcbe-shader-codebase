@@ -185,8 +185,8 @@ void main() {
     highp vec4 var_2b5c5 = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
     highp vec4 var_51875 = vec4(var_2b5c5.xyz * var_2b5c5.xyz, abs(var_2b5c5.w)) + vec4(mix((var_93e9a.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)), 0.0);
     var_51875.w = var_93e9a.w;
-    highp vec4 var_1d587 = var_51875;
     int var_f71fc = int(PBRTextureFlags.x);
+    highp vec4 var_1d587 = var_51875;
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;
