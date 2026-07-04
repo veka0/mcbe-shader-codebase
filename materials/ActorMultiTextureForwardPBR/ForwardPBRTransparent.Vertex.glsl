@@ -57,6 +57,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
 * - uniform vec4 CameraAmbientContribution;

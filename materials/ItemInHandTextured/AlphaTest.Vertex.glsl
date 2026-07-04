@@ -28,8 +28,12 @@
 *
 * Uniforms:
 * - uniform vec4 AlphaMaskedTint;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
@@ -64,6 +68,7 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec4 v_fog;
 out vec4 v_light;
@@ -94,8 +99,9 @@ void main() {
     var_67767.y -= SubPixelOffset.y;
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
-    vec4 var_cd7d8 = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
-    vec4 var_27f6b = var_cd7d8;
+    vec4 var_04ab5 = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
+    vec4 var_27f6b = var_04ab5;
+    v_clipPosition = var_04ab5;
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
 #ifdef FANCY__OFF
@@ -106,5 +112,5 @@ void main() {
 #endif
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_e2d09.xyz;
-    gl_Position = var_cd7d8;
+    gl_Position = var_04ab5;
 }

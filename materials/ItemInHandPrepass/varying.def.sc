@@ -11,6 +11,7 @@ vec4 i_data2 : TEXCOORD6;
 vec4 i_data3 : TEXCOORD5;
 
 vec3     v_bitangent    : BITANGENT;
+vec4     v_clipPosition : COLOR1;
 vec4     v_color0       : COLOR0;
 vec4     v_mers         : TEXCOORD8;
 vec3     v_normal       : NORMAL;

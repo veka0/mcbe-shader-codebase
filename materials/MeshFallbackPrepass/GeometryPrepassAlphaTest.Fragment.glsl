@@ -34,6 +34,7 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 CurrentColor;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;

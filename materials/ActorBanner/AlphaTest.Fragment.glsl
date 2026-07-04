@@ -11,8 +11,8 @@
 * - TRANSPARENT_PASS (not used)
 *
 * Change_Color:
-* - CHANGE_COLOR__MULTI
-* - CHANGE_COLOR__OFF
+* - CHANGE_COLOR__MULTI (not used)
+* - CHANGE_COLOR__OFF (not used)
 *
 * Emissive:
 * - EMISSIVE__OFF (not used)
@@ -26,12 +26,12 @@
 * - INSTANCING__ON (not used)
 *
 * MaskedMultitexture:
-* - MASKED_MULTITEXTURE__OFF
-* - MASKED_MULTITEXTURE__ON
+* - MASKED_MULTITEXTURE__OFF (not used)
+* - MASKED_MULTITEXTURE__ON (not used)
 *
 * Tinting:
-* - TINTING__DISABLED (not used)
-* - TINTING__ENABLED (not used)
+* - TINTING__DISABLED
+* - TINTING__ENABLED
 *
 * Available Resources:
 *
@@ -43,6 +43,7 @@
 * - uniform vec4 ActorFPEpsilon;
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -68,81 +69,77 @@
 
 precision mediump float;
 precision highp int;
-float var_33fae;
+float var_238cd;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_view;
-#ifdef MASKED_MULTITEXTURE__ON
-uniform highp sampler2D s_MatTexture1;
-#endif
 uniform highp sampler2D s_MatTexture;
-#ifdef CHANGE_COLOR__MULTI
 uniform highp vec4 ActorFPEpsilon;
-uniform highp vec4 ChangeColor;
-#endif
-uniform highp vec4 ColorBased;
 uniform highp vec4 DitherParams2[3];
 uniform highp vec4 DitherParams;
 uniform highp vec4 DitheringEnabledToggle;
-uniform highp vec4 MatColor;
-#ifdef CHANGE_COLOR__MULTI
-uniform highp vec4 MultiplicativeTintColor;
-#endif
-uniform highp vec4 OverlayColor;
-uniform highp vec4 TintedAlphaTestEnabled;
-uniform highp vec4 UseAlphaRewrite;
+uniform highp vec4 HudOpacity;
 in highp vec4 v_clipPosition;
+#ifdef TINTING__ENABLED
 in highp vec4 v_color0;
+#endif
 in highp vec4 v_fog;
 in highp vec4 v_light;
-centroid in highp vec2 v_texcoord0;
+centroid in highp vec4 v_texcoords;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-#ifdef MASKED_MULTITEXTURE__OFF
-    highp vec4 var_a9e04 = MatColor * texture(s_MatTexture, v_texcoord0);
+#ifdef TINTING__ENABLED
+    highp vec4 var_a3564 = v_color0;
+    highp vec4 var_13038 = vec4(v_color0.xyz, var_a3564.w);
+    highp vec4 var_1b1d9 = var_13038;
 #endif
-#ifdef MASKED_MULTITEXTURE__ON
-    highp vec4 var_ade26 = texture(s_MatTexture1, v_texcoord0);
-    highp vec4 var_76534 = var_ade26;
-    highp vec4 var_a9e04 = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
+#ifdef TINTING__DISABLED
+    highp vec4 var_bf6a8 = texture(s_MatTexture, v_texcoords.zw);
 #endif
-    highp vec2 var_7c9c5 = DitherParams2[0].xy;
-    bool var_e1a93;
-    if (DitheringEnabledToggle.x != 0.0)
+#ifdef TINTING__ENABLED
+    highp vec4 var_45919 = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_0ad11 = texture(s_MatTexture, v_texcoords.xy);
+    var_45919.w = mix(var_0ad11.x * var_0ad11.w, var_0ad11.w, var_1b1d9.w);
+    highp vec4 var_5fdbc = var_45919;
+    highp vec3 var_f30a7 = var_5fdbc.xyz * var_13038.xyz;
+    highp vec4 var_b626b = vec4(var_f30a7.x, var_f30a7.y, var_f30a7.z, var_5fdbc.w);
+    var_45919 = var_b626b;
+    highp vec4 var_bf6a8 = var_b626b;
+#endif
+    bool var_711f5 = var_bf6a8.w < ActorFPEpsilon.x;
+    bool var_7df86;
+    if (!var_711f5)
     {
-        highp mat4 var_4971e = u_view;
-        highp vec4 var_d36cf = v_clipPosition;
-        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
-        highp vec2 var_f4989 = floor(var_886c2 * 0.25);
-        highp vec2 var_85686 = floor(var_886c2 * 0.5);
-        highp vec2 var_09c49 = floor(var_886c2);
-        var_e1a93 = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_4be3d = DitherParams2[0].xy;
+        bool var_63892;
+        if (DitheringEnabledToggle.x != 0.0)
+        {
+            highp mat4 var_24edd = u_view;
+            highp vec4 var_3267d = v_clipPosition;
+            highp vec2 var_f4f10 = floor(((((v_clipPosition.xyz / vec3(var_3267d.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+            highp vec2 var_c55b8 = floor(var_f4f10 * 0.25);
+            highp vec2 var_63b62 = floor(var_f4f10 * 0.5);
+            highp vec2 var_5fe78 = floor(var_f4f10);
+            var_63892 = smoothstep(var_4be3d.x, var_4be3d.y, dot(-normalize(vec4(var_24edd[0].z, var_24edd[1].z, var_24edd[2].z, var_238cd).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c55b8.x * 0.5) + ((var_c55b8.y * var_c55b8.y) * 0.75)) * 0.25) + fract((var_63b62.x * 0.5) + ((var_63b62.y * var_63b62.y) * 0.75))) * 0.25) + fract((var_5fe78.x * 0.5) + ((var_5fe78.y * var_5fe78.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        }
+        else
+        {
+            var_63892 = false;
+        }
+        var_7df86 = var_63892;
     }
     else
     {
-        var_e1a93 = false;
+        var_7df86 = var_711f5;
     }
-#ifdef CHANGE_COLOR__MULTI
-    if (var_e1a93 || (mix(var_a9e04.w, var_a9e04.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x))
-#endif
-#ifdef CHANGE_COLOR__OFF
-    if (var_e1a93 || (mix(var_a9e04.w, var_a9e04.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5))
-#endif
+    if (var_7df86)
     {
         discard;
     }
-#ifdef CHANGE_COLOR__MULTI
-    highp vec2 var_459de = var_a9e04.xy;
-    highp vec3 var_1099e = mix((var_a9e04.xxx * ChangeColor.xyz).xyz, var_a9e04.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_459de.y)));
-    highp vec4 var_2cd46 = vec4(var_1099e.x, var_1099e.y, var_1099e.z, var_a9e04.w);
-#endif
-#ifdef CHANGE_COLOR__OFF
-    highp vec4 var_2cd46 = var_a9e04;
-#endif
-    var_2cd46.w = max(UseAlphaRewrite.x, var_2cd46.w);
-    var_a9e04 = var_2cd46;
-    highp vec3 var_657e2 = mix((var_2cd46.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_74ef0 = vec4(var_657e2.x, var_657e2.y, var_657e2.z, var_2cd46.w);
-    highp vec4 var_dc02c = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_657e2, var_74ef0.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_74ef0.w);
+    highp vec3 var_7ad1c = var_bf6a8.xyz * v_light.xyz;
+    highp vec4 var_a9e80 = vec4(var_7ad1c.x, var_7ad1c.y, var_7ad1c.z, var_bf6a8.w);
+    var_a9e80.w *= HudOpacity.x;
+    highp vec4 var_6ef7d = var_a9e80;
+    highp vec4 var_8544b = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_a9e80.xyz, var_6ef7d.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_6ef7d.w);
 }

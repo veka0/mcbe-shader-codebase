@@ -46,6 +46,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -76,11 +77,17 @@
 
 precision mediump float;
 precision highp int;
+float var_33fae;
+uniform highp mat4 u_invView;
+uniform highp mat4 u_view;
 uniform highp sampler2D s_MatTexture1;
 #ifdef TINTING__ENABLED
 uniform highp sampler2D s_MatTexture2;
 #endif
 uniform highp sampler2D s_MatTexture;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 GlintColor;
 uniform highp vec4 HudOpacity;
 #ifdef TINTING__ENABLED
@@ -89,24 +96,41 @@ uniform highp vec4 PatternCount;
 uniform highp vec4 PatternUVOffsetsAndScales[7];
 #endif
 uniform highp vec4 TileLightColor;
+in highp vec4 v_clipPosition;
 in highp vec4 v_fog;
 in highp vec4 v_layerUv;
 #ifdef UI_ENTITY__DISABLED
 in highp vec4 v_light;
 #endif
 centroid in highp vec2 v_texcoord0;
+in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_18e94 = texture(s_MatTexture, v_texcoord0);
-#if defined(TINTING__DISABLED) && defined(UI_ENTITY__DISABLED)
-    highp vec3 var_136fb = var_18e94.xyz * v_light.xyz;
-    highp vec4 var_c05da = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_18e94.w);
-#endif
-#if defined(TINTING__ENABLED) || defined(UI_ENTITY__ENABLED)
-    highp vec4 var_c05da = var_18e94;
+    highp vec4 var_c8bdb = texture(s_MatTexture, v_texcoord0);
+    highp vec2 var_7c9c5 = DitherParams2[0].xy;
+    bool var_410b5;
+    if (DitheringEnabledToggle.x != 0.0)
+    {
+        highp mat4 var_4971e = u_view;
+        highp vec4 var_d36cf = v_clipPosition;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_f4989 = floor(var_886c2 * 0.25);
+        highp vec2 var_85686 = floor(var_886c2 * 0.5);
+        highp vec2 var_09c49 = floor(var_886c2);
+        var_410b5 = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+    }
+    else
+    {
+        var_410b5 = false;
+    }
+    if (var_410b5)
+    {
+        var_c8bdb.w = 0.0;
+    }
+#if defined(TINTING__ENABLED) || defined(UI_ENTITY__DISABLED)
+    highp vec4 var_48ffd = var_c8bdb;
 #endif
 #ifdef TINTING__ENABLED
-    highp vec4 var_48ffd = var_18e94;
     for (int var_f2336 = 0; var_f2336 < int(PatternCount.x); var_f2336++)
     {
         highp vec4 var_96930 = texture(s_MatTexture2, (PatternUVOffsetsAndScales[var_f2336].zw * v_texcoord0) + PatternUVOffsetsAndScales[var_f2336].xy) * PatternColors[var_f2336];
@@ -115,35 +139,35 @@ void main() {
     }
     var_48ffd.w = 1.0;
 #endif
-#if defined(TINTING__ENABLED) && defined(UI_ENTITY__DISABLED)
-    highp vec3 var_136fb = var_48ffd.xyz * v_light.xyz;
-    var_c05da = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_48ffd.w);
+#ifdef UI_ENTITY__DISABLED
+    highp vec3 var_90012 = var_48ffd.xyz * v_light.xyz;
+    var_c8bdb = vec4(var_90012.x, var_90012.y, var_90012.z, var_48ffd.w);
 #endif
 #if defined(TINTING__ENABLED) && defined(UI_ENTITY__ENABLED)
-    var_c05da = var_48ffd;
+    var_c8bdb = var_48ffd;
 #endif
-    highp float var_d8f56 = var_c05da.w;
+    highp float var_d8f56 = var_c8bdb.w;
     highp vec4 var_6d4aa = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
 #ifdef UI_ENTITY__DISABLED
-    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_136fb, 0.0);
-#endif
-#if defined(TINTING__DISABLED) && defined(UI_ENTITY__ENABLED)
-    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_18e94.xyz, 0.0);
+    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_90012, 0.0);
 #endif
 #if defined(TINTING__ENABLED) && defined(UI_ENTITY__ENABLED)
     highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_48ffd.xyz, 0.0);
 #endif
-#ifdef TINTING__DISABLED
-    var_98c44.w = var_18e94.w;
+#if defined(TINTING__DISABLED) && defined(UI_ENTITY__ENABLED)
+    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_c8bdb.xyz, 0.0);
 #endif
-#ifdef TINTING__ENABLED
+#if defined(TINTING__ENABLED) || defined(UI_ENTITY__DISABLED)
     var_98c44.w = var_48ffd.w;
 #endif
-    var_c05da = var_98c44;
-    var_c05da.w = var_d8f56;
-    highp vec4 var_ea6de = var_c05da;
+#if defined(TINTING__DISABLED) && defined(UI_ENTITY__ENABLED)
+    var_98c44.w = var_c8bdb.w;
+#endif
+    var_c8bdb = var_98c44;
+    var_c8bdb.w = var_d8f56;
+    highp vec4 var_ea6de = var_c8bdb;
     var_ea6de.w *= HudOpacity.x;
-    var_c05da = var_ea6de;
+    var_c8bdb = var_ea6de;
     highp vec4 var_8544b = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_ea6de.xyz, var_c05da.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_c05da.w);
+    bgfx_FragColor = vec4(mix(vec4(var_ea6de.xyz, var_c8bdb.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_c8bdb.w);
 }

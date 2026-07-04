@@ -43,6 +43,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;

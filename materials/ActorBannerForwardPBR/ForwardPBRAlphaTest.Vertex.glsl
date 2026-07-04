@@ -29,8 +29,8 @@
 * - MASKED_MULTITEXTURE__ON (not used)
 *
 * Tinting:
-* - TINTING__DISABLED (not used)
-* - TINTING__ENABLED (not used)
+* - TINTING__DISABLED
+* - TINTING__ENABLED
 *
 * Available Resources:
 *
@@ -58,6 +58,7 @@
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
 * - uniform vec4 CameraAmbientContribution;
@@ -163,6 +164,10 @@ uniform mat4 PrevWorld;
 uniform mat4 u_model[4];
 uniform mat4 u_proj;
 uniform mat4 u_view;
+#ifdef TINTING__ENABLED
+uniform vec4 BannerColors[7];
+#endif
+uniform vec4 BannerUVOffsetsAndScales[7];
 uniform vec4 SubPixelOffset;
 uniform vec4 UVAnimation;
 in float a_indices;
@@ -189,6 +194,7 @@ out vec3 v_worldPos;
 void main() {
     int var_c8e27 = int(a_indices);
     mat4 var_c7bcb = u_model[0] * Bones[var_c8e27];
+    vec2 var_be3b2 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
     vec4 var_e67a8 = i_data2;
@@ -203,6 +209,7 @@ void main() {
 #ifdef INSTANCING__OFF
     vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
 #endif
+    vec4 var_db20e = a_color0;
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
@@ -210,16 +217,32 @@ void main() {
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_96145.xyz, 1.0));
+    int var_e5df4 = int(var_db20e.w * 255.0);
+    vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_be3b2) + BannerUVOffsetsAndScales[var_e5df4].xy;
+    vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_be3b2) + BannerUVOffsetsAndScales[0].xy;
+#ifdef TINTING__ENABLED
+    vec4 var_55bfd = BannerColors[var_e5df4];
+    var_55bfd.w = 1.0;
+    if (var_e5df4 > 0)
+    {
+        var_55bfd.w = 0.0;
+    }
+#endif
     vec4 var_4c816 = a_tangent;
     v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
     v_clipPosition = var_c804c;
+#ifdef TINTING__DISABLED
     v_color0 = a_color0;
+#endif
+#ifdef TINTING__ENABLED
+    v_color0 = var_55bfd;
+#endif
     v_frontFacing = 0;
     v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
-    v_texcoords = vec4(0.0);
+    v_texcoord0 = var_be3b2;
+    v_texcoords = vec4(var_838f4.x, var_838f4.y, var_ad668.x, var_ad668.y);
     v_worldPos = var_96145.xyz;
     gl_Position = var_c804c;
 }

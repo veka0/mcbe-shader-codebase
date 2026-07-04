@@ -8,7 +8,6 @@
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
-* - TRANSPARENT_PASS (not used)
 *
 * Change_Color:
 * - CHANGE_COLOR__MULTI (not used)
@@ -45,6 +44,7 @@
 * - uniform vec4 BannerBasePBRTextureData[4];
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -78,30 +78,42 @@
 
 precision mediump float;
 precision highp int;
+float var_238cd;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_view;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
+uniform highp vec4 ActorFPEpsilon;
+uniform highp vec4 BannerBasePBRTextureData[4];
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 HudOpacity;
 uniform highp vec4 TileLightIntensity;
 uniform highp vec4 u_prevWorldPosOffset;
+in highp vec3 v_bitangent;
+in highp vec4 v_clipPosition;
 #ifdef TINTING__ENABLED
 in highp vec4 v_color0;
 #endif
+in highp vec3 v_normal;
 in highp vec3 v_prevWorldPos;
+in highp vec3 v_tangent;
 centroid in highp vec4 v_texcoords;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
 layout(location = 2) out highp vec4 bgfx_FragData2;
-void func_9b13f(inout highp float arg_6097c) {
-    if (false)
+void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout highp float arg_95241) {
+    if (arg_0840d > arg_f7959)
     {
-        arg_6097c = 0.501960813999176025390625;
+        arg_95241 = 0.501960813999176025390625 + (0.4980392158031463623046875 * arg_0840d);
         return;
     }
     else
     {
-        arg_6097c = 0.4980392158031463623046875;
+        arg_95241 = 0.4980392158031463623046875 - (0.4980392158031463623046875 * arg_f7959);
         return;
     }
 }
@@ -112,64 +124,164 @@ void main() {
     highp vec4 var_1b1d9 = var_13038;
 #endif
 #ifdef TINTING__DISABLED
-    highp vec4 var_1e2a8 = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_2a22e = texture(s_MatTexture, v_texcoords.zw);
 #endif
 #ifdef TINTING__ENABLED
-    highp vec4 var_773de = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_45919 = texture(s_MatTexture, v_texcoords.zw);
     highp vec4 var_0ad11 = texture(s_MatTexture, v_texcoords.xy);
-    var_773de.w = mix(var_0ad11.x * var_0ad11.w, var_0ad11.w, var_1b1d9.w);
-    highp vec4 var_1e2a8 = var_773de;
-    highp vec3 var_e9521 = var_1e2a8.xyz * var_13038.xyz;
-    var_773de = vec4(var_e9521.x, var_e9521.y, var_e9521.z, var_1e2a8.w);
-    highp vec3 var_53e42 = var_e9521.xyz;
+    var_45919.w = mix(var_0ad11.x * var_0ad11.w, var_0ad11.w, var_1b1d9.w);
+    highp vec4 var_5fdbc = var_45919;
+    highp vec3 var_f30a7 = var_5fdbc.xyz * var_13038.xyz;
+    highp vec4 var_b626b = vec4(var_f30a7.x, var_f30a7.y, var_f30a7.z, var_5fdbc.w);
+    var_45919 = var_b626b;
+    highp vec4 var_2a22e = var_b626b;
 #endif
-#ifdef TINTING__DISABLED
-    highp vec3 var_53e42 = var_1e2a8.xyz;
-#endif
-    highp vec3 var_0fefe = var_53e42;
-    highp vec3 var_83526 = var_53e42 * vec3(0.077399380505084991455078125);
-    highp vec3 var_138ce = pow((var_53e42 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
-    highp float var_8f9f2;
-    if (var_0fefe.x <= 0.040449999272823333740234375)
+    bool var_711f5 = var_2a22e.w < ActorFPEpsilon.x;
+    bool var_7df86;
+    if (!var_711f5)
     {
-        var_8f9f2 = var_83526.x;
+        highp vec2 var_4be3d = DitherParams2[0].xy;
+        bool var_63892;
+        if (DitheringEnabledToggle.x != 0.0)
+        {
+            highp mat4 var_24edd = u_view;
+            highp vec4 var_3267d = v_clipPosition;
+            highp vec2 var_f4f10 = floor(((((v_clipPosition.xyz / vec3(var_3267d.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+            highp vec2 var_c55b8 = floor(var_f4f10 * 0.25);
+            highp vec2 var_63b62 = floor(var_f4f10 * 0.5);
+            highp vec2 var_5fe78 = floor(var_f4f10);
+            var_63892 = smoothstep(var_4be3d.x, var_4be3d.y, dot(-normalize(vec4(var_24edd[0].z, var_24edd[1].z, var_24edd[2].z, var_238cd).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c55b8.x * 0.5) + ((var_c55b8.y * var_c55b8.y) * 0.75)) * 0.25) + fract((var_63b62.x * 0.5) + ((var_63b62.y * var_63b62.y) * 0.75))) * 0.25) + fract((var_5fe78.x * 0.5) + ((var_5fe78.y * var_5fe78.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        }
+        else
+        {
+            var_63892 = false;
+        }
+        var_7df86 = var_63892;
     }
     else
     {
-        var_8f9f2 = var_138ce.x;
+        var_7df86 = var_711f5;
     }
-    var_0fefe.x = var_8f9f2;
-    highp float var_96ac3;
-    if (var_0fefe.y <= 0.040449999272823333740234375)
+    if (var_7df86)
     {
-        var_96ac3 = var_83526.y;
+        discard;
+    }
+    highp vec4 var_414c0 = var_2a22e;
+    var_414c0.w *= HudOpacity.x;
+    highp vec4 var_1d587 = var_414c0;
+    int var_95bcd = int(BannerBasePBRTextureData[2].x);
+    highp vec2 var_2b923 = vec2(BannerBasePBRTextureData[1].x, BannerBasePBRTextureData[1].y);
+    highp vec2 var_b7839 = vec2(BannerBasePBRTextureData[1].z, BannerBasePBRTextureData[1].w);
+    highp vec3 var_7291d;
+    if ((var_95bcd & 4) == 4)
+    {
+        var_7291d = (texture(s_MatTexture, (v_texcoords.zw * var_2b923) + var_b7839).xyz * 2.0) - vec3(1.0);
     }
     else
     {
-        var_96ac3 = var_138ce.y;
+        highp vec3 var_9252d;
+        if ((var_95bcd & 8) == 8)
+        {
+            highp vec2 var_9491c = (v_texcoords.zw * var_2b923) + var_b7839;
+            highp vec3 var_2ae5f = vec3(0.0, 0.0, 1.0);
+            highp float var_92e4d = clamp((min(BannerBasePBRTextureData[3].w - BannerBasePBRTextureData[3].y, BannerBasePBRTextureData[3].w) * (-1.0)) + 2.0, 0.0, 1.0);
+            if (var_92e4d > 0.0)
+            {
+                highp vec2 var_f388f = var_9491c;
+                highp vec2 var_a836e = var_f388f * vec2(textureSize(s_MatTexture, 0));
+                highp vec2 var_f7221 = fract(var_a836e);
+                if (abs(var_f7221.x - 0.5) < 0.0625)
+                {
+                    var_9491c.x += ((var_f7221.x > 0.5) ? 3.814697265625e-06 : (-3.814697265625e-06));
+                }
+                if (abs(var_f7221.y - 0.5) < 0.0625)
+                {
+                    var_9491c.y += ((var_f7221.y > 0.5) ? 3.814697265625e-06 : (-3.814697265625e-06));
+                }
+                highp vec4 var_224f0 = textureGather(s_MatTexture, var_9491c);
+                highp vec2 var_64604 = fract(var_a836e + vec2(0.5));
+                highp vec2 var_ed03c;
+                if (var_64604.y > 0.5)
+                {
+                    var_ed03c = var_224f0.xy;
+                }
+                else
+                {
+                    var_ed03c = var_224f0.wz;
+                }
+                highp vec2 var_8b660 = var_ed03c;
+                ivec2 var_5da0a = ivec2(clamp(vec2(var_64604.x - 0.083333335816860198974609375, var_64604.x + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
+                var_2ae5f.x = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
+                highp vec2 var_a6d82;
+                if (var_64604.x > 0.5)
+                {
+                    var_a6d82 = var_224f0.zy;
+                }
+                else
+                {
+                    var_a6d82 = var_224f0.wx;
+                }
+                var_8b660 = var_a6d82;
+                var_5da0a = ivec2(clamp(vec2(var_64604.y - 0.083333335816860198974609375, var_64604.y + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
+                var_2ae5f.y = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
+                var_2ae5f.z = 0.25;
+                highp vec3 var_1cc05 = normalize(var_2ae5f);
+                highp vec2 var_cb68a = var_1cc05.xy * var_92e4d;
+                var_2ae5f = vec3(var_cb68a.x, var_cb68a.y, var_1cc05.z);
+            }
+            var_9252d = var_2ae5f;
+        }
+        else
+        {
+            var_9252d = vec3(0.0, 0.0, 1.0);
+        }
+        var_7291d = var_9252d;
     }
-    var_0fefe.y = var_96ac3;
-    highp float var_8ff8b;
-    if (var_0fefe.z <= 0.040449999272823333740234375)
+    highp float var_53979;
+    highp float var_e87f4;
+    highp float var_b7687;
+    highp float var_e9ad4;
+    if ((var_95bcd & 1) == 1)
     {
-        var_8ff8b = var_83526.z;
+        highp vec4 var_fb54f = texture(s_MatTexture, (v_texcoords.zw * vec2(BannerBasePBRTextureData[0].x, BannerBasePBRTextureData[0].y)) + vec2(BannerBasePBRTextureData[0].z, BannerBasePBRTextureData[0].w));
+        highp float var_0c75b;
+        if ((var_95bcd & 2) == 2)
+        {
+            var_0c75b = var_fb54f.w;
+        }
+        else
+        {
+            var_0c75b = BannerBasePBRTextureData[3].x;
+        }
+        var_e9ad4 = var_0c75b;
+        var_b7687 = var_fb54f.y;
+        var_e87f4 = var_fb54f.x;
+        var_53979 = var_fb54f.z;
     }
     else
     {
-        var_8ff8b = var_138ce.z;
+        var_e9ad4 = BannerBasePBRTextureData[3].x;
+        var_b7687 = BannerBasePBRTextureData[2].z;
+        var_e87f4 = BannerBasePBRTextureData[2].w;
+        var_53979 = BannerBasePBRTextureData[2].y;
     }
-    var_0fefe.z = var_8ff8b;
-    highp vec4 var_edaf7 = vec4(var_0fefe.x, var_0fefe.y, var_0fefe.z, var_1e2a8.w);
-    var_edaf7.w *= HudOpacity.x;
-    highp vec4 var_1d587 = var_edaf7;
-    highp vec4 var_08b04 = vec4(var_edaf7.xyz, var_1d587.w);
+    highp vec3 var_276aa;
+    if (int(gl_FrontFacing) != 0)
+    {
+        var_276aa = -v_normal;
+    }
+    else
+    {
+        var_276aa = v_normal;
+    }
+    highp vec4 var_08b04 = vec4(var_414c0.xyz, var_1d587.w);
     highp vec4 var_e74f1 = vec4(var_08b04.x, var_08b04.y, var_08b04.z, var_08b04.w);
-    highp float var_1d2b2;
-    func_9b13f(var_1d2b2);
-    var_e74f1.w = var_1d2b2;
-    highp vec3 var_4842b = normalize(vec3(0.0, 1.0, 0.0));
-    highp vec3 var_cd914 = var_4842b;
-    highp vec2 var_645ff = var_4842b.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
+    highp float var_7aa46;
+    func_fb7ab(var_e87f4, var_e9ad4, var_7aa46);
+    var_e74f1.w = var_7aa46;
+    highp vec3 var_9c9d2 = normalize(transpose(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(var_276aa)))) * var_7291d);
+    highp vec3 var_cd914 = var_9c9d2;
+    highp vec2 var_645ff = var_9c9d2.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
     highp vec2 var_72494;
     if (var_cd914.z < 0.0)
     {
@@ -191,5 +303,5 @@ void main() {
     var_96bda = var_c94a9;
     bgfx_FragData0 = var_e74f1;
     bgfx_FragData1 = vec4(var_72494, var_efb33.xy - var_c94a9.xy);
-    bgfx_FragData2 = vec4(0.0, TileLightIntensity.x, TileLightIntensity.y, 1.0);
+    bgfx_FragData2 = vec4(var_b7687, TileLightIntensity.x, TileLightIntensity.y, var_53979);
 }

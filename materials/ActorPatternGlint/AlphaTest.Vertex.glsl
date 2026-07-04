@@ -46,6 +46,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -86,6 +87,7 @@ uniform vec4 OverlayColor;
 uniform vec4 SubPixelOffset;
 uniform vec4 TileLightColor;
 uniform vec4 UVAnimation;
+uniform vec4 UVScale;
 #if defined(FANCY__ON) || defined(INSTANCING__OFF)
 in float a_indices;
 #endif
@@ -109,6 +111,22 @@ centroid out vec2 v_texcoord0;
 centroid out vec4 v_texcoords;
 out vec3 v_worldPos;
 void main() {
+    float var_97211 = sin(UVAnimation.z);
+    float var_ce25b = cos(UVAnimation.z);
+    vec2 var_98b8b = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_ce25b, -var_97211), vec2(var_97211, var_ce25b));
+    var_98b8b.x += UVAnimation.x;
+    vec2 var_eb807 = var_98b8b;
+    vec2 var_e0bbc = var_eb807 + vec2(0.5);
+    var_98b8b = var_e0bbc;
+    vec2 var_1a9e2 = var_e0bbc * UVScale.xy;
+    float var_89ba8 = sin(UVAnimation.w);
+    float var_104e7 = cos(UVAnimation.w);
+    vec2 var_65238 = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_104e7, -var_89ba8), vec2(var_89ba8, var_104e7));
+    var_65238.x += UVAnimation.y;
+    vec2 var_0ef75 = var_65238;
+    vec2 var_a930f = var_0ef75 + vec2(0.5);
+    var_65238 = var_a930f;
+    vec2 var_fa5b0 = var_a930f * UVScale.xy;
 #if defined(FANCY__OFF) && defined(INSTANCING__OFF)
     vec4 var_04231 = (u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0);
 #endif
@@ -145,14 +163,14 @@ void main() {
     v_clipPosition = var_04ab5;
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
-    v_layerUv = vec4(0.0);
+    v_layerUv = vec4(var_1a9e2.x, var_1a9e2.y, var_fa5b0.x, var_fa5b0.y);
 #ifdef FANCY__OFF
     v_light = vec4(TileLightColor.xyz * (1.0 + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
 #endif
 #ifdef FANCY__ON
     v_light = vec4(TileLightColor.xyz * ((((((1.0 + var_dc61b.y) * 0.2750000059604644775390625) + ((var_dc61b.x * var_dc61b.x) * (-0.100000001490116119384765625))) + ((var_dc61b.z * var_dc61b.z) * 0.100000001490116119384765625)) + 0.449999988079071044921875) + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
 #endif
-    v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
+    v_texcoord0 = a_texcoord0;
     v_texcoords = vec4(0.0);
     v_worldPos = var_04231.xyz;
     gl_Position = var_04ab5;

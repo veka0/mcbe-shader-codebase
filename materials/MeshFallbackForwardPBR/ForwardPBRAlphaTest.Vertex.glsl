@@ -7,9 +7,6 @@
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - RASTERIZED_ALPHA_TEST_PASS (not used)
-* - RASTERIZED_OPAQUE_PASS (not used)
-* - RASTERIZED_TRANSPARENT_PASS (not used)
 *
 * AlphaTest:
 * - ALPHA_TEST__OFF (not used)
@@ -51,6 +48,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;

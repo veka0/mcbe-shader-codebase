@@ -24,8 +24,12 @@
 * Available Resources:
 *
 * Uniforms:
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 LightDiffuseColorAndIlluminance;

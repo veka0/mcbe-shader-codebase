@@ -23,8 +23,12 @@
 * Available Resources:
 *
 * Uniforms:
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MaterialID;
