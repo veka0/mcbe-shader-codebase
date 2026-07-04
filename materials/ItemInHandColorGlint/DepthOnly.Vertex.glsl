@@ -78,21 +78,25 @@ out vec4 v_light;
 out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-    float var_97211 = sin(UVAnimation.z);
-    float var_ce25b = cos(UVAnimation.z);
-    vec2 var_98b8b = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_ce25b, -var_97211), vec2(var_97211, var_ce25b));
-    var_98b8b.x += UVAnimation.x;
-    vec2 var_eb807 = var_98b8b;
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_22c65 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_22c65.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_22c65.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
+    float var_4e585 = sin(UVAnimation.z);
+    float var_04af3 = cos(UVAnimation.z);
+    vec2 var_ddacc = (var_22c65 - vec2(0.5)) * mat2(vec2(var_04af3, -var_4e585), vec2(var_4e585, var_04af3));
+    var_ddacc.x += UVAnimation.x;
+    vec2 var_eb807 = var_ddacc;
     vec2 var_e0bbc = var_eb807 + vec2(0.5);
-    var_98b8b = var_e0bbc;
+    var_ddacc = var_e0bbc;
     vec2 var_45c22 = var_e0bbc * UVScale.xy;
-    float var_89ba8 = sin(UVAnimation.w);
-    float var_104e7 = cos(UVAnimation.w);
-    vec2 var_65238 = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_104e7, -var_89ba8), vec2(var_89ba8, var_104e7));
-    var_65238.x += UVAnimation.y;
-    vec2 var_0ef75 = var_65238;
+    float var_6a4a7 = sin(UVAnimation.w);
+    float var_758cc = cos(UVAnimation.w);
+    vec2 var_e87b6 = (var_22c65 - vec2(0.5)) * mat2(vec2(var_758cc, -var_6a4a7), vec2(var_6a4a7, var_758cc));
+    var_e87b6.x += UVAnimation.y;
+    vec2 var_0ef75 = var_e87b6;
     vec2 var_a930f = var_0ef75 + vec2(0.5);
-    var_65238 = var_a930f;
+    var_e87b6 = var_a930f;
     vec2 var_dc447 = var_a930f * UVScale.xy;
 #ifdef FANCY__ON
     vec3 var_f099e = normalize(u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
@@ -120,6 +124,10 @@ void main() {
     var_cbf5d[2] = var_67767;
     vec4 var_04ab5 = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
     vec4 var_27f6b = var_04ab5;
+    uvec2 var_21404 = uvec2(round(var_22c65 * 65535.0));
+    vec2 var_45935 = vec2(float((var_21404.x & 32767u) << uint(1)), float((var_21404.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_21404.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_21404.y & 32768u) >> uint(15))) - 1.0));
     v_clipPosition = var_04ab5;
     v_color0 = vec4(0.0);
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
@@ -130,7 +138,7 @@ void main() {
 #ifdef FANCY__ON
     v_light = vec4(TileLightColor.xyz * ((((((1.0 + var_f099e.y) * 0.2750000059604644775390625) + ((var_f099e.x * var_f099e.x) * (-0.100000001490116119384765625))) + ((var_f099e.z * var_f099e.z) * 0.100000001490116119384765625)) + 0.449999988079071044921875) + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
 #endif
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_worldPos = var_e2d09.xyz;
     gl_Position = var_04ab5;
 }

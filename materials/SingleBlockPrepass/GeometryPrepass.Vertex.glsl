@@ -135,6 +135,10 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec4 var_d80ab = var_4d882 * (u_view * vec4(var_05010, 1.0));
 #endif
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     vec4 var_4938b = a_tangent;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_clipPosition = var_d80ab;
@@ -149,7 +153,7 @@ void main() {
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_prevWorldPos = vec3(0.0);
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_worldPos = var_e2d09.xyz;
 #endif

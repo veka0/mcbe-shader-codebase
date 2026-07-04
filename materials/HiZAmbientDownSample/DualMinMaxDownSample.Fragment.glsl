@@ -5,7 +5,6 @@
 *
 * Passes:
 * - DUAL_MIN_MAX_DOWN_SAMPLE_PASS (not used)
-* - MIN_MAX_DOWN_SAMPLE_PASS (not used)
 *
 * Mode:
 * - MODE__INITIALIZE

@@ -15,6 +15,7 @@
 * Uniforms:
 * - uniform vec4 Data_PS[128];
 * - uniform vec4 Data_VS[128];
+* - uniform vec4 UVTransform[5];
 */
 
 precision mediump float;
@@ -23,24 +24,25 @@ vec3 var_8add6;
 uniform highp sampler2D s_txBuffer1;
 uniform highp sampler2D s_txBuffer;
 uniform highp vec4 Data_PS[128];
+uniform highp vec4 UVTransform[5];
 in highp vec4 v_Additional;
 in highp vec4 v_NoPerspParam;
 flat in highp vec4 v_VaryingData;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_1ef9f = v_Additional;
-    highp vec4 var_acbbe = v_NoPerspParam;
+    highp vec4 var_4144a = v_Additional;
+    highp vec4 var_8fd7e = v_NoPerspParam;
     uvec4 var_c4012 = uvec4(v_VaryingData);
     int var_c37fe = int((var_c4012.z << uint(4)) | ((var_c4012.y & 240u) >> uint(4)));
     highp vec4 var_2a305 = Data_PS[var_c37fe];
     highp vec4 var_51ea2 = Data_PS[var_c37fe + 1];
     highp vec4 var_3e166 = Data_PS[int(var_51ea2.w)];
-    highp vec4 var_17d7b = texture(s_txBuffer1, vec2(var_acbbe.z, 1.0 - var_acbbe.w));
-    highp vec4 var_a5547 = var_17d7b;
-    highp vec4 var_22352 = texture(s_txBuffer, vec2(var_1ef9f.x, 1.0 - var_1ef9f.y));
-    highp vec4 var_51ac8 = var_22352 * var_2a305.w;
+    highp vec4 var_8e498 = texture(s_txBuffer1, (vec2(var_8fd7e.z, 1.0 - var_8fd7e.w) * UVTransform[1].zw) + UVTransform[1].xy);
+    highp vec4 var_a5547 = var_8e498;
+    highp vec4 var_e1066 = texture(s_txBuffer, (vec2(var_4144a.x, 1.0 - var_4144a.y) * UVTransform[0].zw) + UVTransform[0].xy);
+    highp vec4 var_51ac8 = var_e1066 * var_2a305.w;
     highp vec4 var_9b012 = var_51ac8;
-    highp vec3 var_3c560 = var_17d7b.xyz / vec3(max(var_a5547.w, 9.9999997473787516355514526367188e-05));
+    highp vec3 var_3c560 = var_8e498.xyz / vec3(max(var_a5547.w, 9.9999997473787516355514526367188e-05));
     highp vec3 var_55a07 = var_51ac8.xyz / vec3(max(var_9b012.w, 9.9999997473787516355514526367188e-05));
     highp vec3 var_ec6b7;
     switch (int(var_3e166.x))
@@ -422,5 +424,5 @@ void main() {
             break;
         }
     }
-    bgfx_FragColor = ((var_51ac8 * (1.0 - var_a5547.w)) + (vec4(clamp(var_ec6b7, vec3(0.0), vec3(1.0)), 1.0) * (var_9b012.w * var_a5547.w))) + (var_17d7b * (1.0 - var_9b012.w));
+    bgfx_FragColor = ((var_51ac8 * (1.0 - var_a5547.w)) + (vec4(clamp(var_ec6b7, vec3(0.0), vec3(1.0)), 1.0) * (var_9b012.w * var_a5547.w))) + (var_8e498 * (1.0 - var_9b012.w));
 }

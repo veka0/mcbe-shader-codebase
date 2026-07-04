@@ -102,6 +102,10 @@ void main() {
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_a77b2.xyz, 1.0));
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     vec4 var_df94c = a_color0;
     if (var_9d5b1.w < 0.949999988079071044921875)
     {
@@ -115,7 +119,7 @@ void main() {
     v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
     v_fog = vec4(FogColor.xyz, clamp((((var_9454e / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_textureShift = a_texcoord2;
     v_worldPos = var_66b1f;
     v_worldPosition = vec4(var_a77b2.xyz, 0.0);

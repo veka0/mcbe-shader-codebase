@@ -15,6 +15,7 @@
 * Uniforms:
 * - uniform vec4 Data_PS[128];
 * - uniform vec4 Data_VS[128];
+* - uniform vec4 UVTransform[5];
 */
 
 uniform vec4 Data_VS[128];

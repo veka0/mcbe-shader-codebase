@@ -163,6 +163,10 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_9b079 = var_e43a8 * vec4(a_position, 1.0);
 #endif
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     vec4 var_4938b = a_tangent;
     vec4 var_57c72 = a_normal;
     uvec2 var_b33a4 = uvec2(round(a_texcoord1 * 65535.0));
@@ -181,7 +185,7 @@ void main() {
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_worldPos = var_9b079.xyz;
     gl_Position = u_viewProj * vec4(var_9b079.xyz, 1.0);
 }

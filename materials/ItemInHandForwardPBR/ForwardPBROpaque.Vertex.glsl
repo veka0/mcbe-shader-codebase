@@ -174,6 +174,10 @@ void main() {
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_clipPosition = var_c804c;
     v_color0 = a_color0;
@@ -182,7 +186,7 @@ void main() {
     v_pbrTextureId = 0;
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_worldPos = var_e2d09.xyz;
     gl_Position = var_c804c;
 }

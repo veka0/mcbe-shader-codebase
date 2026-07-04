@@ -113,10 +113,18 @@ void main() {
     var_4d882[2] = var_67767;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     vec4 var_d80ab = var_4d882 * (u_view * vec4(var_a77b2.xyz, 1.0));
-    vec4 var_ca76d = a_color0;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec4 var_d80ab = var_4d882 * (u_view * vec4(var_d4226, 1.0));
+#endif
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
+#ifdef RENDER_AS_BILLBOARDS__OFF
+    vec4 var_ca76d = a_color0;
+#endif
+#ifdef RENDER_AS_BILLBOARDS__ON
     vec4 var_ca76d = vec4(1.0);
 #endif
     if (var_9d5b1.w < 0.949999988079071044921875)
@@ -131,7 +139,7 @@ void main() {
     v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
     v_fog = vec4(FogColor.xyz, clamp((((var_e3e0a / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_worldPos = var_7848e;
     v_worldPosition = vec4(var_a77b2.xyz, 0.0);
     gl_Position = var_d80ab;

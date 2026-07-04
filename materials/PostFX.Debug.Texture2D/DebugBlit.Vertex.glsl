@@ -14,6 +14,7 @@
 * Uniforms:
 * - uniform vec4 ClipPlanes;
 * - uniform vec4 DebugMode;
+* - uniform vec4 MipLevel;
 */
 
 in vec4 a_position;

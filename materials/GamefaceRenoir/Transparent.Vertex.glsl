@@ -21,6 +21,7 @@
 * - uniform vec4 GradientStartColor;
 * - uniform vec4 GradientYCoord;
 * - uniform vec4 MaskScaleAndOffset;
+* - uniform vec4 UVTransform[5];
 */
 
 uniform vec4 Data_VS[128];

@@ -112,6 +112,10 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec4 var_d80ab = var_4d882 * (u_view * vec4(var_4e1ae, 1.0));
 #endif
+    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
+    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
     uvec2 var_5e4ed = var_6d79f;
     v_clipPosition = var_d80ab;
@@ -129,7 +133,7 @@ void main() {
     v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_4e1ae) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = var_45935;
     v_worldPos = var_35d42;
     v_worldPosition = vec4(var_a77b2.xyz, 0.0);
     gl_Position = var_d80ab;
