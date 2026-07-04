@@ -132,6 +132,7 @@ precision mediump float;
 precision highp int;
 uniform highp sampler2D s_LightMapTexture;
 uniform highp sampler2D s_MatTexture;
+in highp vec3 v_lightColor;
 in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
@@ -141,5 +142,7 @@ void main() {
     {
         discard;
     }
-    bgfx_FragData[0] = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
+    highp vec2 var_4eb4e = v_lightmapUV;
+    highp vec3 var_3d663 = texture(s_LightMapTexture, vec2(0.0, var_4eb4e.y)).xyz;
+    bgfx_FragData[0] = vec4(clamp(sqrt(v_lightColor + (var_3d663 * var_3d663)), vec3(0.0), vec3(1.0)), 1.0);
 }

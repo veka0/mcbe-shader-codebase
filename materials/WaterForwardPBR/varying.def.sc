@@ -18,6 +18,7 @@ vec2          v_ditheringAndMaskTinting : TEXCOORD2;
 #ifdef DO_WATER_SURFACE_BUFFER_PASS
 flat int      v_frontFacing             : FRONTFACING;
 #endif
+vec3          v_lightColor              : TEXCOORD5;
 vec2          v_lightmapUV              : TEXCOORD1;
 vec3          v_normal                  : NORMAL;
 #ifdef DO_WATER_SURFACE_BUFFER_PASS

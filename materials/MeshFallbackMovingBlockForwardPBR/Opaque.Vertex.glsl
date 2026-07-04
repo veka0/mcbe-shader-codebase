@@ -184,9 +184,8 @@ void main() {
     mat4 var_52789 = u_proj;
     var_52789[2].x += SubPixelOffset.x;
     var_52789[2].y -= SubPixelOffset.y;
-    vec2 var_c34f1 = a_texcoord1;
-    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
-    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
+    uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
+    uvec2 var_5e4ed = var_6d79f;
     v_bitangent = vec3(0.0);
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
@@ -194,8 +193,8 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
-    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
-    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
+    v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
+    v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_normal = vec3(0.0);
     v_pbrTextureId = 0;
     v_tangent = vec3(0.0);
