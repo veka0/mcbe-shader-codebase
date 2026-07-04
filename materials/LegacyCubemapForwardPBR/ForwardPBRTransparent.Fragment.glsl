@@ -21,10 +21,8 @@
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
-* - layout(binding = 7, std430) buffer s_zGpuEntryBufferBuffer { GpuVolumeEntry s_zGpuEntryBuffer[]; };
-* - layout(binding = 8, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 9, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
-* - layout(binding = 10, std430) buffer s_zVoxelBufferBuffer { VoxelNode s_zVoxelBuffer[]; };
+* - layout(binding = 7, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -54,14 +52,13 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
-* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
@@ -119,7 +116,7 @@ uniform highp vec4 CloudRenderDistanceAndCloudHeight;
 uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 uniform highp vec4 FogSkyBlend;
 uniform highp vec4 MoonColor;
 uniform highp vec4 MoonDir;
@@ -208,10 +205,10 @@ void main() {
     highp vec3 var_9e11a = var_fe390.xyz;
     highp vec3 var_a32a9;
     func_9b87e(var_a32a9, var_9e11a);
-    highp vec4 var_72a39 = vec4(var_a32a9, var_ab9d7.w);
-    highp vec4 var_da3c1 = var_72a39;
-    highp vec4 var_2006d = DirectionalLightSourceDiffuseColorAndIlluminance;
-    highp vec3 var_eb03b = (((var_72a39.xyz * AmbientLightParams.xyz) * SkyboxAmbientIlluminance.x) + (((var_72a39.xyz * (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w)) * SkyboxParameters.x) * DiffuseSpecularEmissiveAmbientTermToggles.w)) + ((var_72a39.xyz * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_2006d.w) * SkyboxParameters.y)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.x);
+    highp vec4 var_53298 = vec4(var_a32a9, var_ab9d7.w);
+    highp vec4 var_da3c1 = var_53298;
+    highp vec4 var_f096f = DirectionalLightSourceDiffuseColorAndIlluminance;
+    highp vec3 var_9146d = (((var_53298.xyz * AmbientLightParams.xyz) * SkyboxAmbientIlluminance.x) + (((var_53298.xyz * (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w)) * SkyboxParameters.x) * DiffuseSpecularEmissiveAmbientTermToggles.w)) + ((var_53298.xyz * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_f096f.w) * SkyboxParameters.y)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight.x);
     bool var_78d96 = SkyboxParameters.z != 0.0;
     bool var_0abf2;
     if (var_78d96)
@@ -243,18 +240,18 @@ void main() {
             highp float var_35539 = clamp(pow(max(var_53465, 0.0), AtmosphericScattering.w), 0.0, 1.0);
             highp float var_2d3b9 = 1.809999942779541015625 - (var_8374b * 1.7999999523162841796875);
             highp float var_e5013 = 1.809999942779541015625 - (var_35539 * 1.7999999523162841796875);
-            highp vec3 var_fb0d8 = mix(var_eb03b, (((mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_4c567 * var_4c567) * var_4c567)) * AtmosphericScattering.x) * 0.079577468335628509521484375) * ((var_e5cf9.w * (0.75 * ((var_fe1c1 * var_fe1c1) + 1.0))) + (var_0a854.w * (0.75 * ((var_53465 * var_53465) + 1.0))))) + (((SkyHorizonColor.xyz * ((var_f6039 * var_f6039) * var_f6039)) * 0.079577468335628509521484375) * (((((SunColor.xyz * var_e5cf9.w) * AtmosphericScattering.y) * var_8374b) * (0.0361000001430511474609375 / (var_2d3b9 * sqrt(var_2d3b9)))) + ((((MoonColor.xyz * var_0a854.w) * AtmosphericScattering.z) * var_35539) * (0.0361000001430511474609375 / (var_e5013 * sqrt(var_e5013)))))), vec3(var_19ea0));
+            highp vec3 var_fb0d8 = mix(var_9146d, (((mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_4c567 * var_4c567) * var_4c567)) * AtmosphericScattering.x) * 0.079577468335628509521484375) * ((var_e5cf9.w * (0.75 * ((var_fe1c1 * var_fe1c1) + 1.0))) + (var_0a854.w * (0.75 * ((var_53465 * var_53465) + 1.0))))) + (((SkyHorizonColor.xyz * ((var_f6039 * var_f6039) * var_f6039)) * 0.079577468335628509521484375) * (((((SunColor.xyz * var_e5cf9.w) * AtmosphericScattering.y) * var_8374b) * (0.0361000001430511474609375 / (var_2d3b9 * sqrt(var_2d3b9)))) + ((((MoonColor.xyz * var_0a854.w) * AtmosphericScattering.z) * var_35539) * (0.0361000001430511474609375 / (var_e5013 * sqrt(var_e5013)))))), vec3(var_19ea0));
             var_a4d0b = var_fb0d8;
         }
         else
         {
-            var_a4d0b = var_eb03b;
+            var_a4d0b = var_9146d;
         }
         var_663b7 = var_a4d0b;
     }
     else
     {
-        var_663b7 = var_eb03b;
+        var_663b7 = var_9146d;
     }
     bool var_08c3b = SkyboxParameters.w != 0.0;
     bool var_ebbe3;

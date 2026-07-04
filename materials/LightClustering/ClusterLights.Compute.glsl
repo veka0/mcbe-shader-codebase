@@ -34,8 +34,8 @@ struct LightExtends {
     vec4 pos;
     int index;
     float radius;
-    int pad0;
     int pad1;
+    int pad2;
 };
 
 struct LightContribution {
