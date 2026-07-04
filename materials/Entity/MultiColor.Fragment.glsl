@@ -98,7 +98,7 @@ in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
-    highp vec4 var_17327 = texture(s_MatTexture2, v_texcoord0);
+    highp vec4 var_ff0ca = texture(s_MatTexture2, v_texcoord0);
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
     highp vec4 var_10db1 = texture(s_MatTexture2, v_texcoord0);
@@ -112,21 +112,28 @@ void main() {
 #if defined(SOURCE_INPUT_TYPE1__CONSTANT) && defined(SOURCE_INPUT_TYPE2__CONSTANT)
     highp vec4 var_6b8e9 = MatColor2;
 #endif
-#ifdef SOURCE_INPUT_TYPE1__SAMPLED
-    highp vec4 var_17327 = texture(s_MatTexture1, v_texcoord0);
+#if defined(SOURCE_INPUT_TYPE1__SAMPLED) && (defined(SOURCE_INPUT_TYPE0__CONSTANT) || defined(SOURCE_INPUT_TYPE2__SHARED0) || defined(SOURCE_INPUT_TYPE2__SHARED1))
+    highp vec4 var_ff0ca = texture(s_MatTexture1, v_texcoord0);
+#endif
+#if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && (defined(SOURCE_INPUT_TYPE2__CONSTANT) || defined(SOURCE_INPUT_TYPE2__SAMPLED))
+    highp vec4 var_4c26f = texture(s_MatTexture1, v_texcoord0);
 #endif
 #if defined(SOURCE_INPUT_TYPE2__SAMPLED) && (defined(SOURCE_INPUT_TYPE0__SAMPLED) || defined(SOURCE_INPUT_TYPE1__SAMPLED))
     highp vec4 var_10db1 = texture(s_MatTexture2, v_texcoord0);
 #endif
 // Approximation, matches 23 cases out of 24
-#if defined(SOURCE_INPUT_TYPE1__SAMPLED) && (defined(SOURCE_INPUT_TYPE0__SAMPLED) || !defined(SOURCE_INPUT_TYPE2__SHARED1))
-    highp vec4 var_55860 = var_17327;
+#if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
+    highp vec4 var_02614 = var_ff0ca;
 #endif
-#if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED1)
-    highp vec4 var_87700 = var_17327;
+// Approximation, matches 23 cases out of 24
+#if defined(SOURCE_INPUT_TYPE1__SAMPLED) && (defined(SOURCE_INPUT_TYPE0__CONSTANT) || defined(SOURCE_INPUT_TYPE2__SHARED0) || defined(SOURCE_INPUT_TYPE2__SHARED1))
+    highp vec4 var_fed9b = var_ff0ca;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && (defined(SOURCE_INPUT_TYPE1__CONSTANT) || defined(SOURCE_INPUT_TYPE1__SHARED0)) && (defined(SOURCE_INPUT_TYPE1__SHARED0) || defined(SOURCE_INPUT_TYPE2__SHARED0))
     highp vec4 var_be2c2 = var_63c6d;
+#endif
+#if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && (defined(SOURCE_INPUT_TYPE2__CONSTANT) || defined(SOURCE_INPUT_TYPE2__SAMPLED))
+    highp vec4 var_08849 = var_4c26f;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && (defined(SOURCE_INPUT_TYPE1__SHARED0) || defined(SOURCE_INPUT_TYPE2__SHARED0))
     highp vec4 var_799c6 = MatColor0;
@@ -141,7 +148,7 @@ void main() {
     highp vec4 var_f0c90 = var_10db1;
 #endif
 #if defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED1)
-    highp vec4 var_d8891 = var_17327;
+    highp vec4 var_d8891 = var_ff0ca;
 #endif
 #if defined(SOURCE_INPUT_TYPE2__SAMPLED) && (defined(SOURCE_INPUT_TYPE0__SAMPLED) || defined(SOURCE_INPUT_TYPE1__SHARED0))
     highp vec4 var_9d20d = var_10db1;
@@ -159,7 +166,7 @@ void main() {
     highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, MatColor2.xyz, vec3(var_6b8e9.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
-    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, var_17327.xyz, vec3(var_55860.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, var_ff0ca.xyz, vec3(var_02614.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT) && defined(SOURCE_INPUT_TYPE2__SHARED0)
     highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, MatColor0.xyz, vec3(var_799c6.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
@@ -168,16 +175,16 @@ void main() {
     highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, MatColor1.xyz, vec3(var_78656.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__CONSTANT)
-    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_ff0ca.xyz, vec3(var_fed9b.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
-    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, var_10db1.xyz, vec3(var_f0c90.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_ff0ca.xyz, vec3(var_fed9b.w)).xyz, var_10db1.xyz, vec3(var_f0c90.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED1)
-    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_17327.xyz, vec3(var_87700.w)).xyz, var_17327.xyz, vec3(var_d8891.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_ff0ca.xyz, vec3(var_02614.w)).xyz, var_ff0ca.xyz, vec3(var_d8891.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED0)
-    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, MatColor0.xyz, vec3(var_799c6.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, var_ff0ca.xyz, vec3(var_fed9b.w)).xyz, MatColor0.xyz, vec3(var_799c6.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0) && defined(SOURCE_INPUT_TYPE2__CONSTANT)
     highp vec3 var_4603e = mix((mix(mix(mix(MatColor0.xyz, MatColor0.xyz, vec3(var_799c6.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
@@ -204,19 +211,19 @@ void main() {
     highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, MatColor1.xyz, vec3(var_93a6a.w)).xyz, MatColor1.xyz, vec3(var_78656.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__CONSTANT)
-    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_4c26f.xyz, vec3(var_08849.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SHARED0) && defined(SOURCE_INPUT_TYPE2__CONSTANT)
     highp vec3 var_4d3f1 = mix((mix(mix(mix(var_63c6d.xyz, var_63c6d.xyz, vec3(var_be2c2.w)).xyz, MatColor2.xyz, vec3(var_2d692.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
-    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, var_10db1.xyz, vec3(var_9d20d.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_4c26f.xyz, vec3(var_08849.w)).xyz, var_10db1.xyz, vec3(var_9d20d.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED0)
-    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, var_63c6d.xyz, vec3(var_234e1.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_ff0ca.xyz, vec3(var_fed9b.w)).xyz, var_63c6d.xyz, vec3(var_234e1.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED1)
-    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_17327.xyz, vec3(var_55860.w)).xyz, var_17327.xyz, vec3(var_d8891.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
+    highp vec3 var_4e864 = mix((mix(mix(mix(var_63c6d.xyz, var_ff0ca.xyz, vec3(var_fed9b.w)).xyz, var_ff0ca.xyz, vec3(var_d8891.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SHARED0) && defined(SOURCE_INPUT_TYPE2__SAMPLED)
     highp vec3 var_4d3f1 = mix((mix(mix(mix(var_63c6d.xyz, var_63c6d.xyz, vec3(var_be2c2.w)).xyz, var_10db1.xyz, vec3(var_9d20d.w)).xyz, OverlayColor.xyz, vec3(var_341fe.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_07019.w));
