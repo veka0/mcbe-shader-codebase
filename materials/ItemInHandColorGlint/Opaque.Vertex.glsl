@@ -1,0 +1,128 @@
+#version 310 es
+
+/*
+* Available Macros:
+*
+* Passes:
+* - ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_PASS (not used)
+* - OPAQUE_PASS (not used)
+* - TRANSPARENT_PASS (not used)
+*
+* Fancy:
+* - FANCY__OFF
+* - FANCY__ON
+*
+* Instancing:
+* - INSTANCING__OFF
+* - INSTANCING__ON
+*
+* MultiColorTint:
+* - MULTI_COLOR_TINT__OFF (not used)
+* - MULTI_COLOR_TINT__ON (not used)
+*
+* Available Resources:
+*
+* Buffers:
+* - uniform lowp sampler2D s_GlintTexture;
+*
+* Uniforms:
+* - uniform vec4 ChangeColor;
+* - uniform vec4 ColorBased;
+* - uniform vec4 FogColor;
+* - uniform vec4 FogControl;
+* - uniform vec4 GlintColor;
+* - uniform vec4 LightDiffuseColorAndIlluminance;
+* - uniform vec4 LightWorldSpaceDirection;
+* - uniform vec4 MaterialID;
+* - uniform vec4 MultiplicativeTintColor;
+* - uniform vec4 OverlayColor;
+* - uniform vec4 SubPixelOffset;
+* - uniform vec4 TileLightColor;
+* - uniform vec4 TileLightIntensity;
+* - uniform vec4 UVAnimation;
+* - uniform vec4 UVScale;
+*/
+
+#if defined(FANCY__ON) || defined(INSTANCING__OFF)
+uniform mat4 u_model[4];
+#endif
+uniform mat4 u_proj;
+uniform mat4 u_view;
+uniform vec4 FogColor;
+uniform vec4 FogControl;
+uniform vec4 OverlayColor;
+uniform vec4 SubPixelOffset;
+uniform vec4 TileLightColor;
+uniform vec4 UVAnimation;
+uniform vec4 UVScale;
+in vec4 a_color0;
+#ifdef FANCY__ON
+in vec4 a_normal;
+#endif
+in vec3 a_position;
+in vec2 a_texcoord0;
+#ifdef INSTANCING__ON
+in vec4 i_data1;
+in vec4 i_data2;
+in vec4 i_data3;
+#endif
+out vec4 v_color0;
+out vec4 v_fog;
+out vec4 v_glintUV;
+out vec4 v_light;
+out vec2 v_texcoord0;
+out vec3 v_worldPos;
+void main() {
+    float var_97211 = sin(UVAnimation.z);
+    float var_ce25b = cos(UVAnimation.z);
+    vec2 var_98b8b = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_ce25b, -var_97211), vec2(var_97211, var_ce25b));
+    var_98b8b.x += UVAnimation.x;
+    vec2 var_eb807 = var_98b8b;
+    vec2 var_e0bbc = var_eb807 + vec2(0.5);
+    var_98b8b = var_e0bbc;
+    vec2 var_45c22 = var_e0bbc * UVScale.xy;
+    float var_89ba8 = sin(UVAnimation.w);
+    float var_104e7 = cos(UVAnimation.w);
+    vec2 var_65238 = (a_texcoord0 - vec2(0.5)) * mat2(vec2(var_104e7, -var_89ba8), vec2(var_89ba8, var_104e7));
+    var_65238.x += UVAnimation.y;
+    vec2 var_0ef75 = var_65238;
+    vec2 var_a930f = var_0ef75 + vec2(0.5);
+    var_65238 = var_a930f;
+    vec2 var_dc447 = var_a930f * UVScale.xy;
+#ifdef FANCY__ON
+    vec3 var_f099e = normalize(u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
+    var_f099e.y *= TileLightColor.w;
+#endif
+#ifdef INSTANCING__OFF
+    vec4 var_e2d09 = u_model[0] * vec4(a_position, 1.0);
+#endif
+#ifdef INSTANCING__ON
+    vec4 var_78b44 = i_data1;
+    vec4 var_e67a8 = i_data2;
+    vec4 var_1b7f0 = i_data3;
+    mat4 var_e43a8;
+    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
+    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
+    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
+    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    vec4 var_e2d09 = var_e43a8 * vec4(a_position, 1.0);
+#endif
+    mat4 var_bab0b = u_proj;
+    var_bab0b[2].x += SubPixelOffset.x;
+    var_bab0b[2].y -= SubPixelOffset.y;
+    vec4 var_cd7d8 = var_bab0b * (u_view * vec4(var_e2d09.xyz, 1.0));
+    vec4 var_27f6b = var_cd7d8;
+    v_color0 = a_color0;
+    v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
+    v_glintUV = vec4(var_45c22.x, var_45c22.y, var_dc447.x, var_dc447.y);
+#ifdef FANCY__OFF
+    v_light = vec4(TileLightColor.xyz * (1.0 + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
+#endif
+#ifdef FANCY__ON
+    v_light = vec4(TileLightColor.xyz * ((((((1.0 + var_f099e.y) * 0.2750000059604644775390625) + ((var_f099e.x * var_f099e.x) * (-0.100000001490116119384765625))) + ((var_f099e.z * var_f099e.z) * 0.100000001490116119384765625)) + 0.449999988079071044921875) + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
+#endif
+    v_texcoord0 = a_texcoord0;
+    v_worldPos = var_e2d09.xyz;
+    gl_Position = var_cd7d8;
+}
