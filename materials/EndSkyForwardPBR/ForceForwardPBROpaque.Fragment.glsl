@@ -98,6 +98,7 @@
 
 precision mediump float;
 precision highp int;
+float var_a27a0;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
@@ -109,6 +110,7 @@ uniform highp vec4 AtmosphericScatteringToggles;
 uniform highp vec4 BlockBaseAmbientLightColorIntensity;
 uniform highp vec4 CameraAmbientContribution;
 uniform highp vec4 CameraLightIntensity;
+uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
@@ -131,9 +133,57 @@ in highp vec3 v_clipPosition;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
+    if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
+    {
+        arg_3007f = pow(max(arg_87bd1, vec3(0.0)), vec3(2.2000000476837158203125));
+        return;
+    }
+    else
+    {
+        highp vec3 loc_407b7 = arg_87bd1;
+        highp vec3 loc_67ff9 = arg_87bd1 * vec3(0.077399380505084991455078125);
+        highp vec3 loc_b63b1 = pow((arg_87bd1 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
+        highp float loc_e81ff;
+        if (loc_407b7.x <= 0.040449999272823333740234375)
+        {
+            loc_e81ff = loc_67ff9.x;
+        }
+        else
+        {
+            loc_e81ff = loc_b63b1.x;
+        }
+        loc_407b7.x = loc_e81ff;
+        highp float loc_007b0;
+        if (loc_407b7.y <= 0.040449999272823333740234375)
+        {
+            loc_007b0 = loc_67ff9.y;
+        }
+        else
+        {
+            loc_007b0 = loc_b63b1.y;
+        }
+        loc_407b7.y = loc_007b0;
+        highp float loc_fa4a6;
+        if (loc_407b7.z <= 0.040449999272823333740234375)
+        {
+            loc_fa4a6 = loc_67ff9.z;
+        }
+        else
+        {
+            loc_fa4a6 = loc_b63b1.z;
+        }
+        loc_407b7.z = loc_fa4a6;
+        arg_3007f = loc_407b7;
+        return;
+    }
+}
 void main() {
     highp vec3 var_05b34 = v_clipPosition;
-    highp vec4 var_62d9b = texture(s_SkyTexture, v_texcoord0);
+    highp vec4 var_eeb9a = texture(s_SkyTexture, v_texcoord0);
+    highp vec3 var_9e11a = var_eeb9a.xyz;
+    highp vec3 var_268b9;
+    func_9b87e(var_268b9, var_9e11a);
     highp vec3 var_246fc = v_clipPosition / vec3(var_05b34.z);
     highp vec4 var_d530e = vec4(var_246fc, 1.0);
     highp mat4 var_4fa47 = u_invProj;
@@ -235,11 +285,11 @@ void main() {
         var_bdb1d = 0.0;
         var_1bb57 = vec3(0.0);
     }
-    highp vec4 var_80790 = vec4(var_1bb57, var_bdb1d);
+    highp vec4 var_33c2f = vec4(var_1bb57, var_bdb1d);
     highp vec3 var_3da54 = var_58f25;
-    highp float var_7e2c1 = 1.0 - smoothstep(FogSkyBlend.x - FogSkyBlend.w, FogSkyBlend.y, var_3da54.y);
-    highp vec3 var_b23aa = max(mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_7e2c1 * var_7e2c1) * var_7e2c1)) * MinimumSkyLuminance.x, var_80790.xyz).xyz * var_62d9b.xyz;
-    highp vec4 var_d371e = vec4(var_b23aa.x, var_b23aa.y, var_b23aa.z, var_80790.w);
+    highp float var_13962 = 1.0 - smoothstep(FogSkyBlend.x - FogSkyBlend.w, FogSkyBlend.y, var_3da54.y);
+    highp vec3 var_91f93 = max(mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_13962 * var_13962) * var_13962)) * MinimumSkyLuminance.x, var_33c2f.xyz).xyz * vec4(var_268b9, var_a27a0).xyz;
+    highp vec4 var_d371e = vec4(var_91f93.x, var_91f93.y, var_91f93.z, var_33c2f.w);
     highp vec4 var_1d469;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
@@ -258,7 +308,7 @@ void main() {
         var_1d469 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_9dcbd = var_1d469;
-    highp vec3 var_d9f57 = var_1d469.xyz + (mix(vec3(1.0), var_b23aa.xyz, vec3(var_d371e.w)) * var_9dcbd.w);
+    highp vec3 var_d9f57 = var_1d469.xyz + (mix(vec3(1.0), var_91f93.xyz, vec3(var_d371e.w)) * var_9dcbd.w);
     highp vec3 var_cc26e;
     if (PreExposureEnabled.x > 0.0)
     {
