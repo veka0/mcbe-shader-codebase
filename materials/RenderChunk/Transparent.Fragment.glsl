@@ -79,24 +79,14 @@ void main() {
 #ifdef DITHERING__ON
     highp mat4 View = u_view;
 #endif
-    highp vec4 var_33cd4 = v_color0;
+    highp vec4 var_7f75a = v_color0;
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_e60df = texture(s_MatTexture, v_texcoord0);
-    var_e60df.w *= var_33cd4.w;
-#ifdef DITHERING__OFF
-    highp vec4 var_15f8b = var_e60df;
-#endif
+    highp vec4 var_ee823 = texture(s_MatTexture, v_texcoord0);
+    highp vec3 var_6e45c = (var_ee823.xyz * v_color0.xyz).xyz * var_7f75a.w;
+    highp vec4 var_3d8d1 = vec4(var_6e45c.x, var_6e45c.y, var_6e45c.z, var_ee823.w);
 #ifdef DITHERING__ON
-    highp vec3 var_82cf8 = var_e60df.xyz * v_color0.xyz;
-#endif
-#ifdef DITHERING__OFF
-    highp vec3 var_9ed97 = var_15f8b.xyz * v_color0.xyz;
-    var_e60df = vec4(var_9ed97.x, var_9ed97.y, var_9ed97.z, var_15f8b.w);
-#endif
-#ifdef DITHERING__ON
-    var_e60df = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_e60df.w);
     highp vec2 var_25b3d = DitherParams2[2].xy;
     if (var_4f8e7.x > 0.5)
     {
@@ -107,13 +97,13 @@ void main() {
         highp vec2 var_93c64 = floor(var_b2538);
         if (smoothstep(var_25b3d.x, var_25b3d.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPosition.xyz - ViewPositionAndTime.xyz)) <= (((((((fract((var_39f2b.x * 0.5) + ((var_39f2b.y * var_39f2b.y) * 0.75)) * 0.25) + fract((var_45856.x * 0.5) + ((var_45856.y * var_45856.y) * 0.75))) * 0.25) + fract((var_93c64.x * 0.5) + ((var_93c64.y * var_93c64.y) * 0.75))) * 64.0) + 0.5) * 0.015625))
         {
-            var_e60df.w = 0.0;
+            var_3d8d1.w = 0.0;
         }
     }
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_e60df.xyz, var_e60df.w);
+    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_3d8d1.xyz, var_3d8d1.w);
 #endif
 #ifdef DITHERING__OFF
-    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_9ed97.xyz, var_e60df.w);
+    highp vec4 var_d81ae = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_6e45c.xyz, var_3d8d1.w);
 #endif
     highp vec4 var_67e99 = v_fog;
     highp vec3 var_2a3e1 = mix(var_d81ae.xyz, FogColor.xyz, vec3(var_67e99.w));
