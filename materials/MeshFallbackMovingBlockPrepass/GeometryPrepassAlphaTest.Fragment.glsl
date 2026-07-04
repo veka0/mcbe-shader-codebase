@@ -243,12 +243,12 @@ void main() {
     highp vec4 var_47d7b = v_color0;
     highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
     highp vec4 var_a9bff = var_fe617;
-    highp vec4 var_0bfeb = v_clipPosition;
     highp vec2 var_ded9f = DitherParams2[1].xy;
     bool var_95a90;
     if (DitheringEnabledToggle.x != 0.0)
     {
-        highp vec2 var_376f6 = floor(((((v_clipPosition.xyz / vec3(var_0bfeb.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[1].z)) * DitherParams2[1].z;
+        highp vec4 var_75953 = v_clipPosition;
+        highp vec2 var_376f6 = floor(((((v_clipPosition.xyz / vec3(var_75953.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[1].z)) * DitherParams2[1].z;
         highp vec2 var_c27b1 = floor(var_376f6 * 0.25);
         highp vec2 var_a5f3b = floor(var_376f6 * 0.5);
         highp vec2 var_ccfe4 = floor(var_376f6);

@@ -1125,12 +1125,12 @@ void main() {
         var_bd07c = var_e7bf9;
     }
 #endif
-    highp vec4 var_0ddfd = v_clipPosition;
     highp vec2 var_77469 = DitherParams2[0].xy;
     bool var_37b65;
     if (DitheringEnabledToggle.x != 0.0)
     {
-        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_0ddfd.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec4 var_d36cf = v_clipPosition;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
         highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
         highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
         highp vec2 var_ccfe4 = floor(var_886c2);

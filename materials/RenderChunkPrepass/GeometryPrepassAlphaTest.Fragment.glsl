@@ -238,7 +238,6 @@ void main() {
     highp vec2 var_95233 = vec2(0.0);
 #endif
 #ifdef DITHERING__ON
-    highp vec4 var_84222 = v_clipPosition;
     highp vec2 var_fe616 = DitherParams2[2].xy;
 #endif
     bool var_0c774;
@@ -254,7 +253,8 @@ void main() {
         var_0c774 = smoothstep(var_95233.x, var_95233.y, 0.0) <= (((((((fract((var_75d5b.x * 0.5) + ((var_75d5b.y * var_75d5b.y) * 0.75)) * 0.25) + fract((var_7633c.x * 0.5) + ((var_7633c.y * var_7633c.y) * 0.75))) * 0.25) + fract((var_9c296.x * 0.5) + ((var_9c296.y * var_9c296.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
 #endif
 #ifdef DITHERING__ON
-        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_84222.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
+        highp vec4 var_bb748 = v_clipPosition;
+        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_bb748.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
         highp vec2 var_de637 = floor(var_b2538 * 0.25);
         highp vec2 var_23224 = floor(var_b2538 * 0.5);
         highp vec2 var_f0b21 = floor(var_b2538);

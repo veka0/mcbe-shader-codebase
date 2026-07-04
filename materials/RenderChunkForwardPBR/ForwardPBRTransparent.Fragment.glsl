@@ -9,6 +9,10 @@
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - OPAQUE_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON
+*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON (not used)
@@ -66,6 +70,8 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -201,6 +207,10 @@ uniform highp vec4 DirectionalLightSourceShadowDirection;
 uniform highp vec4 DirectionalLightSourceWorldSpaceDirection;
 uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+#ifdef DITHERING__ON
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+#endif
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform highp vec4 FogAndDistanceControl;
@@ -231,12 +241,21 @@ uniform highp vec4 SkyZenithColor;
 uniform highp vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 uniform highp vec4 SunColor;
 uniform highp vec4 SunDir;
+#ifdef DITHERING__ON
+uniform highp vec4 ViewPositionAndTime;
+#endif
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_bitangent;
+#ifdef DITHERING__ON
+in highp vec4 v_clipPosition;
+#endif
 in highp vec4 v_color0;
+#ifdef DITHERING__ON
+in highp vec2 v_ditheringAndMaskTinting;
+#endif
 in highp vec2 v_lightmapUV;
 in highp vec3 v_normal;
 flat in int v_pbrTextureId;
@@ -1160,17 +1179,38 @@ void func_3da12(inout highp vec2 arg_c3b89, inout highp float arg_1615d, inout h
     arg_85834 = vec4(loc_eda12, 1.0);
 }
 void main() {
+#ifdef DITHERING__ON
+    highp mat4 View = u_view;
+#endif
     highp vec4 var_47d7b = v_color0;
+#ifdef DITHERING__ON
+    highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
+#endif
     highp vec2 var_a7492 = v_lightmapUV;
-    highp vec4 var_e16d7 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_6d979 = texture(s_MatTexture, v_texcoord0);
+#ifdef DITHERING__ON
+    highp vec2 var_d9351 = DitherParams2[2].xy;
+    if (var_4f8e7.x > 0.5)
+    {
+        highp vec4 var_bb748 = v_clipPosition;
+        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_bb748.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
+        highp vec2 var_bad9e = floor(var_b2538 * 0.25);
+        highp vec2 var_5a3a3 = floor(var_b2538 * 0.5);
+        highp vec2 var_55337 = floor(var_b2538);
+        if (smoothstep(var_d9351.x, var_d9351.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_bad9e.x * 0.5) + ((var_bad9e.y * var_bad9e.y) * 0.75)) * 0.25) + fract((var_5a3a3.x * 0.5) + ((var_5a3a3.y * var_5a3a3.y) * 0.75))) * 0.25) + fract((var_55337.x * 0.5) + ((var_55337.y * var_55337.y) * 0.75))) * 64.0) + 0.5) * 0.015625))
+        {
+            var_6d979.w = 0.0;
+        }
+    }
+#endif
 #ifdef SEASONS__OFF
-    highp vec3 var_0255a = var_e16d7.xyz * v_color0.xyz;
+    highp vec3 var_0255a = var_6d979.xyz * v_color0.xyz;
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_0255a = (var_e16d7.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_47d7b.w);
+    highp vec3 var_0255a = (var_6d979.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_47d7b.w);
 #endif
-    highp vec4 var_9ad79 = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_e16d7.w);
+    highp vec4 var_9ad79 = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_6d979.w);
 #ifdef SEASONS__OFF
     var_9ad79.w *= var_47d7b.w;
 #endif

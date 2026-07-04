@@ -165,7 +165,7 @@ struct LightData {
 int var_e7b23;
 layout(binding = 6, std430) buffer s_zLights { Light zLights[]; } var_92649;
 #endif
-layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_10f4d;
+layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_37ad9;
 #ifdef POINT_LIGHT_SHADING__ON
 layout(binding = 5, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_bdf93;
 #endif
@@ -235,7 +235,6 @@ uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 #endif
 uniform vec4 VolumeShadowSettings;
 uniform vec4 WaterAlbedoExtinction;
-uniform vec4 WorldOrigin;
 uniform vec4 u_prevWorldPosOffset;
 void func_8ab59(inout bool arg_5e3ed) {
     if (BiomeBlendingParameters.x > 0.0)
@@ -245,26 +244,39 @@ void func_8ab59(inout bool arg_5e3ed) {
     }
     arg_5e3ed = false;
 }
-void func_aa346(inout vec3 arg_9de81, inout vec4 arg_34c2e) {
+void func_4b3c6(inout vec3 arg_99162, inout vec4 arg_029c1) {
+    int loc_738fb = int(BiomeBlendingParameters.z * 0.5);
+    float loc_9e9be = (arg_99162.x - BiomeBlendingLastUpdatePosition.x) / BiomeBlendingLastUpdatePosition.w;
+    float loc_3eb23 = (arg_99162.z - BiomeBlendingLastUpdatePosition.z) / BiomeBlendingLastUpdatePosition.w;
+    ivec2 loc_f487d = ivec2(loc_738fb + int(floor(loc_9e9be)), loc_738fb + int(floor(loc_3eb23)));
+    loc_f487d.x = clamp(loc_f487d.x, 0, int(BiomeBlendingParameters.z) - 1);
+    loc_f487d.y = clamp(loc_f487d.y, 0, int(BiomeBlendingParameters.z) - 1);
+    int loc_debb5 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
+    int loc_5f53d = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
+    int loc_e5728 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
+    int loc_629bd = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
+    if (((loc_debb5 == loc_5f53d) && (loc_5f53d == loc_e5728)) && (loc_e5728 == loc_629bd))
+    {
+        arg_029c1 = var_37ad9.zBiomeInfoBuffer[loc_debb5].waterAlbedoExtinction;
+        return;
+    }
+    float loc_0d854 = fract(loc_9e9be);
+    float loc_00e44 = fract(loc_3eb23);
+    vec4 loc_14145 = vec4((1.0 - loc_0d854) * (1.0 - loc_00e44), loc_0d854 * (1.0 - loc_00e44), (1.0 - loc_0d854) * loc_00e44, loc_0d854 * loc_00e44);
+    arg_029c1 = (((var_37ad9.zBiomeInfoBuffer[loc_debb5].waterAlbedoExtinction * loc_14145.x) + (var_37ad9.zBiomeInfoBuffer[loc_5f53d].waterAlbedoExtinction * loc_14145.y)) + (var_37ad9.zBiomeInfoBuffer[loc_e5728].waterAlbedoExtinction * loc_14145.z)) + (var_37ad9.zBiomeInfoBuffer[loc_629bd].waterAlbedoExtinction * loc_14145.w);
+}
+void func_b5ebb(inout vec3 arg_9de81, inout vec4 arg_dde0d) {
     bool loc_a9f27;
     func_8ab59(loc_a9f27);
     if (loc_a9f27)
     {
-        vec3 loc_72e58 = arg_9de81;
-        int loc_b9c0c = int(BiomeBlendingParameters.z * 0.5);
-        vec3 loc_55203 = BiomeBlendingLastUpdatePosition.xyz + WorldOrigin.xyz;
-        float loc_4b4c0 = (loc_72e58.x - loc_55203.x) / BiomeBlendingLastUpdatePosition.w;
-        float loc_ec4c0 = (loc_72e58.z - loc_55203.z) / BiomeBlendingLastUpdatePosition.w;
-        ivec2 loc_f9dbc = ivec2(loc_b9c0c + int(floor(loc_4b4c0)), loc_b9c0c + int(floor(loc_ec4c0)));
-        loc_f9dbc.x = clamp(loc_f9dbc.x, 0, int(BiomeBlendingParameters.z) - 1);
-        loc_f9dbc.y = clamp(loc_f9dbc.y, 0, int(BiomeBlendingParameters.z) - 1);
-        float loc_2350c = fract(loc_4b4c0);
-        float loc_78620 = fract(loc_ec4c0);
-        vec4 loc_9af45 = vec4((1.0 - loc_2350c) * (1.0 - loc_78620), loc_2350c * (1.0 - loc_78620), (1.0 - loc_2350c) * loc_78620, loc_2350c * loc_78620);
-        arg_34c2e = (((var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc, 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.x) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1, 0), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.y)) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(0, 1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.z)) + (var_10f4d.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_f9dbc + ivec2(1), 0).x * 255.0))].waterAlbedoExtinction * loc_9af45.w);
+        vec3 loc_a1b82 = arg_9de81;
+        vec4 loc_29eab;
+        func_4b3c6(loc_a1b82, loc_29eab);
+        arg_dde0d = loc_29eab;
         return;
     }
-    arg_34c2e = WaterAlbedoExtinction;
+    arg_dde0d = WaterAlbedoExtinction;
 }
 void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     vec4 loc_59f32 = PlayerShadowProj * vec4(arg_9b0e1, 1.0);
@@ -393,7 +405,7 @@ void func_54599() {
         loc_343cf = loc_8fa9c;
     }
     vec4 loc_4397b;
-    func_aa346(loc_caed6, loc_4397b);
+    func_b5ebb(loc_caed6, loc_4397b);
     vec4 loc_12f1c = loc_4397b;
     float loc_ebd19 = clamp((HeightFogScaleBias.x * loc_45310.y) + HeightFogScaleBias.y, 0.0, 1.0);
     float loc_a9dfb = mix(HenyeyGreensteinG.x, HenyeyGreensteinG.y, loc_343cf);
@@ -926,7 +938,7 @@ void func_fb72a() {
         loc_343cf = loc_8fa9c;
     }
     vec4 loc_4397b;
-    func_aa346(loc_65ac0, loc_4397b);
+    func_b5ebb(loc_65ac0, loc_4397b);
     vec4 loc_12f1c = loc_4397b;
     float loc_ebd19 = clamp((HeightFogScaleBias.x * loc_45310.y) + HeightFogScaleBias.y, 0.0, 1.0);
     float loc_3fa4b = mix(HenyeyGreensteinG.x, HenyeyGreensteinG.y, loc_343cf);

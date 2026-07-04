@@ -13,6 +13,9 @@ vec4 i_data2 : TEXCOORD6;
 vec4 i_data3 : TEXCOORD5;
 
 vec3          v_bitangent               : BITANGENT;
+#ifdef FORWARD_PBR_TRANSPARENT_PASS
+vec4          v_clipPosition            : COLOR1;
+#endif
 vec4          v_color0                  : COLOR0;
 vec2          v_ditheringAndMaskTinting : TEXCOORD2;
 #ifdef FORWARD_PBR_TRANSPARENT_PASS

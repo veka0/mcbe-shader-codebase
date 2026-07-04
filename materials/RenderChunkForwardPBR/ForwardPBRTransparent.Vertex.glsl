@@ -9,6 +9,10 @@
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - OPAQUE_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -66,6 +70,8 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -136,6 +142,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec2 v_ditheringAndMaskTinting;
 flat out int v_frontFacing;
@@ -147,7 +154,7 @@ centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
+    vec4 var_e2d09 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -158,16 +165,18 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_e2d09 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_bab0b = u_proj;
+    var_bab0b[2].x += SubPixelOffset.x;
+    var_bab0b[2].y -= SubPixelOffset.y;
+    vec4 var_c804c = var_bab0b * (u_view * vec4(var_e2d09.xyz, 1.0));
     vec4 var_4938b = a_tangent;
     vec2 var_c34f1 = a_texcoord1;
     uint var_960bd = uint(floor(var_c34f1.x * 255.0));
     uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
+    v_clipPosition = var_c804c;
     v_color0 = a_color0;
     v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
     v_frontFacing = 0;
@@ -176,6 +185,6 @@ void main() {
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
+    v_worldPos = var_e2d09.xyz;
+    gl_Position = var_c804c;
 }

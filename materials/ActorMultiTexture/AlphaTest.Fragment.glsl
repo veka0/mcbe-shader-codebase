@@ -156,12 +156,12 @@ void main() {
 #ifdef COLOR_SECOND_TEXTURE__OFF
     highp vec4 var_d381b = vec4(var_1a87f.x, var_1a87f.y, var_1a87f.z, var_df431.w);
 #endif
-    highp vec4 var_0ddfd = v_clipPosition;
     highp vec2 var_77469 = DitherParams2[0].xy;
     bool var_e71ae;
     if (DitheringEnabledToggle.x != 0.0)
     {
-        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_0ddfd.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec4 var_d36cf = v_clipPosition;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
         highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
         highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
         highp vec2 var_ccfe4 = floor(var_886c2);
