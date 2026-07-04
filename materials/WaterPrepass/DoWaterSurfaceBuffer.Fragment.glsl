@@ -118,7 +118,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -163,7 +163,7 @@ uniform highp sampler2D s_MatTexture;
 uniform highp vec4 BiomeBlendingLastUpdatePosition;
 uniform highp vec4 BiomeBlendingParameters;
 uniform highp vec4 ViewPositionAndTime;
-uniform highp vec4 WaterSurfaceEnabled;
+uniform highp vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 uniform highp vec4 WaterSurfaceOctaveParameters;
 uniform highp vec4 WaterSurfaceParameters;
 uniform highp vec4 WaterSurfaceWaveParameters;
@@ -176,7 +176,9 @@ flat in int v_pbrTextureId;
 in highp vec3 v_tangent;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
+layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76) {
     if (v_pbrTextureId == 65535)
     {
@@ -664,10 +666,10 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
 void main() {
     highp vec3 var_b3851;
     highp float var_bd3b6;
-    highp float var_8ed44;
-    highp float var_0e0cd;
+    highp float var_bcdaf;
+    highp float var_9b8bb;
     highp float var_5431f;
-    func_9052b(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_b3851);
+    func_9052b(var_5431f, var_9b8bb, var_bcdaf, var_bd3b6, var_b3851);
     highp float var_074a9;
     highp float var_0222e;
     highp float var_e7eec;
@@ -679,7 +681,7 @@ void main() {
     highp float var_30ff1;
     func_94180(var_30ff1, var_a1ab3, var_35d96, var_a6a44, var_7b985, var_6c1ae, var_e7eec, var_0222e, var_074a9);
     highp vec3 var_ce339;
-    if (WaterSurfaceEnabled.x > 0.0)
+    if (WaterSurfaceEnabledAndExtinctionDistShift.x > 0.0)
     {
         highp float var_93df6 = ViewPositionAndTime.w * 0.5;
         highp vec2 var_dea28 = vec2(0.0);
@@ -720,35 +722,34 @@ void main() {
         var_ce339 = var_b3851;
     }
     highp vec4 var_e30b2 = vec4(texture(s_MatTexture, v_texcoord0).xyz, 1.0);
-    highp vec2 var_ea830 = v_lightmapUV;
-    highp vec4 var_6de71 = vec4(var_e30b2.x, var_e30b2.y, var_e30b2.z, var_e30b2.w);
+    highp vec2 var_f1ecf = v_lightmapUV;
+    highp vec4 var_e74f1 = vec4(var_e30b2.x, var_e30b2.y, var_e30b2.z, var_e30b2.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
-    var_6de71.w = var_7aa46;
+    var_e74f1.w = var_7aa46;
     highp vec3 var_089df = normalize(var_ce339);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
-    highp vec2 var_5a694;
+    highp vec2 var_72494;
     if (var_cd914.z < 0.0)
     {
-        var_5a694 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
+        var_72494 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
     }
     else
     {
-        var_5a694 = var_645ff;
+        var_72494 = var_645ff;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_7ed87;
+    highp vec4 var_efb33 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_efb33;
     highp vec4 var_eaa92 = u_prevViewProj * vec4(v_worldPos - u_prevWorldPosOffset.xyz, 1.0);
     highp vec4 var_96bda = var_eaa92;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_82203 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_82203;
-    highp vec2 var_ec5a5 = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = var_6de71;
-    bgfx_FragData[1] = vec4(var_5a694.x, var_5a694.y, var_ec5a5.x, var_ec5a5.y);
-    bgfx_FragData[2] = vec4(var_8ed44, var_ea830.x, var_ea830.y, var_0e0cd);
+    highp vec4 var_c94a9 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_c94a9;
+    bgfx_FragData0 = var_e74f1;
+    bgfx_FragData1 = vec4(var_72494, var_efb33.xy - var_c94a9.xy);
+    bgfx_FragData2 = vec4(var_bcdaf, var_f1ecf.x, var_f1ecf.y, var_9b8bb);
 }

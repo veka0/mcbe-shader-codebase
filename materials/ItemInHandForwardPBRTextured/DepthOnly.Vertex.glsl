@@ -121,7 +121,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -170,9 +170,12 @@ void main() {
     vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
     vec4 var_4938b = a_tangent;
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_color0 = a_color0;
     v_frontFacing = 0;
@@ -183,5 +186,5 @@ void main() {
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
+    gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

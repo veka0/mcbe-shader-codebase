@@ -58,25 +58,18 @@ void main() {
 #ifdef MULTI_COLOR_TINT__ON
     highp vec3 var_d683b = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
     highp vec2 var_533c7 = var_d683b.xy;
-    highp vec3 var_3469a = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_bac29 = vec4(var_3469a.x, var_3469a.y, var_3469a.z, vec4(1.0).w);
+    highp vec3 var_8271c = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_c253c = vec4(var_8271c.x, var_8271c.y, var_8271c.z, vec4(1.0).w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_90a94 = vec4(var_05ab4.x, var_05ab4.y, var_05ab4.z, vec4(1.0).w);
-    highp vec3 var_f13ac = mix(mix(var_90a94, var_90a94 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_bac29 = vec4(var_f13ac.x, var_f13ac.y, var_f13ac.z, vec4(1.0).w);
+    highp vec3 var_8271c = mix(mix(var_90a94, var_90a94 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_c253c = vec4(var_8271c.x, var_8271c.y, var_8271c.z, vec4(1.0).w);
 #endif
-    if (var_bac29.w < 0.5)
+    if (var_c253c.w < 0.5)
     {
         discard;
     }
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_1a4b7 = vec4(var_f13ac, var_bac29.w);
-#endif
-#ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_1a4b7 = vec4(var_3469a, var_bac29.w);
-#endif
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_1a4b7.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_1a4b7.w);
+    highp vec4 var_dc02c = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_8271c, var_c253c.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_c253c.w);
 }

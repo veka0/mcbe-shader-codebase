@@ -136,7 +136,7 @@ void main() {
     highp vec4 var_29045 = vec4(var_59242.x, var_59242.y, var_59242.z, var_cd179.w);
 #endif
     var_32f69 = var_29045;
-    highp vec4 var_446f4 = var_29045;
+    highp vec4 var_5dbb7 = var_29045;
 #ifdef SOURCE_INPUT_TYPE1__CONSTANT
     highp vec4 var_b0326 = MatColor1;
 #endif
@@ -153,7 +153,7 @@ void main() {
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0)
     highp vec4 var_b0326 = MatColor0;
 #endif
-    var_446f4.w *= var_b0326.w;
+    var_5dbb7.w *= var_b0326.w;
 #if defined(SOURCE_INPUT_TYPE2__SAMPLED) || (defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED) && defined(SOURCE_INPUT_TYPE2__SHARED1))
     highp vec4 var_18a95 = var_17182;
 #endif
@@ -185,14 +185,13 @@ void main() {
     highp vec3 var_b4d6d = MatColor1.xyz * MatColor2.xyz;
     highp vec4 var_19379 = vec4(var_b4d6d.x, var_b4d6d.y, var_b4d6d.z, MatColor1.w);
 #endif
-    highp vec3 var_4de0a = mix(var_446f4.xyz, var_b4d6d.xyz, vec3(var_19379.w));
-    highp vec4 var_6b2de = vec4(var_4de0a.x, var_4de0a.y, var_4de0a.z, var_446f4.w);
+    highp vec3 var_c34f6 = mix(var_5dbb7.xyz, var_b4d6d.xyz, vec3(var_19379.w));
+    highp vec4 var_6b2de = vec4(var_c34f6.x, var_c34f6.y, var_c34f6.z, var_5dbb7.w);
     if ((var_6b2de.w + var_18a95.w) <= 0.0)
     {
         discard;
     }
-    highp vec4 var_21b35 = OverlayColor;
-    highp vec4 var_d77d6 = v_fog;
-    highp vec3 var_cb028 = mix((mix(var_4de0a.xyz, OverlayColor.xyz, vec3(var_21b35.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d77d6.w));
-    bgfx_FragColor = vec4(var_cb028.x, var_cb028.y, var_cb028.z, var_446f4.w);
+    highp vec4 var_ee2cb = OverlayColor;
+    highp vec4 var_83280 = v_fog;
+    bgfx_FragColor = vec4(mix((mix(var_c34f6.xyz, OverlayColor.xyz, vec3(var_ee2cb.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_83280.w)), var_5dbb7.w);
 }

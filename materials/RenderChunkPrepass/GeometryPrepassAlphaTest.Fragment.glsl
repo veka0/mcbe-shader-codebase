@@ -65,6 +65,9 @@ struct PBRTextureData {
     highp float maxMipNormal;
 };
 
+#ifdef DITHERING__ON
+float var_7ed9a;
+#endif
 layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_907b9;
 uniform highp mat4 u_prevViewProj;
 #ifdef DITHERING__ON
@@ -95,7 +98,9 @@ flat in int v_pbrTextureId;
 in highp vec3 v_tangent;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
+layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76) {
     if (v_pbrTextureId == 65535)
     {
@@ -229,9 +234,6 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-#ifdef DITHERING__ON
-    highp mat4 View = u_view;
-#endif
     highp vec4 var_5b49c = v_color0;
 #if defined(DITHERING__ON) || defined(SEASONS__OFF)
     highp vec2 var_0a028 = v_ditheringAndMaskTinting;
@@ -242,24 +244,25 @@ void main() {
     if (false || (var_b902c.w < 0.5))
 #endif
 #ifdef DITHERING__ON
-    highp vec2 var_fe616 = DitherParams2[2].xy;
-    bool var_4bb61;
+    highp vec2 var_4bd41 = DitherParams2[2].xy;
+    bool var_dcf5d;
     if (var_0a028.x > 0.5)
 #endif
     {
 #ifdef DITHERING__ON
+        highp mat4 var_6eb6a = u_view;
         highp vec4 var_bb748 = v_clipPosition;
         highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_bb748.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
-        highp vec2 var_de637 = floor(var_b2538 * 0.25);
-        highp vec2 var_23224 = floor(var_b2538 * 0.5);
-        highp vec2 var_f0b21 = floor(var_b2538);
-        var_4bb61 = smoothstep(var_fe616.x, var_fe616.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_de637.x * 0.5) + ((var_de637.y * var_de637.y) * 0.75)) * 0.25) + fract((var_23224.x * 0.5) + ((var_23224.y * var_23224.y) * 0.75))) * 0.25) + fract((var_f0b21.x * 0.5) + ((var_f0b21.y * var_f0b21.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_28929 = floor(var_b2538 * 0.25);
+        highp vec2 var_4cce7 = floor(var_b2538 * 0.5);
+        highp vec2 var_2e83b = floor(var_b2538);
+        var_dcf5d = smoothstep(var_4bd41.x, var_4bd41.y, dot(-normalize(vec4(var_6eb6a[0].z, var_6eb6a[1].z, var_6eb6a[2].z, var_7ed9a).xyz), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_28929.x * 0.5) + ((var_28929.y * var_28929.y) * 0.75)) * 0.25) + fract((var_4cce7.x * 0.5) + ((var_4cce7.y * var_4cce7.y) * 0.75))) * 0.25) + fract((var_2e83b.x * 0.5) + ((var_2e83b.y * var_2e83b.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_4bb61 = false;
+        var_dcf5d = false;
     }
-    if (var_4bb61 || (var_b902c.w < 0.5))
+    if (var_dcf5d || (var_b902c.w < 0.5))
     {
 #endif
         discard;
@@ -288,45 +291,44 @@ void main() {
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
-    highp float var_8ed44;
-    highp float var_0e0cd;
+    highp float var_bcdaf;
+    highp float var_9b8bb;
     highp float var_5431f;
-    func_a72a6(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_d2ce2);
+    func_a72a6(var_5431f, var_9b8bb, var_bcdaf, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
     highp vec4 var_53507 = vec4(var_3eefe.xyz, var_3eefe.w);
 #endif
 #ifdef SEASONS__ON
     highp vec4 var_53507 = vec4(var_1c880.xyz, var_1d587.w);
 #endif
-    highp vec2 var_ea830 = v_lightmapUV;
-    highp vec4 var_6de71 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
+    highp vec2 var_f1ecf = v_lightmapUV;
+    highp vec4 var_e74f1 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
-    var_6de71.w = var_7aa46;
+    var_e74f1.w = var_7aa46;
     highp vec3 var_089df = normalize(var_d2ce2);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
-    highp vec2 var_5a694;
+    highp vec2 var_72494;
     if (var_cd914.z < 0.0)
     {
-        var_5a694 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
+        var_72494 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
     }
     else
     {
-        var_5a694 = var_645ff;
+        var_72494 = var_645ff;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_7ed87;
+    highp vec4 var_efb33 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_efb33;
     highp vec4 var_eaa92 = u_prevViewProj * vec4(v_worldPos - u_prevWorldPosOffset.xyz, 1.0);
     highp vec4 var_96bda = var_eaa92;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_82203 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_82203;
-    highp vec2 var_ec5a5 = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = var_6de71;
-    bgfx_FragData[1] = vec4(var_5a694.x, var_5a694.y, var_ec5a5.x, var_ec5a5.y);
-    bgfx_FragData[2] = vec4(var_8ed44, var_ea830.x, var_ea830.y, var_0e0cd);
+    highp vec4 var_c94a9 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_c94a9;
+    bgfx_FragData0 = var_e74f1;
+    bgfx_FragData1 = vec4(var_72494, var_efb33.xy - var_c94a9.xy);
+    bgfx_FragData2 = vec4(var_bcdaf, var_f1ecf.x, var_f1ecf.y, var_9b8bb);
 }

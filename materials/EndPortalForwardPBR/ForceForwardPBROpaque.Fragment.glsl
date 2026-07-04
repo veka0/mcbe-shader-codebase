@@ -94,11 +94,10 @@ void main() {
     {
         var_447cc = vec4((var_73e16.xyz * (var_bebe3.xyz * (1.0 - v_encodedPlane))).xyz * (1.0 - var_1d0b7.w), 0.0);
     }
-    highp vec4 var_ab9d7 = var_447cc;
+    highp vec4 var_d1f0c = var_447cc;
     highp vec3 var_a32a9;
     func_66b9c(var_a32a9, var_447cc);
-    highp vec4 var_ebc77 = vec4(var_a32a9, var_ab9d7.w);
-    highp vec3 var_4b784 = var_ebc77.xyz;
-    highp vec3 var_9b998 = var_ebc77.xyz + (mix(var_4b784, vec3(dot(var_4b784, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x);
-    bgfx_FragColor = vec4(var_9b998.x, var_9b998.y, var_9b998.z, var_ebc77.w);
+    highp vec4 var_ea076 = vec4(var_a32a9, var_d1f0c.w);
+    highp vec3 var_9af17 = var_ea076.xyz;
+    bgfx_FragColor = vec4(var_ea076.xyz + (mix(var_9af17, vec3(dot(var_9af17, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x), var_d1f0c.w);
 }

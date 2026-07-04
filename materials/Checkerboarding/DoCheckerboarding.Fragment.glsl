@@ -29,6 +29,9 @@
 * - uniform vec4 OtherSideOffset;
 */
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+precision mediump float;
+precision highp int;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
+    bgfx_FragColor = vec4(0.0);
 }

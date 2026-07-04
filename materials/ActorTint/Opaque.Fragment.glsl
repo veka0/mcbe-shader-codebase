@@ -115,10 +115,8 @@ void main() {
     highp vec4 var_932a1 = texture(s_MatTexture1, v_texcoord0);
     highp vec3 var_7afaa = var_932a1.xyz * MultiplicativeTintColor.xyz;
     highp vec4 var_f000f = vec4(var_7afaa.x, var_7afaa.y, var_7afaa.z, var_932a1.w);
-    highp vec3 var_51425 = mix((mix(var_8a241.xyz, var_7afaa.xyz, vec3(var_f000f.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_89833 = vec4(var_51425.x, var_51425.y, var_51425.z, var_8a241.w);
-    highp vec4 var_baf55 = vec4(var_51425, var_89833.w);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_baf55.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_baf55.w);
+    highp vec3 var_0f044 = mix((mix(var_8a241.xyz, var_7afaa.xyz, vec3(var_f000f.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_74ef0 = vec4(var_0f044.x, var_0f044.y, var_0f044.z, var_8a241.w);
+    highp vec4 var_dc02c = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_0f044, var_74ef0.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_74ef0.w);
 }

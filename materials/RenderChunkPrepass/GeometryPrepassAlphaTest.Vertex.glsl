@@ -106,14 +106,17 @@ void main() {
     vec3 var_0c400 = a_color0.xyz;
     vec3 var_05010 = var_2071d - ((cross(var_85f78, var_e10ad) * (var_0c400.z - 0.5)) + (var_e10ad * (var_0c400.x - 0.5)));
 #endif
-    mat4 var_f3461 = u_proj;
-    var_f3461[2].x += SubPixelOffset.x;
-    var_f3461[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_4d882 = u_proj;
+    var_4d882[2] = var_67767;
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    vec4 var_d80ab = var_f3461 * (u_view * vec4(var_e2d09.xyz, 1.0));
+    vec4 var_d80ab = var_4d882 * (u_view * vec4(var_e2d09.xyz, 1.0));
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    vec4 var_d80ab = var_f3461 * (u_view * vec4(var_05010, 1.0));
+    vec4 var_d80ab = var_4d882 * (u_view * vec4(var_05010, 1.0));
 #endif
     vec4 var_4938b = a_tangent;
     vec4 var_57c72 = a_normal;

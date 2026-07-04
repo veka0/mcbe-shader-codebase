@@ -11,8 +11,8 @@
 
 precision mediump float;
 precision highp int;
-in highp vec4 v_color;
+in highp vec4 v_Additional;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    bgfx_FragColor = v_color;
+    bgfx_FragColor = v_Additional;
 }

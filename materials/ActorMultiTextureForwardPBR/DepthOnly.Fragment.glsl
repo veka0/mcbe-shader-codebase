@@ -149,7 +149,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -169,7 +169,7 @@ uniform highp vec4 MatColor;
 uniform highp vec4 OverlayColor;
 uniform highp vec4 TintedAlphaTestEnabled;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef MASKED_MULTITEXTURE__OFF
     highp vec4 var_6bc1f = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -188,5 +188,5 @@ void main() {
     {
         discard;
     }
-    bgfx_FragData[0] = vec4(1.0);
+    bgfx_FragData0 = vec4(1.0);
 }

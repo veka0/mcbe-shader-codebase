@@ -19,8 +19,9 @@
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
-* - layout(binding = 5, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 6, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - uniform lowp sampler3D s_SkyAmbientSamples;
+* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -71,6 +72,7 @@
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 StarsColor;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 Time;

@@ -121,10 +121,13 @@ void main() {
 #if defined(FANCY__ON) || defined(INSTANCING__ON)
     vec4 var_04231 = var_89150 * vec4(a_position, 1.0);
 #endif
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_04ab5 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_04ab5 = var_cbf5d * (u_view * vec4(var_04231.xyz, 1.0));
     vec4 var_27f6b = var_04ab5;
     v_clipPosition = var_04ab5;
     v_color0 = vec4(0.0);

@@ -19,9 +19,10 @@
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
+* - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform lowp sampler2D s_SunMoonTexture;
-* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 7, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -72,6 +73,7 @@
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunMoonColor;
 * - uniform vec4 SunMoonEmissiveMultiplier;
@@ -90,8 +92,10 @@ precision highp int;
 uniform highp mat4 u_invProj;
 uniform highp sampler2D s_SunMoonTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
+uniform highp sampler3D s_SkyAmbientSamples;
 uniform highp vec4 PreExposureEnabled;
 uniform highp vec4 SkyProbeUVFadeParameters;
+uniform highp vec4 SkySamplesConfig;
 uniform highp vec4 SunMoonColor;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
@@ -99,9 +103,25 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_ndcPosition;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_2be34(inout highp vec3 arg_9f7bb, inout bool arg_13a99) {
+    if (SkySamplesConfig.x > 0.5)
+    {
+        arg_9f7bb.y = 1.0 - arg_9f7bb.y;
+        arg_9f7bb.z -= SkySamplesConfig.z;
+        arg_9f7bb.z = (exp(4.0 * arg_9f7bb.z) - 1.0) * 0.0186573602259159088134765625;
+        highp vec2 loc_d121e = textureLod(s_SkyAmbientSamples, arg_9f7bb, 0.0).xy;
+        if (loc_d121e.y < SkySamplesConfig.w)
+        {
+            arg_13a99 = false;
+            return;
+        }
+    }
+    arg_13a99 = true;
+}
 void main() {
     highp vec4 var_86892 = texture(s_SunMoonTexture, v_texcoord0);
     highp vec3 var_f733f = (SunMoonColor.xyz * var_86892.xyz) * SunMoonColor.w;
+    highp vec3 var_e7e0a;
     highp vec3 var_d5208;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
@@ -109,26 +129,44 @@ void main() {
         highp vec2 var_ce114 = (v_ndcPosition.xy + vec2(1.0)) * 0.5;
         highp vec4 var_196b0 = u_invProj * vec4(v_ndcPosition, 1.0);
         highp float var_b4ccc = var_ce114.x;
+        highp vec3 var_2d7e6 = vec3(var_b4ccc, var_ce114.y, log((53.598148345947265625 * ((((-var_196b0.z) / var_196b0.w) - var_65315.x) / (var_65315.y - var_65315.x))) + 1.0) * 0.25);
         ivec3 var_dbde4 = ivec3(VolumeDimensions.xyz);
-        highp vec3 var_9bf69 = vec3(var_b4ccc, var_ce114.y, log((53.598148345947265625 * ((((-var_196b0.z) / var_196b0.w) - var_65315.x) / (var_65315.y - var_65315.x))) + 1.0) * 0.25);
-        highp float var_eb2d5 = (var_9bf69.z * float(var_dbde4.z)) - 0.5;
+        highp vec3 var_203f7 = var_2d7e6;
+        highp float var_eb2d5 = (var_203f7.z * float(var_dbde4.z)) - 0.5;
         int var_b2370 = clamp(int(var_eb2d5), 0, var_dbde4.z - 2);
         highp vec4 var_36b18 = mix(textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_b4ccc, var_ce114.y, float(var_b2370 + 1)), 0.0), vec4(clamp(var_eb2d5 - float(var_b2370), 0.0, 1.0)));
         var_d5208 = var_f733f * var_36b18.w;
+        var_e7e0a = var_2d7e6;
     }
     else
     {
         var_d5208 = var_f733f;
+        var_e7e0a = vec3(0.0);
     }
-    highp vec2 var_2d4a7 = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
-    highp vec3 var_c41e6;
+    highp vec3 var_a871a = var_e7e0a;
+    bool var_0db97;
+    func_2be34(var_a871a, var_0db97);
+    highp vec2 var_db400 = (v_ndcPosition.xy + vec2(1.0)) * vec2(0.5);
+    highp vec3 var_bd900;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_c41e6 = var_d5208 * 0.0033142860047519207000732421875;
+        var_bd900 = var_d5208 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_c41e6 = var_d5208;
+        var_bd900 = var_d5208;
     }
-    bgfx_FragColor = vec4(var_c41e6, (clamp(var_2d4a7.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
+    highp float var_185a5;
+    highp vec3 var_39d0c;
+    if (!var_0db97)
+    {
+        var_39d0c = vec3(0.0);
+        var_185a5 = 0.0;
+    }
+    else
+    {
+        var_39d0c = var_bd900;
+        var_185a5 = (clamp(var_db400.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06);
+    }
+    bgfx_FragColor = vec4(var_39d0c, var_185a5);
 }

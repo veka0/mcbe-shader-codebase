@@ -73,19 +73,17 @@ void main() {
 #endif
     highp vec4 var_d4311 = (GlintColor * (texture(s_GlintTexture, fract(v_glintUV.xy)).xyzx + texture(s_GlintTexture, fract(v_glintUV.zw)).xyzx)) * TileLightColor;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_5cac8 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix(var_01aa6, var_01aa6 * ChangeColor, vec4(var_f8735.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    highp vec4 var_b8bc1 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix(var_01aa6, var_01aa6 * ChangeColor, vec4(var_f8735.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_5cac8 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix((var_ac065.xxx * ChangeColor.xyz).xyz, var_ac065.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_449c5.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    highp vec4 var_b8bc1 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix((var_ac065.xxx * ChangeColor.xyz).xyz, var_ac065.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_449c5.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
 #endif
-    var_5cac8.w = 1.0;
-    highp vec4 var_c67ba = var_5cac8;
-    if (var_c67ba.w < 0.5)
+    var_b8bc1.w = 1.0;
+    highp vec4 var_61054 = var_b8bc1;
+    if (var_61054.w < 0.5)
     {
         discard;
     }
-    highp vec4 var_d4abf = vec4(var_5cac8.xyz, var_c67ba.w);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_d4abf.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_d4abf.w);
+    highp vec4 var_8544b = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_b8bc1.xyz, var_61054.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_61054.w);
 }

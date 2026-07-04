@@ -74,7 +74,7 @@ in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_cbf9d = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_89716 = texture(s_MatTexture0, v_texcoord0);
 #endif
     highp vec4 var_5b8d6 = OverlayColor;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
@@ -82,23 +82,22 @@ void main() {
     highp vec4 var_edeb5 = vec4(var_99c58.x, var_99c58.y, var_99c58.z, MatColor0.w);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec3 var_99c58 = mix(var_cbf9d.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
-    highp vec4 var_edeb5 = vec4(var_99c58.x, var_99c58.y, var_99c58.z, var_cbf9d.w);
+    highp vec3 var_99c58 = mix(var_89716.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
+    highp vec4 var_edeb5 = vec4(var_99c58.x, var_99c58.y, var_99c58.z, var_89716.w);
 #endif
     highp float var_e2805 = var_edeb5.w;
-    highp vec3 var_d04fd = mix(var_99c58.xyz, var_99c58.xyz * v_light.xyz, vec3(var_e2805));
+    highp vec3 var_5d45e = mix(var_99c58.xyz, var_99c58.xyz * v_light.xyz, vec3(var_e2805));
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    var_edeb5 = vec4(var_d04fd.x, var_d04fd.y, var_d04fd.z, MatColor0.w);
+    var_edeb5 = vec4(var_5d45e.x, var_5d45e.y, var_5d45e.z, MatColor0.w);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    var_edeb5 = vec4(var_d04fd.x, var_d04fd.y, var_d04fd.z, var_cbf9d.w);
+    var_edeb5 = vec4(var_5d45e.x, var_5d45e.y, var_5d45e.z, var_89716.w);
 #endif
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_a3ef8 = mix(var_d04fd.xyz, v_fog.xyz, vec3(var_6ca24.w));
+    highp vec4 var_36be7 = v_fog;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    bgfx_FragColor = vec4(var_a3ef8.x, var_a3ef8.y, var_a3ef8.z, MatColor0.w);
+    bgfx_FragColor = vec4(mix(var_5d45e.xyz, v_fog.xyz, vec3(var_36be7.w)), MatColor0.w);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    bgfx_FragColor = vec4(var_a3ef8.x, var_a3ef8.y, var_a3ef8.z, var_cbf9d.w);
+    bgfx_FragColor = vec4(mix(var_5d45e.xyz, v_fog.xyz, vec3(var_36be7.w)), var_89716.w);
 #endif
 }

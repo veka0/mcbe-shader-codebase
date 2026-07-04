@@ -6,38 +6,40 @@
 * Passes:
 * - TRANSPARENT_PASS (not used)
 *
-* showDF:
-* - SHOW_DF__OFF (not used)
-* - SHOW_DF__ON (not used)
-*
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_Texture0;
-* - uniform lowp sampler2D s_Texture1;
-* - uniform lowp sampler2D s_Texture2;
+* - uniform lowp sampler2D s_txBuffer;
+* - uniform lowp sampler2D s_txBuffer1;
+* - uniform lowp sampler2D s_txBuffer2;
 *
 * Uniforms:
-* - uniform vec4 PrimProps0;
-* - uniform vec4 PrimProps1;
-* - uniform vec4 ShaderType;
-* - uniform mat4 Transform;
+* - uniform vec4 Data_PS[128];
+* - uniform vec4 Data_VS[128];
 */
 
-uniform mat4 Transform;
-in vec4 a_texcoord3;
-in vec4 a_color0;
-in vec4 a_position;
-out vec4 v_additional;
-out vec4 v_color;
-out vec4 v_screenPosition;
+uniform vec4 Data_VS[128];
+in vec4 a_texcoord1;
+in uvec4 a_texcoord4;
+in vec3 a_position;
+out vec4 v_Additional;
+out vec4 v_Color_;
+out vec4 v_NoPerspParam;
+out vec3 v_ScreenNormalPosition;
+flat out vec4 v_VaryingData;
+out vec4 v_zPosition;
 void main() {
-    vec4 var_3ccf0 = a_position * Transform;
-    float var_70560 = var_3ccf0.w;
-    var_3ccf0.x = (var_3ccf0.x * 2.0) - var_70560;
-    var_3ccf0.y = ((var_70560 - var_3ccf0.y) * 2.0) - var_70560;
-    v_additional = a_texcoord3;
-    v_color = a_color0;
-    v_screenPosition = a_position;
-    gl_Position = var_3ccf0;
+    uvec4 var_57f2e = uvec4(vec4(a_texcoord4));
+    int var_fec0d = int(((var_57f2e.y & 15u) << uint(8)) | var_57f2e.x);
+    vec4 var_12588 = vec4(a_position, 1.0) * mat4(Data_VS[var_fec0d], Data_VS[var_fec0d + 1], Data_VS[var_fec0d + 2], Data_VS[var_fec0d + 3]);
+    float var_70560 = var_12588.w;
+    var_12588.x = (var_12588.x * 2.0) - var_70560;
+    var_12588.y = ((var_70560 - var_12588.y) * 2.0) - var_70560;
+    v_Additional = a_texcoord1;
+    v_Color_ = vec4(0.0);
+    v_NoPerspParam = a_texcoord1;
+    v_ScreenNormalPosition = a_position;
+    v_VaryingData = vec4(a_texcoord4);
+    v_zPosition = vec4(0.0);
+    gl_Position = var_12588;
 }

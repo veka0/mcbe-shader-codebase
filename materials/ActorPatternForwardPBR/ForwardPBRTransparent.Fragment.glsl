@@ -159,7 +159,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -170,16 +170,16 @@ precision mediump float;
 precision highp int;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp vec4 PreExposureEnabled;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec3 var_b425c;
+    highp vec3 var_602cc;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_b425c = vec3(1.0) * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_602cc = vec3(1.0) * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_b425c = vec3(1.0);
+        var_602cc = vec3(1.0);
     }
-    bgfx_FragData[0] = vec4(var_b425c.x, var_b425c.y, var_b425c.z, vec4(1.0).w);
+    bgfx_FragData0 = vec4(var_602cc, 1.0);
 }

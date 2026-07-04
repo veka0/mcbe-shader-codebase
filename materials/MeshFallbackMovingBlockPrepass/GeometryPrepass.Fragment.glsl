@@ -103,7 +103,9 @@ flat in int v_pbrTextureId;
 in highp vec3 v_tangent;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
+layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76) {
     if (v_pbrTextureId == 65535)
     {
@@ -265,44 +267,43 @@ void main() {
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
-    highp float var_42cdf;
-    highp float var_17b33;
+    highp float var_afce0;
+    highp float var_28f57;
     highp float var_5431f;
-    func_a72a6(var_5431f, var_17b33, var_42cdf, var_bd3b6, var_d2ce2);
+    func_a72a6(var_5431f, var_28f57, var_afce0, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
     highp vec4 var_53507 = vec4(var_ebbe6.xyz, var_ebbe6.w);
 #endif
 #ifdef SEASONS__ON
     highp vec4 var_53507 = vec4(var_1c880.xyz, var_1d587.w);
 #endif
-    highp vec4 var_6de71 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
+    highp vec4 var_e74f1 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
-    var_6de71.w = var_7aa46;
+    var_e74f1.w = var_7aa46;
     highp vec3 var_089df = normalize(var_d2ce2);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
-    highp vec2 var_5a694;
+    highp vec2 var_72494;
     if (var_cd914.z < 0.0)
     {
-        var_5a694 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
+        var_72494 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
     }
     else
     {
-        var_5a694 = var_645ff;
+        var_72494 = var_645ff;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_7ed87;
+    highp vec4 var_efb33 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_efb33;
     highp vec4 var_eaa92 = u_prevViewProj * vec4(v_worldPos - u_prevWorldPosOffset.xyz, 1.0);
     highp vec4 var_96bda = var_eaa92;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_82203 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_82203;
-    highp vec2 var_ec5a5 = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = var_6de71;
-    bgfx_FragData[1] = vec4(var_5a694.x, var_5a694.y, var_ec5a5.x, var_ec5a5.y);
-    bgfx_FragData[2] = vec4(var_42cdf, TileLightIntensity.x, TileLightIntensity.y, var_17b33);
+    highp vec4 var_c94a9 = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_c94a9;
+    bgfx_FragData0 = var_e74f1;
+    bgfx_FragData1 = vec4(var_72494, var_efb33.xy - var_c94a9.xy);
+    bgfx_FragData2 = vec4(var_afce0, TileLightIntensity.x, TileLightIntensity.y, var_28f57);
 }

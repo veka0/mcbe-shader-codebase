@@ -145,7 +145,7 @@ in highp vec2 v_occlusionUV;
 in highp vec3 v_prevWorldPos;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_b7c4a = texture(s_WeatherTexture, v_texcoord0);
     if (var_b7c4a.w < 0.5)
@@ -194,7 +194,7 @@ void main() {
         discard;
     }
 #endif
-    highp vec4 var_f90b5;
+    highp vec4 var_6343e;
     if (distance(v_worldPos, v_prevWorldPos - u_prevWorldPosOffset.xyz) > 27.0)
     {
         highp vec4 var_7293e = u_viewProj * vec4(v_worldPos, 1.0);
@@ -208,7 +208,7 @@ void main() {
         highp vec4 var_b3184 = ((var_40af8 / vec4(var_a08f7)) * 0.5) + vec4(0.5);
         var_9f128 = var_b3184;
         highp vec2 var_95189 = var_b74ea.xy - var_b3184.xy;
-        var_f90b5 = vec4(vec4(1.0).x, vec4(1.0).y, var_95189.x, var_95189.y);
+        var_6343e = vec4(vec4(1.0).x, vec4(1.0).y, var_95189.x, var_95189.y);
     }
     else
     {
@@ -223,7 +223,7 @@ void main() {
         highp vec4 var_ff2a0 = ((var_3d686 / vec4(var_5148a)) * 0.5) + vec4(0.5);
         var_42184 = var_ff2a0;
         highp vec2 var_26dea = var_58273.xy - var_ff2a0.xy;
-        var_f90b5 = vec4(vec4(1.0).x, vec4(1.0).y, var_26dea.x, var_26dea.y);
+        var_6343e = vec4(vec4(1.0).x, vec4(1.0).y, var_26dea.x, var_26dea.y);
     }
-    bgfx_FragData[0] = var_f90b5;
+    bgfx_FragData0 = var_6343e;
 }

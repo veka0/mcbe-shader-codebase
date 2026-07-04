@@ -116,7 +116,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -181,9 +181,12 @@ void main() {
     vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
     vec3 var_0e57e = a_color0.xyz;
 #endif
-    mat4 var_52789 = u_proj;
-    var_52789[2].x += SubPixelOffset.x;
-    var_52789[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_f12b9 = u_proj;
+    var_f12b9[2] = var_67767;
     uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
     uvec2 var_5e4ed = var_6d79f;
     v_bitangent = vec3(0.0);
@@ -201,10 +204,10 @@ void main() {
     v_texcoord0 = a_texcoord0;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_52789 * (u_view * vec4(var_a67a8.xyz, 1.0));
+    gl_Position = var_f12b9 * (u_view * vec4(var_a67a8.xyz, 1.0));
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_worldPos = var_91aa3;
-    gl_Position = var_52789 * (u_view * vec4(var_2cae0 - ((cross(var_b9097, var_3d861) * (var_0e57e.z - 0.5)) + (var_3d861 * (var_0e57e.x - 0.5))), 1.0));
+    gl_Position = var_f12b9 * (u_view * vec4(var_2cae0 - ((cross(var_b9097, var_3d861) * (var_0e57e.z - 0.5)) + (var_3d861 * (var_0e57e.x - 0.5))), 1.0));
 #endif
 }

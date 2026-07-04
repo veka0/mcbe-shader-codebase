@@ -114,7 +114,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -161,7 +161,8 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -230,30 +231,38 @@ void func_190ed(inout highp vec3 arg_1ec6a, inout highp float arg_19032, inout h
 void main() {
     highp vec2 var_c8bfb = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
     highp vec4 var_af032 = texture(s_Normal, var_c8bfb.xy);
-    highp vec2 var_07479 = var_af032.xy;
+    highp vec2 var_a5f1f = var_af032.xy;
     highp vec2 var_195ea = var_c8bfb.xy;
     highp vec4 var_4435a = texture(s_SceneDepth, var_c8bfb.xy);
     highp float var_48a47 = (var_4435a.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_48a47, 1.0);
-    highp mat4 var_3460a = u_invProj;
+    highp mat4 var_4fa47 = u_invProj;
+    highp mat4 var_498b7 = u_invProj;
+    highp mat4 var_4882d = u_invProj;
+    highp mat4 var_78c1b = u_invProj;
+    highp mat4 var_40575 = u_invProj;
     highp float var_eb413 = var_df846.x;
     highp float var_ac116 = var_df846.y;
     highp float var_f2b7c = var_df846.w;
     highp float var_0357c = var_df846.z;
     highp float var_2c821 = var_df846.w;
-    highp vec4 var_9666f = vec4(var_eb413 * var_3460a[0].x, var_ac116 * var_3460a[1].y, var_f2b7c * var_3460a[3].z, (var_0357c * var_3460a[2].w) + (var_2c821 * var_3460a[3].w));
+    highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_df846 = var_9666f;
     highp float var_d799e = var_df846.w;
     highp vec4 var_20845 = var_9666f / vec4(var_d799e);
     var_df846 = var_20845;
     highp vec4 var_1c342 = vec4(v_projPosition.xy + vec2(SubPixelOffset.x, -SubPixelOffset.y), var_48a47, 1.0);
-    highp mat4 var_3ebcc = u_invProj;
+    highp mat4 var_2949d = u_invProj;
+    highp mat4 var_e6914 = u_invProj;
+    highp mat4 var_164c7 = u_invProj;
+    highp mat4 var_b5866 = u_invProj;
+    highp mat4 var_bb46a = u_invProj;
     highp float var_a6256 = var_1c342.x;
     highp float var_05401 = var_1c342.y;
     highp float var_b8669 = var_1c342.w;
     highp float var_259fc = var_1c342.z;
     highp float var_f8db3 = var_1c342.w;
-    highp vec4 var_fa2eb = vec4(var_a6256 * var_3ebcc[0].x, var_05401 * var_3ebcc[1].y, var_b8669 * var_3ebcc[3].z, (var_259fc * var_3ebcc[2].w) + (var_f8db3 * var_3ebcc[3].w));
+    highp vec4 var_fa2eb = vec4(var_a6256 * var_2949d[0].x, var_05401 * var_e6914[1].y, var_b8669 * var_164c7[3].z, (var_259fc * var_b5866[2].w) + (var_f8db3 * var_bb46a[3].w));
     var_1c342 = var_fa2eb;
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
@@ -263,7 +272,7 @@ void main() {
     highp vec3 var_76063 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
     highp vec3 var_fddd0 = vec3(QuantizationParameters.z * 0.5) - mod(var_38d64, vec3(QuantizationParameters.z));
     highp vec3 var_ec4b0 = (var_38d64 + (var_fddd0 - (var_76063 * dot(var_fddd0, var_76063)))) + WorldOrigin.xyz;
-    highp vec2 var_3ccf7 = var_07479;
+    highp vec2 var_3ccf7 = var_a5f1f;
     highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_3ccf7.x)) - abs(var_3ccf7.y));
     highp vec2 var_c65e0;
     if (var_b0cb0.z < 0.0)
@@ -528,18 +537,18 @@ void main() {
     {
         var_f2e5a = var_51636;
     }
-    highp vec3 var_f5acb;
+    highp vec3 var_0ffa6;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_f5acb = var_f2e5a * ((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
+        var_0ffa6 = var_f2e5a * ((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_f5acb = var_f2e5a;
+        var_0ffa6 = var_f2e5a;
     }
     highp vec3 var_0c789 = var_e3992;
-    highp float var_f6497 = ((var_0c789.z * 0.5) + 0.5) * 65535.0;
-    highp float var_6a818 = floor(var_f6497);
-    bgfx_FragData[0] = vec4(var_f5acb, 1.0);
-    bgfx_FragData[1] = vec4((var_07479 * 0.5) + vec2(0.5), var_6a818 * 1.525902189314365386962890625e-05, var_f6497 - var_6a818);
+    highp float var_3df38 = ((var_0c789.z * 0.5) + 0.5) * 65535.0;
+    highp float var_543e2 = floor(var_3df38);
+    bgfx_FragData0 = vec4(var_0ffa6, 1.0);
+    bgfx_FragData1 = vec4((var_a5f1f * 0.5) + vec2(0.5), var_543e2 * 1.525902189314365386962890625e-05, var_3df38 - var_543e2);
 }

@@ -19,9 +19,10 @@
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
+* - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform lowp sampler2D s_SunMoonTexture;
-* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 7, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -72,6 +73,7 @@
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunMoonColor;
 * - uniform vec4 SunMoonEmissiveMultiplier;

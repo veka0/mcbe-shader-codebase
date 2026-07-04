@@ -82,23 +82,23 @@ void main() {
         discard;
     }
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_c44be = var_30e9e.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec3 var_85992 = var_30e9e.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
     highp vec3 var_61abf = var_30e9e.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
     highp vec2 var_533c7 = var_61abf.xy;
-    highp vec3 var_c44be = mix(mix((var_61abf.xxx * ChangeColor.xyz).xyz, var_61abf.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec3 var_85992 = mix(mix((var_61abf.xxx * ChangeColor.xyz).xyz, var_61abf.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
 #endif
-    highp vec4 var_4ef07 = vec4(var_c44be.x, var_c44be.y, var_c44be.z, var_30e9e.w);
+    highp vec4 var_8d120 = vec4(var_85992.x, var_85992.y, var_85992.z, var_30e9e.w);
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_96542 = mix(mix(var_4ef07, var_4ef07 * ChangeColor, vec4(var_f5beb.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_89833 = vec4(var_96542.x, var_96542.y, var_96542.z, var_30e9e.w);
-    highp vec4 var_1a4b7 = vec4(var_96542, var_89833.w);
+    highp vec3 var_4c654 = mix(mix(var_8d120, var_8d120 * ChangeColor, vec4(var_f5beb.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_74ef0 = vec4(var_4c654.x, var_4c654.y, var_4c654.z, var_30e9e.w);
+#endif
+    highp vec4 var_f5291 = v_fog;
+#ifdef MULTI_COLOR_TINT__OFF
+    bgfx_FragColor = vec4(mix(vec4(var_4c654, var_74ef0.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_74ef0.w);
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_1a4b7 = vec4(var_c44be, var_4ef07.w);
+    bgfx_FragColor = vec4(mix(vec4(var_85992, var_8d120.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_8d120.w);
 #endif
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_1a4b7.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_1a4b7.w);
 }

@@ -118,7 +118,7 @@
 * - uniform vec4 VolumeShadowSettings;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -280,11 +280,11 @@ void func_b5ebb(inout vec3 arg_9de81, inout vec4 arg_dde0d) {
     }
     arg_dde0d = WaterAlbedoExtinction;
 }
-void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
-    vec4 loc_59f32 = PlayerShadowProj * vec4(arg_9b0e1, 1.0);
-    loc_59f32.z -= CascadesParameters[0].y;
-    loc_59f32.z = min(loc_59f32.z, 1.0);
-    vec2 loc_5ae5f = ((vec2(loc_59f32.x, loc_59f32.y) * 0.5) + vec2(0.5)) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
+void func_a0b5c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
+    vec4 loc_12ebe = PlayerShadowProj * vec4(arg_9b0e1, 1.0);
+    loc_12ebe.z -= CascadesParameters[0].y;
+    loc_12ebe.z = min(loc_12ebe.z, 1.0);
+    vec2 loc_0d624 = ((loc_12ebe.xy * 0.5) + vec2(0.5)) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
     int loc_64b28;
     if (QuantizationParameters.x != 0.0)
     {
@@ -295,37 +295,40 @@ void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
         loc_64b28 = clamp(int((2.0 * VolumeShadowSettings.x) + 0.5), 1, 9);
     }
     int loc_a4d0e = loc_64b28 / 2;
-    loc_59f32.z = (loc_59f32.z * 0.5) + 0.5;
-    loc_5ae5f.y += (1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
-    bool loc_2c837 = loc_5ae5f.x >= 0.0;
+    vec2 loc_6828b = loc_0d624;
+    loc_6828b.y += (1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
+    loc_12ebe.z = (loc_12ebe.z * 0.5) + 0.5;
+    loc_0d624 = loc_6828b;
+    vec2 loc_9adef = vec2(loc_0d624.x, 1.0 - loc_0d624.y);
+    bool loc_2c837 = loc_9adef.x >= 0.0;
     bool loc_d06e3;
     if (loc_2c837)
     {
-        loc_d06e3 = loc_5ae5f.x < FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
+        loc_d06e3 = loc_9adef.x < FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
     }
     else
     {
         loc_d06e3 = loc_2c837;
     }
-    bool loc_c7ec9;
+    bool loc_da85e;
     if (loc_d06e3)
     {
-        loc_c7ec9 = loc_5ae5f.y >= (1.0 - FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
+        loc_da85e = loc_9adef.y >= 0.0;
     }
     else
     {
-        loc_c7ec9 = loc_d06e3;
+        loc_da85e = loc_d06e3;
     }
-    bool loc_8e2b9;
-    if (loc_c7ec9)
+    bool loc_e80f2;
+    if (loc_da85e)
     {
-        loc_8e2b9 = loc_5ae5f.y < 1.0;
+        loc_e80f2 = loc_9adef.y < FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y;
     }
     else
     {
-        loc_8e2b9 = loc_c7ec9;
+        loc_e80f2 = loc_da85e;
     }
-    if (!loc_8e2b9)
+    if (!loc_e80f2)
     {
         arg_7a26d = 1.0;
         return;
@@ -340,15 +343,15 @@ void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
         float loc_5e275;
         for (int loc_d3328 = 0; loc_d3328 < loc_64b28; loc_edd8a = loc_5e275, loc_d3328++)
         {
-            vec2 loc_49c98 = loc_5ae5f + ((vec2(float(loc_d3328 - loc_a4d0e) + 0.5, float(loc_e3b31 - loc_a4d0e) + 0.5) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
+            vec2 loc_49c98 = loc_0d624 + ((vec2(float(loc_d3328 - loc_a4d0e) + 0.5, float(loc_e3b31 - loc_a4d0e) + 0.5) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.z) * FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.y);
             vec3 loc_747f0 = vec3(loc_49c98.x, loc_49c98.y, loc_304c3);
             if (QuantizationParameters.x != 0.0)
             {
-                loc_5e275 = loc_edd8a + float(textureLod(s_ShadowCascades, loc_747f0, 0.0).x >= loc_59f32.z);
+                loc_5e275 = loc_edd8a + float(textureLod(s_ShadowCascades, loc_747f0, 0.0).x >= loc_12ebe.z);
             }
             else
             {
-                vec4 loc_8954e = step(vec4(loc_59f32.z), textureGather(s_ShadowCascades, loc_747f0));
+                vec4 loc_8954e = step(vec4(loc_12ebe.z), textureGather(s_ShadowCascades, loc_747f0));
                 vec2 loc_db73a = fract((loc_747f0.xy * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
                 loc_5e275 = loc_edd8a + mix(mix(loc_8954e.w, loc_8954e.z, loc_db73a.x), mix(loc_8954e.x, loc_8954e.y, loc_db73a.x), loc_db73a.y);
             }
@@ -357,15 +360,15 @@ void func_e5e1e(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
 #ifdef POINT_LIGHT_SHADING__OFF
-void func_0b82f() {
-    int loc_84ff0 = int(GlobalInvocationID.x);
-    int loc_b5bd2 = int(GlobalInvocationID.y);
+void func_327ea() {
+    int loc_da723 = int(GlobalInvocationID.x);
+    int loc_1c644 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
-    if (((loc_84ff0 >= int(VolumeDimensions.x)) || (loc_b5bd2 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
+    if (((loc_da723 >= int(VolumeDimensions.x)) || (loc_1c644 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_8b342 = ((vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_8b342 = ((vec3(float(loc_da723), float(loc_1c644), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_8b342;
     vec3 loc_777c2 = loc_8b342;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -376,14 +379,15 @@ void func_0b82f() {
     vec3 loc_caed6 = loc_e8a8c.xyz / vec3(loc_dc33a.w);
     vec3 loc_45310 = loc_caed6;
     vec3 loc_16a16 = (u_view * vec4(loc_caed6, 1.0)).xyz;
-    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
-    vec2 loc_e585f = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
-    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
+    ivec2 loc_96650 = ivec2(gl_GlobalInvocationID.xy);
+    vec2 loc_f3117 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, loc_96650, 0).xy;
+    vec2 loc_9e759 = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, loc_96650, 0).xy;
+    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_f3117.x) * VolumeDimensions.z) * loc_f3117.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
     float loc_8fa9c;
     if (loc_f2b43 >= 0.0)
     {
         float loc_efd00;
-        if ((loc_b4177.z - loc_e585f.x) >= 0.0)
+        if ((loc_b4177.z - loc_9e759.x) >= 0.0)
         {
             loc_efd00 = 0.0;
         }
@@ -457,19 +461,19 @@ void func_0b82f() {
             int loc_c0de4 = int(dot(clamp(CascadesPerSet, vec4(0.0), vec4(1.0)), vec4(1.0)));
             float loc_f6ac1;
             loc_f6ac1 = 1.0;
-            int loc_d7178;
+            int loc_29996;
             float loc_484ee;
-            for (int loc_8a709 = 0, loc_0e4f2 = 0; loc_8a709 < loc_c0de4; loc_0e4f2 = loc_d7178, loc_f6ac1 = loc_484ee, loc_8a709++)
+            for (int loc_8a709 = 0, loc_0e4f2 = 0; loc_8a709 < loc_c0de4; loc_0e4f2 = loc_29996, loc_f6ac1 = loc_484ee, loc_8a709++)
             {
                 int loc_79423 = min((loc_0e4f2 + int(CascadesPerSet[loc_8a709])), 8);
                 loc_484ee = loc_f6ac1;
-                loc_d7178 = loc_0e4f2;
+                loc_29996 = loc_0e4f2;
                 int loc_a0458;
                 float loc_5399e;
-                for (; loc_d7178 < loc_79423; loc_484ee = loc_5399e, loc_d7178 = loc_a0458)
+                for (; loc_29996 < loc_79423; loc_484ee = loc_5399e, loc_29996 = loc_a0458)
                 {
-                    vec4 loc_0dca3 = CascadesShadowProj[loc_d7178] * vec4(loc_caed6, 1.0);
-                    vec3 loc_8d38c = abs(loc_0dca3.xyz);
+                    vec4 loc_4a0d9 = CascadesShadowProj[loc_29996] * vec4(loc_caed6, 1.0);
+                    vec3 loc_8d38c = abs(loc_4a0d9.xyz);
                     bool loc_45980 = loc_8d38c.x <= 1.0;
                     bool loc_f1421;
                     if (loc_45980)
@@ -491,7 +495,7 @@ void func_0b82f() {
                     }
                     if (loc_e36b7)
                     {
-                        vec4 loc_ada37 = loc_0dca3;
+                        vec4 loc_38cc9 = loc_4a0d9;
                         int loc_3a40c;
                         if (QuantizationParameters.x != 0.0)
                         {
@@ -499,12 +503,12 @@ void func_0b82f() {
                         }
                         else
                         {
-                            loc_3a40c = clamp(int((CascadesParameters[loc_d7178].w * VolumeShadowSettings.x) + 0.5), 1, 9);
+                            loc_3a40c = clamp(int((CascadesParameters[loc_29996].w * VolumeShadowSettings.x) + 0.5), 1, 9);
                         }
                         int loc_960ef = loc_3a40c / 2;
-                        vec2 loc_445f6 = ((vec2(loc_ada37.x, loc_ada37.y) * 0.5) + vec2(0.5)) * CascadesParameters[loc_d7178].x;
-                        float loc_4fba3 = (loc_ada37.z * 0.5) + 0.5;
-                        loc_445f6.y += (1.0 - CascadesParameters[loc_d7178].x);
+                        vec2 loc_dc4ac = ((loc_4a0d9.xy * 0.5) + vec2(0.5)) * CascadesParameters[loc_29996].x;
+                        float loc_4fba3 = (loc_38cc9.z * 0.5) + 0.5;
+                        loc_dc4ac.y += (1.0 - CascadesParameters[loc_29996].x);
                         float loc_3555e;
                         loc_3555e = 0.0;
                         float loc_801c0;
@@ -514,16 +518,16 @@ void func_0b82f() {
                             float loc_30840;
                             for (int loc_963d2 = 0; loc_963d2 < loc_3a40c; loc_801c0 = loc_30840, loc_963d2++)
                             {
-                                vec2 loc_cced5 = loc_445f6 + ((vec2(float(loc_963d2 - loc_960ef) + 0.5, float(loc_15249 - loc_960ef) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_d7178].x);
-                                vec4 loc_fe3f0 = textureGather(s_ShadowCascades, vec3(loc_cced5, float(loc_d7178)));
+                                vec2 loc_cced5 = loc_dc4ac + ((vec2(float(loc_963d2 - loc_960ef) + 0.5, float(loc_15249 - loc_960ef) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_29996].x);
+                                vec4 loc_fe3f0 = textureGather(s_ShadowCascades, vec3(loc_cced5, float(loc_29996)));
                                 vec4 loc_26b65 = loc_fe3f0;
                                 if (QuantizationParameters.x != 0.0)
                                 {
-                                    loc_30840 = loc_801c0 + float(loc_26b65.w >= (loc_4fba3 - CascadesParameters[loc_d7178].y));
+                                    loc_30840 = loc_801c0 + float(loc_26b65.w >= (loc_4fba3 - CascadesParameters[loc_29996].y));
                                 }
                                 else
                                 {
-                                    vec4 loc_2f6b4 = step(vec4(loc_4fba3 - CascadesParameters[loc_d7178].y), loc_fe3f0);
+                                    vec4 loc_2f6b4 = step(vec4(loc_4fba3 - CascadesParameters[loc_29996].y), loc_fe3f0);
                                     vec2 loc_e2aba = fract((loc_cced5 * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
                                     loc_30840 = loc_801c0 + mix(mix(loc_2f6b4.w, loc_2f6b4.z, loc_e2aba.x), mix(loc_2f6b4.x, loc_2f6b4.y, loc_e2aba.x), loc_e2aba.y);
                                 }
@@ -535,7 +539,7 @@ void func_0b82f() {
                     else
                     {
                         loc_5399e = loc_484ee;
-                        loc_a0458 = loc_d7178 + 1;
+                        loc_a0458 = loc_29996 + 1;
                     }
                 }
             }
@@ -543,7 +547,7 @@ void func_0b82f() {
             if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0)
             {
                 float loc_ad066;
-                func_e5e1e(loc_caed6, loc_ad066);
+                func_a0b5c(loc_caed6, loc_ad066);
                 loc_f828f = loc_ad066;
             }
             else
@@ -564,10 +568,9 @@ void func_0b82f() {
             if (loc_b7807)
             {
                 vec4 loc_bcd0f = CloudShadowProj * vec4(loc_caed6, 1.0);
-                vec4 loc_6ef28 = loc_bcd0f;
-                loc_6ef28 = loc_bcd0f / vec4(loc_6ef28.w);
-                loc_6ef28.z -= (CascadesParameters[0].y / loc_6ef28.w);
-                vec2 loc_76921 = ((vec2(loc_6ef28.x, loc_6ef28.y) * 0.5) + vec2(0.5)) * CascadesParameters[0].x;
+                vec4 loc_bcbd7 = loc_bcd0f;
+                loc_bcbd7 = loc_bcd0f / vec4(loc_bcbd7.w);
+                loc_bcbd7.z -= (CascadesParameters[0].y / loc_bcbd7.w);
                 int loc_c86ff;
                 if (QuantizationParameters.x != 0.0)
                 {
@@ -578,8 +581,9 @@ void func_0b82f() {
                     loc_c86ff = clamp(int((EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.z * VolumeShadowSettings.x) + 0.5), 1, 9);
                 }
                 int loc_7508d = loc_c86ff / 2;
-                loc_6ef28.z = (loc_6ef28.z * 0.5) + 0.5;
-                loc_76921.y += (1.0 - CascadesParameters[0].x);
+                vec2 loc_37738 = ((loc_bcbd7.xy * 0.5) + vec2(0.5)) * CascadesParameters[0].x;
+                loc_37738.y += (1.0 - CascadesParameters[0].x);
+                loc_bcbd7.z = (loc_bcbd7.z * 0.5) + 0.5;
                 float loc_19cd0 = dot(CascadesPerSet, vec4(1.0));
                 float loc_543e1;
                 loc_543e1 = 0.0;
@@ -590,14 +594,14 @@ void func_0b82f() {
                     float loc_16f2e;
                     for (int loc_fdb90 = 0; loc_fdb90 < loc_c86ff; loc_0fce1 = loc_16f2e, loc_fdb90++)
                     {
-                        vec3 loc_d07c9 = vec3(loc_76921 + ((vec2(float(loc_fdb90 - loc_7508d) + 0.5, float(loc_093cd - loc_7508d) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[0].x), loc_19cd0);
+                        vec3 loc_d07c9 = vec3(loc_37738 + ((vec2(float(loc_fdb90 - loc_7508d) + 0.5, float(loc_093cd - loc_7508d) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[0].x), loc_19cd0);
                         if (QuantizationParameters.x != 0.0)
                         {
-                            loc_16f2e = loc_0fce1 + float(textureLod(s_ShadowCascades, loc_d07c9, 0.0).x >= loc_6ef28.z);
+                            loc_16f2e = loc_0fce1 + float(textureLod(s_ShadowCascades, loc_d07c9, 0.0).x >= loc_bcbd7.z);
                         }
                         else
                         {
-                            vec4 loc_2ae6b = step(vec4(loc_6ef28.z), textureGather(s_ShadowCascades, loc_d07c9));
+                            vec4 loc_2ae6b = step(vec4(loc_bcbd7.z), textureGather(s_ShadowCascades, loc_d07c9));
                             vec2 loc_52300 = fract((loc_d07c9.xy * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
                             loc_16f2e = loc_0fce1 + mix(mix(loc_2ae6b.w, loc_2ae6b.z, loc_52300.x), mix(loc_2ae6b.x, loc_2ae6b.y, loc_52300.x), loc_52300.y);
                         }
@@ -635,7 +639,7 @@ void func_0b82f() {
     }
     if (TemporalSettings.x > 0.0)
     {
-        vec3 loc_dfafd = (vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_dfafd = (vec3(float(loc_da723), float(loc_1c644), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
         vec3 loc_e9300 = loc_dfafd;
         vec2 loc_9d396 = VolumeNearFar.xy;
         float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
@@ -656,11 +660,11 @@ void func_0b82f() {
         float loc_53f43 = (loc_96ba4.z * float(loc_57985.z)) - 0.5;
         int loc_25a80 = clamp(int(loc_53f43), 0, loc_57985.z - 2);
         vec3 loc_34735 = VolumeDimensions.xyz * loc_33e20;
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), mix(vec4(loc_7175c, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_da723, loc_1c644, loc_beae9), mix(vec4(loc_7175c, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
     }
     else
     {
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), vec4(loc_7175c, loc_8068a));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_da723, loc_1c644, loc_beae9), vec4(loc_7175c, loc_8068a));
     }
 }
 #endif
@@ -890,15 +894,15 @@ void func_0582d(inout vec3 arg_5cc04, inout vec3 arg_534d1, inout vec3 arg_81f82
     }
     arg_534d1 = loc_ceaba;
 }
-void func_b07bb() {
-    int loc_84ff0 = int(GlobalInvocationID.x);
-    int loc_b5bd2 = int(GlobalInvocationID.y);
+void func_6a19f() {
+    int loc_da723 = int(GlobalInvocationID.x);
+    int loc_1c644 = int(GlobalInvocationID.y);
     int loc_beae9 = int(GlobalInvocationID.z);
-    if (((loc_84ff0 >= int(VolumeDimensions.x)) || (loc_b5bd2 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
+    if (((loc_da723 >= int(VolumeDimensions.x)) || (loc_1c644 >= int(VolumeDimensions.y))) || (loc_beae9 >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_8b342 = ((vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_8b342 = ((vec3(float(loc_da723), float(loc_1c644), float(loc_beae9)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_8b342;
     vec3 loc_777c2 = loc_8b342;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -909,14 +913,15 @@ void func_b07bb() {
     vec3 loc_65ac0 = loc_e8a8c.xyz / vec3(loc_dc33a.w);
     vec3 loc_45310 = loc_65ac0;
     vec3 loc_ef0ef = (u_view * vec4(loc_65ac0, 1.0)).xyz;
-    vec2 loc_04947 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
-    vec2 loc_e585f = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, ivec2(loc_84ff0, loc_b5bd2), 0).xy;
-    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_04947.x) * VolumeDimensions.z) * loc_04947.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
+    ivec2 loc_96650 = ivec2(gl_GlobalInvocationID.xy);
+    vec2 loc_f3117 = texelFetch(s_ScreenSpaceWaterFrontFaceDepthAndNormal, loc_96650, 0).xy;
+    vec2 loc_9e759 = texelFetch(s_ScreenSpaceWaterBackFaceDepthAndNormal, loc_96650, 0).xy;
+    float loc_f2b43 = smoothstep(-0.5, 0.5, ((((loc_b4177.z - loc_f3117.x) * VolumeDimensions.z) * loc_f3117.y) - CameraUnderwaterAndWaterSurfaceBiasAndFalloff.y) / CameraUnderwaterAndWaterSurfaceBiasAndFalloff.z);
     float loc_8fa9c;
     if (loc_f2b43 >= 0.0)
     {
         float loc_efd00;
-        if ((loc_b4177.z - loc_e585f.x) >= 0.0)
+        if ((loc_b4177.z - loc_9e759.x) >= 0.0)
         {
             loc_efd00 = 0.0;
         }
@@ -991,19 +996,19 @@ void func_b07bb() {
             int loc_c0de4 = int(dot(clamp(CascadesPerSet, vec4(0.0), vec4(1.0)), vec4(1.0)));
             float loc_f6ac1;
             loc_f6ac1 = 1.0;
-            int loc_d7178;
+            int loc_29996;
             float loc_484ee;
-            for (int loc_8a709 = 0, loc_0e4f2 = 0; loc_8a709 < loc_c0de4; loc_0e4f2 = loc_d7178, loc_f6ac1 = loc_484ee, loc_8a709++)
+            for (int loc_8a709 = 0, loc_0e4f2 = 0; loc_8a709 < loc_c0de4; loc_0e4f2 = loc_29996, loc_f6ac1 = loc_484ee, loc_8a709++)
             {
                 int loc_79423 = min((loc_0e4f2 + int(CascadesPerSet[loc_8a709])), 8);
                 loc_484ee = loc_f6ac1;
-                loc_d7178 = loc_0e4f2;
+                loc_29996 = loc_0e4f2;
                 int loc_a0458;
                 float loc_5399e;
-                for (; loc_d7178 < loc_79423; loc_484ee = loc_5399e, loc_d7178 = loc_a0458)
+                for (; loc_29996 < loc_79423; loc_484ee = loc_5399e, loc_29996 = loc_a0458)
                 {
-                    vec4 loc_0dca3 = CascadesShadowProj[loc_d7178] * vec4(loc_65ac0, 1.0);
-                    vec3 loc_8d38c = abs(loc_0dca3.xyz);
+                    vec4 loc_4a0d9 = CascadesShadowProj[loc_29996] * vec4(loc_65ac0, 1.0);
+                    vec3 loc_8d38c = abs(loc_4a0d9.xyz);
                     bool loc_45980 = loc_8d38c.x <= 1.0;
                     bool loc_f1421;
                     if (loc_45980)
@@ -1025,7 +1030,7 @@ void func_b07bb() {
                     }
                     if (loc_e36b7)
                     {
-                        vec4 loc_ada37 = loc_0dca3;
+                        vec4 loc_38cc9 = loc_4a0d9;
                         int loc_3a40c;
                         if (QuantizationParameters.x != 0.0)
                         {
@@ -1033,12 +1038,12 @@ void func_b07bb() {
                         }
                         else
                         {
-                            loc_3a40c = clamp(int((CascadesParameters[loc_d7178].w * VolumeShadowSettings.x) + 0.5), 1, 9);
+                            loc_3a40c = clamp(int((CascadesParameters[loc_29996].w * VolumeShadowSettings.x) + 0.5), 1, 9);
                         }
                         int loc_960ef = loc_3a40c / 2;
-                        vec2 loc_445f6 = ((vec2(loc_ada37.x, loc_ada37.y) * 0.5) + vec2(0.5)) * CascadesParameters[loc_d7178].x;
-                        float loc_4fba3 = (loc_ada37.z * 0.5) + 0.5;
-                        loc_445f6.y += (1.0 - CascadesParameters[loc_d7178].x);
+                        vec2 loc_dc4ac = ((loc_4a0d9.xy * 0.5) + vec2(0.5)) * CascadesParameters[loc_29996].x;
+                        float loc_4fba3 = (loc_38cc9.z * 0.5) + 0.5;
+                        loc_dc4ac.y += (1.0 - CascadesParameters[loc_29996].x);
                         float loc_3555e;
                         loc_3555e = 0.0;
                         float loc_801c0;
@@ -1048,16 +1053,16 @@ void func_b07bb() {
                             float loc_30840;
                             for (int loc_963d2 = 0; loc_963d2 < loc_3a40c; loc_801c0 = loc_30840, loc_963d2++)
                             {
-                                vec2 loc_cced5 = loc_445f6 + ((vec2(float(loc_963d2 - loc_960ef) + 0.5, float(loc_15249 - loc_960ef) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_d7178].x);
-                                vec4 loc_fe3f0 = textureGather(s_ShadowCascades, vec3(loc_cced5, float(loc_d7178)));
+                                vec2 loc_cced5 = loc_dc4ac + ((vec2(float(loc_963d2 - loc_960ef) + 0.5, float(loc_15249 - loc_960ef) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_29996].x);
+                                vec4 loc_fe3f0 = textureGather(s_ShadowCascades, vec3(loc_cced5, float(loc_29996)));
                                 vec4 loc_26b65 = loc_fe3f0;
                                 if (QuantizationParameters.x != 0.0)
                                 {
-                                    loc_30840 = loc_801c0 + float(loc_26b65.w >= (loc_4fba3 - CascadesParameters[loc_d7178].y));
+                                    loc_30840 = loc_801c0 + float(loc_26b65.w >= (loc_4fba3 - CascadesParameters[loc_29996].y));
                                 }
                                 else
                                 {
-                                    vec4 loc_2f6b4 = step(vec4(loc_4fba3 - CascadesParameters[loc_d7178].y), loc_fe3f0);
+                                    vec4 loc_2f6b4 = step(vec4(loc_4fba3 - CascadesParameters[loc_29996].y), loc_fe3f0);
                                     vec2 loc_e2aba = fract((loc_cced5 * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
                                     loc_30840 = loc_801c0 + mix(mix(loc_2f6b4.w, loc_2f6b4.z, loc_e2aba.x), mix(loc_2f6b4.x, loc_2f6b4.y, loc_e2aba.x), loc_e2aba.y);
                                 }
@@ -1069,7 +1074,7 @@ void func_b07bb() {
                     else
                     {
                         loc_5399e = loc_484ee;
-                        loc_a0458 = loc_d7178 + 1;
+                        loc_a0458 = loc_29996 + 1;
                     }
                 }
             }
@@ -1077,7 +1082,7 @@ void func_b07bb() {
             if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0)
             {
                 float loc_ad066;
-                func_e5e1e(loc_65ac0, loc_ad066);
+                func_a0b5c(loc_65ac0, loc_ad066);
                 loc_f828f = loc_ad066;
             }
             else
@@ -1098,10 +1103,9 @@ void func_b07bb() {
             if (loc_b7807)
             {
                 vec4 loc_bcd0f = CloudShadowProj * vec4(loc_65ac0, 1.0);
-                vec4 loc_6ef28 = loc_bcd0f;
-                loc_6ef28 = loc_bcd0f / vec4(loc_6ef28.w);
-                loc_6ef28.z -= (CascadesParameters[0].y / loc_6ef28.w);
-                vec2 loc_76921 = ((vec2(loc_6ef28.x, loc_6ef28.y) * 0.5) + vec2(0.5)) * CascadesParameters[0].x;
+                vec4 loc_bcbd7 = loc_bcd0f;
+                loc_bcbd7 = loc_bcd0f / vec4(loc_bcbd7.w);
+                loc_bcbd7.z -= (CascadesParameters[0].y / loc_bcbd7.w);
                 int loc_c86ff;
                 if (QuantizationParameters.x != 0.0)
                 {
@@ -1112,8 +1116,9 @@ void func_b07bb() {
                     loc_c86ff = clamp(int((EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.z * VolumeShadowSettings.x) + 0.5), 1, 9);
                 }
                 int loc_7508d = loc_c86ff / 2;
-                loc_6ef28.z = (loc_6ef28.z * 0.5) + 0.5;
-                loc_76921.y += (1.0 - CascadesParameters[0].x);
+                vec2 loc_37738 = ((loc_bcbd7.xy * 0.5) + vec2(0.5)) * CascadesParameters[0].x;
+                loc_37738.y += (1.0 - CascadesParameters[0].x);
+                loc_bcbd7.z = (loc_bcbd7.z * 0.5) + 0.5;
                 float loc_19cd0 = dot(CascadesPerSet, vec4(1.0));
                 float loc_543e1;
                 loc_543e1 = 0.0;
@@ -1124,14 +1129,14 @@ void func_b07bb() {
                     float loc_16f2e;
                     for (int loc_fdb90 = 0; loc_fdb90 < loc_c86ff; loc_0fce1 = loc_16f2e, loc_fdb90++)
                     {
-                        vec3 loc_d07c9 = vec3(loc_76921 + ((vec2(float(loc_fdb90 - loc_7508d) + 0.5, float(loc_093cd - loc_7508d) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[0].x), loc_19cd0);
+                        vec3 loc_d07c9 = vec3(loc_37738 + ((vec2(float(loc_fdb90 - loc_7508d) + 0.5, float(loc_093cd - loc_7508d) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[0].x), loc_19cd0);
                         if (QuantizationParameters.x != 0.0)
                         {
-                            loc_16f2e = loc_0fce1 + float(textureLod(s_ShadowCascades, loc_d07c9, 0.0).x >= loc_6ef28.z);
+                            loc_16f2e = loc_0fce1 + float(textureLod(s_ShadowCascades, loc_d07c9, 0.0).x >= loc_bcbd7.z);
                         }
                         else
                         {
-                            vec4 loc_2ae6b = step(vec4(loc_6ef28.z), textureGather(s_ShadowCascades, loc_d07c9));
+                            vec4 loc_2ae6b = step(vec4(loc_bcbd7.z), textureGather(s_ShadowCascades, loc_d07c9));
                             vec2 loc_52300 = fract((loc_d07c9.xy * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
                             loc_16f2e = loc_0fce1 + mix(mix(loc_2ae6b.w, loc_2ae6b.z, loc_52300.x), mix(loc_2ae6b.x, loc_2ae6b.y, loc_52300.x), loc_52300.y);
                         }
@@ -1211,7 +1216,7 @@ void func_b07bb() {
     }
     if (TemporalSettings.x > 0.0)
     {
-        vec3 loc_dfafd = (vec3(float(loc_84ff0), float(loc_b5bd2), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_dfafd = (vec3(float(loc_da723), float(loc_1c644), float(loc_beae9)) + vec3(0.5)) / VolumeDimensions.xyz;
         vec3 loc_e9300 = loc_dfafd;
         vec2 loc_9d396 = VolumeNearFar.xy;
         float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
@@ -1232,20 +1237,20 @@ void func_b07bb() {
         float loc_53f43 = (loc_96ba4.z * float(loc_57985.z)) - 0.5;
         int loc_25a80 = clamp(int(loc_53f43), 0, loc_57985.z - 2);
         vec3 loc_34735 = VolumeDimensions.xyz * loc_33e20;
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), mix(vec4(loc_0bece, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_da723, loc_1c644, loc_beae9), mix(vec4(loc_0bece, loc_8068a), mix(textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80)), 0.0), textureLod(s_PreviousLightingBuffer, vec3(loc_d255f, loc_81f33.y, float(loc_25a80 + 1)), 0.0), vec4(clamp(loc_53f43 - float(loc_25a80), 0.0, 1.0))), vec4(mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_34735, vec3(0.0), vec3(loc_dbdb4)) - loc_34735) * TemporalSettings.y, 0.0, 1.0)))));
     }
     else
     {
-        imageStore(s_CurrentLightingBuffer, ivec3(loc_84ff0, loc_b5bd2, loc_beae9), vec4(loc_0bece, loc_8068a));
+        imageStore(s_CurrentLightingBuffer, ivec3(loc_da723, loc_1c644, loc_beae9), vec4(loc_0bece, loc_8068a));
     }
 }
 #endif
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
 #ifdef POINT_LIGHT_SHADING__OFF
-    func_0b82f();
+    func_327ea();
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-    func_b07bb();
+    func_6a19f();
 #endif
 }

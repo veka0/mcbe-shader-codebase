@@ -6,157 +6,93 @@
 * Passes:
 * - TRANSPARENT_PASS (not used)
 *
-* showDF:
-* - SHOW_DF__OFF
-* - SHOW_DF__ON
-*
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_Texture0;
-* - uniform lowp sampler2D s_Texture1;
-* - uniform lowp sampler2D s_Texture2;
+* - uniform lowp sampler2D s_txBuffer;
+* - uniform lowp sampler2D s_txBuffer1;
+* - uniform lowp sampler2D s_txBuffer2;
+* - uniform lowp sampler2D s_txBuffer3;
+* - uniform lowp sampler2D s_txBuffer4;
 *
 * Uniforms:
-* - uniform vec4 PrimProps0;
-* - uniform vec4 PrimProps1;
-* - uniform vec4 ShaderType;
+* - uniform vec4 Data_PS[128];
+* - uniform vec4 Data_VS[128];
 * - uniform vec4 TextureSize1;
-* - uniform mat4 Transform;
 */
 
 precision mediump float;
 precision highp int;
-uniform highp sampler2D s_Texture0;
-uniform highp sampler2D s_Texture1;
-uniform highp sampler2D s_Texture2;
-uniform highp vec4 PrimProps1;
-uniform highp vec4 ShaderType;
-uniform highp vec4 TextureSize1;
-in highp vec4 v_additional;
-in highp vec4 v_color;
+uniform highp sampler2D s_txBuffer1;
+uniform highp sampler2D s_txBuffer2;
+uniform highp sampler2D s_txBuffer;
+uniform highp vec4 Data_PS[128];
+in highp vec4 v_Additional;
+flat in highp vec4 v_VaryingData;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-#ifdef SHOW_DF__ON
-void func_f9079(inout highp vec4 arg_44c6a, inout highp vec4 arg_6cb6d, inout highp vec4 arg_6cc22, inout highp float arg_e811a) {
-    highp float loc_e6bc5;
-    if (0.0 == ShaderType.x)
-    {
-        loc_e6bc5 = min(1.0, arg_44c6a.z * arg_44c6a.w);
-    }
-    else
-    {
-        highp float loc_f4dd1;
-        if (3.0 == ShaderType.x)
-        {
-            highp vec2 loc_0c488 = v_additional.xy;
-            bool loc_7ea7b = PrimProps1.z != (-1.0);
-            bool loc_eb95b;
-            if (!loc_7ea7b)
-            {
-                loc_eb95b = PrimProps1.w != (-1.0);
-            }
-            else
-            {
-                loc_eb95b = loc_7ea7b;
-            }
-            if (loc_eb95b)
-            {
-                loc_0c488 = clamp(loc_0c488, PrimProps1.xy, PrimProps1.xy + PrimProps1.zw);
-            }
-            highp float loc_74cec = loc_0c488.x;
-            highp float loc_83bc9 = loc_0c488.y;
-            highp vec2 loc_8f1e9 = vec2(loc_74cec, 1.0 - loc_83bc9);
-            loc_0c488 = loc_8f1e9;
-            arg_6cb6d = texture(s_Texture0, loc_8f1e9);
-            arg_6cb6d.w = mix(1.0 - arg_6cb6d.w, arg_6cb6d.w, arg_6cc22.x);
-            arg_6cb6d.w = mix(((0.2125999927520751953125 * arg_6cb6d.x) + (0.715200006961822509765625 * arg_6cb6d.y)) + (0.072200000286102294921875 * arg_6cb6d.z), arg_6cb6d.w, arg_6cc22.z);
-            loc_f4dd1 = arg_6cc22.w * clamp(arg_44c6a.z, 0.0, 1.0);
-        }
-        else
-        {
-            if (17.0 == ShaderType.x)
-            {
-                highp vec2 loc_a0815 = vec2(arg_44c6a.x, arg_44c6a.y);
-                highp vec2 loc_f41d2 = floor(vec2(loc_a0815.x * TextureSize1.x, loc_a0815.y * TextureSize1.y)) + vec2(0.5);
-                arg_6cb6d = v_color * pow(abs(texture(s_Texture1, vec2(loc_f41d2.x / TextureSize1.x, loc_f41d2.y / TextureSize1.y)).x), 1.4500000476837158203125 - (((0.2125999927520751953125 * v_color.x) + (0.715200006961822509765625 * v_color.y)) + (0.072200000286102294921875 * v_color.z)));
-            }
-            else
-            {
-                if (18.0 == ShaderType.x)
-                {
-                    arg_6cb6d = vec4(texture(s_Texture2, vec2(arg_44c6a.x, arg_44c6a.y)).xxx, 1.0);
-                    arg_e811a = 1.0;
-                    return;
-                }
-            }
-            loc_f4dd1 = 1.0;
-        }
-        loc_e6bc5 = loc_f4dd1;
-    }
-    arg_e811a = loc_e6bc5;
-}
-#endif
 void main() {
-    highp vec4 var_b641f = v_additional;
-    highp vec4 var_178af = v_color;
-    highp vec4 var_95961 = v_color;
-    highp float var_0eaaa;
-#ifdef SHOW_DF__OFF
-    if (0.0 == ShaderType.x)
+    highp vec4 var_c8ac5 = v_Additional;
+    uvec4 var_4581e = uvec4(v_VaryingData);
+    int var_824d1 = int((var_4581e.z << uint(4)) | ((var_4581e.y & 240u) >> uint(4)));
+    int var_c73bc = int(var_4581e.w);
+    highp vec4 var_e5700 = Data_PS[var_824d1];
+    highp vec4 var_4d1c7 = Data_PS[var_824d1 + 1];
+    highp vec4 var_80255 = Data_PS[var_824d1];
+    highp float var_1710e;
+    if (0.0 == float(var_c73bc))
     {
-        var_0eaaa = min(1.0, var_b641f.z * var_b641f.w);
+        var_1710e = min(1.0, var_c8ac5.z * var_c8ac5.w);
     }
     else
     {
         highp float var_f4dd1;
-        if (3.0 == ShaderType.x)
+        if (3.0 == float(var_c73bc))
         {
-            highp vec2 var_9ff7d = v_additional.xy;
-            bool var_7ea7b = PrimProps1.z != (-1.0);
-            bool var_eb95b;
-            if (!var_7ea7b)
+            highp vec2 var_a37ad = v_Additional.xy;
+            highp vec4 var_49a69 = Data_PS[int(var_4d1c7.w)];
+            bool var_3afc1 = var_49a69.z != (-1.0);
+            bool var_30475;
+            if (!var_3afc1)
             {
-                var_eb95b = PrimProps1.w != (-1.0);
+                var_30475 = var_49a69.w != (-1.0);
             }
             else
             {
-                var_eb95b = var_7ea7b;
+                var_30475 = var_3afc1;
             }
-            if (var_eb95b)
+            if (var_30475)
             {
-                var_9ff7d = clamp(var_9ff7d, PrimProps1.xy, PrimProps1.xy + PrimProps1.zw);
+                var_a37ad.x = clamp(var_c8ac5.x, var_49a69.x, var_49a69.x + var_49a69.z);
+                var_a37ad.y = clamp(var_c8ac5.y, var_49a69.y, var_49a69.y + var_49a69.w);
             }
-            highp float var_74cec = var_9ff7d.x;
-            highp float var_83bc9 = var_9ff7d.y;
-            highp vec2 var_8f1e9 = vec2(var_74cec, 1.0 - var_83bc9);
-            var_9ff7d = var_8f1e9;
-            var_95961 = texture(s_Texture0, var_8f1e9);
-            var_95961.w = mix(1.0 - var_95961.w, var_95961.w, var_178af.x);
-            var_95961.w = mix(((0.2125999927520751953125 * var_95961.x) + (0.715200006961822509765625 * var_95961.y)) + (0.072200000286102294921875 * var_95961.z), var_95961.w, var_178af.z);
-            var_f4dd1 = var_178af.w * clamp(var_b641f.z, 0.0, 1.0);
+            var_80255 = texture(s_txBuffer, vec2(var_a37ad.x, 1.0 - var_a37ad.y));
+            var_80255.w = mix(1.0 - var_80255.w, var_80255.w, var_e5700.x);
+            var_80255.w = mix(((0.2125999927520751953125 * var_80255.x) + (0.715200006961822509765625 * var_80255.y)) + (0.072200000286102294921875 * var_80255.z), var_80255.w, var_e5700.z);
+            var_f4dd1 = var_e5700.w * clamp(var_c8ac5.z, 0.0, 1.0);
         }
         else
         {
-            if (17.0 == ShaderType.x)
+            if (17.0 == float(var_c73bc))
             {
-                highp vec2 var_38988 = vec2(var_b641f.x, var_b641f.y);
-                highp vec2 var_d692e = floor(vec2(var_38988.x * TextureSize1.x, var_38988.y * TextureSize1.y)) + vec2(0.5);
-                var_95961 = v_color * pow(abs(texture(s_Texture1, vec2(var_d692e.x / TextureSize1.x, var_d692e.y / TextureSize1.y)).x), 1.4500000476837158203125 - (((0.2125999927520751953125 * v_color.x) + (0.715200006961822509765625 * v_color.y)) + (0.072200000286102294921875 * v_color.z)));
+                var_80255 = Data_PS[var_824d1] * pow(abs(texture(s_txBuffer1, v_Additional.xy).x), 1.4500000476837158203125 - (((0.2125999927520751953125 * Data_PS[var_824d1].x) + (0.715200006961822509765625 * Data_PS[var_824d1].y)) + (0.072200000286102294921875 * Data_PS[var_824d1].z)));
             }
             else
             {
-                if (18.0 == ShaderType.x)
+                if (18.0 == float(var_c73bc))
                 {
-                    var_95961 = v_color * pow(smoothstep((-0.501960813999176025390625) / var_b641f.z, 0.501960813999176025390625 / var_b641f.z, (texture(s_Texture2, vec2(var_b641f.x, var_b641f.y)).x * 7.96875) - 3.984375), 1.4500000476837158203125 - (((0.2125999927520751953125 * v_color.x) + (0.715200006961822509765625 * v_color.y)) + (0.072200000286102294921875 * v_color.z)));
+                    var_80255 = Data_PS[var_824d1] * pow(abs(smoothstep((-0.501960813999176025390625) / var_c8ac5.z, 0.501960813999176025390625 / var_c8ac5.z, (texture(s_txBuffer2, v_Additional.xy).x * 7.96875) - 3.984375)), 1.4500000476837158203125 - (((0.2125999927520751953125 * Data_PS[var_824d1].x) + (0.715200006961822509765625 * Data_PS[var_824d1].y)) + (0.072200000286102294921875 * Data_PS[var_824d1].z)));
+                }
+                else
+                {
+                    if (22.0 == float(var_c73bc))
+                    {
+                        var_80255 = Data_PS[var_824d1] * pow(abs(smoothstep(0.5 - var_c8ac5.z, 0.5 + var_c8ac5.z, texture(s_txBuffer2, v_Additional.xy).x)), 1.4500000476837158203125 - (((0.2125999927520751953125 * Data_PS[var_824d1].x) + (0.715200006961822509765625 * Data_PS[var_824d1].y)) + (0.072200000286102294921875 * Data_PS[var_824d1].z)));
+                    }
                 }
             }
             var_f4dd1 = 1.0;
         }
-        var_0eaaa = var_f4dd1;
+        var_1710e = var_f4dd1;
     }
-#endif
-#ifdef SHOW_DF__ON
-    func_f9079(var_b641f, var_95961, var_178af, var_0eaaa);
-#endif
-    bgfx_FragColor = var_95961 * var_0eaaa;
+    bgfx_FragColor = var_80255 * var_1710e;
 }

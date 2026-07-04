@@ -104,7 +104,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -122,10 +122,8 @@ void main() {
     highp vec4 var_e966b = v_color0;
     highp vec4 var_6ca24 = v_fog;
     highp vec4 var_de643 = texture(s_ParticleTexture, v_texcoord0) * vec4(v_color0.xyz, var_e966b.w);
-    highp vec3 var_2cb07 = mix(var_de643.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    highp vec4 var_89833 = vec4(var_2cb07.x, var_2cb07.y, var_2cb07.z, var_de643.w);
-    highp vec4 var_baf55 = vec4(var_2cb07, var_89833.w);
-    highp vec4 var_3b1ba = v_fog;
-    highp vec3 var_14685 = mix(var_baf55.xyz, v_fog.xyz, vec3(var_3b1ba.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_baf55.w);
+    highp vec3 var_2ce89 = mix(var_de643.xyz, v_fog.xyz, vec3(var_6ca24.w));
+    highp vec4 var_74ef0 = vec4(var_2ce89.x, var_2ce89.y, var_2ce89.z, var_de643.w);
+    highp vec4 var_dc02c = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_2ce89, var_74ef0.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_74ef0.w);
 }

@@ -100,10 +100,10 @@ void main() {
     highp vec4 var_18e94 = texture(s_MatTexture, v_texcoord0);
 #if defined(TINTING__DISABLED) && defined(UI_ENTITY__DISABLED)
     highp vec3 var_136fb = var_18e94.xyz * v_light.xyz;
-    highp vec4 var_6d19d = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_18e94.w);
+    highp vec4 var_c05da = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_18e94.w);
 #endif
 #if defined(TINTING__ENABLED) || defined(UI_ENTITY__ENABLED)
-    highp vec4 var_6d19d = var_18e94;
+    highp vec4 var_c05da = var_18e94;
 #endif
 #ifdef TINTING__ENABLED
     highp vec4 var_48ffd = var_18e94;
@@ -117,12 +117,12 @@ void main() {
 #endif
 #if defined(TINTING__ENABLED) && defined(UI_ENTITY__DISABLED)
     highp vec3 var_136fb = var_48ffd.xyz * v_light.xyz;
-    var_6d19d = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_48ffd.w);
+    var_c05da = vec4(var_136fb.x, var_136fb.y, var_136fb.z, var_48ffd.w);
 #endif
 #if defined(TINTING__ENABLED) && defined(UI_ENTITY__ENABLED)
-    var_6d19d = var_48ffd;
+    var_c05da = var_48ffd;
 #endif
-    highp float var_d8f56 = var_6d19d.w;
+    highp float var_d8f56 = var_c05da.w;
     highp vec4 var_6d4aa = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
 #ifdef UI_ENTITY__DISABLED
     highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_136fb, 0.0);
@@ -139,13 +139,11 @@ void main() {
 #ifdef TINTING__ENABLED
     var_98c44.w = var_48ffd.w;
 #endif
-    var_6d19d = var_98c44;
-    var_6d19d.w = var_d8f56;
-    highp vec4 var_e4436 = var_6d19d;
-    var_e4436.w *= HudOpacity.x;
-    var_6d19d = var_e4436;
-    highp vec4 var_d4abf = vec4(var_e4436.xyz, var_6d19d.w);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_d4abf.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_d4abf.w);
+    var_c05da = var_98c44;
+    var_c05da.w = var_d8f56;
+    highp vec4 var_ea6de = var_c05da;
+    var_ea6de.w *= HudOpacity.x;
+    var_c05da = var_ea6de;
+    highp vec4 var_8544b = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_ea6de.xyz, var_c05da.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_c05da.w);
 }

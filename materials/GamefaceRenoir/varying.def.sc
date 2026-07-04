@@ -1,9 +1,11 @@
-vec4 a_texcoord3 : TEXCOORD3;
-vec4 a_color0    : COLOR0;
-vec4 a_position  : POSITION;
+vec4  a_texcoord1 : TEXCOORD1;
+uvec4 a_texcoord4 : TEXCOORD4;
+vec3  a_position  : POSITION;
 
-vec4 v_additional     : TEXCOORD2;
-vec4 v_color          : TEXCOORD1;
-vec4 v_screenPosition : TEXCOORD0;
-vec4 v_varyingParam0  : TEXCOORD3;
-vec4 v_varyingParam1  : TEXCOORD4;
+vec4      v_Additional           : TEXCOORD1;
+vec4      v_NoPerspParam         : TEXCOORD4;
+vec3      v_ScreenNormalPosition : TEXCOORD2;
+flat vec4 v_VaryingData          : TEXCOORD3;
+vec4      v_VaryingParam0        : TEXCOORD5;
+vec4      v_VaryingParam1        : TEXCOORD6;
+vec4      v_zPosition            : TEXCOORD0;

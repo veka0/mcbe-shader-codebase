@@ -98,11 +98,9 @@ void main() {
 #ifdef TINTING__DISABLED
     highp vec3 var_63b26 = var_aa96e.xyz * v_light.xyz;
 #endif
-    highp vec4 var_edaf7 = vec4(var_63b26.x, var_63b26.y, var_63b26.z, var_aa96e.w);
-    var_edaf7.w *= HudOpacity.x;
-    highp vec4 var_1d587 = var_edaf7;
-    highp vec4 var_d4abf = vec4(var_edaf7.xyz, var_1d587.w);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_d4abf.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_d4abf.w);
+    highp vec4 var_a9e80 = vec4(var_63b26.x, var_63b26.y, var_63b26.z, var_aa96e.w);
+    var_a9e80.w *= HudOpacity.x;
+    highp vec4 var_6ef7d = var_a9e80;
+    highp vec4 var_8544b = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_a9e80.xyz, var_6ef7d.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_6ef7d.w);
 }

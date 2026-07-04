@@ -121,7 +121,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -133,9 +133,9 @@ precision highp int;
 uniform highp sampler2D s_LightMapTexture;
 in highp vec3 v_lightColor;
 in highp vec2 v_lightmapUV;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_4eb4e = v_lightmapUV;
-    highp vec3 var_3d663 = texture(s_LightMapTexture, vec2(0.0, var_4eb4e.y)).xyz;
-    bgfx_FragData[0] = vec4(clamp(sqrt(v_lightColor + (var_3d663 * var_3d663)), vec3(0.0), vec3(1.0)), 1.0);
+    highp vec3 var_9cb55 = texture(s_LightMapTexture, vec2(0.0, var_4eb4e.y)).xyz;
+    bgfx_FragData0 = vec4(clamp(sqrt(v_lightColor + (var_9cb55 * var_9cb55)), vec3(0.0), vec3(1.0)), 1.0);
 }

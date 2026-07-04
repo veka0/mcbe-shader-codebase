@@ -89,7 +89,9 @@ uniform highp vec4 MatColor;
 uniform highp vec4 OverlayColor;
 uniform highp vec4 TintedAlphaTestEnabled;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
+layout(location = 2) out highp vec4 bgfx_FragData2;
 void main() {
 #ifdef MASKED_MULTITEXTURE__OFF
     highp vec4 var_6bc1f = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -108,7 +110,7 @@ void main() {
     {
         discard;
     }
-    bgfx_FragData[0] = vec4(1.0);
-    bgfx_FragData[1] = vec4(0.0);
-    bgfx_FragData[2] = vec4(0.0);
+    bgfx_FragData0 = vec4(1.0);
+    bgfx_FragData1 = vec4(0.0);
+    bgfx_FragData2 = vec4(0.0);
 }

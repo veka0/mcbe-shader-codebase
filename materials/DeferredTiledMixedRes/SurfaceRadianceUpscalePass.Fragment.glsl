@@ -113,7 +113,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -235,13 +235,17 @@ void main() {
     highp vec4 var_11add = texture(s_SceneDepth, v_texcoord0.xy);
     highp float var_3533f = (var_11add.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_3533f, 1.0);
-    highp mat4 var_3460a = u_invProj;
+    highp mat4 var_4fa47 = u_invProj;
+    highp mat4 var_498b7 = u_invProj;
+    highp mat4 var_4882d = u_invProj;
+    highp mat4 var_78c1b = u_invProj;
+    highp mat4 var_40575 = u_invProj;
     highp float var_eb413 = var_df846.x;
     highp float var_ac116 = var_df846.y;
     highp float var_f2b7c = var_df846.w;
     highp float var_0357c = var_df846.z;
     highp float var_2c821 = var_df846.w;
-    highp vec4 var_9666f = vec4(var_eb413 * var_3460a[0].x, var_ac116 * var_3460a[1].y, var_f2b7c * var_3460a[3].z, (var_0357c * var_3460a[2].w) + (var_2c821 * var_3460a[3].w));
+    highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_df846 = var_9666f;
     highp float var_d799e = var_df846.w;
     highp vec4 var_98bb3 = var_9666f / vec4(var_d799e);

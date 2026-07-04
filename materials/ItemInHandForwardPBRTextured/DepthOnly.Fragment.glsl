@@ -121,7 +121,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -130,7 +130,6 @@
 
 precision mediump float;
 precision highp int;
-float var_aaae6;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
@@ -144,7 +143,8 @@ uniform highp vec4 PreExposureEnabled;
 in highp vec4 v_color0;
 in highp vec3 v_prevWorldPos;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_517fd = v_color0;
@@ -154,14 +154,14 @@ void main() {
     highp vec3 var_620d5 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
     highp vec2 var_35473 = var_620d5.xy;
     highp vec3 var_7f614 = mix(mix((var_620d5.xxx * ChangeColor.xyz).xyz, var_620d5.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_cdf31 = vec4(var_7f614.x, var_7f614.y, var_7f614.z, vec4(1.0).w);
+    highp vec4 var_e4f0a = vec4(var_7f614.x, var_7f614.y, var_7f614.z, vec4(1.0).w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_e2f60 = vec4(var_05ab4.x, var_05ab4.y, var_05ab4.z, vec4(1.0).w);
     highp vec3 var_3b8c4 = mix(mix(var_e2f60, var_e2f60 * ChangeColor, vec4(var_517fd.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_cdf31 = vec4(var_3b8c4.x, var_3b8c4.y, var_3b8c4.z, vec4(1.0).w);
+    highp vec4 var_e4f0a = vec4(var_3b8c4.x, var_3b8c4.y, var_3b8c4.z, vec4(1.0).w);
 #endif
-    if (var_cdf31.w < 0.5)
+    if (var_e4f0a.w < 0.5)
     {
         discard;
     }
@@ -171,26 +171,25 @@ void main() {
 #ifdef MULTI_COLOR_TINT__ON
     highp vec3 var_0ce89 = var_7f614.xyz;
 #endif
-    highp vec3 var_cb832;
+    highp vec3 var_d523d;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_cb832 = var_0ce89 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_d523d = var_0ce89 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_cb832 = var_0ce89;
+        var_d523d = var_0ce89;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_7ed87;
+    highp vec4 var_93f7a = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_93f7a;
     highp vec4 var_c6f70 = u_prevViewProj * vec4(v_prevWorldPos, 1.0);
     highp vec4 var_96bda = var_c6f70;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_82203 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_82203;
-    highp vec2 var_e953a = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_cdf31.w).w);
-    bgfx_FragData[1] = vec4(vec4(0.0).x, vec4(0.0).y, var_e953a.x, var_e953a.y);
+    highp vec4 var_cd007 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_cd007;
+    bgfx_FragData0 = vec4(var_d523d, var_e4f0a.w);
+    bgfx_FragData1 = vec4(0.0, 0.0, var_93f7a.xy - var_cd007.xy);
 }
