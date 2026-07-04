@@ -621,17 +621,17 @@ void main() {
     {
         var_fc5fc = var_71d55;
     }
-    highp vec3 var_65737;
+    highp vec3 var_11406;
     if (var_fc5fc)
     {
-        highp vec3 var_a85cf = v_worldPos - WorldOrigin.xyz;
-        highp vec3 var_1f1d3 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_5c650)), normalize(dFdy(var_5c650)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-        highp vec3 var_8ce38 = mod(var_a85cf, vec3(QuantizationParameters.z));
-        var_65737 = (var_a85cf - (var_8ce38 - (var_1f1d3 * dot(var_8ce38, var_1f1d3)))) + WorldOrigin.xyz;
+        highp vec3 var_a35f2 = v_worldPos - WorldOrigin.xyz;
+        highp vec3 var_66e39 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_5c650)), normalize(dFdy(var_5c650)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+        highp vec3 var_2872c = vec3(QuantizationParameters.z * 0.5) - mod(var_a35f2, vec3(QuantizationParameters.z));
+        var_11406 = (var_a35f2 + (var_2872c - (var_66e39 * dot(var_2872c, var_66e39)))) + WorldOrigin.xyz;
     }
     else
     {
-        var_65737 = v_worldPos;
+        var_11406 = v_worldPos;
     }
     highp vec4 var_380f5 = vec4(0.0);
     highp float var_28662 = var_b414b.x * var_b414b.x;
@@ -669,7 +669,7 @@ void main() {
         highp vec3 var_a3c91;
         if (int(QuantizationParameters.y) > 0)
         {
-            var_a3c91 = var_65737;
+            var_a3c91 = var_11406;
         }
         else
         {
@@ -800,8 +800,8 @@ void main() {
         highp vec3 var_dd3fd;
         if (QuantizationParameters.w > 0.0)
         {
-            var_dd3fd = (u_view * vec4(var_65737, 1.0)).xyz;
-            var_a8715 = var_65737;
+            var_dd3fd = (u_view * vec4(var_11406, 1.0)).xyz;
+            var_a8715 = var_11406;
         }
         else
         {

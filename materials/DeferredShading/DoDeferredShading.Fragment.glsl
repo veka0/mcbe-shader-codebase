@@ -1038,12 +1038,12 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_3e56e = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_dc0c3 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
-    highp vec3 var_8037f = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_751a2 = mod(var_3e56e, vec3(QuantizationParameters.z));
+    highp vec3 var_6e9b6 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_38bcd = vec3(QuantizationParameters.z * 0.5) - mod(var_dc0c3, vec3(QuantizationParameters.z));
 #ifdef POINT_LIGHT_SHADING__ON
-    highp vec3 var_108a6 = (var_3e56e - (var_751a2 - (var_8037f * dot(var_751a2, var_8037f)))) + WorldOrigin.xyz;
+    highp vec3 var_b0a52 = (var_dc0c3 + (var_38bcd - (var_6e9b6 * dot(var_38bcd, var_6e9b6)))) + WorldOrigin.xyz;
 #endif
     highp vec2 var_745cb = var_99c96.xy;
     highp vec3 var_b0cb0 = vec3(var_99c96.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
@@ -1116,28 +1116,28 @@ void main() {
         highp vec3 var_d0c5d = -(var_279a9 / vec3(length(var_279a9) + 9.9999997473787516355514526367188e-05));
         highp float var_c1643 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_2a00e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
         highp vec3 var_8bbda = var_279a9;
-        highp vec3 var_ba89f;
+        highp vec3 var_b8a90;
         if (int(QuantizationParameters.y) > 0)
         {
 #ifdef POINT_LIGHT_SHADING__OFF
-            var_ba89f = (var_3e56e - (var_751a2 - (var_8037f * dot(var_751a2, var_8037f)))) + WorldOrigin.xyz;
+            var_b8a90 = (var_dc0c3 + (var_38bcd - (var_6e9b6 * dot(var_38bcd, var_6e9b6)))) + WorldOrigin.xyz;
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-            var_ba89f = var_108a6;
+            var_b8a90 = var_b0a52;
 #endif
         }
         else
         {
-            var_ba89f = var_2a484;
+            var_b8a90 = var_2a484;
         }
         highp vec3 var_95b4a;
         highp vec3 var_8cf42;
-        func_d749b(var_7c7bd, var_8cf42, var_95b4a, var_8efdc, var_ba89f, var_dcd7a, var_8bbda, var_ba621, var_d0c5d, var_10338, var_798fe, var_139fd, var_be3c0, var_c1643);
+        func_d749b(var_7c7bd, var_8cf42, var_95b4a, var_8efdc, var_b8a90, var_dcd7a, var_8bbda, var_ba621, var_d0c5d, var_10338, var_798fe, var_139fd, var_be3c0, var_c1643);
 #ifdef POINT_LIGHT_SHADING__ON
         highp vec4 var_b2434;
         highp vec3 var_79a86;
         highp vec3 var_7ac75;
-        func_6336c(var_7ac75, var_8cf42, var_79a86, var_95b4a, var_b2434, var_279a9, var_108a6, var_2a484, var_8efdc, var_d0c5d, var_10338, var_798fe, var_139fd, var_be3c0, var_c1643, var_dcd7a);
+        func_6336c(var_7ac75, var_8cf42, var_79a86, var_95b4a, var_b2434, var_279a9, var_b0a52, var_2a484, var_8efdc, var_d0c5d, var_10338, var_798fe, var_139fd, var_be3c0, var_c1643, var_dcd7a);
         var_d9ed8 = var_7ac75;
 #endif
 #ifdef POINT_LIGHT_SHADING__OFF

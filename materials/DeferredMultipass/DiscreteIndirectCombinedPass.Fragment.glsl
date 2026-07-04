@@ -578,7 +578,7 @@ void func_cf8e7(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     arg_98547 = loc_983e3;
     arg_33e52 = loc_fa2ec;
 }
-void func_78b91(inout highp vec3 arg_08c94, inout highp vec3 arg_77e08, inout highp vec4 arg_d4ca2, inout highp vec3 arg_468c4, inout highp vec3 arg_2ee2f, inout highp vec3 arg_6beec, inout highp vec3 arg_f9282, inout highp vec3 arg_62456, inout highp vec3 arg_f2581, inout highp vec3 arg_81306, inout highp vec2 arg_fde8c, inout highp vec3 arg_ad784, inout highp vec3 arg_c1689, inout highp float arg_b2d73, inout highp float arg_77a7a, inout highp vec3 arg_8986b) {
+void func_a0fc9(inout highp vec3 arg_08c94, inout highp vec3 arg_77e08, inout highp vec4 arg_d4ca2, inout highp vec3 arg_468c4, inout highp vec3 arg_229fe, inout highp vec3 arg_29328, inout highp vec3 arg_c3199, inout highp vec3 arg_62456, inout highp vec3 arg_f2581, inout highp vec3 arg_81306, inout highp vec2 arg_fde8c, inout highp vec3 arg_ad784, inout highp vec3 arg_c1689, inout highp float arg_b2d73, inout highp float arg_77a7a, inout highp vec3 arg_8986b) {
     if (!(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z != 0.0))
     {
         arg_08c94 = vec3(0.0);
@@ -636,19 +636,19 @@ void func_78b91(inout highp vec3 arg_08c94, inout highp vec3 arg_77e08, inout hi
     {
         loc_6aff4 = loc_70859;
     }
-    highp vec3 loc_5e9f4;
+    highp vec3 loc_53df2;
     if (int(QuantizationParameters.y) > 0)
     {
-        loc_5e9f4 = (arg_2ee2f - (arg_6beec - (arg_f9282 * dot(arg_6beec, arg_f9282)))) + WorldOrigin.xyz;
+        loc_53df2 = (arg_229fe + (arg_29328 - (arg_c3199 * dot(arg_29328, arg_c3199)))) + WorldOrigin.xyz;
     }
     else
     {
-        loc_5e9f4 = arg_62456;
+        loc_53df2 = arg_62456;
     }
     highp vec4 loc_62ffc;
     highp vec3 loc_4f8b5;
     highp vec3 loc_8f61c;
-    func_cf8e7(loc_94300, loc_6aff4, loc_8f61c, loc_4f8b5, loc_62ffc, arg_468c4, arg_f2581, arg_81306, arg_fde8c, arg_ad784, arg_c1689, arg_b2d73, arg_77a7a, arg_62456, loc_5e9f4, arg_8986b);
+    func_cf8e7(loc_94300, loc_6aff4, loc_8f61c, loc_4f8b5, loc_62ffc, arg_468c4, arg_f2581, arg_81306, arg_fde8c, arg_ad784, arg_c1689, arg_b2d73, arg_77a7a, arg_62456, loc_53df2, arg_8986b);
     arg_08c94 = loc_8f61c * (1.0 - loc_8e727);
     arg_77e08 = loc_4f8b5 * (1.0 - loc_f9ee3);
     arg_d4ca2 = loc_62ffc;
@@ -683,10 +683,10 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_3aeef = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_7cc1b = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
     highp vec3 var_69119 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_806ba = mod(var_3aeef, vec3(QuantizationParameters.z));
+    highp vec3 var_6d23b = vec3(QuantizationParameters.z * 0.5) - mod(var_7cc1b, vec3(QuantizationParameters.z));
     highp vec2 var_745cb = var_99c96.xy;
     highp vec3 var_b0cb0 = vec3(var_99c96.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
@@ -743,7 +743,7 @@ void main() {
         highp vec4 var_a0f79;
         highp vec3 var_12eb9;
         highp vec3 var_7ac75;
-        func_78b91(var_7ac75, var_12eb9, var_a0f79, var_f6ab5, var_3aeef, var_806ba, var_69119, var_3a5a4, var_1eaa4, var_55dbe, var_a1893, var_88b0b, var_7c5c9, var_ab82c, var_46232, var_33dd1);
+        func_a0fc9(var_7ac75, var_12eb9, var_a0f79, var_f6ab5, var_7cc1b, var_6d23b, var_69119, var_3a5a4, var_1eaa4, var_55dbe, var_a1893, var_88b0b, var_7c5c9, var_ab82c, var_46232, var_33dd1);
         var_f0c18 = var_7ac75;
         var_1137d = var_12eb9;
         var_345f2 = var_a0f79;

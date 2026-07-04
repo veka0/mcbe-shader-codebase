@@ -539,10 +539,10 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_d5564 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_44540 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
-    highp vec3 var_4caf6 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_fc769 = mod(var_d5564, vec3(QuantizationParameters.z));
+    highp vec3 var_cceb0 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_53026 = vec3(QuantizationParameters.z * 0.5) - mod(var_44540, vec3(QuantizationParameters.z));
     highp vec2 var_745cb = var_af032.xy;
     highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
@@ -578,18 +578,18 @@ void main() {
     if (var_45a07.z != 1.0)
     {
         highp vec3 var_92517 = var_54046;
-        highp vec3 var_49e65;
+        highp vec3 var_8d2f5;
         if (int(QuantizationParameters.y) > 0)
         {
-            var_49e65 = (var_d5564 - (var_fc769 - (var_4caf6 * dot(var_fc769, var_4caf6)))) + WorldOrigin.xyz;
+            var_8d2f5 = (var_44540 + (var_53026 - (var_cceb0 * dot(var_53026, var_cceb0)))) + WorldOrigin.xyz;
         }
         else
         {
-            var_49e65 = (u_invView * vec4(var_148ed.xyz, 1.0)).xyz;
+            var_8d2f5 = (u_invView * vec4(var_148ed.xyz, 1.0)).xyz;
         }
         highp vec3 var_a53cf;
         highp vec3 var_e520d;
-        func_23ff3(var_66577, var_e520d, var_a53cf, var_b9e03, var_49e65, var_effba, var_92517, var_d61cf, var_98c8c, var_75bca, var_92928, var_9c3c2, var_121d0);
+        func_23ff3(var_66577, var_e520d, var_a53cf, var_b9e03, var_8d2f5, var_effba, var_92517, var_d61cf, var_98c8c, var_75bca, var_92928, var_9c3c2, var_121d0);
         var_e6b66 = var_e520d;
         var_d9967 = var_a53cf;
     }

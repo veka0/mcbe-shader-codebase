@@ -490,10 +490,10 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_b99be = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_9c35f = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
-    highp vec3 var_8f813 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_7f483 = mod(var_b99be, vec3(QuantizationParameters.z));
+    highp vec3 var_e61e6 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_53aa0 = vec3(QuantizationParameters.z * 0.5) - mod(var_9c35f, vec3(QuantizationParameters.z));
     highp vec2 var_745cb = var_af032.xy;
     highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
@@ -543,18 +543,18 @@ void main() {
     highp vec3 var_fca56 = -(var_bd17c / vec3(length(var_bd17c) + 9.9999997473787516355514526367188e-05));
     highp float var_243e1 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_4ac0e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
     highp vec3 var_e8ddd = var_bd17c;
-    highp vec3 var_3748e;
+    highp vec3 var_71888;
     if (int(QuantizationParameters.y) > 0)
     {
-        var_3748e = (var_b99be - (var_7f483 - (var_8f813 * dot(var_7f483, var_8f813)))) + WorldOrigin.xyz;
+        var_71888 = (var_9c35f + (var_53aa0 - (var_e61e6 * dot(var_53aa0, var_e61e6)))) + WorldOrigin.xyz;
     }
     else
     {
-        var_3748e = var_ff3a3;
+        var_71888 = var_ff3a3;
     }
     highp vec3 var_47b67;
     highp vec3 var_80804;
-    func_0179a(var_4494d, var_80804, var_47b67, var_6fdd9, var_3748e, var_8b177, var_e8ddd, var_b42d8, var_fca56, var_3d58a, var_b99f0, var_a9088, var_243e1);
+    func_0179a(var_4494d, var_80804, var_47b67, var_6fdd9, var_71888, var_8b177, var_e8ddd, var_b42d8, var_fca56, var_3d58a, var_b99f0, var_a9088, var_243e1);
     bgfx_FragData[0] = vec4(var_80804, 1.0);
     bgfx_FragData[1] = vec4(var_47b67, 1.0);
 }

@@ -79,10 +79,15 @@ in highp vec4 v_worldPosition;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
+#if defined(DITHERING__OFF) && defined(SEASONS__ON)
+    highp vec4 var_e49ec = v_color0;
+#endif
 #ifdef DITHERING__ON
     highp mat4 View = u_view;
 #endif
-    highp vec4 var_ba39c = v_color0;
+#if defined(DITHERING__ON) && defined(SEASONS__ON)
+    highp vec4 var_e49ec = v_color0;
+#endif
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
@@ -114,18 +119,18 @@ void main() {
         discard;
     }
 #ifdef SEASONS__OFF
-    highp vec4 var_07116 = var_98945;
-    highp vec3 var_1d266 = (var_07116.xyz * v_color0.xyz).xyz * var_ba39c.w;
-    var_98945 = vec4(var_1d266.x, var_1d266.y, var_1d266.z, var_07116.w);
+    highp vec4 var_15f8b = var_98945;
+    highp vec3 var_26419 = var_15f8b.xyz * v_color0.xyz;
+    var_98945 = vec4(var_26419.x, var_26419.y, var_26419.z, var_15f8b.w);
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_98945.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_ba39c.w);
-    highp vec4 var_1d266 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_98945.w);
-    var_1d266.w = 1.0;
-    var_98945 = var_1d266;
+    highp vec3 var_2b07f = (var_98945.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_e49ec.w);
+    highp vec4 var_26419 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_98945.w);
+    var_26419.w = 1.0;
+    var_98945 = var_26419;
 #endif
-    highp vec4 var_16cd7 = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_1d266.xyz, var_98945.w);
+    highp vec4 var_16cd7 = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_26419.xyz, var_98945.w);
     highp vec4 var_67e99 = v_fog;
     highp vec3 var_2a3e1 = mix(var_16cd7.xyz, FogColor.xyz, vec3(var_67e99.w));
     bgfx_FragColor = vec4(var_2a3e1.x, var_2a3e1.y, var_2a3e1.z, var_16cd7.w);

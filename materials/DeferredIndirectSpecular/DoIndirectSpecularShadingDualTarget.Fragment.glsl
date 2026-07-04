@@ -258,11 +258,11 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_ea248 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_38d64 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
-    highp vec3 var_a45f7 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_7d782 = mod(var_ea248, vec3(QuantizationParameters.z));
-    highp vec3 var_204a2 = (var_ea248 - (var_7d782 - (var_a45f7 * dot(var_7d782, var_a45f7)))) + WorldOrigin.xyz;
+    highp vec3 var_76063 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_fddd0 = vec3(QuantizationParameters.z * 0.5) - mod(var_38d64, vec3(QuantizationParameters.z));
+    highp vec3 var_ec4b0 = (var_38d64 + (var_fddd0 - (var_76063 * dot(var_fddd0, var_76063)))) + WorldOrigin.xyz;
     highp vec2 var_3ccf7 = var_07479;
     highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_3ccf7.x)) - abs(var_3ccf7.y));
     highp vec2 var_c65e0;
@@ -327,7 +327,7 @@ void main() {
         highp vec3 var_23420;
         if (QuantizationParameters.w > 0.0)
         {
-            highp vec4 var_d5962 = u_viewProj * vec4(var_204a2, 1.0);
+            highp vec4 var_d5962 = u_viewProj * vec4(var_ec4b0, 1.0);
             highp vec4 var_412ca = var_d5962;
             highp vec3 var_f4c6b = var_d5962.xyz / vec3(var_412ca.w);
             var_f4c6b.y *= (-1.0);
@@ -337,8 +337,8 @@ void main() {
             highp vec2 var_95d93 = vec2(var_74cec, 1.0 - var_83bc9);
             var_9b904 = var_95d93;
             var_bcb12 = var_95d93;
-            var_23420 = (u_view * vec4(var_204a2, 1.0)).xyz;
-            var_7c2f6 = var_204a2;
+            var_23420 = (u_view * vec4(var_ec4b0, 1.0)).xyz;
+            var_7c2f6 = var_ec4b0;
         }
         else
         {
@@ -412,8 +412,8 @@ void main() {
             highp vec3 var_e2d67;
             if (QuantizationParameters.w > 0.0)
             {
-                var_e2d67 = (u_view * vec4(var_204a2, 1.0)).xyz;
-                var_ee8d4 = var_204a2;
+                var_e2d67 = (u_view * vec4(var_ec4b0, 1.0)).xyz;
+                var_ee8d4 = var_ec4b0;
             }
             else
             {
@@ -480,7 +480,7 @@ void main() {
                 highp vec3 var_1816e;
                 if (QuantizationParameters.w > 0.0)
                 {
-                    var_1816e = (u_view * vec4(var_204a2, 1.0)).xyz;
+                    var_1816e = (u_view * vec4(var_ec4b0, 1.0)).xyz;
                 }
                 else
                 {

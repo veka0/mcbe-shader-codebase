@@ -1189,40 +1189,39 @@ void func_190ed(inout highp vec3 arg_1ec6a, inout highp float arg_19032, inout h
     arg_85834 = vec4(loc_4c5f3, 1.0);
 }
 void main() {
-    highp vec4 var_16862 = v_color0;
+    highp vec4 var_1e556 = v_color0;
     bool var_7320a = AlphaMaskedTint.x != 0.0;
-    highp vec4 var_9af0f = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_1bee0 = texture(s_MatTexture, v_texcoord0);
     if (var_7320a)
     {
-        highp vec3 var_c7ec1 = mix(var_9af0f.xyz, var_9af0f.xyz * v_color0.xyz, vec3(var_9af0f.w));
-        var_9af0f = vec4(var_c7ec1.x, var_c7ec1.y, var_c7ec1.z, var_9af0f.w);
-        var_9af0f.w = 1.0;
+        highp vec3 var_5e4d7 = mix(var_1bee0.xyz, var_1bee0.xyz * v_color0.xyz, vec3(var_1bee0.w)).xyz * var_1e556.w;
+        var_1bee0 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_1bee0.w);
+        var_1bee0.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_9af0f.xyz * v_color0.xyz;
-        var_9af0f = vec4(var_55928.x, var_55928.y, var_55928.z, var_9af0f.w);
+        highp vec3 var_55928 = var_1bee0.xyz * v_color0.xyz;
+        var_1bee0 = vec4(var_55928.x, var_55928.y, var_55928.z, var_1bee0.w);
     }
-    highp vec4 var_1f491 = var_9af0f;
-    highp vec3 var_9b8be = var_1f491.xyz * var_16862.w;
-    highp vec4 var_3801b = vec4(var_9b8be.x, var_9b8be.y, var_9b8be.z, var_1f491.w) * MatColor;
-    var_9af0f = var_3801b;
-    highp vec3 var_4b6b9 = var_3801b.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec4 var_74395 = var_1bee0;
+    highp vec4 var_48e86 = var_74395 * MatColor;
+    var_1bee0 = var_48e86;
+    highp vec3 var_4b6b9 = var_48e86.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #ifdef MULTI_COLOR_TINT__ON
     highp vec2 var_35473 = var_4b6b9.xy;
     highp vec3 var_f9ddb = mix(mix((var_4b6b9.xxx * ChangeColor.xyz).xyz, var_4b6b9.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_71049 = vec4(var_f9ddb.x, var_f9ddb.y, var_f9ddb.z, var_3801b.w);
+    highp vec4 var_71049 = vec4(var_f9ddb.x, var_f9ddb.y, var_f9ddb.z, var_48e86.w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_24ae4 = vec4(var_4b6b9.x, var_4b6b9.y, var_4b6b9.z, var_3801b.w);
-    highp vec3 var_99f3c = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_16862.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_71049 = vec4(var_99f3c.x, var_99f3c.y, var_99f3c.z, var_3801b.w);
+    highp vec4 var_24ae4 = vec4(var_4b6b9.x, var_4b6b9.y, var_4b6b9.z, var_48e86.w);
+    highp vec3 var_99f3c = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_1e556.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_71049 = vec4(var_99f3c.x, var_99f3c.y, var_99f3c.z, var_48e86.w);
 #endif
     if (!var_7320a)
     {
         highp vec3 var_d5484 = var_71049.xyz * v_color0.xyz;
         var_71049 = vec4(var_d5484.x, var_d5484.y, var_d5484.z, var_71049.w);
-        var_71049.w *= var_16862.w;
+        var_71049.w *= var_1e556.w;
     }
     highp vec3 var_c9532;
     func_66b9c(var_c9532, var_71049);
@@ -1239,12 +1238,12 @@ void main() {
     highp vec3 var_b4b34 = normalize(var_d2ce2);
     highp vec4 var_e14aa = vec4(var_b4b34, 0.0);
     highp vec3 var_f8af5 = var_9f386.xyz;
-    highp vec3 var_239fe = v_worldPos - WorldOrigin.xyz;
+    highp vec3 var_219ab = v_worldPos - WorldOrigin.xyz;
     highp vec3 var_eebcb = dFdx(var_f8af5);
     highp vec3 var_211c8 = dFdy(var_f8af5);
-    highp vec3 var_5acf5 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_7d782 = mod(var_239fe, vec3(QuantizationParameters.z));
-    highp vec3 var_14922 = (var_239fe - (var_7d782 - (var_5acf5 * dot(var_7d782, var_5acf5)))) + WorldOrigin.xyz;
+    highp vec3 var_322a5 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_fddd0 = vec3(QuantizationParameters.z * 0.5) - mod(var_219ab, vec3(QuantizationParameters.z));
+    highp vec3 var_1b088 = (var_219ab + (var_fddd0 - (var_322a5 * dot(var_fddd0, var_322a5)))) + WorldOrigin.xyz;
     highp vec3 var_6c01a = var_e14aa.xyz;
     highp vec3 var_cde66 = (u_view * var_e14aa).xyz;
     highp vec3 var_c1070 = vec3(0.039999999105930328369140625 * (1.0 - var_74663)) + (var_c9532 * var_74663);
@@ -1284,7 +1283,7 @@ void main() {
         highp vec3 var_b5d88;
         if (int(QuantizationParameters.y) > 0)
         {
-            var_b5d88 = var_14922;
+            var_b5d88 = var_1b088;
         }
         else
         {
@@ -1296,7 +1295,7 @@ void main() {
         highp vec4 var_05431;
         highp vec3 var_aae12;
         highp vec3 var_e318f;
-        func_323af(var_e318f, var_e3304, var_aae12, var_904fd, var_05431, var_f8af5, var_14922, var_cde66, var_9823f, var_d2dca, var_c1070, var_c9532, var_74663, var_49d92, var_6c01a);
+        func_323af(var_e318f, var_e3304, var_aae12, var_904fd, var_05431, var_f8af5, var_1b088, var_cde66, var_9823f, var_d2dca, var_c1070, var_c9532, var_74663, var_49d92, var_6c01a);
         var_20513 = var_e318f;
         var_01e0d = var_aae12;
         var_02fd0 = var_05431;
@@ -1422,8 +1421,8 @@ void main() {
         highp vec3 var_dd3fd;
         if (QuantizationParameters.w > 0.0)
         {
-            var_dd3fd = (u_view * vec4(var_14922, 1.0)).xyz;
-            var_a8715 = var_14922;
+            var_dd3fd = (u_view * vec4(var_1b088, 1.0)).xyz;
+            var_a8715 = var_1b088;
         }
         else
         {
@@ -1518,7 +1517,7 @@ void main() {
             highp vec3 var_21df9;
             if (QuantizationParameters.w > 0.0)
             {
-                var_21df9 = (u_view * vec4(var_14922, 1.0)).xyz;
+                var_21df9 = (u_view * vec4(var_1b088, 1.0)).xyz;
             }
             else
             {
