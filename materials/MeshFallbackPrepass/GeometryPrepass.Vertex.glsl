@@ -43,11 +43,13 @@
 * - uniform mat4 PrevWorld;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 TileLightIntensity;
+* - uniform vec4 UVAnimation;
 * - uniform vec4 ZShiftValue;
 */
 
 uniform mat4 u_model[4];
 uniform mat4 u_viewProj;
+uniform vec4 UVAnimation;
 in vec4 a_color0;
 in vec4 a_normal;
 in vec3 a_position;
@@ -86,7 +88,7 @@ void main() {
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = (u_model[0] * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
     v_worldPos = var_9b079.xyz;
     gl_Position = u_viewProj * vec4(var_9b079.xyz, 1.0);
 }

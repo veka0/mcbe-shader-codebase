@@ -10,6 +10,10 @@
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF (not used)
 * - INSTANCING__ON (not used)
@@ -30,6 +34,8 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 GlobalRoughness;

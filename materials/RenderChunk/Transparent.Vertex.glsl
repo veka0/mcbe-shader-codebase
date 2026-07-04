@@ -10,6 +10,10 @@
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
+*
 * Instancing:
 * - INSTANCING__OFF
 * - INSTANCING__ON
@@ -30,6 +34,8 @@
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 GlobalRoughness;
@@ -63,6 +69,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec4 v_color0;
+out float v_dithering;
 out vec4 v_fog;
 out vec2 v_lightmapUV;
 centroid out vec2 v_texcoord0;
@@ -120,9 +127,12 @@ void main() {
         vec4 var_cb46d = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
         var_ca76d.w = mix(var_9d5b1.w, 1.0, clamp(var_e3e0a / var_cb46d.w, 0.0, 1.0));
     }
+    vec2 var_e91ee = a_texcoord1;
+    uint var_960bd = uint(floor(var_e91ee.x * 255.0));
     v_color0 = var_ca76d;
+    v_dithering = float(uint(floor(var_e91ee.y * 255.0)) & 1u);
     v_fog = vec4(FogColor.xyz, clamp((((var_e3e0a / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
-    v_lightmapUV = a_texcoord1;
+    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_1c444;
 #ifdef RENDER_AS_BILLBOARDS__OFF

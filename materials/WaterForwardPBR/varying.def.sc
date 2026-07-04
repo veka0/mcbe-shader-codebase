@@ -14,6 +14,7 @@ vec4 i_data3 : TEXCOORD5;
 
 vec3          v_bitangent    : BITANGENT;
 vec4          v_color0       : COLOR0;
+float         v_dithering    : TEXCOORD2;
 #ifdef DO_WATER_SURFACE_BUFFER_PASS
 flat int      v_frontFacing  : FRONTFACING;
 #endif
