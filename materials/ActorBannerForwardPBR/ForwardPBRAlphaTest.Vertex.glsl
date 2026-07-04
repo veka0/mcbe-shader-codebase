@@ -35,7 +35,6 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_MERSTexture;
@@ -47,19 +46,17 @@
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 12, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 13, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 14, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 11, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 12, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
+* - uniform vec4 BannerBasePBRTextureData[4];
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
-* - uniform vec4 BiomeBlendingLastUpdatePosition;
-* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
@@ -144,6 +141,7 @@
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WaterSurfaceEnabled;
 * - uniform vec4 WaterSurfaceOctaveParameters;
@@ -173,6 +171,7 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+flat out int v_frontFacing;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
@@ -202,6 +201,7 @@ void main() {
     vec4 var_4c816 = a_tangent;
     v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
     v_color0 = a_color0;
+    v_frontFacing = 0;
     v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;

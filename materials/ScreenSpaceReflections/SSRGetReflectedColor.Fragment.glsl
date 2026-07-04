@@ -44,6 +44,7 @@ uniform highp sampler2D s_PreviousReflectionBuffer;
 uniform highp sampler2D s_RasterColor;
 uniform highp vec4 SSRTemporalAccumulationParams;
 uniform highp vec4 ScreenSize;
+uniform highp vec4 ViewportScale;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
@@ -74,7 +75,7 @@ void main() {
     {
         var_567d7 = vec4(0.0);
     }
-    highp vec4 var_648fa;
+    highp vec4 var_b1d8f;
     if (SSRTemporalAccumulationParams.x > 0.0)
     {
         highp vec4 var_ffe7a = vec4((v_texcoord0.xy * 2.0) - vec2(1.0), (var_cb8e0.z * 2.0) - 1.0, 1.0);
@@ -91,24 +92,24 @@ void main() {
         var_ffe7a = var_62835;
         highp vec4 var_77040 = u_prevViewProj * vec4((u_invView * vec4(var_62835.xyz, 1.0)).xyz, 1.0);
         highp vec4 var_67609 = var_77040;
-        highp vec2 var_d1e3c = ((var_77040.xyz / vec3(var_67609.w)).xy + vec2(1.0)) * 0.5;
-        var_d1e3c.y = 1.0 - var_d1e3c.y;
+        highp vec2 var_68901 = ((var_77040.xyz / vec3(var_67609.w)).xy + vec2(1.0)) * 0.5;
+        var_68901.y = 1.0 - var_68901.y;
         int var_6b3ea = int(SSRTemporalAccumulationParams.z);
         int var_08d17 = -var_6b3ea;
         highp vec4 var_a266f;
         highp float var_4a7a2;
-        highp vec4 var_8cd78;
-        var_8cd78 = vec4(0.0);
+        highp vec4 var_a0312;
+        var_a0312 = vec4(0.0);
         var_4a7a2 = 0.0;
         var_a266f = vec4(0.0);
         highp float var_b7f64;
         highp vec4 var_c4779;
         highp vec4 var_8c126;
-        for (int var_210f2 = var_08d17; var_210f2 <= var_6b3ea; var_8cd78 = var_c4779, var_4a7a2 = var_b7f64, var_a266f = var_8c126, var_210f2++)
+        for (int var_210f2 = var_08d17; var_210f2 <= var_6b3ea; var_a0312 = var_c4779, var_4a7a2 = var_b7f64, var_a266f = var_8c126, var_210f2++)
         {
             int var_f2c75 = -var_6b3ea;
             var_8c126 = var_a266f;
-            var_c4779 = var_8cd78;
+            var_c4779 = var_a0312;
             var_b7f64 = var_4a7a2;
             highp float var_84ace;
             highp vec4 var_25bbb;
@@ -147,12 +148,12 @@ void main() {
                 var_758f4 = var_8c126 + ((var_e336d - var_c4779) * (var_e336d - var_25bbb));
             }
         }
-        highp vec4 var_af310 = sqrt(max(vec4(0.0), var_a266f / vec4(var_4a7a2 - 1.0)));
-        var_648fa = clamp(texture(s_PreviousReflectionBuffer, vec2(var_d1e3c.x, 1.0 - var_d1e3c.y)), var_8cd78 - (var_af310 * SSRTemporalAccumulationParams.y), var_8cd78 + (var_af310 * SSRTemporalAccumulationParams.y));
+        highp vec4 var_96519 = sqrt(max(vec4(0.0), var_a266f / vec4(var_4a7a2 - 1.0)));
+        var_b1d8f = clamp(texture(s_PreviousReflectionBuffer, vec2(var_68901.x, 1.0 - var_68901.y) * ViewportScale.zw), var_a0312 - (var_96519 * SSRTemporalAccumulationParams.y), var_a0312 + (var_96519 * SSRTemporalAccumulationParams.y));
     }
     else
     {
-        var_648fa = var_567d7;
+        var_b1d8f = var_567d7;
     }
-    bgfx_FragData[0] = mix(var_648fa, var_567d7, vec4(SSRTemporalAccumulationParams.w));
+    bgfx_FragData[0] = mix(var_b1d8f, var_567d7, vec4(SSRTemporalAccumulationParams.w));
 }

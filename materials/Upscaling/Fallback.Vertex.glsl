@@ -23,7 +23,7 @@
 * - uniform vec4 RecipDisplayResolution;
 * - uniform vec4 RenderResolution;
 * - uniform vec4 ResolutionRatiosAndFPEpsilon;
-* - uniform vec4 SubPixelJitter;
+* - uniform vec4 SubPixelJitterAndValidHistory;
 * - uniform vec4 TAAUpscalingParameters;
 */
 

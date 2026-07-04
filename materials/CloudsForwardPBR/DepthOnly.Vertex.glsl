@@ -15,26 +15,24 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
+* - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 8, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 9, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 10, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 8, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 9, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
-* - uniform vec4 BiomeBlendingLastUpdatePosition;
-* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientSamples;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -47,6 +45,7 @@
 * - uniform vec4 CloudLightingUniforms;
 * - uniform mat4 CloudShadowProj;
 * - uniform vec4 CloudShadowsVisible;
+* - uniform vec4 CloudViewport;
 * - uniform vec4 ClusterDepthBounds;
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
@@ -65,6 +64,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -92,16 +92,19 @@
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SkyZenithColor;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WorldOrigin;
 */
@@ -118,7 +121,7 @@ in vec4 i_data3;
 #endif
 flat out int v_adjacentClouds;
 out vec4 v_color0;
-out vec3 v_ndcPosition;
+out vec4 v_fragCoord;
 out vec3 v_normal;
 out vec2 v_texcoord0;
 out vec2 v_tilePosition;
@@ -138,14 +141,14 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_12727 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec4 var_24fab = u_viewProj * vec4(var_12727.xyz, 1.0);
-    var_24fab.z = clamp(var_24fab.z, 0.0, 1.0);
+    vec4 var_f6566 = u_viewProj * vec4(var_12727.xyz, 1.0);
+    var_f6566.z = clamp(var_f6566.z, -1.0, 1.0);
     v_adjacentClouds = 0;
     v_color0 = vec4(0.0);
-    v_ndcPosition = vec3(0.0);
+    v_fragCoord = vec4(0.0);
     v_normal = vec3(0.0);
     v_texcoord0 = vec2(0.0);
     v_tilePosition = vec2(0.0);
     v_worldPos = var_12727.xyz;
-    gl_Position = var_24fab;
+    gl_Position = var_f6566;
 }

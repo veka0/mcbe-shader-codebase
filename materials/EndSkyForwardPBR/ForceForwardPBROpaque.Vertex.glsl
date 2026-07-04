@@ -1,0 +1,133 @@
+#version 310 es
+
+/*
+* Available Macros:
+*
+* Passes:
+* - FORCE_FORWARD_PBR_OPAQUE_PASS (not used)
+*
+* Instancing:
+* - INSTANCING__OFF
+* - INSTANCING__ON
+*
+* Available Resources:
+*
+* Buffers:
+* - uniform lowp sampler2DArray s_CausticsTexture;
+* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
+* - uniform highp sampler2DArray s_ScatteringBuffer;
+* - uniform highp sampler2DArray s_ShadowCascades;
+* - uniform lowp sampler2D s_SkyTexture;
+* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+*
+* Uniforms:
+* - uniform vec4 AmbientLightParams;
+* - uniform vec4 AtmosphericScattering;
+* - uniform vec4 AtmosphericScatteringToggles;
+* - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraLightIntensity;
+* - uniform vec4 CascadesParameters[8];
+* - uniform vec4 CascadesPerSet;
+* - uniform mat4 CascadesShadowInvProj[8];
+* - uniform mat4 CascadesShadowProj[8];
+* - uniform vec4 CausticsParameters;
+* - uniform vec4 CausticsTextureParameters;
+* - uniform mat4 CloudShadowProj;
+* - uniform vec4 CloudShadowsVisible;
+* - uniform vec4 ClusterDepthBounds;
+* - uniform vec4 ClusterDimensions;
+* - uniform vec4 ClusterNearFarWidthHeight;
+* - uniform vec4 ClusterSize;
+* - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
+* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+* - uniform vec4 DirectionalLightSourceShadowDirection;
+* - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+* - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
+* - uniform vec4 FogAndDistanceControl;
+* - uniform vec4 FogColor;
+* - uniform vec4 FogSkyBlend;
+* - uniform vec4 LightDiffuseColorAndIlluminance;
+* - uniform vec4 LightWorldSpaceDirection;
+* - uniform vec4 ManhattanDistAttenuationEnabled;
+* - uniform vec4 MaterialID;
+* - uniform vec4 MinimumSkyLuminance;
+* - uniform vec4 MoonColor;
+* - uniform vec4 MoonDir;
+* - uniform vec4 NdLFloor;
+* - uniform mat4 PlayerShadowProj;
+* - uniform vec4 PointLightAttenuationWindow;
+* - uniform vec4 PointLightAttenuationWindowEnabled;
+* - uniform vec4 PointLightDiffuseFadeOutParameters;
+* - uniform mat4 PointLightInvProj;
+* - uniform vec4 PointLightNdLFloor;
+* - uniform mat4 PointLightProj;
+* - uniform vec4 PointLightShadowParams1;
+* - uniform vec4 PointLightSpecularFadeOutParameters;
+* - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
+* - uniform vec4 RenderChunkFogAlpha;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
+* - uniform vec4 SkyAmbientLightColorIntensity;
+* - uniform vec4 SkyHorizonColor;
+* - uniform vec4 SkyZenithColor;
+* - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
+* - uniform vec4 SunColor;
+* - uniform vec4 SunDir;
+* - uniform vec4 Time;
+* - uniform mat4 UV0Transform;
+* - uniform vec4 ViewportScale;
+* - uniform vec4 VolumeDimensions;
+* - uniform vec4 VolumeNearFar;
+* - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
+* - uniform vec4 WaterExtinctionCoefficients;
+* - uniform vec4 WorldOrigin;
+*/
+
+uniform mat4 UV0Transform;
+#ifdef INSTANCING__OFF
+uniform mat4 u_model[4];
+#endif
+uniform mat4 u_viewProj;
+in vec4 a_color0;
+in vec3 a_position;
+in vec2 a_texcoord0;
+#ifdef INSTANCING__ON
+in vec4 i_data1;
+in vec4 i_data2;
+in vec4 i_data3;
+#endif
+out vec3 v_clipPosition;
+out vec4 v_color0;
+out vec2 v_texcoord0;
+out vec3 v_worldPos;
+void main() {
+#ifdef INSTANCING__OFF
+    vec4 var_12727 = u_model[0] * vec4(a_position, 1.0);
+#endif
+#ifdef INSTANCING__ON
+    vec4 var_78b44 = i_data1;
+    vec4 var_e67a8 = i_data2;
+    vec4 var_1b7f0 = i_data3;
+    mat4 var_e43a8;
+    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
+    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
+    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
+    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    vec4 var_12727 = var_e43a8 * vec4(a_position, 1.0);
+#endif
+    vec4 var_aca83 = u_viewProj * vec4(var_12727.xyz, 1.0);
+    v_clipPosition = var_aca83.xyz;
+    v_color0 = a_color0;
+    v_texcoord0 = (UV0Transform * vec4(a_texcoord0, 0.0, 1.0)).xy;
+    v_worldPos = var_12727.xyz;
+    gl_Position = var_aca83;
+}

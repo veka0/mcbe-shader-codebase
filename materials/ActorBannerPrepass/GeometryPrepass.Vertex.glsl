@@ -42,6 +42,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BannerBasePBRTextureData[4];
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
 * - uniform mat4 Bones[8];
@@ -97,6 +98,7 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+flat out int v_frontFacing;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
@@ -144,6 +146,7 @@ void main() {
 #ifdef TINTING__ENABLED
     v_color0 = var_55bfd;
 #endif
+    v_frontFacing = 0;
     v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;

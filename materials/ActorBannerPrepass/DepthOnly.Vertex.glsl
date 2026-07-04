@@ -42,6 +42,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BannerBasePBRTextureData[4];
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
 * - uniform mat4 Bones[8];
@@ -93,6 +94,7 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+flat out int v_frontFacing;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
@@ -119,6 +121,7 @@ void main() {
     var_be69c[2].y -= SubPixelOffset.y;
     v_bitangent = vec3(0.0);
     v_color0 = a_color0;
+    v_frontFacing = 0;
     v_normal = vec3(0.0);
     v_prevWorldPos = vec3(0.0);
     v_tangent = vec3(0.0);

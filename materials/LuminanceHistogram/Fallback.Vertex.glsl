@@ -19,7 +19,6 @@
 * Buffers:
 * - uniform lowp sampler2D s_AdaptedFrameAverageLuminance;
 * - layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
-* - uniform lowp sampler2D s_CustomWeight;
 * - uniform lowp sampler2D s_GameColor;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
@@ -27,10 +26,10 @@
 * - uniform vec4 Adaptation;
 * - uniform vec4 AdaptiveParameters;
 * - uniform vec4 CenterWeight;
-* - uniform vec4 EnableCustomWeight;
 * - uniform vec4 LogLuminanceRange;
 * - uniform vec4 MinLogLuminance;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantileBounds;
 * - uniform vec4 ScreenSize;
 */
 

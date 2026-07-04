@@ -42,7 +42,7 @@
 * - uniform vec4 OverlayColor;
 * - uniform mat4 PrevWorld;
 * - uniform vec4 SubPixelOffset;
-* - uniform vec4 TileLightColor;
+* - uniform vec4 TileLightIntensity;
 * - uniform vec4 ZShiftValue;
 */
 

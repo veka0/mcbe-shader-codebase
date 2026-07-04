@@ -4,15 +4,19 @@
 * Available Macros:
 *
 * Passes:
+* - FORCE_FORWARD_PBR_OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
+* - TRANSPARENT_DEGAMMA_PASS (not used)
 *
 * Available Resources:
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
+* - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
 * Uniforms:
 * - uniform mat4 CubemapRotation;
+* - uniform vec4 PreExposureEnabled;
 */
 
 precision mediump float;

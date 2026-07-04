@@ -42,7 +42,7 @@
 * - uniform vec4 OverlayColor;
 * - uniform mat4 PrevWorld;
 * - uniform vec4 SubPixelOffset;
-* - uniform vec4 TileLightColor;
+* - uniform vec4 TileLightIntensity;
 * - uniform vec4 ZShiftValue;
 */
 
@@ -55,7 +55,7 @@ uniform highp sampler2D s_MatTexture;
 #endif
 uniform highp vec4 CurrentColor;
 uniform highp vec4 MERSUniforms;
-uniform highp vec4 TileLightColor;
+uniform highp vec4 TileLightIntensity;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
@@ -122,5 +122,5 @@ void main() {
     highp vec2 var_ec5a5 = var_7ed87.xy - var_82203.xy;
     bgfx_FragData[0] = var_6de71;
     bgfx_FragData[1] = vec4(var_5a694.x, var_5a694.y, var_ec5a5.x, var_ec5a5.y);
-    bgfx_FragData[2] = vec4(MERSUniforms.y, TileLightColor.x, TileLightColor.y, MERSUniforms.z);
+    bgfx_FragData[2] = vec4(MERSUniforms.y, TileLightIntensity.x, TileLightIntensity.y, MERSUniforms.z);
 }

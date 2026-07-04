@@ -6,7 +6,6 @@
 * Passes:
 * - DEPTH_AND_NORMAL_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
-* - DO_WATER_SHADING_PASS (not used)
 * - DO_WATER_SURFACE_BUFFER_PASS (not used)
 *
 * Instancing:
@@ -113,6 +112,7 @@
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WaterSurfaceEnabled;
 * - uniform vec4 WaterSurfaceOctaveParameters;

@@ -7,6 +7,10 @@
 * - FALLBACK_PASS (not used)
 * - POPULATE_PASS (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * ThreadLimit:
 * - THREAD_LIMIT__LIMITED_AT128 (not used)
 * - THREAD_LIMIT__LIMITED_AT256 (not used)
@@ -28,9 +32,9 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 5, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 8, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 9, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 5, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 6, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
@@ -42,6 +46,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientSamples;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
 * - uniform vec4 CascadesParameters[8];
@@ -69,6 +74,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 HeightFogScaleBias;
 * - uniform vec4 HenyeyGreensteinG;
 * - uniform vec4 IBLParameters;
@@ -95,14 +101,15 @@
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
-* - uniform vec4 SkyAmbientSamplesConfig;
 * - uniform vec4 SkyHorizonColor;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SkyZenithColor;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 TemporalSettings;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -110,6 +117,10 @@
 * - uniform vec4 VolumeShadowSettings;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
+* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceOctaveParameters;
+* - uniform vec4 WaterSurfaceParameters;
+* - uniform vec4 WaterSurfaceWaveParameters;
 * - uniform vec4 WorldOrigin;
 */
 
