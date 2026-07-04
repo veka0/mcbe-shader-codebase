@@ -40,13 +40,14 @@ uniform highp sampler2D s_ParticleTexture;
 uniform highp vec4 MERSUniforms;
 uniform highp vec4 PBRTextureFlags;
 uniform highp vec4 u_prevWorldPosOffset;
-in highp vec2 v_ambientLight;
 in highp vec3 v_bitangent;
 in highp vec4 v_color0;
+in highp vec3 v_coloredLighting;
 in highp vec4 v_fog;
 in highp vec3 v_normal;
 in highp vec3 v_tangent;
 in highp vec2 v_texcoord0;
+in highp vec2 v_vanillaLighting;
 in highp vec3 v_worldPos;
 layout(location = 0) out uvec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
@@ -124,7 +125,7 @@ void main() {
         var_9e9f5 = v_normal;
     }
     highp vec4 var_39c01 = vec4(var_2cb07, var_89833.w);
-    highp vec2 var_0f0fa = v_ambientLight;
+    highp vec2 var_e52a8 = v_vanillaLighting;
     highp vec4 var_6bfdc = vec4(var_39c01.x, var_39c01.y, var_39c01.z, var_39c01.w);
     highp float var_7aa46;
     func_fb7ab(var_b8805, var_46b2c, var_7aa46);
@@ -151,19 +152,19 @@ void main() {
     highp float var_9ef48 = var_96bda.w;
     highp vec4 var_d0ebc = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_d0ebc;
-    highp vec3 var_ba656 = vec3(0.0);
-    highp vec3 var_7893a;
-    if ((((var_ba656.x + var_ba656.y) + var_ba656.z) < 9.9999997473787516355514526367188e-05) && (var_0f0fa.x > 9.9999997473787516355514526367188e-05))
+    highp vec3 var_a461a = v_coloredLighting;
+    highp vec3 var_98222;
+    if ((((var_a461a.x + var_a461a.y) + var_a461a.z) < 9.9999997473787516355514526367188e-05) && (var_e52a8.x > 9.9999997473787516355514526367188e-05))
     {
         highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_9a19a = var_0f0fa.x * var_0f0fa.x;
-        var_7893a = clamp(vec3(var_9a19a + (var_0bc6f.x * var_0bc6f.w), (var_9a19a * ((((var_9a19a * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_9a19a * (((var_9a19a * var_9a19a) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        highp float var_9a19a = var_e52a8.x * var_e52a8.x;
+        var_98222 = clamp(vec3(var_9a19a + (var_0bc6f.x * var_0bc6f.w), (var_9a19a * ((((var_9a19a * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_9a19a * (((var_9a19a * var_9a19a) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_7893a = vec3(0.0);
+        var_98222 = v_coloredLighting;
     }
-    highp vec3 var_8f0e5 = var_7893a * vec3(0.16666667163372039794921875);
+    highp vec3 var_8f0e5 = var_98222 * vec3(0.16666667163372039794921875);
     highp vec4 var_f46ce = vec4(var_8f0e5, 0.0039215688593685626983642578125);
     highp vec2 var_8a7dd = max(var_f46ce.xy, var_f46ce.zw);
     highp float var_a7109 = ceil(clamp(max(var_8a7dd.x, var_8a7dd.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;
@@ -174,7 +175,7 @@ void main() {
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
     uvec2 var_12195 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
     uvec2 var_73d15 = uvec2(uint(clamp(var_245c0, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_0d3d5, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_73d15.x << 8u) | var_73d15.y, var_12195.x, var_12195.y, uint(clamp(var_0f0fa.y, 0.0, 1.0) * 255.0));
+    bgfx_FragData0 = uvec4((var_73d15.x << 8u) | var_73d15.y, var_12195.x, var_12195.y, uint(clamp(var_e52a8.y, 0.0, 1.0) * 255.0));
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }
