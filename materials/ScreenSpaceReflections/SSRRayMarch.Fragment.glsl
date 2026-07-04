@@ -19,14 +19,16 @@
 * - uniform lowp sampler2D s_GbufferNormal;
 * - uniform lowp sampler2D s_GbufferRoughness;
 * - uniform lowp sampler2D s_InputTexture;
+* - uniform lowp sampler2D s_PreviousReflectionBuffer;
 * - uniform lowp sampler2D s_RasterColor;
 *
 * Uniforms:
 * - uniform vec4 CameraData;
 * - uniform vec4 RenderMode;
-* - uniform vec4 SSRFadingParams;
+* - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
+* - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
 */
@@ -34,17 +36,17 @@
 precision mediump float;
 precision highp int;
 uniform highp mat4 u_invProj;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_proj;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_GbufferDepth;
 uniform highp sampler2D s_GbufferNormal;
 uniform highp sampler2D s_GbufferRoughness;
 uniform highp vec4 CameraData;
-uniform highp vec4 SSRFadingParams;
+uniform highp vec4 SSRFadingParamsAndThickness;
 uniform highp vec4 SSRRayMarchingParams;
 uniform highp vec4 SSRRoughnessCutoffParams;
 uniform highp vec4 ScreenSize;
-uniform highp vec4 UnitPlaneExtents;
 in highp vec4 v_projPosition;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
@@ -60,11 +62,11 @@ void func_7a080(inout bool arg_3514b, inout highp vec3 arg_6cf39) {
         return;
     }
 }
-void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout highp vec3 arg_d2d2d, inout highp vec4 arg_ae71b, inout int arg_eb797, inout highp float arg_b12bb) {
-    highp vec3 loc_54878 = reflect(normalize(arg_8ff75), normalize((u_view * vec4(normalize(normalize(vec3(arg_26f8d.x, arg_26f8d.y, arg_d2d2d.z))), 0.0)).xyz));
-    highp vec3 loc_ac142 = arg_8ff75 + (loc_54878 * SSRRayMarchingParams.z);
+void func_21d92(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout highp vec3 arg_8417c, inout highp vec4 arg_0418b, inout int arg_eb797, inout highp float arg_cf4e3) {
+    highp vec3 loc_99271 = normalize(reflect(normalize(arg_4185b), normalize((u_view * vec4(normalize(normalize(vec3(arg_0126e.x, arg_0126e.y, arg_8417c.z))), 0.0)).xyz)));
+    highp vec3 loc_ac142 = arg_4185b + (loc_99271 * SSRRayMarchingParams.z);
     highp vec3 loc_999a9 = loc_ac142;
-    highp vec3 loc_24d1c = loc_ac142 + loc_54878;
+    highp vec3 loc_24d1c = loc_ac142 + loc_99271;
     highp vec3 loc_4d47b = loc_24d1c;
     bool loc_94df4;
     func_7a080(loc_94df4, loc_4d47b);
@@ -82,7 +84,7 @@ void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
     }
     if (loc_24c20)
     {
-        arg_ae71b = vec4(0.0, 0.0, 0.0, -1.0);
+        arg_0418b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
     highp vec4 loc_646fe = u_proj * vec4(loc_ac142, 1.0);
@@ -132,50 +134,40 @@ void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
         loc_165e0 = loc_6c458.z;
     }
     highp vec3 loc_a20bd = vec3(loc_52170, loc_1029f, loc_165e0);
-    int loc_e201e = min(int(min(min(loc_a20bd.x, loc_a20bd.y), loc_a20bd.z)), int(SSRRayMarchingParams.x));
-    highp vec3 loc_2b544 = vec3(0.0);
+    int loc_7f413 = min(int(min(min(loc_a20bd.x, loc_a20bd.y), loc_a20bd.z)), int(SSRRayMarchingParams.x));
+    highp vec3 loc_34e0b = vec3(0.0);
     highp vec3 loc_bc119 = loc_feb5c;
     highp float loc_e9327 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_bc119.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-    highp float loc_339dc;
-    int loc_7dcb5;
-    highp vec3 loc_3ee51;
-    int loc_cadec = 1;
-    highp float loc_4f5e1 = loc_e9327;
-    for (; loc_cadec <= loc_e201e; loc_4f5e1 = loc_339dc, loc_cadec++)
+    highp float loc_153a4;
+    int loc_7f26d;
+    highp vec3 loc_90bb9;
+    int loc_55806 = 1;
+    highp float loc_f4b0e = loc_e9327;
+    for (; loc_55806 <= loc_7f413; loc_f4b0e = loc_153a4, loc_55806++)
     {
-        highp vec3 loc_3a27d = loc_feb5c + (loc_58f30 * float(loc_cadec));
-        highp vec3 loc_a160b = loc_3a27d;
-        loc_339dc = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_a160b.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-        highp vec4 loc_d36ff = texture(s_GbufferDepth, loc_3a27d.xy);
-        highp float loc_f2cf8 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((((loc_d36ff.x * 2.0) - 1.0) * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
-        if (loc_339dc > loc_f2cf8)
+        highp vec3 loc_82463 = loc_feb5c + (loc_58f30 * float(loc_55806));
+        highp vec3 loc_a160b = loc_82463;
+        loc_153a4 = ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_a160b.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
+        highp float loc_2931a = ((-(((2.0 * CameraData.y) * CameraData.x) / (((((texture(s_GbufferDepth, loc_82463.xy).x * 2.0) - 1.0) * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x);
+        if ((loc_2931a <= loc_153a4) && (loc_f4b0e <= (loc_2931a + (SSRFadingParamsAndThickness.w * loc_2931a))))
         {
-            if (loc_4f5e1 < loc_f2cf8)
-            {
-                loc_3ee51 = loc_3a27d;
-                loc_7dcb5 = loc_cadec;
-                break;
-            }
-            else
-            {
-                loc_3ee51 = vec3(0.0);
-                loc_7dcb5 = -1;
-                break;
-            }
+            loc_90bb9 = loc_82463;
+            loc_7f26d = loc_55806;
+            break;
         }
     }
-    loc_2b544 = loc_3ee51;
-    if (loc_7dcb5 < 1)
+    loc_34e0b = loc_90bb9;
+    if (loc_7f26d < 1)
     {
-        arg_ae71b = vec4(0.0, 0.0, 0.0, -1.0);
+        arg_0418b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
-    highp float loc_8e3e2 = float(loc_7dcb5 - 1);
-    highp float loc_1f44e = float(loc_7dcb5);
-    highp float loc_d8fa7;
-    highp vec3 loc_1281f;
-    loc_1281f = loc_2b544;
-    loc_d8fa7 = loc_1f44e;
+    highp float loc_8e3e2 = float(loc_7f26d - 1);
+    highp float loc_1f44e = float(loc_7f26d);
+    highp float loc_39c99;
+    highp vec3 loc_22e67;
+    loc_22e67 = loc_34e0b;
+    loc_39c99 = loc_1f44e;
     highp float loc_5ef74;
     highp vec3 loc_16df8;
     highp float loc_31f17;
@@ -183,7 +175,7 @@ void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
     int loc_30e69 = 0;
     highp float loc_58449 = loc_8e3e2;
     highp float loc_1fbb4 = loc_1f44e;
-    for (; loc_30e69 < arg_eb797; loc_1fbb4 = loc_8426a, loc_58449 = loc_31f17, loc_1281f = loc_16df8, loc_d8fa7 = loc_5ef74, loc_30e69++)
+    for (; loc_30e69 < arg_eb797; loc_1fbb4 = loc_8426a, loc_58449 = loc_31f17, loc_22e67 = loc_16df8, loc_39c99 = loc_5ef74, loc_30e69++)
     {
         highp float loc_0341d = (loc_58449 + loc_1fbb4) * 0.5;
         highp vec3 loc_85eb3 = loc_feb5c + (loc_58f30 * loc_0341d);
@@ -199,16 +191,30 @@ void func_d2fad(inout highp vec3 arg_8ff75, inout highp vec2 arg_26f8d, inout hi
         {
             loc_8426a = loc_1fbb4;
             loc_31f17 = loc_0341d;
-            loc_16df8 = loc_1281f;
-            loc_5ef74 = loc_d8fa7;
+            loc_16df8 = loc_22e67;
+            loc_5ef74 = loc_39c99;
         }
     }
-    loc_2b544 = loc_1281f;
-    highp vec2 loc_60203 = (loc_1281f.xy * 2.0) - vec2(1.0);
-    loc_60203.x = pow(abs(loc_60203.x), SSRFadingParams.x * CameraData.z);
-    loc_60203.y = pow(abs(loc_60203.y), SSRFadingParams.y);
-    highp vec2 loc_f4147 = loc_1281f.xy;
-    arg_ae71b = vec4(loc_1281f.xy, distance(arg_8ff75, vec4(vec3(((vec2(loc_f4147.x, 1.0 - loc_f4147.y) * 2.0) - vec2(1.0)) * UnitPlaneExtents.xy, -1.0) * mix(CameraData.x, CameraData.y, ((-(((2.0 * CameraData.y) * CameraData.x) / (((loc_2b544.z * (CameraData.y - CameraData.x)) - CameraData.y) - CameraData.x))) - CameraData.x) / (CameraData.y - CameraData.x)), 1.0).xyz), min(min((1.0 - loc_60203.x) * (1.0 - loc_60203.y), 1.0 - smoothstep(SSRFadingParams.z, 1.0, loc_d8fa7 / float(loc_e201e))), mix(1.0, 0.0, (max(arg_b12bb, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
+    loc_34e0b = loc_22e67;
+    highp vec2 loc_17fb7 = loc_22e67.xy;
+    highp vec2 loc_215a9 = (loc_22e67.xy * 2.0) - vec2(1.0);
+    loc_215a9.x = pow(abs(loc_17fb7.x), SSRFadingParamsAndThickness.x * CameraData.z);
+    loc_215a9.y = pow(abs(loc_17fb7.y), SSRFadingParamsAndThickness.y);
+    highp vec4 loc_e7405 = texture(s_GbufferNormal, loc_22e67.xy);
+    highp vec2 loc_d21e3 = loc_e7405.xy;
+    highp vec3 loc_6b26b = vec3(loc_e7405.xy, (1.0 - abs(loc_d21e3.x)) - abs(loc_d21e3.y));
+    highp vec2 loc_ba96a;
+    if (loc_6b26b.z < 0.0)
+    {
+        loc_ba96a = (vec2(1.0) - abs(loc_6b26b.yx)) * ((step(vec2(0.0), loc_6b26b.xy) * 2.0) - vec2(1.0));
+    }
+    else
+    {
+        loc_ba96a = loc_6b26b.xy;
+    }
+    highp vec3 loc_2be11 = loc_6b26b;
+    loc_6b26b = vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z);
+    arg_0418b = vec4(loc_34e0b.xy, loc_34e0b.z, min(min(min((1.0 - loc_215a9.x) * (1.0 - loc_215a9.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, loc_39c99 / float(loc_7f413))), clamp(1.0 - dot(normalize(normalize(vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z))), normalize((u_invView * vec4(loc_99271, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_cf4e3, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
 }
 void main() {
     highp vec4 var_a28fd = texture(s_GbufferRoughness, v_texcoord0);
@@ -249,7 +255,7 @@ void main() {
         highp vec3 var_83f17 = var_f857f;
         var_f857f = vec3(var_e3359.x, var_e3359.y, var_83f17.z);
         highp vec4 var_82fd4;
-        func_d2fad(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
+        func_21d92(var_2b1ec, var_e3359, var_83f17, var_82fd4, var_f1ffd, var_c0a46);
         var_53578 = var_82fd4;
     }
     bgfx_FragColor = var_53578;

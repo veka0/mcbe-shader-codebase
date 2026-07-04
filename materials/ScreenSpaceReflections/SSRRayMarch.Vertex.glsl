@@ -19,14 +19,16 @@
 * - uniform lowp sampler2D s_GbufferNormal;
 * - uniform lowp sampler2D s_GbufferRoughness;
 * - uniform lowp sampler2D s_InputTexture;
+* - uniform lowp sampler2D s_PreviousReflectionBuffer;
 * - uniform lowp sampler2D s_RasterColor;
 *
 * Uniforms:
 * - uniform vec4 CameraData;
 * - uniform vec4 RenderMode;
-* - uniform vec4 SSRFadingParams;
+* - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
+* - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
 */
