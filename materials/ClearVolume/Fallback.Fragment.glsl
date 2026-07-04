@@ -7,6 +7,11 @@
 * - CLEAR_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128 (not used)
+* - THREAD_LIMIT__LIMITED_AT256 (not used)
+* - THREAD_LIMIT__NATIVE (not used)
+*
 * Available Resources:
 *
 * Buffers:

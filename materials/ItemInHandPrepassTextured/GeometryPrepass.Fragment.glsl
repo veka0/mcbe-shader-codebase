@@ -223,19 +223,19 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
 void main() {
     highp vec4 var_8b5b4 = v_color0;
     highp vec4 var_7dda5 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_15f34 = MatColor * var_7dda5;
+    highp vec4 var_29833 = MatColor * var_7dda5;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_2254b = var_15f34.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec3 var_ab152 = (var_29833.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_0bba1 = var_15f34.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_35473 = var_0bba1.xy;
-    highp vec3 var_2254b = mix(mix((var_0bba1.xxx * ChangeColor.xyz).xyz, var_0bba1.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec3 var_86350 = (var_29833.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec2 var_35473 = var_86350.xy;
+    highp vec3 var_ab152 = mix(mix((var_86350.xxx * ChangeColor.xyz).xyz, var_86350.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
 #endif
-    highp vec4 var_aa0d3 = vec4(var_2254b.x, var_2254b.y, var_2254b.z, var_15f34.w);
+    highp vec4 var_aa0d3 = vec4(var_ab152.x, var_ab152.y, var_ab152.z, var_29833.w);
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec3 var_189a9 = mix(mix(var_aa0d3, var_aa0d3 * ChangeColor, vec4(var_8b5b4.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_a4120 = vec4(var_189a9.x, var_189a9.y, var_189a9.z, var_15f34.w);
+    highp vec4 var_a4120 = vec4(var_189a9.x, var_189a9.y, var_189a9.z, var_29833.w);
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
@@ -247,7 +247,7 @@ void main() {
     highp vec4 var_b46bf = vec4(var_189a9.xyz * v_color0.xyz, var_a4120.w * var_8b5b4.w);
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_b46bf = vec4(var_2254b.xyz * v_color0.xyz, var_aa0d3.w * var_8b5b4.w);
+    highp vec4 var_b46bf = vec4(var_ab152.xyz * v_color0.xyz, var_aa0d3.w * var_8b5b4.w);
 #endif
     highp vec4 var_6de71 = vec4(var_b46bf.x, var_b46bf.y, var_b46bf.z, var_b46bf.w);
     highp float var_7aa46;

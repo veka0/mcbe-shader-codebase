@@ -4,15 +4,14 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_AND_NORMAL_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
-* - DO_WATER_EXTINCTION_PASS (not used)
-* - DO_WATER_SHADING_PASS (not used)
-* - DO_WATER_SURFACE_BUFFER_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - OPAQUE_PASS (not used)
 *
 * Instancing:
-* - INSTANCING__OFF
-* - INSTANCING__ON
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON (not used)
 *
 * RenderAsBillboards:
 * - RENDER_AS_BILLBOARDS__OFF (not used)
@@ -35,7 +34,6 @@
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
-* - uniform lowp sampler2D s_SceneDepth;
 * - uniform lowp sampler2D s_SeasonsTexture;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
@@ -54,11 +52,13 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapEnabled[2];
+* - uniform vec4 DirectionalLightExplicitCascadedShadowMapIndices[2];
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform mat4 DirectionalLightSourceCausticsViewProj[2];
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance[2];
-* - uniform mat4 DirectionalLightSourceInvWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceIsSun[2];
 * - uniform vec4 DirectionalLightSourceShadowCascadeNumber[2];
 * - uniform vec4 DirectionalLightSourceShadowDirection[2];
@@ -70,10 +70,8 @@
 * - uniform mat4 DirectionalLightSourceShadowProj1[2];
 * - uniform mat4 DirectionalLightSourceShadowProj2[2];
 * - uniform mat4 DirectionalLightSourceShadowProj3[2];
-* - uniform mat4 DirectionalLightSourceWaterSurfaceViewProj[2];
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection[2];
 * - uniform vec4 DirectionalLightToggleAndCountAndMaxDistanceAndMaxCascadesPerLight;
-* - uniform vec4 DirectionalLightWaterExtinctionEnabledAndWaterDepthMapCascadeIndex;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -94,16 +92,17 @@
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform vec4 PointLightDiffuseFadeOutParameters;
+* - uniform mat4 PointLightInvProj;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowBias;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 ShadowPCFWidth;
-* - uniform vec4 ShadowPrecisionRoundingParameters;
-* - uniform vec4 ShadowQuantizationParameters;
 * - uniform vec4 ShadowSlopeBias;
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
@@ -112,6 +111,7 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
+* - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
 * - uniform vec4 ViewPositionAndTime;
 * - uniform vec4 VolumeDimensions;
@@ -125,52 +125,18 @@
 * - uniform vec4 WorldOrigin;
 */
 
-#ifdef INSTANCING__OFF
-uniform mat4 u_model[4];
-#endif
-uniform mat4 u_proj;
-uniform mat4 u_view;
-uniform vec4 SubPixelOffset;
-in vec4 a_color0;
-in vec2 a_texcoord1;
-in vec3 a_position;
-in vec2 a_texcoord0;
-#ifdef INSTANCING__ON
-in vec4 i_data1;
-in vec4 i_data2;
-in vec4 i_data3;
-#endif
-out vec3 v_bitangent;
-out vec4 v_color0;
-out vec2 v_lightmapUV;
-out vec3 v_normal;
-out vec3 v_tangent;
-centroid out vec2 v_texcoord0;
-out vec3 v_worldPos;
+precision mediump float;
+precision highp int;
+uniform highp sampler2D s_LightMapTexture;
+uniform highp sampler2D s_MatTexture;
+in highp vec2 v_lightmapUV;
+centroid in highp vec2 v_texcoord0;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-#ifdef INSTANCING__OFF
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
-#endif
-#ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
-#endif
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
-    v_bitangent = vec3(0.0);
-    v_color0 = a_color0;
-    v_lightmapUV = a_texcoord1;
-    v_normal = vec3(0.0);
-    v_tangent = vec3(0.0);
-    v_texcoord0 = a_texcoord0;
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
+    highp vec4 var_0b949 = texture(s_MatTexture, v_texcoord0);
+    if (var_0b949.w < 0.5)
+    {
+        discard;
+    }
+    bgfx_FragColor = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
 }

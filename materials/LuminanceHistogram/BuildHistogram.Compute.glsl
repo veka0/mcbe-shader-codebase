@@ -6,8 +6,13 @@
 * Passes:
 * - BUILD_HISTOGRAM_PASS (not used)
 * - CALCULATE_AVERAGE_PASS (not used)
+* - CALCULATE_AVERAGE_FRAGMENT_PASS (not used)
 * - CLEAN_UP_PASS (not used)
 * - FALLBACK_PASS (not used)
+*
+* ThreadLimit:
+* - THREAD_LIMIT__LIMITED_AT128
+* - THREAD_LIMIT__NATIVE
 *
 * Available Resources:
 *
@@ -29,12 +34,17 @@
 * - uniform vec4 ScreenSize;
 */
 
+#ifdef THREAD_LIMIT__LIMITED_AT128
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+#endif
+#ifdef THREAD_LIMIT__NATIVE
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+#endif
 struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_f0b4b;
+layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_894e2;
 uniform highp sampler2D s_GameColor;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform vec4 CenterWeight;
@@ -55,7 +65,20 @@ void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
     uint var_58b5b = GlobalInvocationID.x;
     uint var_9f84d = GlobalInvocationID.y;
-    curFrameLuminanceHistogramShared[gl_LocalInvocationIndex] = 0u;
+#ifdef THREAD_LIMIT__LIMITED_AT128
+    for (uint var_a845f = 0u; var_a845f < 2u; var_a845f++)
+#endif
+#ifdef THREAD_LIMIT__NATIVE
+    for (uint var_5c629 = 0u; var_5c629 < 1u; var_5c629++)
+#endif
+    {
+#ifdef THREAD_LIMIT__LIMITED_AT128
+        curFrameLuminanceHistogramShared[(var_a845f * 128u) + gl_LocalInvocationIndex] = 0u;
+#endif
+#ifdef THREAD_LIMIT__NATIVE
+        curFrameLuminanceHistogramShared[(var_5c629 * 256u) + gl_LocalInvocationIndex] = 0u;
+#endif
+    }
     barrier();
     bool var_65e9e = var_58b5b < uint(ScreenSize.x);
     bool var_4a46b;
@@ -87,5 +110,19 @@ void main() {
         uint var_be8be = atomicAdd(curFrameLuminanceHistogramShared[var_9eefc], uint(exp((-CenterWeight.x) * dot(var_529a3, var_529a3)) * 256.0));
     }
     barrier();
-    uint var_56ca1 = atomicAdd(var_f0b4b.CurFrameLuminanceHistogram[gl_LocalInvocationIndex].count, curFrameLuminanceHistogramShared[gl_LocalInvocationIndex]);
+#ifdef THREAD_LIMIT__LIMITED_AT128
+    for (uint var_3f941 = 0u; var_3f941 < 2u; var_3f941++)
+#endif
+#ifdef THREAD_LIMIT__NATIVE
+    for (uint var_2edda = 0u; var_2edda < 1u; var_2edda++)
+#endif
+    {
+#ifdef THREAD_LIMIT__LIMITED_AT128
+        uint var_c8bf6 = (var_3f941 * 128u) + gl_LocalInvocationIndex;
+#endif
+#ifdef THREAD_LIMIT__NATIVE
+        uint var_c8bf6 = (var_2edda * 256u) + gl_LocalInvocationIndex;
+#endif
+        uint var_1dd77 = atomicAdd(var_894e2.CurFrameLuminanceHistogram[var_c8bf6].count, curFrameLuminanceHistogramShared[var_c8bf6]);
+    }
 }

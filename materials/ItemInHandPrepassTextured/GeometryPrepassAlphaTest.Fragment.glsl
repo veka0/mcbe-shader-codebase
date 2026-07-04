@@ -223,20 +223,20 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
 void main() {
     highp vec4 var_8b5b4 = v_color0;
     highp vec4 var_7dda5 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_d9c64 = MatColor * var_7dda5;
+    highp vec4 var_fa883 = MatColor * var_7dda5;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_2ce32 = var_d9c64.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec3 var_944ec = (var_fa883.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_0bba1 = var_d9c64.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_35473 = var_0bba1.xy;
-    highp vec3 var_280a7 = mix(mix((var_0bba1.xxx * ChangeColor.xyz).xyz, var_0bba1.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_c01f5 = vec4(var_280a7.x, var_280a7.y, var_280a7.z, var_d9c64.w);
+    highp vec3 var_86350 = (var_fa883.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec2 var_35473 = var_86350.xy;
+    highp vec3 var_280a7 = mix(mix((var_86350.xxx * ChangeColor.xyz).xyz, var_86350.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_c01f5 = vec4(var_280a7.x, var_280a7.y, var_280a7.z, var_fa883.w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_24ae4 = vec4(var_2ce32.x, var_2ce32.y, var_2ce32.z, var_d9c64.w);
+    highp vec4 var_24ae4 = vec4(var_944ec.x, var_944ec.y, var_944ec.z, var_fa883.w);
     highp vec3 var_189a9 = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_8b5b4.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_c01f5 = vec4(var_189a9.x, var_189a9.y, var_189a9.z, var_d9c64.w);
+    highp vec4 var_c01f5 = vec4(var_189a9.x, var_189a9.y, var_189a9.z, var_fa883.w);
 #endif
     if (var_c01f5.w < 0.5)
     {
