@@ -69,9 +69,7 @@
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
-* - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform mat4 PointLightProj;
 * - uniform vec4 PreExposureEnabled;
 * - uniform mat4 PrevWorld;
 * - uniform vec4 QuantizationParameters;

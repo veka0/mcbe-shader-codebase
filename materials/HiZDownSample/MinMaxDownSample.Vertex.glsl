@@ -18,6 +18,7 @@
 * - uniform vec4 MipResolutionAndRecipResolution;
 * - uniform vec4 PreviousMipResolutionAndRecipResolution;
 * - uniform vec4 ScreenSize;
+* - uniform vec4 Thickness;
 * - uniform vec4 ViewportScale;
 */
 
