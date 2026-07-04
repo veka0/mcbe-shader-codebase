@@ -25,7 +25,6 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
-* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 CurrentColor;
 * - uniform vec4 DiscardValue;
 * - uniform vec4 HudOpacity;

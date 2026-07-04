@@ -291,9 +291,9 @@ void main() {
     highp float var_9ef48 = var_96bda.w;
     highp vec4 var_d0ebc = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_d0ebc;
-    highp vec3 var_f13a2 = BlockLightColor.xyz;
+    highp vec3 var_f88c4 = BlockLightColor.xyz;
     highp vec3 var_fbfa9;
-    if ((((var_f13a2.x + var_f13a2.y) + var_f13a2.z) <= 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x >= 9.9999997473787516355514526367188e-05))
+    if ((((var_f88c4.x + var_f88c4.y) + var_f88c4.z) < 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x > 9.9999997473787516355514526367188e-05))
     {
         highp vec4 var_0bc6f = vec4(0.0);
         highp float var_88ce0 = TileLightIntensity.x * TileLightIntensity.x;
