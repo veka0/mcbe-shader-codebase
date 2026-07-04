@@ -28,6 +28,7 @@
 * - layout(binding = 1, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
 * - uniform vec4 FogColor;
@@ -70,6 +71,7 @@ layout(binding = 1, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_5
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
+uniform highp vec4 AlphaMaskedTint;
 uniform highp vec4 ChangeColor;
 uniform highp vec4 ColorBased;
 uniform highp vec4 MatColor;
@@ -221,35 +223,48 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-    highp vec4 var_8b5b4 = v_color0;
-    highp vec4 var_7dda5 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_29833 = MatColor * var_7dda5;
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_ab152 = (var_29833.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-#endif
+    highp vec4 var_1e556 = v_color0;
+    bool var_7320a = AlphaMaskedTint.x != 0.0;
+    highp vec4 var_1bee0 = texture(s_MatTexture, v_texcoord0);
+    if (var_7320a)
+    {
+        highp vec3 var_5e4d7 = mix(var_1bee0.xyz, var_1bee0.xyz * v_color0.xyz, vec3(var_1bee0.w)).xyz * var_1e556.w;
+        var_1bee0 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_1bee0.w);
+        var_1bee0.w = 1.0;
+    }
+    else
+    {
+        highp vec3 var_55928 = var_1bee0.xyz * v_color0.xyz;
+        var_1bee0 = vec4(var_55928.x, var_55928.y, var_55928.z, var_1bee0.w);
+    }
+    highp vec4 var_74395 = var_1bee0;
+    highp vec4 var_48e86 = var_74395 * MatColor;
+    var_1bee0 = var_48e86;
+    highp vec3 var_4b6b9 = var_48e86.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_86350 = (var_29833.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_35473 = var_86350.xy;
-    highp vec3 var_ab152 = mix(mix((var_86350.xxx * ChangeColor.xyz).xyz, var_86350.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec2 var_35473 = var_4b6b9.xy;
+    highp vec3 var_f9ddb = mix(mix((var_4b6b9.xxx * ChangeColor.xyz).xyz, var_4b6b9.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_44a37 = vec4(var_f9ddb.x, var_f9ddb.y, var_f9ddb.z, var_48e86.w);
 #endif
-    highp vec4 var_aa0d3 = vec4(var_ab152.x, var_ab152.y, var_ab152.z, var_29833.w);
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_189a9 = mix(mix(var_aa0d3, var_aa0d3 * ChangeColor, vec4(var_8b5b4.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_a4120 = vec4(var_189a9.x, var_189a9.y, var_189a9.z, var_29833.w);
+    highp vec4 var_24ae4 = vec4(var_4b6b9.x, var_4b6b9.y, var_4b6b9.z, var_48e86.w);
+    highp vec3 var_99f3c = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_1e556.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_44a37 = vec4(var_99f3c.x, var_99f3c.y, var_99f3c.z, var_48e86.w);
 #endif
+    if (!var_7320a)
+    {
+        highp vec3 var_d5484 = var_44a37.xyz * v_color0.xyz;
+        var_44a37 = vec4(var_d5484.x, var_d5484.y, var_d5484.z, var_44a37.w);
+        var_44a37.w *= var_1e556.w;
+    }
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
     highp float var_42cdf;
     highp float var_17b33;
     highp float var_5431f;
     func_c1ba0(var_5431f, var_17b33, var_42cdf, var_bd3b6, var_d2ce2);
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_b46bf = vec4(var_189a9.xyz * v_color0.xyz, var_a4120.w * var_8b5b4.w);
-#endif
-#ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_b46bf = vec4(var_ab152.xyz * v_color0.xyz, var_aa0d3.w * var_8b5b4.w);
-#endif
-    highp vec4 var_6de71 = vec4(var_b46bf.x, var_b46bf.y, var_b46bf.z, var_b46bf.w);
+    highp vec4 var_08b04 = vec4(var_44a37.xyz, var_44a37.w);
+    highp vec4 var_6de71 = vec4(var_08b04.x, var_08b04.y, var_08b04.z, var_08b04.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
     var_6de71.w = var_7aa46;

@@ -12,6 +12,7 @@
 * Buffers:
 * - uniform lowp sampler2D s_HighlightTextureColor;
 * - uniform lowp sampler2D s_HighlightTextureDepth;
+* - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SceneTextureColor;
 * - uniform lowp sampler2D s_SceneTextureDepth;
 * - uniform lowp sampler2D s_SelectedBlocksOverlayTexture;
@@ -27,6 +28,7 @@
 * - uniform vec4 OutlineColor;
 * - uniform vec4 OutlineWidth;
 * - uniform vec4 OverlayTextureStretch;
+* - uniform vec4 PreExposureEnabled;
 * - uniform vec4 ScreenSize;
 */
 

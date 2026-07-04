@@ -6,8 +6,9 @@
 * Passes:
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
 *
 * Dithering:
 * - DITHERING__OFF (not used)
@@ -129,7 +130,7 @@ precision mediump float;
 precision highp int;
 uniform highp sampler2D s_LightMapTexture;
 in highp vec2 v_lightmapUV;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
-    bgfx_FragColor = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
+    bgfx_FragData[0] = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
 }

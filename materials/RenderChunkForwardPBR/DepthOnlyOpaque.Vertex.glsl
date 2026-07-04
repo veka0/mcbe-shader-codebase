@@ -6,8 +6,9 @@
 * Passes:
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
 *
 * Dithering:
 * - DITHERING__OFF (not used)
@@ -142,10 +143,13 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec2 v_ditheringAndMaskTinting;
+flat out int v_frontFacing;
 out vec2 v_lightmapUV;
 out vec3 v_normal;
+flat out int v_pbrTextureId;
 out vec3 v_tangent;
 centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
@@ -184,6 +188,7 @@ void main() {
     uint var_960bd = uint(floor(var_c34f1.x * 255.0));
     uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
     v_bitangent = vec3(0.0);
+    v_clipPosition = vec4(0.0);
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
 #endif
@@ -191,8 +196,10 @@ void main() {
     v_color0 = vec4(1.0);
 #endif
     v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
+    v_frontFacing = 0;
     v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
     v_normal = vec3(0.0);
+    v_pbrTextureId = 0;
     v_tangent = vec3(0.0);
     v_texcoord0 = a_texcoord0;
 #ifdef RENDER_AS_BILLBOARDS__OFF

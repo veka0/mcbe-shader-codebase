@@ -6,8 +6,9 @@
 * Passes:
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
 *
 * Dithering:
 * - DITHERING__OFF (not used)
@@ -131,12 +132,12 @@ uniform highp sampler2D s_LightMapTexture;
 uniform highp sampler2D s_MatTexture;
 in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
     highp vec4 var_0b949 = texture(s_MatTexture, v_texcoord0);
     if (var_0b949.w < 0.5)
     {
         discard;
     }
-    bgfx_FragColor = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
+    bgfx_FragData[0] = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
 }

@@ -38,6 +38,7 @@
 * - layout(binding = 10, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;

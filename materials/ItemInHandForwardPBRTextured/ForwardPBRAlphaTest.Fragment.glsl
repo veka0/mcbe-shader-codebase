@@ -38,6 +38,7 @@
 * - layout(binding = 10, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
@@ -161,7 +162,7 @@ struct LightData {
 };
 
 int var_e7b23;
-float var_f570b;
+float var_aaae6;
 layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_907b9;
 layout(binding = 10, std430) buffer s_zLights { Light zLights[]; } var_9152e;
 layout(binding = 9, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_2c1ee;
@@ -186,6 +187,7 @@ uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
 uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 uniform highp samplerCubeArray s_SpecularIBLRecords;
+uniform highp vec4 AlphaMaskedTint;
 uniform highp vec4 AmbientLightParams;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
@@ -258,48 +260,48 @@ in highp vec3 v_tangent;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
-void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
+void func_66b9c(inout highp vec3 arg_5a7d1, inout highp vec4 arg_37ddf) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
-        arg_3007f = pow(max(arg_87bd1, vec3(0.0)), vec3(2.2000000476837158203125));
+        arg_5a7d1 = pow(max(arg_37ddf.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
         return;
     }
     else
     {
-        highp vec3 loc_407b7 = arg_87bd1;
-        highp vec3 loc_67ff9 = arg_87bd1 * vec3(0.077399380505084991455078125);
-        highp vec3 loc_b63b1 = pow((arg_87bd1 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
+        highp vec3 loc_be4c0 = arg_37ddf.xyz;
+        highp vec3 loc_d634f = arg_37ddf.xyz * vec3(0.077399380505084991455078125);
+        highp vec3 loc_1f157 = pow((arg_37ddf.xyz + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
         highp float loc_e81ff;
-        if (loc_407b7.x <= 0.040449999272823333740234375)
+        if (loc_be4c0.x <= 0.040449999272823333740234375)
         {
-            loc_e81ff = loc_67ff9.x;
+            loc_e81ff = loc_d634f.x;
         }
         else
         {
-            loc_e81ff = loc_b63b1.x;
+            loc_e81ff = loc_1f157.x;
         }
-        loc_407b7.x = loc_e81ff;
+        loc_be4c0.x = loc_e81ff;
         highp float loc_007b0;
-        if (loc_407b7.y <= 0.040449999272823333740234375)
+        if (loc_be4c0.y <= 0.040449999272823333740234375)
         {
-            loc_007b0 = loc_67ff9.y;
+            loc_007b0 = loc_d634f.y;
         }
         else
         {
-            loc_007b0 = loc_b63b1.y;
+            loc_007b0 = loc_1f157.y;
         }
-        loc_407b7.y = loc_007b0;
+        loc_be4c0.y = loc_007b0;
         highp float loc_fa4a6;
-        if (loc_407b7.z <= 0.040449999272823333740234375)
+        if (loc_be4c0.z <= 0.040449999272823333740234375)
         {
-            loc_fa4a6 = loc_67ff9.z;
+            loc_fa4a6 = loc_d634f.z;
         }
         else
         {
-            loc_fa4a6 = loc_b63b1.z;
+            loc_fa4a6 = loc_1f157.z;
         }
-        loc_407b7.z = loc_fa4a6;
-        arg_3007f = loc_407b7;
+        loc_be4c0.z = loc_fa4a6;
+        arg_5a7d1 = loc_be4c0;
         return;
     }
 }
@@ -1185,35 +1187,46 @@ void func_17044(inout highp float arg_0d97d, inout highp vec4 arg_85834) {
     arg_85834 = vec4(loc_02aca, 1.0);
 }
 void main() {
-    highp vec4 var_04b6d = v_color0;
-    highp vec4 var_7dda5 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_fa883 = MatColor * var_7dda5;
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_944ec = (var_fa883.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-#endif
+    highp vec4 var_1e556 = v_color0;
+    bool var_7320a = AlphaMaskedTint.x != 0.0;
+    highp vec4 var_1bee0 = texture(s_MatTexture, v_texcoord0);
+    if (var_7320a)
+    {
+        highp vec3 var_5e4d7 = mix(var_1bee0.xyz, var_1bee0.xyz * v_color0.xyz, vec3(var_1bee0.w)).xyz * var_1e556.w;
+        var_1bee0 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_1bee0.w);
+        var_1bee0.w = 1.0;
+    }
+    else
+    {
+        highp vec3 var_55928 = var_1bee0.xyz * v_color0.xyz;
+        var_1bee0 = vec4(var_55928.x, var_55928.y, var_55928.z, var_1bee0.w);
+    }
+    highp vec4 var_74395 = var_1bee0;
+    highp vec4 var_48e86 = var_74395 * MatColor;
+    var_1bee0 = var_48e86;
+    highp vec3 var_4b6b9 = var_48e86.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_86350 = (var_fa883.xyz * v_color0.xyz).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_35473 = var_86350.xy;
-    highp vec3 var_ffb2a = mix(mix((var_86350.xxx * ChangeColor.xyz).xyz, var_86350.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_714e6 = vec4(var_ffb2a.x, var_ffb2a.y, var_ffb2a.z, var_fa883.w);
+    highp vec2 var_35473 = var_4b6b9.xy;
+    highp vec3 var_f9ddb = mix(mix((var_4b6b9.xxx * ChangeColor.xyz).xyz, var_4b6b9.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_159b5 = vec4(var_f9ddb.x, var_f9ddb.y, var_f9ddb.z, var_48e86.w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_24ae4 = vec4(var_944ec.x, var_944ec.y, var_944ec.z, var_fa883.w);
-    highp vec3 var_ee97a = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_04b6d.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_714e6 = vec4(var_ee97a.x, var_ee97a.y, var_ee97a.z, var_fa883.w);
+    highp vec4 var_24ae4 = vec4(var_4b6b9.x, var_4b6b9.y, var_4b6b9.z, var_48e86.w);
+    highp vec3 var_99f3c = mix(mix(var_24ae4, var_24ae4 * ChangeColor, vec4(var_1e556.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_159b5 = vec4(var_99f3c.x, var_99f3c.y, var_99f3c.z, var_48e86.w);
 #endif
-    if (var_714e6.w < 0.5)
+    if (var_159b5.w < 0.5)
     {
         discard;
     }
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_44754 = var_ee97a.xyz * v_color0.xyz;
-#endif
-#ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_44754 = var_ffb2a.xyz * v_color0.xyz;
-#endif
+    if (!var_7320a)
+    {
+        highp vec3 var_d5484 = var_159b5.xyz * v_color0.xyz;
+        var_159b5 = vec4(var_d5484.x, var_d5484.y, var_d5484.z, var_159b5.w);
+        var_159b5.w *= var_1e556.w;
+    }
     highp vec3 var_a1b79;
-    func_9b87e(var_a1b79, var_44754);
+    func_66b9c(var_a1b79, var_159b5);
     highp vec3 var_d2ce2;
     highp float var_5e5e9;
     highp float var_ed23d;
@@ -1514,14 +1527,14 @@ void main() {
         var_0c8bf = var_e2657;
     }
     highp vec3 var_7ea3c = vec4(var_f8ea4.xyz + (var_44766 * var_b61f4.w), 1.0).xyz + var_0c8bf;
-    highp vec3 var_09481;
+    highp vec3 var_cb832;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_09481 = var_7ea3c * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_cb832 = var_7ea3c * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_09481 = var_7ea3c;
+        var_cb832 = var_7ea3c;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
@@ -1534,6 +1547,6 @@ void main() {
     highp vec4 var_82203 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_82203;
     highp vec2 var_e953a = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = vec4(var_09481.x, var_09481.y, var_09481.z, vec4(var_f570b, var_f570b, var_f570b, var_714e6.w * var_04b6d.w).w);
+    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_159b5.w).w);
     bgfx_FragData[1] = vec4(vec4(0.0).x, vec4(0.0).y, var_e953a.x, var_e953a.y);
 }

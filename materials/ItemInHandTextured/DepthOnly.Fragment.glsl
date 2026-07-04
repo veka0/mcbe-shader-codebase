@@ -27,6 +27,7 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
 * - uniform vec4 FogColor;

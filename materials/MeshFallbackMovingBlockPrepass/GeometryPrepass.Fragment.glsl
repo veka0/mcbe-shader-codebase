@@ -233,22 +233,25 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-    highp vec4 var_47d7b = v_color0;
-    highp vec4 var_e16d7 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_57380 = v_color0;
+#ifdef SEASONS__ON
+    highp vec4 var_b65d1 = texture(s_MatTexture, v_texcoord0);
+#endif
 #ifdef SEASONS__OFF
-    highp vec3 var_0255a = var_e16d7.xyz * v_color0.xyz;
+    highp vec4 var_84c3e = texture(s_MatTexture, v_texcoord0);
+    highp vec3 var_82cf8 = var_84c3e.xyz * v_color0.xyz;
+    var_84c3e = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_84c3e.w);
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_0255a = (var_e16d7.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_47d7b.w);
+    highp vec3 var_2b07f = (var_b65d1.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_57380.w);
+    highp vec4 var_84c3e = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_b65d1.w);
+    var_84c3e.w = 1.0;
 #endif
-    highp vec4 var_94b70 = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_e16d7.w);
+    highp vec4 var_d117f = var_84c3e;
 #ifdef SEASONS__OFF
-    var_94b70.w *= var_47d7b.w;
-#endif
-#ifdef SEASONS__ON
-    var_94b70.w = 1.0;
-    highp vec4 var_1d587 = var_94b70;
+    highp vec3 var_cdbd7 = var_d117f.xyz * var_57380.w;
+    var_84c3e = vec4(var_cdbd7.x, var_cdbd7.y, var_cdbd7.z, var_d117f.w);
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
@@ -257,12 +260,12 @@ void main() {
     highp float var_5431f;
     func_a72a6(var_5431f, var_17b33, var_42cdf, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
-    highp vec4 var_53507 = vec4(var_94b70.xyz, var_94b70.w);
+    highp vec4 var_b71d9 = vec4(var_cdbd7, var_84c3e.w);
 #endif
 #ifdef SEASONS__ON
-    highp vec4 var_53507 = vec4(var_94b70.xyz, var_1d587.w);
+    highp vec4 var_b71d9 = vec4(var_84c3e.xyz, var_d117f.w);
 #endif
-    highp vec4 var_6de71 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
+    highp vec4 var_6de71 = vec4(var_b71d9.x, var_b71d9.y, var_b71d9.z, var_b71d9.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
     var_6de71.w = var_7aa46;
