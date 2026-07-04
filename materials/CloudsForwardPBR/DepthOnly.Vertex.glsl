@@ -7,6 +7,7 @@
 * - DEPTH_ONLY_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
+* - MOTION_ONLY_PASS (not used)
 *
 * Instancing:
 * - INSTANCING__OFF
@@ -72,6 +73,7 @@
 * - uniform vec4 PointLightNdLFloor;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PreExposureEnabled;
+* - uniform mat4 PrevWorld;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;

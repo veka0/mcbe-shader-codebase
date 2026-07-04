@@ -40,76 +40,77 @@ void func_011ac(inout highp float arg_6b2b2, inout highp float arg_ca2fb) {
 }
 void main() {
     highp vec4 var_b0825 = v_Additional;
-    uvec4 var_4581e = uvec4(v_VaryingData);
-    int var_c37fe = int((var_4581e.z << uint(4)) | ((var_4581e.y & 240u) >> uint(4)));
-    int var_9fd69 = int(var_4581e.w);
-    highp vec4 var_44008 = Data_PS[var_c37fe];
-    highp vec4 var_6e7e8 = Data_PS[var_c37fe + 1];
+    uvec4 var_eb4ac = uvec4(v_VaryingData);
+    int var_8e4d8 = int((var_eb4ac.z << 4u) | ((var_eb4ac.y & 240u) >> 4u));
+    int var_998b1 = int(var_eb4ac.w);
+    highp vec4 var_45e84 = Data_PS[var_8e4d8];
+    highp vec4 var_5349b = Data_PS[var_8e4d8 + 1];
+    int var_fc151 = max(0, (int(var_45e84.x) + (-1)));
     highp float var_26c81;
-    if (0.0 == float(var_9fd69))
+    if (0 == var_998b1)
     {
         var_26c81 = min(1.0, var_b0825.z * var_b0825.w);
     }
     else
     {
         highp float var_a4790;
-        if (3.0 == float(var_9fd69))
+        if (3 == var_998b1)
         {
-            var_44008 = texture(s_txBuffer, (vec2(var_b0825.x, 1.0 - var_b0825.y) * UVTransform[0].zw) + UVTransform[0].xy);
-            var_a4790 = var_44008.w;
+            var_5349b = texture(s_txBuffer, (vec2(var_b0825.x, 1.0 - var_b0825.y) * UVTransform[0].zw) + UVTransform[0].xy);
+            var_a4790 = var_5349b.w;
         }
         else
         {
             highp float var_b5f11;
-            if (17.0 == float(var_9fd69))
+            if (17 == var_998b1)
             {
-                highp vec4 var_100b4 = texture(s_txBuffer1, (v_Additional.xy * UVTransform[1].zw) + UVTransform[1].xy);
+                highp vec4 var_734d6 = texture(s_txBuffer1, (v_Additional.xy * UVTransform[1].zw) + UVTransform[1].xy);
                 highp vec3 var_63dba = v_Color_.xyz;
                 highp float var_c5996 = ((0.2125999927520751953125 * var_63dba.x) + (0.715200006961822509765625 * var_63dba.y)) + (0.072200000286102294921875 * var_63dba.z);
-                highp float var_54a4f;
-                if ((int(var_6e7e8.y) & 1) != 0)
+                highp float var_15585;
+                if ((int(Data_PS[var_fc151].y) & 1) != 0)
                 {
                     highp float var_94c89;
                     func_011ac(var_c5996, var_94c89);
-                    var_54a4f = var_94c89;
+                    var_15585 = var_94c89;
                 }
                 else
                 {
-                    var_54a4f = var_c5996;
+                    var_15585 = var_c5996;
                 }
-                var_44008 = v_Color_ * pow(abs(var_100b4.x), 1.4500000476837158203125 - var_54a4f);
+                var_5349b = v_Color_ * pow(abs(var_734d6.x), max(abs(1.4500000476837158203125 - var_15585), 9.9999997473787516355514526367188e-05));
                 var_b5f11 = 1.0;
             }
             else
             {
                 highp float var_78c7e;
-                if (18.0 == float(var_9fd69))
+                if (18 == var_998b1)
                 {
-                    highp vec4 var_8512a = texture(s_txBuffer2, (v_Additional.xy * UVTransform[2].zw) + UVTransform[2].xy);
-                    highp vec4 var_6b1bb = vec4(-1.0);
+                    highp vec4 var_5e399 = texture(s_txBuffer2, (v_Additional.xy * UVTransform[2].zw) + UVTransform[2].xy);
+                    highp vec4 var_a7043 = vec4(-1.0);
                     highp vec3 var_093d9 = v_Color_.xyz;
                     highp float var_b9e21 = ((0.2125999927520751953125 * var_093d9.x) + (0.715200006961822509765625 * var_093d9.y)) + (0.072200000286102294921875 * var_093d9.z);
-                    highp float var_42e75;
-                    if ((int(var_6e7e8.y) & 1) != 0)
+                    highp float var_a05c0;
+                    if ((int(Data_PS[var_fc151].y) & 1) != 0)
                     {
                         highp float var_6fbe6;
                         func_011ac(var_b9e21, var_6fbe6);
-                        var_42e75 = var_6fbe6;
+                        var_a05c0 = var_6fbe6;
                     }
                     else
                     {
-                        var_42e75 = var_b9e21;
+                        var_a05c0 = var_b9e21;
                     }
-                    var_44008 = v_Color_ * pow(abs(smoothstep((-0.501960813999176025390625) / var_6b1bb.x, 0.501960813999176025390625 / var_6b1bb.x, (var_8512a.x * 7.96875) - 3.984375)), 1.4500000476837158203125 - var_42e75);
+                    var_5349b = v_Color_ * pow(abs(smoothstep((-0.501960813999176025390625) / var_a7043.x, 0.501960813999176025390625 / var_a7043.x, (var_5e399.x * 7.96875) - 3.984375)), max(abs(1.4500000476837158203125 - var_a05c0), 9.9999997473787516355514526367188e-05));
                     var_78c7e = 1.0;
                 }
                 else
                 {
                     highp float var_4ae87;
-                    if (31.0 == float(var_9fd69))
+                    if (34 == var_998b1)
                     {
-                        var_44008 = texture(s_txBuffer, (((var_44008.zw * vec2(fract(v_Additional.xy).x, 1.0 - fract(v_Additional.xy).y)) + var_44008.xy) * UVTransform[0].zw) + UVTransform[0].xy);
-                        var_4ae87 = var_44008.w;
+                        var_5349b = texture(s_txBuffer, (((var_5349b.zw * vec2(fract(v_Additional.xy).x, 1.0 - fract(v_Additional.xy).y)) + var_5349b.xy) * UVTransform[0].zw) + UVTransform[0].xy);
+                        var_4ae87 = var_5349b.w;
                     }
                     else
                     {

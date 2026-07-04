@@ -31,9 +31,9 @@ out vec3 v_ScreenNormalPosition;
 flat out vec4 v_VaryingData;
 out vec4 v_zPosition;
 void main() {
-    uvec4 var_57f2e = uvec4(vec4(a_texcoord4));
-    int var_fec0d = int(((var_57f2e.y & 15u) << uint(8)) | var_57f2e.x);
-    vec4 var_12588 = vec4(a_position, 1.0) * mat4(Data_VS[var_fec0d], Data_VS[var_fec0d + 1], Data_VS[var_fec0d + 2], Data_VS[var_fec0d + 3]);
+    uvec4 var_7bbc0 = uvec4(vec4(a_texcoord4));
+    int var_a178f = int(((var_7bbc0.y & 15u) << 8u) | var_7bbc0.x);
+    vec4 var_12588 = vec4(a_position, 1.0) * mat4(Data_VS[var_a178f], Data_VS[var_a178f + 1], Data_VS[var_a178f + 2], Data_VS[var_a178f + 3]);
     float var_70560 = var_12588.w;
     var_12588.x = (var_12588.x * 2.0) - var_70560;
     var_12588.y = ((var_70560 - var_12588.y) * 2.0) - var_70560;

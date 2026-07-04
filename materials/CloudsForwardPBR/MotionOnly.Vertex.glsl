@@ -98,17 +98,14 @@
 * - uniform vec4 WorldOrigin;
 */
 
+uniform mat4 PrevWorld;
 #ifdef INSTANCING__OFF
 uniform mat4 u_model[4];
 #endif
 uniform mat4 u_proj;
 uniform mat4 u_view;
-uniform vec4 CloudColor;
-uniform vec4 CloudLightingToggles;
 uniform vec4 SubPixelOffset;
-in float a_texcoord4;
 in vec4 a_color0;
-in vec4 a_normal;
 in vec3 a_position;
 in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
@@ -120,11 +117,11 @@ flat out int v_adjacentClouds;
 out vec4 v_color0;
 out vec4 v_fragCoord;
 out vec3 v_normal;
+out vec3 v_prevWorldPos;
 out vec2 v_texcoord0;
 out vec2 v_tilePosition;
 out vec3 v_worldPos;
 void main() {
-    int var_5b856 = int(a_texcoord4);
 #ifdef INSTANCING__OFF
     vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
@@ -139,34 +136,19 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec2 var_62d4f = vec2(0.0);
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
     var_67767.y -= SubPixelOffset.y;
     mat4 var_8e1af = u_proj;
     var_8e1af[2] = var_67767;
-    vec3 var_71df9 = clamp(CloudColor.xyz * a_color0.xyz, vec3(0.0), vec3(1.0));
-    vec3 var_a2482;
-    int var_0f149;
-    if (CloudLightingToggles.z != 0.0)
-    {
-        var_62d4f.x = ((var_5b856 & 256) != int(0u)) ? 0.0 : 16.0;
-        var_62d4f.y = ((var_5b856 & 512) != int(0u)) ? 0.0 : 16.0;
-        var_0f149 = var_5b856;
-        var_a2482 = a_normal.xyz;
-    }
-    else
-    {
-        var_0f149 = 0;
-        var_a2482 = vec3(0.0);
-    }
-    v_adjacentClouds = var_0f149;
-    v_color0 = vec4(var_71df9.x, var_71df9.y, var_71df9.z, CloudColor.w);
+    v_adjacentClouds = 0;
+    v_color0 = a_color0;
     v_fragCoord = vec4(0.0);
-    v_normal = var_a2482;
+    v_normal = vec3(0.0);
+    v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_tilePosition = var_62d4f;
+    v_tilePosition = vec2(0.0);
     v_worldPos = var_a67a8.xyz;
     gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

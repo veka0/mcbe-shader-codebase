@@ -10,8 +10,8 @@
 * - MOTION_ONLY_PASS (not used)
 *
 * Instancing:
-* - INSTANCING__OFF
-* - INSTANCING__ON
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON (not used)
 *
 * Available Resources:
 *
@@ -98,75 +98,24 @@
 * - uniform vec4 WorldOrigin;
 */
 
-#ifdef INSTANCING__OFF
-uniform mat4 u_model[4];
-#endif
-uniform mat4 u_proj;
-uniform mat4 u_view;
-uniform vec4 CloudColor;
-uniform vec4 CloudLightingToggles;
-uniform vec4 SubPixelOffset;
-in float a_texcoord4;
-in vec4 a_color0;
-in vec4 a_normal;
-in vec3 a_position;
-in vec2 a_texcoord0;
-#ifdef INSTANCING__ON
-in vec4 i_data1;
-in vec4 i_data2;
-in vec4 i_data3;
-#endif
-flat out int v_adjacentClouds;
-out vec4 v_color0;
-out vec4 v_fragCoord;
-out vec3 v_normal;
-out vec2 v_texcoord0;
-out vec2 v_tilePosition;
-out vec3 v_worldPos;
+precision mediump float;
+precision highp int;
+uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_viewProj;
+uniform highp vec4 u_prevWorldPosOffset;
+in highp vec3 v_prevWorldPos;
+in highp vec3 v_worldPos;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    int var_5b856 = int(a_texcoord4);
-#ifdef INSTANCING__OFF
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
-#endif
-#ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
-#endif
-    vec2 var_62d4f = vec2(0.0);
-    mat4 var_83c3f = u_proj;
-    vec4 var_67767 = var_83c3f[2];
-    var_67767.x += SubPixelOffset.x;
-    var_67767.y -= SubPixelOffset.y;
-    mat4 var_8e1af = u_proj;
-    var_8e1af[2] = var_67767;
-    vec3 var_71df9 = clamp(CloudColor.xyz * a_color0.xyz, vec3(0.0), vec3(1.0));
-    vec3 var_a2482;
-    int var_0f149;
-    if (CloudLightingToggles.z != 0.0)
-    {
-        var_62d4f.x = ((var_5b856 & 256) != int(0u)) ? 0.0 : 16.0;
-        var_62d4f.y = ((var_5b856 & 512) != int(0u)) ? 0.0 : 16.0;
-        var_0f149 = var_5b856;
-        var_a2482 = a_normal.xyz;
-    }
-    else
-    {
-        var_0f149 = 0;
-        var_a2482 = vec3(0.0);
-    }
-    v_adjacentClouds = var_0f149;
-    v_color0 = vec4(var_71df9.x, var_71df9.y, var_71df9.z, CloudColor.w);
-    v_fragCoord = vec4(0.0);
-    v_normal = var_a2482;
-    v_texcoord0 = a_texcoord0;
-    v_tilePosition = var_62d4f;
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
+    highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
+    highp vec4 var_46c40 = var_5dd1c;
+    highp float var_bc97b = var_46c40.w;
+    highp vec4 var_ae1cb = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_ae1cb;
+    highp vec4 var_21b68 = u_prevViewProj * vec4(v_prevWorldPos - u_prevWorldPosOffset.xyz, 1.0);
+    highp vec4 var_96bda = var_21b68;
+    highp float var_9ef48 = var_96bda.w;
+    highp vec4 var_95bc6 = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_95bc6;
+    bgfx_FragColor = vec4(1.0, 1.0, var_ae1cb.xy - var_95bc6.xy);
 }

@@ -32,20 +32,20 @@ layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_4144a = v_Additional;
     highp vec4 var_8fd7e = v_NoPerspParam;
-    uvec4 var_c4012 = uvec4(v_VaryingData);
-    int var_c37fe = int((var_c4012.z << uint(4)) | ((var_c4012.y & 240u) >> uint(4)));
-    highp vec4 var_2a305 = Data_PS[var_c37fe];
-    highp vec4 var_51ea2 = Data_PS[var_c37fe + 1];
-    highp vec4 var_3e166 = Data_PS[int(var_51ea2.w)];
+    uvec4 var_05e85 = uvec4(v_VaryingData);
+    int var_8e4d8 = int((var_05e85.z << 4u) | ((var_05e85.y & 240u) >> 4u));
+    highp vec4 var_0a8ca = Data_PS[var_8e4d8];
+    highp vec4 var_937d7 = Data_PS[var_8e4d8 + 1];
+    highp vec4 var_341fb = Data_PS[int(var_0a8ca.x)];
     highp vec4 var_8e498 = texture(s_txBuffer1, (vec2(var_8fd7e.z, 1.0 - var_8fd7e.w) * UVTransform[1].zw) + UVTransform[1].xy);
     highp vec4 var_a5547 = var_8e498;
     highp vec4 var_e1066 = texture(s_txBuffer, (vec2(var_4144a.x, 1.0 - var_4144a.y) * UVTransform[0].zw) + UVTransform[0].xy);
-    highp vec4 var_51ac8 = var_e1066 * var_2a305.w;
+    highp vec4 var_51ac8 = var_e1066 * var_937d7.w;
     highp vec4 var_9b012 = var_51ac8;
     highp vec3 var_3c560 = var_8e498.xyz / vec3(max(var_a5547.w, 9.9999997473787516355514526367188e-05));
     highp vec3 var_55a07 = var_51ac8.xyz / vec3(max(var_9b012.w, 9.9999997473787516355514526367188e-05));
     highp vec3 var_ec6b7;
-    switch (int(var_3e166.x))
+    switch (int(var_341fb.x))
     {
         case 0:
         {
