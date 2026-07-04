@@ -19,7 +19,7 @@
 * Buffers:
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
-* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+* - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
@@ -109,10 +109,10 @@ precision mediump float;
 precision highp int;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
-uniform highp sampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2D s_SceneDepth;
 uniform highp sampler3D s_SkyAmbientSamples;
+uniform highp usampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp vec4 AmbientLightParams;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
@@ -167,17 +167,17 @@ void main() {
     highp float var_d799e = var_df846.w;
     highp vec4 var_98bb3 = var_9666f / vec4(var_d799e);
     var_df846 = var_98bb3;
-    highp vec4 var_6b83a = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
-    highp float var_1ca06;
+    uvec4 var_7a602 = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
+    highp float var_f8f82;
     if (var_cbd90 == 1.0)
     {
         highp float var_92116;
         func_dc62c(var_92116);
-        var_1ca06 = var_92116;
+        var_f8f82 = var_92116;
     }
     else
     {
-        var_1ca06 = var_6b83a.z;
+        var_f8f82 = float(var_7a602.w) * 0.0039215688593685626983642578125;
     }
     highp vec3 var_cdd00 = normalize((u_invView * vec4(var_98bb3.xyz, 1.0)).xyz - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
@@ -241,7 +241,7 @@ void main() {
                 highp vec3 var_9d0d4;
                 if (AtmosphericScatteringToggles.w != 0.0)
                 {
-                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_1ca06)));
+                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_f8f82)));
                 }
                 else
                 {

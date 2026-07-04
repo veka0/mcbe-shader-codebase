@@ -28,7 +28,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_DiffuseLighting;
-* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+* - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_NormalsAndDepthLighting;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -130,11 +130,11 @@ uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_ColorMetalnessSubsurface;
-uniform highp sampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp sampler2D s_Normal;
 uniform highp sampler2D s_SceneDepth;
 uniform highp sampler2DArray s_CausticsTexture;
 uniform highp sampler2DArray s_ShadowCascades;
+uniform highp usampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp vec4 CascadesParameters[8];
 uniform highp vec4 CascadesPerSet;
 uniform highp vec4 CausticsParameters;
@@ -278,18 +278,18 @@ void func_0b88d(inout highp vec3 arg_3a8bb, inout highp float arg_13db0, inout h
     }
     arg_7a26d = loc_9af5f / float(loc_ec55d * loc_ec55d);
 }
-void func_1057d(inout highp vec4 arg_765b5, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_c4970, inout highp float arg_485b3, inout highp vec3 arg_c7286, inout highp vec2 arg_3e2b4, inout highp vec3 arg_08b90, inout highp float arg_2d822, inout highp float arg_67b92) {
+void func_d4370(inout uvec4 arg_9133d, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_c4970, inout highp float arg_485b3, inout highp vec3 arg_c7286, inout highp vec2 arg_3e2b4, inout highp vec3 arg_08b90, inout highp float arg_2d822, inout highp float arg_67b92) {
     bool loc_10906 = DirectionalLightSkyLightHeuristicToggles.x != 0.0;
-    bool loc_d0d08;
+    bool loc_02a8f;
     if (loc_10906)
     {
-        loc_d0d08 = abs(arg_765b5.z) < 9.9999997473787516355514526367188e-05;
+        loc_02a8f = abs(float(arg_9133d.w) * 0.0039215688593685626983642578125) < 9.9999997473787516355514526367188e-05;
     }
     else
     {
-        loc_d0d08 = loc_10906;
+        loc_02a8f = loc_10906;
     }
-    if (loc_d0d08)
+    if (loc_02a8f)
     {
         arg_87514 = vec3(0.0);
         arg_c03dc = vec3(0.0);
@@ -468,7 +468,7 @@ void func_1057d(inout highp vec4 arg_765b5, inout highp vec3 arg_87514, inout hi
 void main() {
     highp vec2 var_4d847 = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
     highp vec4 var_af032 = texture(s_Normal, var_4d847.xy);
-    highp vec2 var_195ea = var_4d847.xy;
+    highp vec2 var_0d4a8 = var_4d847.xy;
     highp float var_c4702 = (texture(s_SceneDepth, var_4d847.xy).x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_c4702, 1.0);
     highp mat4 var_4fa47 = u_invProj;
@@ -521,12 +521,13 @@ void main() {
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
     highp vec3 var_8b177 = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
     highp vec3 var_6fdd9 = normalize((u_view * vec4(var_8b177, 0.0)).xyz);
-    highp vec4 var_a5cb7 = texture(s_ColorMetalnessSubsurface, var_195ea);
+    highp vec4 var_a5cb7 = texture(s_ColorMetalnessSubsurface, var_0d4a8);
     highp vec4 var_4ac0e = var_a5cb7;
     highp float var_a9088 = clamp(2.007874011993408203125 * (var_4ac0e.w - 0.501960813999176025390625), 0.0, 1.0);
-    highp vec4 var_7d742 = texture(s_EmissiveAmbientLinearRoughness, var_195ea);
-    highp vec4 var_4494d = var_7d742;
-    highp vec2 var_3d58a = var_7d742.wx;
+    uvec4 var_a6b1f = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * var_0d4a8), 0);
+    uint var_4b676 = var_a6b1f.x & 65535u;
+    uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
+    highp vec2 var_ca3b6 = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
     highp vec3 var_ff3a3 = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_bd17c = var_20845.xyz;
     highp vec3 var_9e11a = var_a5cb7.xyz;
@@ -566,7 +567,7 @@ void main() {
     }
     highp vec3 var_5bb13;
     highp vec3 var_7ea81;
-    func_1057d(var_4494d, var_7ea81, var_5bb13, var_6fdd9, var_71888, var_8b177, var_e8ddd, var_b42d8, var_fca56, var_3d58a, var_b99f0, var_a9088, var_243e1);
+    func_d4370(var_a6b1f, var_7ea81, var_5bb13, var_6fdd9, var_71888, var_8b177, var_e8ddd, var_b42d8, var_fca56, var_ca3b6, var_b99f0, var_a9088, var_243e1);
     bgfx_FragData0 = vec4(var_7ea81, 1.0);
     bgfx_FragData1 = vec4(var_5bb13, 1.0);
 }

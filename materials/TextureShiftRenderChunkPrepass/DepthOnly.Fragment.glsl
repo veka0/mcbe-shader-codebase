@@ -58,9 +58,7 @@ layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer
 uniform highp sampler2D s_MatTexture;
 in highp vec2 v_texcoord0;
 flat in highp vec2 v_textureShift;
-layout(location = 0) out highp vec4 bgfx_FragData0;
-layout(location = 1) out highp vec4 bgfx_FragData1;
-layout(location = 2) out highp vec4 bgfx_FragData2;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec2 var_558f1 = v_textureShift;
     int var_ec921 = int(var_558f1.y * 65535.0);
@@ -70,7 +68,5 @@ void main() {
     {
         discard;
     }
-    bgfx_FragData0 = vec4(1.0);
-    bgfx_FragData1 = vec4(0.0);
-    bgfx_FragData2 = vec4(0.0);
+    bgfx_FragColor = vec4(1.0);
 }

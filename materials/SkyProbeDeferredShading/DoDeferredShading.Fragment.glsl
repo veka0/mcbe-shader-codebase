@@ -17,7 +17,7 @@
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
-* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+* - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
@@ -116,9 +116,9 @@ precision highp int;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_ColorMetalnessSubsurface;
-uniform highp sampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp sampler2D s_SceneDepth;
 uniform highp sampler2DArray s_ScatteringBuffer;
+uniform highp usampler2D s_EmissiveAmbientLinearRoughness;
 uniform highp vec4 AmbientLightParams;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
@@ -216,7 +216,10 @@ void main() {
     highp vec4 var_98bb3 = var_9666f / vec4(var_d799e);
     var_df846 = var_98bb3;
     highp vec4 var_bde9b = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
-    highp vec2 var_f1a6b = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy).wx;
+    uvec4 var_9fb04 = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
+    uint var_4b676 = var_9fb04.x & 65535u;
+    uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
+    highp vec2 var_3a5c6 = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
     highp vec3 var_900f6 = vec3(v_projPosition.xy, var_971b7);
     highp vec3 var_9e11a = var_bde9b.xyz;
     highp vec3 var_91423;
@@ -340,7 +343,7 @@ void main() {
         var_98d00 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_3c34c = var_98d00;
-    highp vec3 var_b220d = var_98d00.xyz + (mix(((mix(var_91423, vec3(dot(var_91423, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_f1a6b.y)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x, var_e4982.xyz, vec3(var_a052e.w)) * var_3c34c.w);
+    highp vec3 var_b220d = var_98d00.xyz + (mix(((mix(var_91423, vec3(dot(var_91423, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_3a5c6.y)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x, var_e4982.xyz, vec3(var_a052e.w)) * var_3c34c.w);
     highp vec3 var_a3b9e;
     if (CurrentFace.x == 3.0)
     {

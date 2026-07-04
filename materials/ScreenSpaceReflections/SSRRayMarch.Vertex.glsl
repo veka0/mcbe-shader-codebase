@@ -17,7 +17,7 @@
 * Buffers:
 * - uniform lowp sampler2D s_GbufferDepth;
 * - uniform lowp sampler2D s_GbufferNormal;
-* - uniform lowp sampler2D s_GbufferRoughness;
+* - uniform lowp usampler2D s_GbufferRoughness;
 * - uniform lowp sampler2D s_InputTexture;
 * - uniform lowp sampler2D s_PreviousReflectionBuffer;
 * - uniform lowp sampler2D s_RasterColor;
