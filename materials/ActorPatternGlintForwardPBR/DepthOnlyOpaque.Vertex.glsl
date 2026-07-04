@@ -47,6 +47,7 @@
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
+* - layout(binding = 12, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_MERSTexture;
 * - uniform lowp sampler2D s_MatTexture;
 * - uniform lowp sampler2D s_MatTexture1;
@@ -57,8 +58,9 @@
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 12, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 13, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
@@ -92,7 +94,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 DitherParams;
 * - uniform vec4 DitherParams2[3];
@@ -105,6 +107,7 @@
 * - uniform vec4 FogControl;
 * - uniform vec4 FogSkyBlend;
 * - uniform vec4 GlintColor;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 HudOpacity;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
@@ -113,7 +116,6 @@
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MatColor;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MetalnessUniform;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;

@@ -22,7 +22,6 @@
 * - uniform vec4 LightAmbientColorAndIntensity;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 */
 
 #ifdef INSTANCING__OFF

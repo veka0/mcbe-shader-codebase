@@ -15,11 +15,13 @@
 *
 * Buffers:
 * - uniform lowp sampler2DArray s_CausticsTexture;
+* - layout(binding = 6, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_MatTexture;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
+* - layout(binding = 7, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -45,16 +47,16 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;

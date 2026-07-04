@@ -54,7 +54,6 @@
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 OverlayColor;
 * - uniform vec4 PBRTextureFlags;
 * - uniform mat4 PrevWorld;

@@ -7,6 +7,10 @@
 * - FALLBACK_PASS (not used)
 * - WATER_SURFACE_PASS (not used)
 *
+* GPUBlockLighting:
+* - GPU_BLOCK_LIGHTING__OFF (not used)
+* - GPU_BLOCK_LIGHTING__ON (not used)
+*
 * PointLightShading:
 * - POINT_LIGHT_SHADING__OFF (not used)
 * - POINT_LIGHT_SHADING__ON (not used)
@@ -16,9 +20,9 @@
 * Buffers:
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
-* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
+* - layout(binding = 12, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_PointLightShadowTextureAtlas;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
@@ -27,9 +31,10 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -46,8 +51,6 @@
 * - uniform vec4 CascadesPerSet;
 * - uniform mat4 CascadesShadowInvProj[8];
 * - uniform mat4 CascadesShadowProj[8];
-* - uniform vec4 CausticsParameters;
-* - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
 * - uniform vec4 CloudShadowsVisible;
 * - uniform vec4 ClusterDepthBounds;
@@ -61,13 +64,14 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -97,14 +101,11 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
-* - uniform vec4 Time;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
-* - uniform vec4 WaterAlbedoExtinction;
-* - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;

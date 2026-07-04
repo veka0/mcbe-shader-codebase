@@ -7,6 +7,10 @@
 * - FALLBACK_PASS (not used)
 * - POPULATE_PASS (not used)
 *
+* GPUBlockLighting:
+* - GPU_BLOCK_LIGHTING__OFF (not used)
+* - GPU_BLOCK_LIGHTING__ON (not used)
+*
 * PointLightShading:
 * - POINT_LIGHT_SHADING__OFF (not used)
 * - POINT_LIGHT_SHADING__ON (not used)
@@ -23,6 +27,7 @@
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2DArray s_CurrentLightingBuffer;
+* - layout(binding = 13, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_PointLightShadowTextureAtlas;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_PreviousLightingBuffer;
@@ -32,9 +37,10 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 14, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 16, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 17, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
@@ -67,13 +73,14 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 HeightFogScaleBias;
 * - uniform vec4 HenyeyGreensteinG;
 * - uniform vec4 IBLParameters;
