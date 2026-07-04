@@ -10,6 +10,9 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BlitTexture;
+*
+* Uniforms:
+* - uniform vec4 ViewportScale;
 */
 
 uniform mat4 u_modelViewProj;

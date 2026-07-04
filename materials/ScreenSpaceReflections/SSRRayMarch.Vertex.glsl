@@ -24,24 +24,25 @@
 *
 * Uniforms:
 * - uniform vec4 CameraData;
-* - uniform vec4 RenderMode;
 * - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
 * - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
+* - uniform vec4 ViewportScale;
 */
 
+uniform vec4 ViewportScale;
 in vec4 a_position;
 in vec2 a_texcoord0;
 out vec4 v_projPosition;
-out vec2 v_texcoord0;
+out vec4 v_texcoord0;
 void main() {
-    vec2 var_8e808 = a_texcoord0;
     vec2 var_081c4 = (a_position.xy * 2.0) - vec2(1.0);
     float var_9f265 = var_081c4.x;
+    vec2 var_828cb = a_texcoord0 * ViewportScale.xy;
     v_projPosition = vec4(var_9f265, var_081c4.y, 0.0, 1.0);
-    v_texcoord0 = vec2(var_8e808.x, var_8e808.y);
+    v_texcoord0 = vec4(var_828cb.x, var_828cb.y, a_texcoord0.x, a_texcoord0.y);
     gl_Position = vec4(var_9f265, var_081c4.y, 0.0, 1.0);
 }

@@ -40,43 +40,43 @@ in highp vec4 v_varyingParam1;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_f5f14 = v_additional;
-    highp vec4 var_52da2 = v_varyingParam0;
+    highp vec4 var_86567 = v_varyingParam0;
     highp float var_ac5a3;
-    if (int(mod(float(int(ShaderType.x)), 4.0)) >= 2)
+    if ((int(ShaderType.x) & 2) != 0)
     {
-        var_ac5a3 = var_52da2.x;
+        var_ac5a3 = var_86567.x;
     }
     else
     {
         highp float var_385d0;
-        if (int(mod(float(int(ShaderType.x)), 8.0)) >= 4)
+        if ((int(ShaderType.x) & 4) != 0)
         {
             var_385d0 = length(v_varyingParam0.xy);
         }
         else
         {
-            highp float var_b832c;
-            if (int(mod(float(int(ShaderType.x)), 16.0)) >= 8)
+            highp float var_d6a52;
+            if ((int(ShaderType.x) & 8) != 0)
             {
-                var_b832c = (3.1400001049041748046875 + atan(var_52da2.y, var_52da2.x)) * 0.159235656261444091796875;
+                var_d6a52 = (3.1415927410125732421875 + atan(var_86567.y, var_86567.x)) * 0.15915493667125701904296875;
             }
             else
             {
-                var_b832c = 0.0;
+                var_d6a52 = 0.0;
             }
-            var_385d0 = var_b832c;
+            var_385d0 = var_d6a52;
         }
         var_ac5a3 = var_385d0;
     }
     highp float var_90552;
-    if (int(mod(float(int(ShaderType.x)), 512.0)) >= 256)
+    if ((int(ShaderType.x) & 256) != 0)
     {
         var_90552 = fract(var_ac5a3);
     }
     else
     {
         highp float var_669fd;
-        if (int(mod(float(int(ShaderType.x)), 1024.0)) >= 512)
+        if ((int(ShaderType.x) & 512) != 0)
         {
             highp float var_f4252 = 2.0 * fract(var_ac5a3 * 0.5);
             highp float var_e18f1;
@@ -97,14 +97,14 @@ void main() {
         var_90552 = var_669fd;
     }
     highp vec4 var_01d41;
-    if (int(mod(float(int(ShaderType.x)), 32.0)) >= 16)
+    if ((int(ShaderType.x) & 16) != 0)
     {
         var_01d41 = mix(GradientStartColor, GradientEndColor, vec4(clamp(var_90552, 0.0, 1.0)));
     }
     else
     {
         highp vec4 var_c56fa;
-        if (int(mod(float(int(ShaderType.x)), 64.0)) >= 32)
+        if ((int(ShaderType.x) & 32) != 0)
         {
             highp float var_15763 = 2.0 * var_90552;
             highp float var_367df = 1.0 - var_15763;
@@ -113,14 +113,14 @@ void main() {
         else
         {
             highp vec4 var_e510f;
-            if (int(mod(float(int(ShaderType.x)), 128.0)) >= 64)
+            if ((int(ShaderType.x) & 64) != 0)
             {
                 var_e510f = texture(s_Texture2, vec2(var_90552, GradientYCoord.x));
             }
             else
             {
                 highp vec4 var_dd35c;
-                if (int(mod(float(int(ShaderType.x)), 2.0)) >= 1)
+                if ((int(ShaderType.x) & 1) != 0)
                 {
                     var_dd35c = texture(s_Texture0, vec2(v_additional.x, 1.0 - v_additional.y));
                 }
@@ -135,7 +135,7 @@ void main() {
         var_01d41 = var_c56fa;
     }
     highp vec4 var_f6024;
-    if (int(mod(float(int(ShaderType.x)), 256.0)) >= 128)
+    if ((int(ShaderType.x) & 128) != 0)
     {
         var_f6024 = var_01d41 * texture(s_Texture1, v_varyingParam1.xy).w;
     }

@@ -25,8 +25,8 @@
 *
 * Uniforms:
 * - uniform vec4 BilateralFilterParams;
-* - uniform vec4 BilateralGridParams;
 * - uniform vec4 GridDimensions;
+* - uniform vec4 LuminanceRangeParams;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 SceneResolutionAndRecipSceneResolution;
 */
@@ -45,8 +45,8 @@ struct GridCell {
 layout(binding = 1, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_1f7e0;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2D s_SceneColor;
-uniform vec4 BilateralGridParams;
 uniform vec4 GridDimensions;
+uniform vec4 LuminanceRangeParams;
 uniform vec4 PreExposureEnabled;
 uniform vec4 SceneResolutionAndRecipSceneResolution;
 void main() {
@@ -64,17 +64,17 @@ void main() {
     if (var_834b5)
     {
         vec3 var_8120d = texelFetch(s_SceneColor, ivec2(int(GlobalInvocationID.x), int(GlobalInvocationID.y)), 0).xyz;
-        vec3 var_f2211;
+        vec3 var_896e3;
         if (PreExposureEnabled.x > 0.0)
         {
-            var_f2211 = var_8120d / vec3((0.180000007152557373046875 / texelFetch(s_PreviousFrameAverageLuminance, ivec2(0), 0).x) + 9.9999997473787516355514526367188e-05);
+            var_896e3 = var_8120d / vec3((0.180000007152557373046875 / texelFetch(s_PreviousFrameAverageLuminance, ivec2(0), 0).x) + 9.9999997473787516355514526367188e-05);
         }
         else
         {
-            var_f2211 = var_8120d;
+            var_896e3 = var_8120d;
         }
-        float var_cc2f2 = (log2(dot(var_f2211, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))) - BilateralGridParams.x) / (BilateralGridParams.y - BilateralGridParams.x);
-        float var_a69ee = GridDimensions.z * var_cc2f2;
+        float var_86ba0 = (log2(clamp(dot(var_896e3, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)), LuminanceRangeParams.z, LuminanceRangeParams.w)) - LuminanceRangeParams.x) / (LuminanceRangeParams.y - LuminanceRangeParams.x);
+        float var_a69ee = GridDimensions.z * var_86ba0;
         uvec2 var_8ce2e = uvec2(((vec2(float(GlobalInvocationID.x), float(GlobalInvocationID.y)) + vec2(0.5)) * SceneResolutionAndRecipSceneResolution.zw) * GridDimensions.xy);
         uint var_79fc6 = uint(clamp(int(var_a69ee), 0, int(GridDimensions.z) - 2));
         uvec3 var_18f28 = uvec3(GridDimensions.xyz);
@@ -86,8 +86,8 @@ void main() {
         float var_b5d7d = clamp(var_a69ee - float(var_79fc6), 0.0, 1.0);
         float var_ce1f7 = 1.0 - var_b5d7d;
         uint var_aa3f4 = atomicAdd(var_1f7e0.BilateralGrid[var_6324c].weight, uint(var_ce1f7 * 256.0));
-        uint var_0bf9a = atomicAdd(var_1f7e0.BilateralGrid[var_6324c].value, uint((var_ce1f7 * var_cc2f2) * 256.0));
+        uint var_0bf9a = atomicAdd(var_1f7e0.BilateralGrid[var_6324c].value, uint((var_ce1f7 * var_86ba0) * 256.0));
         uint var_4e27e = atomicAdd(var_1f7e0.BilateralGrid[var_78299].weight, uint(var_b5d7d * 256.0));
-        uint var_88e9f = atomicAdd(var_1f7e0.BilateralGrid[var_78299].value, uint((var_b5d7d * var_cc2f2) * 256.0));
+        uint var_88e9f = atomicAdd(var_1f7e0.BilateralGrid[var_78299].value, uint((var_b5d7d * var_86ba0) * 256.0));
     }
 }

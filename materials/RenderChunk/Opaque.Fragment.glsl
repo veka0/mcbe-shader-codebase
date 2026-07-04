@@ -36,6 +36,7 @@
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MaterialID;
+* - uniform vec4 MeshContext;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 ViewPositionAndTime;

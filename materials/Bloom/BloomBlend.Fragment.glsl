@@ -17,8 +17,8 @@
 *
 * Uniforms:
 * - uniform vec4 BloomParams;
-* - uniform vec4 RenderMode;
 * - uniform vec4 ScreenSize;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
@@ -26,10 +26,10 @@ precision highp int;
 uniform highp sampler2D s_BlurPyramidTexture;
 uniform highp sampler2D s_HDRi;
 uniform highp vec4 BloomParams;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec2 var_f30bd = v_texcoord0;
-    highp vec2 var_3b144 = vec2(4.0 * abs(dFdx(var_f30bd.x)), 4.0 * abs(dFdy(var_f30bd.y)));
-    bgfx_FragColor = vec4(texture(s_HDRi, v_texcoord0).xyz + (((((((((texture(s_BlurPyramidTexture, v_texcoord0 + vec2(0.5 * var_3b144.x, 0.5 * var_3b144.y)) * 0.16599999368190765380859375) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2((-0.5) * var_3b144.x, 0.5 * var_3b144.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(0.5 * var_3b144.x, (-0.5) * var_3b144.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2((-0.5) * var_3b144.x, (-0.5) * var_3b144.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_3b144.x, var_3b144.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_3b144.x, var_3b144.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_3b144.x, -var_3b144.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_3b144.x, -var_3b144.y)) * 0.082999996840953826904296875)).xyz * BloomParams.x), 1.0);
+    highp vec4 var_fc471 = v_texcoord0;
+    highp vec2 var_ae616 = vec2(4.0 * abs(dFdx(var_fc471.x)), 4.0 * abs(dFdy(var_fc471.y)));
+    bgfx_FragColor = vec4(texture(s_HDRi, v_texcoord0.xy).xyz + (((((((((texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(0.5 * var_ae616.x, 0.5 * var_ae616.y)) * 0.16599999368190765380859375) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2((-0.5) * var_ae616.x, 0.5 * var_ae616.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(0.5 * var_ae616.x, (-0.5) * var_ae616.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2((-0.5) * var_ae616.x, (-0.5) * var_ae616.y)) * 0.16599999368190765380859375)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_ae616.x, var_ae616.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_ae616.x, var_ae616.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_ae616.x, -var_ae616.y)) * 0.082999996840953826904296875)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_ae616.x, -var_ae616.y)) * 0.082999996840953826904296875)).xyz * BloomParams.x), 1.0);
 }

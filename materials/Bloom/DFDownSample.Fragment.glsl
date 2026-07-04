@@ -17,17 +17,17 @@
 *
 * Uniforms:
 * - uniform vec4 BloomParams;
-* - uniform vec4 RenderMode;
 * - uniform vec4 ScreenSize;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
 precision highp int;
 uniform highp sampler2D s_BlurPyramidTexture;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec2 var_a00a8 = v_texcoord0;
-    highp vec2 var_9977d = vec2(1.5 * abs(dFdx(var_a00a8.x)), 1.5 * abs(dFdy(var_a00a8.y)));
-    bgfx_FragColor = ((((texture(s_BlurPyramidTexture, v_texcoord0) * 0.5) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_9977d.x, var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_9977d.x, var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(var_9977d.x, -var_9977d.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0 + vec2(-var_9977d.x, -var_9977d.y)) * 0.125);
+    highp vec4 var_3c433 = v_texcoord0;
+    highp vec2 var_dc432 = vec2(1.5 * abs(dFdx(var_3c433.x)), 1.5 * abs(dFdy(var_3c433.y)));
+    bgfx_FragColor = ((((texture(s_BlurPyramidTexture, v_texcoord0.xy) * 0.5) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_dc432.x, var_dc432.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_dc432.x, var_dc432.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(var_dc432.x, -var_dc432.y)) * 0.125)) + (texture(s_BlurPyramidTexture, v_texcoord0.xy + vec2(-var_dc432.x, -var_dc432.y)) * 0.125);
 }

@@ -24,13 +24,13 @@
 *
 * Uniforms:
 * - uniform vec4 CameraData;
-* - uniform vec4 RenderMode;
 * - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
 * - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
@@ -48,7 +48,7 @@ uniform highp vec4 SSRRayMarchingParams;
 uniform highp vec4 SSRRoughnessCutoffParams;
 uniform highp vec4 ScreenSize;
 in highp vec4 v_projPosition;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void func_7a080(inout bool arg_3514b, inout highp vec3 arg_6cf39) {
     if (CameraData.x < CameraData.y)
@@ -217,8 +217,8 @@ void func_21d92(inout highp vec3 arg_4185b, inout highp vec2 arg_0126e, inout hi
     arg_0418b = vec4(loc_34e0b.xy, loc_34e0b.z, min(min(min((1.0 - loc_215a9.x) * (1.0 - loc_215a9.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, loc_39c99 / float(loc_7f413))), clamp(1.0 - dot(normalize(normalize(vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z))), normalize((u_invView * vec4(loc_99271, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_cf4e3, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
 }
 void main() {
-    highp vec4 var_a28fd = texture(s_GbufferRoughness, v_texcoord0);
-    highp float var_c0a46 = var_a28fd.w;
+    highp vec4 var_eb4c0 = texture(s_GbufferRoughness, v_texcoord0.xy);
+    highp float var_c0a46 = var_eb4c0.w;
     highp vec4 var_53578;
     if (var_c0a46 > SSRRoughnessCutoffParams.x)
     {
@@ -227,22 +227,22 @@ void main() {
     else
     {
         int var_f1ffd = int(SSRRayMarchingParams.w);
-        highp vec4 var_d6b2b = vec4(v_projPosition.xy, (texture(s_GbufferDepth, v_texcoord0).x * 2.0) - 1.0, 1.0);
+        highp vec4 var_b7389 = vec4(v_projPosition.xy, (texture(s_GbufferDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
         highp mat4 var_1356c = u_invProj;
-        highp float var_a1967 = var_d6b2b.x;
-        highp float var_ccc39 = var_d6b2b.y;
-        highp float var_071ba = var_d6b2b.w;
-        highp float var_55419 = var_d6b2b.z;
-        highp float var_10bf4 = var_d6b2b.w;
+        highp float var_a1967 = var_b7389.x;
+        highp float var_ccc39 = var_b7389.y;
+        highp float var_071ba = var_b7389.w;
+        highp float var_55419 = var_b7389.z;
+        highp float var_10bf4 = var_b7389.w;
         highp vec4 var_67b7b = vec4(var_a1967 * var_1356c[0].x, var_ccc39 * var_1356c[1].y, var_071ba * var_1356c[3].z, (var_55419 * var_1356c[2].w) + (var_10bf4 * var_1356c[3].w));
-        var_d6b2b = var_67b7b;
-        highp float var_750bb = var_d6b2b.w;
+        var_b7389 = var_67b7b;
+        highp float var_750bb = var_b7389.w;
         highp vec4 var_f9757 = var_67b7b / vec4(var_750bb);
-        var_d6b2b = var_f9757;
+        var_b7389 = var_f9757;
         highp vec3 var_2b1ec = var_f9757.xyz;
-        highp vec4 var_2c670 = texture(s_GbufferNormal, v_texcoord0);
-        highp vec2 var_34a65 = var_2c670.xy;
-        highp vec3 var_f857f = vec3(var_2c670.xy, (1.0 - abs(var_34a65.x)) - abs(var_34a65.y));
+        highp vec4 var_ad0af = texture(s_GbufferNormal, v_texcoord0.xy);
+        highp vec2 var_34a65 = var_ad0af.xy;
+        highp vec3 var_f857f = vec3(var_ad0af.xy, (1.0 - abs(var_34a65.x)) - abs(var_34a65.y));
         highp vec2 var_e3359;
         if (var_f857f.z < 0.0)
         {

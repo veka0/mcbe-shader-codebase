@@ -24,13 +24,13 @@
 *
 * Uniforms:
 * - uniform vec4 CameraData;
-* - uniform vec4 RenderMode;
 * - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
 * - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 UnitPlaneExtents;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
@@ -44,12 +44,12 @@ uniform highp sampler2D s_PreviousReflectionBuffer;
 uniform highp sampler2D s_RasterColor;
 uniform highp vec4 SSRTemporalAccumulationParams;
 uniform highp vec4 ScreenSize;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
-    highp vec4 var_e17eb = texture(s_InputTexture, v_texcoord0);
-    highp vec4 var_91b87 = var_e17eb;
-    highp vec4 var_d7d01 = vec4((var_e17eb.xy * 2.0) - vec2(1.0), (texture(s_GbufferDepth, var_e17eb.xy).x * 2.0) - 1.0, 1.0);
+    highp vec4 var_52592 = texture(s_InputTexture, v_texcoord0.xy);
+    highp vec4 var_cb8e0 = var_52592;
+    highp vec4 var_d7d01 = vec4((var_52592.xy * 2.0) - vec2(1.0), (texture(s_GbufferDepth, var_52592.xy).x * 2.0) - 1.0, 1.0);
     highp mat4 var_3460a = u_invProj;
     highp float var_eb413 = var_d7d01.x;
     highp float var_ac116 = var_d7d01.y;
@@ -66,9 +66,9 @@ void main() {
     highp vec2 var_c1944 = ((var_29b70.xyz / vec3(var_53e38.w)).xy + vec2(1.0)) * 0.5;
     var_c1944.y = 1.0 - var_c1944.y;
     highp vec4 var_567d7;
-    if (var_91b87.w >= 0.0)
+    if (var_cb8e0.w >= 0.0)
     {
-        var_567d7 = vec4(texture(s_RasterColor, vec2(var_c1944.x, 1.0 - var_c1944.y)).xyz, var_91b87.w);
+        var_567d7 = vec4(texture(s_RasterColor, vec2(var_c1944.x, 1.0 - var_c1944.y)).xyz, var_cb8e0.w);
     }
     else
     {
@@ -77,18 +77,18 @@ void main() {
     highp vec4 var_648fa;
     if (SSRTemporalAccumulationParams.x > 0.0)
     {
-        highp vec4 var_0e847 = vec4((v_texcoord0 * 2.0) - vec2(1.0), (var_91b87.z * 2.0) - 1.0, 1.0);
+        highp vec4 var_ffe7a = vec4((v_texcoord0.xy * 2.0) - vec2(1.0), (var_cb8e0.z * 2.0) - 1.0, 1.0);
         highp mat4 var_1356c = u_invProj;
-        highp float var_a1967 = var_0e847.x;
-        highp float var_ccc39 = var_0e847.y;
-        highp float var_071ba = var_0e847.w;
-        highp float var_55419 = var_0e847.z;
-        highp float var_10bf4 = var_0e847.w;
+        highp float var_a1967 = var_ffe7a.x;
+        highp float var_ccc39 = var_ffe7a.y;
+        highp float var_071ba = var_ffe7a.w;
+        highp float var_55419 = var_ffe7a.z;
+        highp float var_10bf4 = var_ffe7a.w;
         highp vec4 var_67b7b = vec4(var_a1967 * var_1356c[0].x, var_ccc39 * var_1356c[1].y, var_071ba * var_1356c[3].z, (var_55419 * var_1356c[2].w) + (var_10bf4 * var_1356c[3].w));
-        var_0e847 = var_67b7b;
-        highp float var_750bb = var_0e847.w;
+        var_ffe7a = var_67b7b;
+        highp float var_750bb = var_ffe7a.w;
         highp vec4 var_62835 = var_67b7b / vec4(var_750bb);
-        var_0e847 = var_62835;
+        var_ffe7a = var_62835;
         highp vec4 var_77040 = u_prevViewProj * vec4((u_invView * vec4(var_62835.xyz, 1.0)).xyz, 1.0);
         highp vec4 var_67609 = var_77040;
         highp vec2 var_d1e3c = ((var_77040.xyz / vec3(var_67609.w)).xy + vec2(1.0)) * 0.5;
@@ -104,7 +104,7 @@ void main() {
         highp float var_b7f64;
         highp vec4 var_c4779;
         highp vec4 var_8c126;
-        for (int var_d7dfd = var_08d17; var_d7dfd <= var_6b3ea; var_8cd78 = var_c4779, var_4a7a2 = var_b7f64, var_a266f = var_8c126, var_d7dfd++)
+        for (int var_210f2 = var_08d17; var_210f2 <= var_6b3ea; var_8cd78 = var_c4779, var_4a7a2 = var_b7f64, var_a266f = var_8c126, var_210f2++)
         {
             int var_f2c75 = -var_6b3ea;
             var_8c126 = var_a266f;
@@ -113,14 +113,14 @@ void main() {
             highp float var_84ace;
             highp vec4 var_25bbb;
             highp vec4 var_758f4;
-            for (int var_04000 = var_f2c75; var_04000 <= var_6b3ea; var_8c126 = var_758f4, var_c4779 = var_25bbb, var_b7f64 = var_84ace, var_04000++)
+            for (int var_371a7 = var_f2c75; var_371a7 <= var_6b3ea; var_8c126 = var_758f4, var_c4779 = var_25bbb, var_b7f64 = var_84ace, var_371a7++)
             {
-                highp vec4 var_8f2eb = texture(s_InputTexture, v_texcoord0 + (vec2(float(var_d7dfd), float(var_04000)) * ScreenSize.zw));
-                highp vec4 var_4e5f5 = var_8f2eb;
+                highp vec4 var_c6fe8 = texture(s_InputTexture, v_texcoord0.xy + (vec2(float(var_210f2), float(var_371a7)) * ScreenSize.zw));
+                highp vec4 var_4e5f5 = var_c6fe8;
                 highp vec4 var_e336d;
                 if (var_4e5f5.w >= 0.0)
                 {
-                    highp vec4 var_f79e8 = vec4((var_8f2eb.xy * 2.0) - vec2(1.0), (texture(s_GbufferDepth, var_8f2eb.xy).x * 2.0) - 1.0, 1.0);
+                    highp vec4 var_f79e8 = vec4((var_c6fe8.xy * 2.0) - vec2(1.0), (texture(s_GbufferDepth, var_c6fe8.xy).x * 2.0) - 1.0, 1.0);
                     highp mat4 var_c3b98 = u_invProj;
                     highp float var_cf8d3 = var_f79e8.x;
                     highp float var_0efa9 = var_f79e8.y;

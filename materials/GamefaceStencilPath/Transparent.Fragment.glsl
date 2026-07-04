@@ -22,7 +22,7 @@ in highp vec2 v_extraParams;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec2 var_6ab19 = v_extraParams;
-    if (int(ShaderType.x) == 15)
+    if (15.0 == ShaderType.x)
     {
         highp vec2 var_af5a7 = abs(v_extraParams);
         highp vec2 var_8f934 = var_af5a7;
@@ -38,7 +38,7 @@ void main() {
     }
     else
     {
-        if (int(ShaderType.x) == 16)
+        if (16.0 == ShaderType.x)
         {
         }
         else

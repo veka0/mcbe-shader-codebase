@@ -6,6 +6,10 @@
 * Passes:
 * - TRANSPARENT_PASS (not used)
 *
+* showDF:
+* - SHOW_DF__OFF (not used)
+* - SHOW_DF__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:

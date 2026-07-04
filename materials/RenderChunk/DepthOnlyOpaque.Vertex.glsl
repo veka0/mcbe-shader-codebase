@@ -36,6 +36,7 @@
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MaterialID;
+* - uniform vec4 MeshContext;
 * - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 ViewPositionAndTime;
@@ -48,6 +49,7 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
+uniform vec4 MeshContext;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
@@ -83,21 +85,22 @@ void main() {
     vec4 var_93fa5 = var_cc6b6 * vec4(a_position, 1.0);
 #endif
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    vec3 var_acd6a = var_93fa5.xyz;
+    vec3 var_2b3bd = var_93fa5.xyz;
 #endif
 #if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_acd6a = (u_model[0] * vec4(a_position, 1.0)).xyz;
+    vec3 var_2b3bd = (u_model[0] * vec4(a_position, 1.0)).xyz;
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_acd6a = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
+    vec3 var_2b3bd = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    vec3 var_eb4e0 = var_acd6a + vec3(0.5);
+    vec3 var_eb4e0 = var_2b3bd + vec3(0.5);
     vec3 var_f280f = normalize(var_eb4e0 - ViewPositionAndTime.xyz);
     vec3 var_d3ea2 = normalize(cross(vec3(0.0, 1.0, 0.0), var_f280f));
     vec3 var_c39b1 = a_color0.xyz;
-    vec3 var_74db2 = var_eb4e0 - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
+    vec3 var_c77d5 = var_eb4e0 - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
 #endif
+    vec4 var_870be = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
     mat4 var_dd47a = u_proj;
     var_dd47a[2].x += SubPixelOffset.x;
     var_dd47a[2].y -= SubPixelOffset.y;
@@ -106,18 +109,18 @@ void main() {
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
-    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_74db2) / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_c77d5) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_acd6a) / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_2b3bd) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
 #endif
     v_lightmapUV = a_texcoord1;
     v_texcoord0 = a_texcoord0;
-    v_worldPos = var_acd6a;
+    v_worldPos = var_2b3bd;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     gl_Position = var_dd47a * (u_view * vec4(var_93fa5.xyz, 1.0));
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    gl_Position = var_dd47a * (u_view * vec4(var_74db2, 1.0));
+    gl_Position = var_dd47a * (u_view * vec4(var_c77d5, 1.0));
 #endif
 }

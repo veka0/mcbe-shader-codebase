@@ -10,6 +10,9 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_BlitTexture;
+*
+* Uniforms:
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;

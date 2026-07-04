@@ -40,9 +40,9 @@
 * - uniform vec4 GenericTonemapperCrosstalkParams;
 * - uniform vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 * - uniform vec4 RasterizedColorEnabled;
-* - uniform vec4 RenderMode;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 TonemapParams0;
+* - uniform vec4 ViewportScale;
 */
 
 precision mediump float;
@@ -75,11 +75,11 @@ uniform highp vec4 GenericTonemapperContrastAndScaleAndOffsetAndCrosstalk;
 uniform highp vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform highp vec4 RasterizedColorEnabled;
 uniform highp vec4 TonemapParams0;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_97017 = texture(s_ColorTexture, v_texcoord0);
-    highp vec3 var_f0fbb = var_97017.xyz;
+    highp vec4 var_be1e6 = texture(s_ColorTexture, v_texcoord0.xy);
+    highp vec3 var_f0fbb = var_be1e6.xyz;
     highp vec3 var_9db8c;
     if (TonemapParams0.z > 0.0)
     {
@@ -559,9 +559,9 @@ void main() {
     highp vec3 var_d9d1b;
     if (RasterizedColorEnabled.x > 0.0)
     {
-        highp vec4 var_ccefb = texture(s_RasterizedColor, v_texcoord0);
-        highp vec4 var_bfce0 = var_ccefb;
-        var_d9d1b = (var_b53eb * (1.0 - var_bfce0.w)) + var_ccefb.xyz;
+        highp vec4 var_3c414 = texture(s_RasterizedColor, v_texcoord0.xy);
+        highp vec4 var_bfce0 = var_3c414;
+        var_d9d1b = (var_b53eb * (1.0 - var_bfce0.w)) + var_3c414.xyz;
     }
     else
     {

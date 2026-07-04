@@ -7,6 +7,10 @@
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF
+* - POINT_LIGHT_SHADING__ON
+*
 * Available Resources:
 *
 * Buffers:
@@ -47,7 +51,6 @@
 * - uniform vec4 ClusterSize;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform mat4 DirectionalLightSourceCausticsViewProj;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
@@ -84,6 +87,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -95,9 +99,12 @@
 * - uniform vec4 WorldOrigin;
 */
 
+#ifdef POINT_LIGHT_SHADING__ON
 #extension GL_EXT_texture_cube_map_array : require
+#endif
 precision mediump float;
 precision highp int;
+#ifdef POINT_LIGHT_SHADING__ON
 struct Light {
     highp vec4 position;
     highp vec4 color;
@@ -111,15 +118,17 @@ struct LightData {
     highp float lookup;
 };
 
-layout(binding = 12, std430) buffer s_zLights { Light zLights[]; } var_49c86;
+layout(binding = 12, std430) buffer s_zLights { Light zLights[]; } var_cbe06;
 layout(binding = 11, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_8139c;
+#endif
 uniform highp mat4 CascadesShadowInvProj[8];
 uniform highp mat4 CascadesShadowProj[8];
 uniform highp mat4 CloudShadowProj;
-uniform highp mat4 DirectionalLightSourceCausticsViewProj;
 uniform highp mat4 PlayerShadowProj;
+#ifdef POINT_LIGHT_SHADING__ON
 uniform highp mat4 PointLightInvProj;
 uniform highp mat4 PointLightProj;
+#endif
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_view;
@@ -131,7 +140,9 @@ uniform highp sampler2D s_SceneDepth;
 uniform highp sampler2DArray s_CausticsTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
+#ifdef POINT_LIGHT_SHADING__ON
 uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+#endif
 uniform highp vec4 AmbientLightParams;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
@@ -142,10 +153,12 @@ uniform highp vec4 CascadesPerSet;
 uniform highp vec4 CausticsParameters;
 uniform highp vec4 CausticsTextureParameters;
 uniform highp vec4 CloudShadowsVisible;
+#ifdef POINT_LIGHT_SHADING__ON
 uniform highp vec4 ClusterDepthBounds;
 uniform highp vec4 ClusterDimensions;
 uniform highp vec4 ClusterNearFarWidthHeight;
 uniform highp vec4 ClusterSize;
+#endif
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 DirectionalLightSkyLightHeuristicToggles;
 uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
@@ -158,16 +171,20 @@ uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAnd
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
+#ifdef POINT_LIGHT_SHADING__ON
 uniform highp vec4 ManhattanDistAttenuationEnabled;
+#endif
 uniform highp vec4 MoonColor;
 uniform highp vec4 MoonDir;
 uniform highp vec4 NdLFloor;
+#ifdef POINT_LIGHT_SHADING__ON
 uniform highp vec4 PointLightAttenuationWindow;
 uniform highp vec4 PointLightAttenuationWindowEnabled;
 uniform highp vec4 PointLightDiffuseFadeOutParameters;
 uniform highp vec4 PointLightNdLFloor;
 uniform highp vec4 PointLightShadowParams1;
 uniform highp vec4 PointLightSpecularFadeOutParameters;
+#endif
 uniform highp vec4 PreExposureEnabled;
 uniform highp vec4 QuantizationParameters;
 uniform highp vec4 QuantizationPrecisionRoundingParameters;
@@ -189,68 +206,11 @@ uniform highp vec4 WaterSurfaceParameters;
 uniform highp vec4 WaterSurfaceWaveParameters;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
-in highp vec2 v_texcoord0;
+in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-mat4 var_94180;
+#ifdef POINT_LIGHT_SHADING__ON
 int var_e7b23;
-void func_17084(inout highp vec4 arg_c59ed, inout int arg_a0aa6, inout highp vec3 arg_0d628, inout highp mat4 arg_d64be, inout bool arg_5e3ed, inout highp mat4 arg_4ee81) {
-    arg_c59ed = CascadesShadowProj[arg_a0aa6] * vec4(arg_0d628, 1.0);
-    highp vec4 loc_108af = arg_c59ed;
-    bool loc_3c9c6 = loc_108af.x >= (-1.0);
-    bool loc_b786b;
-    if (loc_3c9c6)
-    {
-        loc_b786b = loc_108af.x <= 1.0;
-    }
-    else
-    {
-        loc_b786b = loc_3c9c6;
-    }
-    bool loc_537c4;
-    if (loc_b786b)
-    {
-        loc_537c4 = loc_108af.y >= (-1.0);
-    }
-    else
-    {
-        loc_537c4 = loc_b786b;
-    }
-    bool loc_32c46;
-    if (loc_537c4)
-    {
-        loc_32c46 = loc_108af.y <= 1.0;
-    }
-    else
-    {
-        loc_32c46 = loc_537c4;
-    }
-    bool loc_88a47;
-    if (loc_32c46)
-    {
-        loc_88a47 = loc_108af.z >= (-1.0);
-    }
-    else
-    {
-        loc_88a47 = loc_32c46;
-    }
-    bool loc_7078d;
-    if (loc_88a47)
-    {
-        loc_7078d = loc_108af.z <= 1.0;
-    }
-    else
-    {
-        loc_7078d = loc_88a47;
-    }
-    if (loc_7078d)
-    {
-        arg_d64be = CascadesShadowInvProj[arg_a0aa6];
-        arg_5e3ed = true;
-        return;
-    }
-    arg_d64be = arg_4ee81;
-    arg_5e3ed = false;
-}
+#endif
 void func_59bf3(inout highp vec3 arg_3a8bb, inout highp float arg_13db0, inout highp vec4 arg_f7c69, inout highp float arg_7a26d) {
     highp vec4 loc_90e3d = PlayerShadowProj * vec4(arg_3a8bb, 1.0);
     highp float loc_fcb6d = clamp(arg_13db0, arg_f7c69.x, 1.0);
@@ -320,7 +280,7 @@ void func_59bf3(inout highp vec3 arg_3a8bb, inout highp float arg_13db0, inout h
     }
     arg_7a26d = loc_9af5f / float(loc_ec55d * loc_ec55d);
 }
-void func_93e04(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_d7698, inout highp float arg_485b3, inout highp vec3 arg_c7286, inout highp vec3 arg_08b90, inout highp vec3 arg_bcfb6, inout highp float arg_b14d8, inout highp float arg_67b92) {
+void func_28cdb(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_3f549, inout highp float arg_485b3, inout highp vec3 arg_c7286, inout highp vec3 arg_08b90, inout highp vec3 arg_bcfb6, inout highp float arg_b14d8, inout highp float arg_67b92) {
     bool loc_10906 = DirectionalLightSkyLightHeuristicToggles.x != 0.0;
     bool loc_d0d08;
     if (loc_10906)
@@ -337,114 +297,128 @@ void func_93e04(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout hi
         arg_c03dc = vec3(0.0);
         return;
     }
-    highp float loc_58556;
+    highp float loc_acdcc;
     highp float loc_f89fe;
     if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x) == 1)
     {
-        highp float loc_93b5c = max(dot(arg_58fab, normalize((u_view * DirectionalLightSourceShadowDirection).xyz)), 0.0);
-        highp vec4 loc_c54e0 = NdLFloor;
-        highp vec3 loc_30919 = arg_adf73 + ((arg_c100b * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.w) * clamp(1.0 - loc_93b5c, 0.0, 1.0));
-        highp float loc_c0909;
-        highp float loc_5150e;
-        highp mat4 loc_c0243;
-        loc_c0243 = var_94180;
-        loc_5150e = 1.0;
-        loc_c0909 = 1.0;
-        int loc_f4afa;
-        highp float loc_0d7a8;
-        highp float loc_d1899;
-        highp mat4 loc_c2344;
-        for (int loc_5264b = 0, loc_35690 = 0; loc_5264b < 4; loc_c0243 = loc_c2344, loc_35690 = loc_f4afa, loc_5150e = loc_d1899, loc_c0909 = loc_0d7a8, loc_5264b++)
+        highp float loc_05e4d = max(dot(arg_58fab, normalize((u_view * DirectionalLightSourceShadowDirection).xyz)), 0.0);
+        highp vec3 loc_28854 = arg_adf73 + ((arg_c100b * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.w) * clamp(1.0 - loc_05e4d, 0.0, 1.0));
+        int loc_933da = int(dot(clamp(CascadesPerSet, vec4(0.0), vec4(1.0)), vec4(1.0)));
+        highp float loc_6cb34;
+        highp float loc_84203;
+        loc_84203 = 1.0;
+        loc_6cb34 = 1.0;
+        int loc_0b773;
+        highp float loc_a77da;
+        highp float loc_288b6;
+        for (int loc_840b5 = 0, loc_8c11c = 0; loc_840b5 < loc_933da; loc_8c11c = loc_0b773, loc_84203 = loc_288b6, loc_6cb34 = loc_a77da, loc_840b5++)
         {
-            int loc_e04ea = int(CascadesPerSet[loc_5264b]);
-            highp mat4 loc_f0ccd;
-            loc_f0ccd = loc_c0243;
-            highp mat4 loc_6af8a;
-            for (int loc_ba2a0 = 0; loc_ba2a0 < loc_e04ea; loc_f0ccd = loc_6af8a, loc_ba2a0++)
+            int loc_3ddd0 = min((loc_8c11c + int(CascadesPerSet[loc_840b5])), 8);
+            loc_288b6 = loc_84203;
+            loc_a77da = loc_6cb34;
+            loc_0b773 = loc_8c11c;
+            int loc_620dd;
+            highp float loc_ac3e2;
+            highp float loc_6ac75;
+            for (; loc_0b773 < loc_3ddd0; loc_288b6 = loc_6ac75, loc_a77da = loc_ac3e2, loc_0b773 = loc_620dd)
             {
-                int loc_5d0fd = loc_35690 + loc_ba2a0;
-                if (loc_5d0fd >= 8)
+                highp vec4 loc_0391e = CascadesShadowProj[loc_0b773] * vec4(loc_28854, 1.0);
+                highp vec3 loc_f82b9 = abs(loc_0391e.xyz);
+                bool loc_54586 = loc_f82b9.x <= 1.0;
+                bool loc_d55ba;
+                if (loc_54586)
                 {
-                    loc_c2344 = loc_f0ccd;
-                    loc_d1899 = loc_5150e;
-                    loc_0d7a8 = loc_c0909;
-                    break;
-                }
-                highp vec4 loc_0b98f;
-                bool loc_07230;
-                func_17084(loc_0b98f, loc_5d0fd, loc_30919, loc_6af8a, loc_07230, loc_f0ccd);
-                highp vec4 loc_e2716 = loc_0b98f;
-                if (!loc_07230)
-                {
-                    continue;
-                }
-                highp float loc_e3626 = clamp(loc_93b5c, loc_c54e0[loc_5d0fd], 1.0);
-                highp float loc_0ebc3 = CascadesParameters[loc_5d0fd].y + (CascadesParameters[loc_5d0fd].z * (sqrt(1.0 - (loc_e3626 * loc_e3626)) / loc_e3626));
-                highp float loc_6a01d = SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.z * length(loc_6af8a * vec4(0.0, 0.0, 1.0, 0.0));
-                int loc_cf72f;
-                if (QuantizationParameters.x != 0.0)
-                {
-                    loc_cf72f = 1;
+                    loc_d55ba = loc_f82b9.y <= 1.0;
                 }
                 else
                 {
-                    loc_cf72f = clamp(int(CascadesParameters[loc_5d0fd].w + 0.5), 1, 9);
+                    loc_d55ba = loc_54586;
                 }
-                int loc_2b064 = loc_cf72f / 2;
-                highp vec2 loc_c324a = ((vec2(loc_e2716.x, loc_e2716.y) * 0.5) + vec2(0.5)) * CascadesParameters[loc_5d0fd].x;
-                highp float loc_19971 = (loc_e2716.z * 0.5) + 0.5;
-                loc_c324a.y += (1.0 - CascadesParameters[loc_5d0fd].x);
-                highp float loc_4e095;
-                highp float loc_5c92c;
-                loc_5c92c = 0.0;
-                loc_4e095 = 0.0;
-                highp float loc_444ba;
-                highp float loc_898f0;
-                for (int loc_e34b5 = 0; loc_e34b5 < loc_cf72f; loc_5c92c = loc_898f0, loc_4e095 = loc_444ba, loc_e34b5++)
+                bool loc_18633;
+                if (loc_d55ba)
                 {
-                    loc_898f0 = loc_5c92c;
-                    loc_444ba = loc_4e095;
-                    highp float loc_8ac7d;
-                    highp float loc_3cd49;
-                    for (int loc_3eaff = 0; loc_3eaff < loc_cf72f; loc_898f0 = loc_3cd49, loc_444ba = loc_8ac7d, loc_3eaff++)
+                    loc_18633 = loc_f82b9.z <= 1.0;
+                }
+                else
+                {
+                    loc_18633 = loc_d55ba;
+                }
+                if (loc_18633)
+                {
+                    highp vec4 loc_569e5 = loc_0391e;
+                    highp vec4 loc_49c0e = NdLFloor;
+                    highp float loc_34935 = clamp(loc_05e4d, loc_49c0e[loc_0b773], 1.0);
+                    highp float loc_bac6a = CascadesParameters[loc_0b773].y + (CascadesParameters[loc_0b773].z * (sqrt(1.0 - (loc_34935 * loc_34935)) / loc_34935));
+                    highp float loc_d3a5b = SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.z * length(CascadesShadowInvProj[loc_0b773] * vec4(0.0, 0.0, 1.0, 0.0));
+                    int loc_98038;
+                    if (QuantizationParameters.x != 0.0)
                     {
-                        highp vec2 loc_237bd = loc_c324a + ((vec2(float(loc_3eaff - loc_2b064) + 0.5, float(loc_e34b5 - loc_2b064) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_5d0fd].x);
-                        highp vec4 loc_15033 = textureGather(s_ShadowCascades, vec3(loc_237bd, float(loc_5d0fd)));
-                        highp vec4 loc_a366c = loc_15033;
-                        highp vec2 loc_e2c03 = fract((loc_237bd * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
-                        highp vec4 loc_2d037 = vec4(1.0) - smoothstep(vec4(0.0), vec4(1.0), (vec4(loc_19971) - loc_15033) * loc_6a01d);
-                        highp vec2 loc_7086f = loc_e2c03;
-                        loc_8ac7d = loc_444ba + mix(mix(loc_2d037.w, loc_2d037.z, loc_7086f.x), mix(loc_2d037.x, loc_2d037.y, loc_7086f.x), loc_7086f.y);
-                        if (QuantizationParameters.x != 0.0)
+                        loc_98038 = 1;
+                    }
+                    else
+                    {
+                        loc_98038 = clamp(int(CascadesParameters[loc_0b773].w + 0.5), 1, 9);
+                    }
+                    int loc_960ef = loc_98038 / 2;
+                    highp vec2 loc_63e61 = ((vec2(loc_569e5.x, loc_569e5.y) * 0.5) + vec2(0.5)) * CascadesParameters[loc_0b773].x;
+                    highp float loc_7263a = (loc_569e5.z * 0.5) + 0.5;
+                    loc_63e61.y += (1.0 - CascadesParameters[loc_0b773].x);
+                    highp float loc_94392;
+                    highp float loc_89b67;
+                    loc_89b67 = 0.0;
+                    loc_94392 = 0.0;
+                    highp float loc_bb531;
+                    highp float loc_c824b;
+                    for (int loc_8ad4e = 0; loc_8ad4e < loc_98038; loc_89b67 = loc_c824b, loc_94392 = loc_bb531, loc_8ad4e++)
+                    {
+                        loc_c824b = loc_89b67;
+                        loc_bb531 = loc_94392;
+                        highp float loc_8794a;
+                        highp float loc_befb6;
+                        for (int loc_6a5e1 = 0; loc_6a5e1 < loc_98038; loc_c824b = loc_befb6, loc_bb531 = loc_8794a, loc_6a5e1++)
                         {
-                            loc_3cd49 = loc_898f0 + float(loc_a366c.w >= (loc_19971 - loc_0ebc3));
-                        }
-                        else
-                        {
-                            highp vec4 loc_f7572 = step(vec4(loc_19971 - loc_0ebc3), loc_15033);
-                            highp vec2 loc_df6bc = loc_e2c03;
-                            loc_3cd49 = loc_898f0 + mix(mix(loc_f7572.w, loc_f7572.z, loc_df6bc.x), mix(loc_f7572.x, loc_f7572.y, loc_df6bc.x), loc_df6bc.y);
+                            highp vec2 loc_3cc8b = loc_63e61 + ((vec2(float(loc_6a5e1 - loc_960ef) + 0.5, float(loc_8ad4e - loc_960ef) + 0.5) * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.x) * CascadesParameters[loc_0b773].x);
+                            highp vec4 loc_0c1b5 = textureGather(s_ShadowCascades, vec3(loc_3cc8b, float(loc_0b773)));
+                            highp vec4 loc_1e988 = loc_0c1b5;
+                            highp vec2 loc_89c3c = fract((loc_3cc8b * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.z) + vec2(0.5));
+                            highp vec4 loc_0edfa = vec4(1.0) - smoothstep(vec4(0.0), vec4(1.0), (vec4(loc_7263a) - loc_0c1b5) * loc_d3a5b);
+                            highp vec2 loc_df6bc = loc_89c3c;
+                            loc_8794a = loc_bb531 + mix(mix(loc_0edfa.w, loc_0edfa.z, loc_df6bc.x), mix(loc_0edfa.x, loc_0edfa.y, loc_df6bc.x), loc_df6bc.y);
+                            if (QuantizationParameters.x != 0.0)
+                            {
+                                loc_befb6 = loc_c824b + float(loc_1e988.w >= (loc_7263a - loc_bac6a));
+                            }
+                            else
+                            {
+                                highp vec4 loc_6da26 = step(vec4(loc_7263a - loc_bac6a), loc_0c1b5);
+                                highp vec2 loc_4ce21 = loc_89c3c;
+                                loc_befb6 = loc_c824b + mix(mix(loc_6da26.w, loc_6da26.z, loc_4ce21.x), mix(loc_6da26.x, loc_6da26.y, loc_4ce21.x), loc_4ce21.y);
+                            }
                         }
                     }
+                    loc_6ac75 = min(loc_288b6, loc_94392 / float(loc_98038 * loc_98038));
+                    loc_ac3e2 = min(loc_a77da, loc_89b67 / float(loc_98038 * loc_98038));
+                    loc_620dd = loc_3ddd0;
                 }
-                loc_c2344 = loc_6af8a;
-                loc_d1899 = min(loc_5150e, loc_4e095 / float(loc_cf72f * loc_cf72f));
-                loc_0d7a8 = min(loc_c0909, loc_5c92c / float(loc_cf72f * loc_cf72f));
-                break;
+                else
+                {
+                    loc_6ac75 = loc_288b6;
+                    loc_ac3e2 = loc_a77da;
+                    loc_620dd = loc_0b773 + 1;
+                }
             }
-            loc_f4afa = loc_35690 + loc_e04ea;
         }
-        highp float loc_fc44d;
+        highp float loc_ace78;
         if (int(FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions.x) > 0)
         {
             highp vec4 loc_a39dc = NdLFloor;
-            highp float loc_cd479;
-            func_59bf3(loc_30919, loc_93b5c, loc_a39dc, loc_cd479);
-            loc_fc44d = min(loc_c0909, loc_cd479);
+            highp float loc_80bb3;
+            func_59bf3(loc_28854, loc_05e4d, loc_a39dc, loc_80bb3);
+            loc_ace78 = loc_80bb3;
         }
         else
         {
-            loc_fc44d = loc_c0909;
+            loc_ace78 = 1.0;
         }
         bool loc_77735 = int(CloudShadowsVisible.x) > 0;
         bool loc_b7d63;
@@ -456,14 +430,14 @@ void func_93e04(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout hi
         {
             loc_b7d63 = loc_77735;
         }
-        highp float loc_4c338;
+        highp float loc_e5d4d;
         if (loc_b7d63)
         {
             highp vec4 loc_c8015 = NdLFloor;
-            highp vec4 loc_8ad63 = CloudShadowProj * vec4(loc_30919, 1.0);
+            highp vec4 loc_8ad63 = CloudShadowProj * vec4(loc_28854, 1.0);
             highp vec4 loc_ac654 = loc_8ad63;
             loc_ac654 = loc_8ad63 / vec4(loc_ac654.w);
-            highp float loc_12cc8 = clamp(loc_93b5c, loc_c8015.x, 1.0);
+            highp float loc_12cc8 = clamp(loc_05e4d, loc_c8015.x, 1.0);
             loc_ac654.z -= ((CascadesParameters[0].y + (CascadesParameters[0].z * (sqrt(1.0 - (loc_12cc8 * loc_12cc8)) / loc_12cc8))) / loc_ac654.w);
             highp vec2 loc_340fb = ((vec2(loc_ac654.x, loc_ac654.y) * 0.5) + vec2(0.5)) * CascadesParameters[0].x;
             int loc_44da4;
@@ -501,29 +475,29 @@ void func_93e04(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout hi
                     }
                 }
             }
-            highp float loc_9f028 = loc_99071 / float(loc_44da4 * loc_44da4);
-            highp float loc_58ee6;
-            if (loc_9f028 < 1.0)
+            highp float loc_a9287 = loc_99071 / float(loc_44da4 * loc_44da4);
+            highp float loc_1bbb8;
+            if (loc_a9287 < 1.0)
             {
-                loc_58ee6 = min(loc_fc44d, max(loc_9f028, 1.0 - EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.w));
+                loc_1bbb8 = min(1.0, max(loc_a9287, 1.0 - EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.w));
             }
             else
             {
-                loc_58ee6 = loc_fc44d;
+                loc_1bbb8 = 1.0;
             }
-            loc_4c338 = loc_58ee6;
+            loc_e5d4d = loc_1bbb8;
         }
         else
         {
-            loc_4c338 = loc_fc44d;
+            loc_e5d4d = 1.0;
         }
-        loc_f89fe = loc_5150e;
-        loc_58556 = mix(loc_4c338, 1.0, smoothstep(max(0.0, ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y - 8.0), ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y, -arg_d7698.z));
+        loc_f89fe = loc_84203;
+        loc_acdcc = mix(min(loc_6cb34, min(loc_ace78, loc_e5d4d)), 1.0, smoothstep(max(0.0, ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y - 8.0), ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y, -arg_3f549.z));
     }
     else
     {
         loc_f89fe = 1.0;
-        loc_58556 = 1.0;
+        loc_acdcc = 1.0;
     }
     highp vec3 loc_52f44 = normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz);
     highp vec4 loc_85a44 = DirectionalLightSourceDiffuseColorAndIlluminance;
@@ -543,9 +517,10 @@ void func_93e04(inout highp vec4 arg_6739f, inout highp vec3 arg_87514, inout hi
     highp float loc_9b2bc = loc_e86cf * loc_e86cf;
     highp vec3 loc_00b7f = arg_08b90 + ((vec3(1.0) - arg_08b90) * ((loc_9b2bc * loc_9b2bc) * loc_e86cf));
     highp vec3 loc_82e5e = arg_bcfb6 * (1.0 - arg_b14d8);
-    arg_87514 = ((((((vec3(1.0) - loc_00b7f) * mix(loc_947b2, max((dot(arg_58fab, loc_52f44) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (loc_d8782 * loc_d8782), 0.0), arg_67b92)) * (loc_82e5e * vec3(0.3183098733425140380859375))) * loc_58556) + (((loc_82e5e * vec3(0.3183098733425140380859375)) * (arg_67b92 * max((dot(-arg_58fab, loc_52f44) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (loc_65d74 * loc_65d74), 0.0))) * loc_f89fe)) * loc_08df4) * DiffuseSpecularEmissiveAmbientTermToggles.x;
-    arg_c03dc = ((((((loc_00b7f * (loc_3da81 / ((loc_c16ab * loc_c16ab) * 3.1415927410125732421875))) * ((loc_fefd5 / (((loc_fefd5 * (1.0 - loc_4fd72)) + loc_4fd72) + 9.9999997473787516355514526367188e-05)) * (loc_947b2 / (((loc_947b2 * (1.0 - loc_4fd72)) + loc_4fd72) + 9.9999997473787516355514526367188e-05)))) / vec3(((4.0 * loc_947b2) * loc_fefd5) + 9.9999997473787516355514526367188e-05)) * loc_947b2) * loc_58556) * loc_08df4) * DiffuseSpecularEmissiveAmbientTermToggles.y;
+    arg_87514 = ((((((vec3(1.0) - loc_00b7f) * mix(loc_947b2, max((dot(arg_58fab, loc_52f44) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (loc_d8782 * loc_d8782), 0.0), arg_67b92)) * (loc_82e5e * vec3(0.3183098733425140380859375))) * loc_acdcc) + (((loc_82e5e * vec3(0.3183098733425140380859375)) * (arg_67b92 * max((dot(-arg_58fab, loc_52f44) + SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.y) / (loc_65d74 * loc_65d74), 0.0))) * loc_f89fe)) * loc_08df4) * DiffuseSpecularEmissiveAmbientTermToggles.x;
+    arg_c03dc = ((((((loc_00b7f * (loc_3da81 / ((loc_c16ab * loc_c16ab) * 3.1415927410125732421875))) * ((loc_fefd5 / (((loc_fefd5 * (1.0 - loc_4fd72)) + loc_4fd72) + 9.9999997473787516355514526367188e-05)) * (loc_947b2 / (((loc_947b2 * (1.0 - loc_4fd72)) + loc_4fd72) + 9.9999997473787516355514526367188e-05)))) / vec3(((4.0 * loc_947b2) * loc_fefd5) + 9.9999997473787516355514526367188e-05)) * loc_947b2) * loc_acdcc) * loc_08df4) * DiffuseSpecularEmissiveAmbientTermToggles.y;
 }
+#ifdef POINT_LIGHT_SHADING__ON
 void func_5d077(inout highp float arg_958de, inout highp vec2 arg_e6843, inout highp float arg_33edf, inout highp vec2 arg_410bb, inout highp vec3 arg_e0671) {
     if (arg_958de < arg_e6843.x)
     {
@@ -584,9 +559,9 @@ void func_5d077(inout highp float arg_958de, inout highp vec2 arg_e6843, inout h
     }
     arg_33edf = floor((log2(arg_958de / arg_410bb.y) * ((arg_e0671.z - 2.0) / log2(arg_e6843.y / arg_410bb.y))) + 2.0);
 }
-void func_b99c3(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
+void func_f0232(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
     highp float loc_28341 = -arg_9f603.z;
-    highp vec2 loc_1b48c = v_texcoord0;
+    highp vec2 loc_72053 = v_texcoord0.xy;
     highp vec3 loc_fd394 = ClusterDimensions.xyz;
     highp vec2 loc_703d4 = ClusterNearFarWidthHeight.zw;
     highp vec2 loc_d7b5c = ClusterSize.xy;
@@ -594,7 +569,7 @@ void func_b99c3(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     highp vec2 loc_eee23 = ClusterDepthBounds.xy;
     highp float loc_5de3f;
     func_5d077(loc_28341, loc_909cb, loc_5de3f, loc_eee23, loc_fd394);
-    highp vec3 loc_60667 = vec3(floor((loc_1b48c.x * loc_703d4.x) / loc_d7b5c.x), floor((loc_1b48c.y * loc_703d4.y) / loc_d7b5c.y), loc_5de3f);
+    highp vec3 loc_60667 = vec3(floor((loc_72053.x * loc_703d4.x) / loc_d7b5c.x), floor((loc_72053.y * loc_703d4.y) / loc_d7b5c.y), loc_5de3f);
     bool loc_ce27d = loc_60667.x < 0.0;
     bool loc_f15a5;
     if (!loc_ce27d)
@@ -654,13 +629,13 @@ void func_b99c3(inout highp vec3 arg_9f603, inout int arg_e45b8, inout int arg_f
     arg_d7f4c = true;
 }
 void func_bbb6d(inout int arg_826b5, inout highp float arg_9eee0, inout highp float arg_6b488, inout highp vec3 arg_aee55, inout highp vec3 arg_1111c, inout highp float arg_77c90) {
-    if (var_49c86.zLights[arg_826b5].shadowProbeIndex < 0)
+    if (var_cbe06.zLights[arg_826b5].shadowProbeIndex < 0)
     {
         arg_9eee0 = 1.0;
         arg_6b488 = 1.0;
         return;
     }
-    highp vec3 loc_44ea9 = arg_aee55 - var_49c86.zLights[arg_826b5].position.xyz;
+    highp vec3 loc_44ea9 = arg_aee55 - var_cbe06.zLights[arg_826b5].position.xyz;
     highp vec3 loc_0b3e9 = abs(loc_44ea9);
     bool loc_ab77c = loc_0b3e9.x >= loc_0b3e9.y;
     bool loc_ca7f9;
@@ -706,7 +681,7 @@ void func_bbb6d(inout int arg_826b5, inout highp float arg_9eee0, inout highp fl
     {
         loc_f715f.y *= (-1.0);
     }
-    highp float loc_e670f = (textureLod(s_PointLightShadowTextureArray, vec4(loc_f715f, float(var_49c86.zLights[arg_826b5].shadowProbeIndex)), 0.0).x * 2.0) - 1.0;
+    highp float loc_e670f = (textureLod(s_PointLightShadowTextureArray, vec4(loc_f715f, float(var_cbe06.zLights[arg_826b5].shadowProbeIndex)), 0.0).x * 2.0) - 1.0;
     highp float loc_591c8;
     if (loc_e670f >= loc_6114a.z)
     {
@@ -733,16 +708,16 @@ void func_bbb6d(inout int arg_826b5, inout highp float arg_9eee0, inout highp fl
     arg_9eee0 = loc_d7fd8;
     arg_6b488 = loc_591c8;
 }
-void func_28d9b(inout highp vec4 arg_e84ec, inout int arg_49c8c, inout highp float arg_43b7a, inout highp float arg_7f337, inout highp vec3 arg_ec226, inout highp vec3 arg_29ac4, inout highp vec3 arg_f6a53, inout highp vec3 arg_4f9dc, inout highp float arg_8bccf) {
+void func_eb281(inout highp vec4 arg_e84ec, inout int arg_0b9bc, inout highp float arg_43b7a, inout highp float arg_7f337, inout highp vec3 arg_0a2b9, inout highp vec3 arg_29ac4, inout highp vec3 arg_f6a53, inout highp vec3 arg_4f9dc, inout highp float arg_8bccf) {
     arg_e84ec = vec4(0.0);
-    if (arg_49c8c < 0)
+    if (arg_0b9bc < 0)
     {
         arg_43b7a = 1.0;
         arg_7f337 = 1.0;
-        arg_ec226 = vec3(0.0);
+        arg_0a2b9 = vec3(0.0);
         return;
     }
-    highp vec3 loc_8dfd7 = var_49c86.zLights[arg_49c8c].position.xyz - arg_29ac4;
+    highp vec3 loc_8dfd7 = var_cbe06.zLights[arg_0b9bc].position.xyz - arg_29ac4;
     highp vec3 loc_8cb9b = loc_8dfd7;
     highp float loc_3a449;
     if (ManhattanDistAttenuationEnabled.x > 0.0)
@@ -754,11 +729,11 @@ void func_28d9b(inout highp vec4 arg_e84ec, inout int arg_49c8c, inout highp flo
     {
         loc_3a449 = dot(loc_8dfd7, loc_8dfd7);
     }
-    if (loc_3a449 >= (var_49c86.zLights[arg_49c8c].position.w * var_49c86.zLights[arg_49c8c].position.w))
+    if (loc_3a449 >= (var_cbe06.zLights[arg_0b9bc].position.w * var_cbe06.zLights[arg_0b9bc].position.w))
     {
         arg_43b7a = 1.0;
         arg_7f337 = 1.0;
-        arg_ec226 = vec3(0.0);
+        arg_0a2b9 = vec3(0.0);
         return;
     }
     highp float loc_cddfe;
@@ -767,7 +742,7 @@ void func_28d9b(inout highp vec4 arg_e84ec, inout int arg_49c8c, inout highp flo
     {
         highp float loc_412fd;
         highp float loc_b2a04;
-        func_bbb6d(arg_49c8c, loc_b2a04, loc_412fd, arg_f6a53, arg_4f9dc, arg_8bccf);
+        func_bbb6d(arg_0b9bc, loc_b2a04, loc_412fd, arg_f6a53, arg_4f9dc, arg_8bccf);
         loc_a011d = loc_b2a04;
         loc_cddfe = loc_412fd;
     }
@@ -776,27 +751,27 @@ void func_28d9b(inout highp vec4 arg_e84ec, inout int arg_49c8c, inout highp flo
         loc_a011d = 1.0;
         loc_cddfe = 1.0;
     }
-    highp float loc_4c5a5 = loc_3a449 / ((var_49c86.zLights[arg_49c8c].position.w * var_49c86.zLights[arg_49c8c].position.w) + 9.9999997473787516355514526367188e-05);
+    highp float loc_4c5a5 = loc_3a449 / ((var_cbe06.zLights[arg_0b9bc].position.w * var_cbe06.zLights[arg_0b9bc].position.w) + 9.9999997473787516355514526367188e-05);
     highp float loc_fcfce = clamp(1.0 - (loc_4c5a5 * loc_4c5a5), 0.0, 1.0);
     highp float loc_e1ff6 = (1.0 / max(loc_3a449, 9.9999997473787516355514526367188e-05)) * (loc_fcfce * loc_fcfce);
-    highp float loc_4217d;
+    highp float loc_219c5;
     if (PointLightAttenuationWindowEnabled.x > 0.0)
     {
-        loc_4217d = loc_e1ff6 * clamp((smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, 1.0 - loc_e1ff6) * PointLightAttenuationWindow.z) + PointLightAttenuationWindow.w, 0.0, 1.0);
+        loc_219c5 = loc_e1ff6 * clamp((smoothstep(PointLightAttenuationWindow.x, PointLightAttenuationWindow.y, 1.0 - loc_e1ff6) * PointLightAttenuationWindow.z) + PointLightAttenuationWindow.w, 0.0, 1.0);
     }
     else
     {
-        loc_4217d = loc_e1ff6;
+        loc_219c5 = loc_e1ff6;
     }
     if (loc_cddfe > 0.0)
     {
-        highp vec3 loc_8226d = var_49c86.zLights[arg_49c8c].color.xyz * loc_4217d;
+        highp vec3 loc_8226d = var_cbe06.zLights[arg_0b9bc].color.xyz * loc_219c5;
         arg_e84ec = vec4(loc_8226d.x, loc_8226d.y, loc_8226d.z, arg_e84ec.w);
-        arg_e84ec.w = 1.0 - (loc_3a449 / ((var_49c86.zLights[arg_49c8c].position.w * var_49c86.zLights[arg_49c8c].position.w) + 9.9999997473787516355514526367188e-05));
+        arg_e84ec.w = 1.0 - (loc_3a449 / ((var_cbe06.zLights[arg_0b9bc].position.w * var_cbe06.zLights[arg_0b9bc].position.w) + 9.9999997473787516355514526367188e-05));
     }
     arg_43b7a = loc_a011d;
     arg_7f337 = loc_cddfe;
-    arg_ec226 = ((var_49c86.zLights[arg_49c8c].color.xyz * var_49c86.zLights[arg_49c8c].color.w) * loc_4217d) * DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z;
+    arg_0a2b9 = (var_cbe06.zLights[arg_0b9bc].color.xyz * var_cbe06.zLights[arg_0b9bc].color.w) * loc_219c5;
 }
 void func_bf953(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg_3289d, inout highp vec3 arg_98547, inout highp vec4 arg_33e52, inout highp vec3 arg_1418f, inout highp vec3 arg_fea00, inout highp vec3 arg_e4e64, inout highp vec3 arg_061f9, inout highp vec4 arg_33915, inout highp vec3 arg_04538, inout highp vec3 arg_dd9d3, inout highp float arg_f859b, inout highp float arg_f3664, inout highp vec3 arg_e6b36, inout highp vec3 arg_b8e73, inout highp vec3 arg_775e2) {
     highp vec4 loc_fa2ec = vec4(0.0);
@@ -810,7 +785,7 @@ void func_bf953(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     bool loc_a0bb1;
     int loc_490eb;
     int loc_c476d;
-    func_b99c3(arg_1418f, loc_c476d, loc_490eb, loc_a0bb1);
+    func_f0232(arg_1418f, loc_c476d, loc_490eb, loc_a0bb1);
     if (!loc_a0bb1)
     {
         arg_3289d = vec3(0.0);
@@ -835,7 +810,7 @@ void func_bf953(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
         {
             break;
         }
-        highp vec3 loc_287bb = normalize((u_view * vec4(var_49c86.zLights[loc_dbe64].position.xyz, 1.0)).xyz - arg_fea00);
+        highp vec3 loc_287bb = normalize((u_view * vec4(var_cbe06.zLights[loc_dbe64].position.xyz, 1.0)).xyz - arg_fea00);
         highp vec3 loc_6691c;
         highp vec3 loc_07fc6;
         highp vec3 loc_20211;
@@ -908,7 +883,7 @@ void func_bf953(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
         highp vec3 loc_ecd5d;
         highp float loc_8e513;
         highp float loc_4e3aa;
-        func_28d9b(loc_6407e, loc_dbe64, loc_4e3aa, loc_8e513, loc_ecd5d, arg_e6b36, arg_b8e73, arg_775e2, arg_f3664);
+        func_eb281(loc_6407e, loc_dbe64, loc_4e3aa, loc_8e513, loc_ecd5d, arg_e6b36, arg_b8e73, arg_775e2, arg_f3664);
         loc_fa2ec += loc_6407e;
         loc_ed2f2 = loc_33c65 + ((((loc_6691c * loc_8e513) + (loc_07fc6 * loc_4e3aa)) * loc_ecd5d) * DiffuseSpecularEmissiveAmbientTermToggles.x);
         loc_7c75a = loc_983e3 + (((loc_20211 * loc_8e513) * loc_ecd5d) * DiffuseSpecularEmissiveAmbientTermToggles.y);
@@ -923,10 +898,87 @@ void func_bf953(inout bool arg_9a2b4, inout bool arg_b6724, inout highp vec3 arg
     arg_98547 = loc_983e3;
     arg_33e52 = loc_fa2ec;
 }
+void func_de4ec(inout highp vec3 arg_4f139, inout highp vec3 arg_d5e4d, inout highp vec3 arg_5b214, inout highp vec3 arg_2f16d, inout highp vec4 arg_d4ca2, inout highp vec3 arg_d3364, inout highp vec3 arg_b40e7, inout highp vec3 arg_7ff36, inout highp vec3 arg_43c81, inout highp vec3 arg_1c32e, inout highp vec4 arg_98d83, inout highp vec3 arg_78aab, inout highp vec3 arg_17091, inout highp float arg_5bbba, inout highp float arg_30a5c, inout highp vec3 arg_721d3) {
+    if (!(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.z != 0.0))
+    {
+        arg_4f139 = arg_d5e4d;
+        arg_5b214 = arg_2f16d;
+        arg_d4ca2 = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
+    highp vec3 loc_88b27 = arg_d3364;
+    highp float loc_3707d;
+    if (ManhattanDistAttenuationEnabled.x > 0.0)
+    {
+        loc_3707d = (abs(loc_88b27.x) + abs(loc_88b27.y)) + abs(loc_88b27.z);
+    }
+    else
+    {
+        loc_3707d = length(arg_d3364);
+    }
+    bool loc_464cb = PointLightSpecularFadeOutParameters.x > 0.0;
+    highp float loc_f4966;
+    if (loc_464cb)
+    {
+        loc_f4966 = smoothstep(PointLightSpecularFadeOutParameters.x, PointLightSpecularFadeOutParameters.y, loc_3707d);
+    }
+    else
+    {
+        loc_f4966 = 0.0;
+    }
+    bool loc_49ba4 = !loc_464cb;
+    bool loc_69bf6;
+    if (!loc_49ba4)
+    {
+        loc_69bf6 = loc_464cb && (loc_3707d < PointLightSpecularFadeOutParameters.y);
+    }
+    else
+    {
+        loc_69bf6 = loc_49ba4;
+    }
+    bool loc_686c7 = PointLightDiffuseFadeOutParameters.x > 0.0;
+    highp float loc_deef1;
+    if (loc_686c7)
+    {
+        loc_deef1 = smoothstep(PointLightDiffuseFadeOutParameters.x, PointLightDiffuseFadeOutParameters.y, loc_3707d);
+    }
+    else
+    {
+        loc_deef1 = 0.0;
+    }
+    bool loc_70859 = !loc_686c7;
+    bool loc_bd5d8;
+    if (!loc_70859)
+    {
+        loc_bd5d8 = loc_686c7 && (loc_3707d < PointLightDiffuseFadeOutParameters.y);
+    }
+    else
+    {
+        loc_bd5d8 = loc_70859;
+    }
+    highp vec3 loc_e34b3;
+    if (int(QuantizationParameters.y) > 0)
+    {
+        loc_e34b3 = arg_b40e7;
+    }
+    else
+    {
+        loc_e34b3 = arg_7ff36;
+    }
+    highp vec3 loc_828a2 = arg_d3364;
+    highp vec4 loc_7d9e2;
+    highp vec3 loc_831de;
+    highp vec3 loc_78da3;
+    func_bf953(loc_69bf6, loc_bd5d8, loc_78da3, loc_831de, loc_7d9e2, loc_828a2, arg_d3364, arg_43c81, arg_1c32e, arg_98d83, arg_78aab, arg_17091, arg_5bbba, arg_30a5c, arg_7ff36, loc_e34b3, arg_721d3);
+    arg_4f139 = arg_d5e4d + (loc_78da3 * (1.0 - loc_deef1));
+    arg_5b214 = arg_2f16d + (loc_831de * (1.0 - loc_f4966));
+    arg_d4ca2 = loc_7d9e2;
+}
+#endif
 void main() {
-    highp vec4 var_158bd = texture(s_Normal, v_texcoord0);
-    highp vec4 var_d6549 = texture(s_SceneDepth, v_texcoord0);
-    highp float var_48a47 = (var_d6549.x * 2.0) - 1.0;
+    highp vec4 var_99c96 = texture(s_Normal, v_texcoord0.xy);
+    highp vec4 var_11add = texture(s_SceneDepth, v_texcoord0.xy);
+    highp float var_48a47 = (var_11add.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_48a47, 1.0);
     highp mat4 var_3460a = u_invProj;
     highp float var_eb413 = var_df846.x;
@@ -951,15 +1003,17 @@ void main() {
     highp float var_f7138 = var_1c342.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
     var_1c342 = var_3ee7d;
-    highp vec3 var_ea248 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
+    highp vec3 var_3e56e = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_e3d8f = var_3ee7d.xyz;
     highp vec3 var_eebcb = dFdx(var_e3d8f);
     highp vec3 var_211c8 = dFdy(var_e3d8f);
-    highp vec3 var_5acf5 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
-    highp vec3 var_7d782 = mod(var_ea248, vec3(QuantizationParameters.z));
-    highp vec3 var_bfb9a = (var_ea248 - (var_7d782 - (var_5acf5 * dot(var_7d782, var_5acf5)))) + WorldOrigin.xyz;
-    highp vec2 var_745cb = var_158bd.xy;
-    highp vec3 var_b0cb0 = vec3(var_158bd.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
+    highp vec3 var_b364c = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(var_eebcb), normalize(var_211c8))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
+    highp vec3 var_751a2 = mod(var_3e56e, vec3(QuantizationParameters.z));
+#ifdef POINT_LIGHT_SHADING__ON
+    highp vec3 var_108a6 = (var_3e56e - (var_751a2 - (var_b364c * dot(var_751a2, var_b364c)))) + WorldOrigin.xyz;
+#endif
+    highp vec2 var_745cb = var_99c96.xy;
+    highp vec3 var_b0cb0 = vec3(var_99c96.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
     if (var_b0cb0.z < 0.0)
     {
@@ -971,17 +1025,17 @@ void main() {
     }
     highp vec3 var_e6b69 = var_b0cb0;
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
-    highp vec3 var_60226 = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
-    highp vec3 var_9ae1f = normalize((u_view * vec4(var_60226, 0.0)).xyz);
-    highp vec4 var_124e5 = texture(s_ColorMetalnessSubsurface, v_texcoord0);
-    highp vec4 var_2a00e = var_124e5;
-    highp float var_89af8 = clamp(2.007874011993408203125 * (var_2a00e.w - 0.501960813999176025390625), 0.0, 1.0);
-    highp vec4 var_cbefb = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0);
-    highp vec3 var_a2baf = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
-    highp vec3 var_f3829 = var_20845.xyz;
+    highp vec3 var_48720 = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
+    highp vec3 var_bbd9d = normalize((u_view * vec4(var_48720, 0.0)).xyz);
+    highp vec4 var_9372e = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
+    highp vec4 var_2a00e = var_9372e;
+    highp float var_4d4cd = clamp(2.007874011993408203125 * (var_2a00e.w - 0.501960813999176025390625), 0.0, 1.0);
+    highp vec4 var_2e3b8 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
+    highp vec3 var_00911 = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
+    highp vec3 var_279a9 = var_20845.xyz;
     highp vec3 var_ce54f = vec3(v_projPosition.xy, var_48a47);
-    highp vec3 var_d1d8e = pow(max(var_124e5.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
-    highp vec3 var_dfc44 = vec3(0.039999999105930328369140625 * (1.0 - var_89af8)) + (var_d1d8e * var_89af8);
+    highp vec3 var_2b918 = pow(max(var_9372e.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
+    highp vec3 var_40fbc = vec3(0.039999999105930328369140625 * (1.0 - var_4d4cd)) + (var_2b918 * var_4d4cd);
     bool var_ff669 = CausticsParameters.x != 0.0;
     bool var_94c07;
     if (var_ff669)
@@ -992,37 +1046,21 @@ void main() {
     {
         var_94c07 = var_ff669;
     }
-    highp float var_84479;
+    highp float var_9a17a;
     if (var_94c07)
     {
-        highp vec4 var_b94ca = DirectionalLightSourceCausticsViewProj * vec4(var_a2baf - WorldOrigin.xyz, 1.0);
-        highp vec4 var_3ab6f = var_b94ca;
-        highp vec3 var_08d24 = var_b94ca.xyz / vec3(var_3ab6f.w);
-        var_08d24.y *= (-1.0);
-        highp vec2 var_a8b6a = (var_08d24.xy + vec2(1.0)) * 0.5;
-        highp float var_236dd = var_a8b6a.x;
-        highp float var_44bd7 = var_a8b6a.y;
-        highp vec2 var_3a399 = vec2(var_236dd, 1.0 - var_44bd7);
-        var_a8b6a = var_3a399;
-        highp vec2 var_e259e = var_3a399 * CausticsParameters.y;
-        highp float var_057f4;
+        highp vec2 var_47393 = (var_00911 - WorldOrigin.xyz).xz * CausticsParameters.y;
+        highp float var_57cde;
         if (CausticsTextureParameters.x != 0.0)
         {
-            highp float var_3e5be = var_e259e.x;
-            highp float var_31a58 = var_e259e.x;
-            highp float var_13623 = var_3e5be - floor(var_31a58);
-            highp float var_891d4 = var_e259e.y;
-            highp float var_ae62a = var_e259e.y;
-            highp float var_4a595 = var_891d4 - floor(var_ae62a);
-            var_e259e = vec2(var_13623, var_4a595);
-            var_057f4 = texture(s_CausticsTexture, vec3(var_13623, var_4a595, CausticsTextureParameters.y)).x * 2.0;
+            var_57cde = texture(s_CausticsTexture, vec3(var_47393, CausticsTextureParameters.y)).x * 2.0;
         }
         else
         {
             highp float var_174a2;
             highp float var_46142;
             highp vec2 var_fb2a7;
-            var_fb2a7 = var_e259e;
+            var_fb2a7 = var_47393;
             var_46142 = 0.0;
             var_174a2 = 0.0;
             highp float var_de54f;
@@ -1051,126 +1089,76 @@ void main() {
                 var_4a4e9 = var_5e4f2 * WaterSurfaceOctaveParameters.w;
                 var_67f3a = var_66997 + 1.39900004863739013671875;
             }
-            var_057f4 = var_174a2 / var_46142;
+            var_57cde = var_174a2 / var_46142;
         }
-        var_84479 = pow(var_057f4, float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
+        var_9a17a = pow(var_57cde * clamp(var_48720.y, 0.0, 1.0), float(int(CausticsParameters.z))) * float(int(CausticsParameters.z) + 1);
     }
     else
     {
-        var_84479 = 1.0;
+        var_9a17a = 1.0;
     }
     highp vec3 var_5bd0a = var_ce54f;
-    highp float var_2a1b2;
+#ifdef POINT_LIGHT_SHADING__ON
     highp vec4 var_9a0a9;
-    highp vec3 var_dcaab;
-    highp vec3 var_0fd64;
+#endif
+    highp vec3 var_f8b9a;
+    highp vec3 var_c45ad;
     if (var_5bd0a.z != 1.0)
     {
-        highp vec3 var_cdc15 = -(var_f3829 / vec3(length(var_f3829) + 9.9999997473787516355514526367188e-05));
-        highp float var_3fde4 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_2a00e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
-        highp vec3 var_92517 = var_f3829;
-        highp vec3 var_8b833;
+        highp vec3 var_cd073 = -(var_279a9 / vec3(length(var_279a9) + 9.9999997473787516355514526367188e-05));
+        highp float var_684e2 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_2a00e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
+        highp vec3 var_92517 = var_279a9;
+        highp vec3 var_81acf;
         if (int(QuantizationParameters.y) > 0)
         {
-            var_8b833 = var_bfb9a;
+#ifdef POINT_LIGHT_SHADING__OFF
+            var_81acf = (var_3e56e - (var_751a2 - (var_b364c * dot(var_751a2, var_b364c)))) + WorldOrigin.xyz;
+#endif
+#ifdef POINT_LIGHT_SHADING__ON
+            var_81acf = var_108a6;
+#endif
         }
         else
         {
-            var_8b833 = var_a2baf;
+            var_81acf = var_00911;
         }
-        highp vec3 var_4e5a9;
-        highp vec3 var_c2621;
-        func_93e04(var_cbefb, var_c2621, var_4e5a9, var_9ae1f, var_8b833, var_60226, var_92517, var_84479, var_cdc15, var_dfc44, var_d1d8e, var_89af8, var_3fde4);
-        highp vec3 var_850d6 = var_f3829;
-        highp float var_a89c0;
-        if (ManhattanDistAttenuationEnabled.x > 0.0)
-        {
-            var_a89c0 = (abs(var_850d6.x) + abs(var_850d6.y)) + abs(var_850d6.z);
-        }
-        else
-        {
-            var_a89c0 = length(var_f3829);
-        }
-        bool var_3ca7e = PointLightSpecularFadeOutParameters.x > 0.0;
-        highp float var_f999d;
-        if (var_3ca7e)
-        {
-            var_f999d = smoothstep(PointLightSpecularFadeOutParameters.x, PointLightSpecularFadeOutParameters.y, var_a89c0);
-        }
-        else
-        {
-            var_f999d = 0.0;
-        }
-        bool var_d0403 = !var_3ca7e;
-        bool var_bf718;
-        if (!var_d0403)
-        {
-            var_bf718 = var_3ca7e && (var_a89c0 < PointLightSpecularFadeOutParameters.y);
-        }
-        else
-        {
-            var_bf718 = var_d0403;
-        }
-        bool var_fe0c8 = PointLightDiffuseFadeOutParameters.x > 0.0;
-        highp float var_8de40;
-        if (var_fe0c8)
-        {
-            var_8de40 = smoothstep(PointLightDiffuseFadeOutParameters.x, PointLightDiffuseFadeOutParameters.y, var_a89c0);
-        }
-        else
-        {
-            var_8de40 = 0.0;
-        }
-        bool var_fc9d4 = !var_fe0c8;
-        bool var_5423d;
-        if (!var_fc9d4)
-        {
-            var_5423d = var_fe0c8 && (var_a89c0 < PointLightDiffuseFadeOutParameters.y);
-        }
-        else
-        {
-            var_5423d = var_fc9d4;
-        }
-        highp vec3 var_3a1b1;
-        if (int(QuantizationParameters.y) > 0)
-        {
-            var_3a1b1 = var_bfb9a;
-        }
-        else
-        {
-            var_3a1b1 = var_a2baf;
-        }
-        highp vec3 var_cdcc9 = var_f3829;
-        highp vec4 var_e4833;
-        highp vec3 var_da80f;
-        highp vec3 var_bb1ac;
-        func_bf953(var_bf718, var_5423d, var_bb1ac, var_da80f, var_e4833, var_cdcc9, var_f3829, var_9ae1f, var_cdc15, var_cbefb, var_dfc44, var_d1d8e, var_89af8, var_3fde4, var_a2baf, var_3a1b1, var_60226);
-        var_0fd64 = var_c2621 + (var_bb1ac * (1.0 - var_8de40));
-        var_dcaab = var_4e5a9 + (var_da80f * (1.0 - var_f999d));
-        var_9a0a9 = var_e4833;
-        var_2a1b2 = var_8de40;
+        highp vec3 var_d0e1a;
+        highp vec3 var_54add;
+        func_28cdb(var_2e3b8, var_54add, var_d0e1a, var_bbd9d, var_81acf, var_48720, var_92517, var_9a17a, var_cd073, var_40fbc, var_2b918, var_4d4cd, var_684e2);
+#ifdef POINT_LIGHT_SHADING__ON
+        highp vec4 var_b2434;
+        highp vec3 var_79a86;
+        highp vec3 var_7ac75;
+        func_de4ec(var_7ac75, var_54add, var_79a86, var_d0e1a, var_b2434, var_279a9, var_108a6, var_00911, var_bbd9d, var_cd073, var_2e3b8, var_40fbc, var_2b918, var_4d4cd, var_684e2, var_48720);
+        var_c45ad = var_7ac75;
+#endif
+#ifdef POINT_LIGHT_SHADING__OFF
+        var_c45ad = var_54add;
+        var_f8b9a = var_d0e1a;
+#endif
+#ifdef POINT_LIGHT_SHADING__ON
+        var_f8b9a = var_79a86;
+        var_9a0a9 = var_b2434;
+#endif
     }
     else
     {
-        var_0fd64 = vec3(0.0);
-        var_dcaab = vec3(0.0);
+        var_c45ad = vec3(0.0);
+        var_f8b9a = vec3(0.0);
+#ifdef POINT_LIGHT_SHADING__ON
         var_9a0a9 = vec4(0.0, 0.0, 0.0, 1.0);
-        var_2a1b2 = 0.0;
+#endif
     }
-    highp float var_20c11;
-    if (true)
-    {
-        var_20c11 = PointLightDiffuseFadeOutParameters.w;
-    }
-    else
-    {
-        var_20c11 = PointLightDiffuseFadeOutParameters.z + ((PointLightDiffuseFadeOutParameters.w - PointLightDiffuseFadeOutParameters.z) * var_2a1b2);
-    }
-    highp vec4 var_a97e2 = var_9a0a9;
-    highp float var_70d6e = var_cbefb.y * var_cbefb.y;
-    highp vec4 var_00308 = SkyAmbientLightColorIntensity;
-    highp float var_bd4f6 = var_cbefb.z * var_cbefb.z;
-    highp vec3 var_db82c = normalize(var_a2baf - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+#ifdef POINT_LIGHT_SHADING__OFF
+    highp vec4 var_eb9be = vec4(0.0, 0.0, 0.0, 1.0);
+#endif
+#ifdef POINT_LIGHT_SHADING__ON
+    highp vec4 var_eb9be = var_9a0a9;
+#endif
+    highp float var_b2f6b = var_2e3b8.y * var_2e3b8.y;
+    highp vec4 var_86e61 = SkyAmbientLightColorIntensity;
+    highp float var_e48a6 = var_2e3b8.z * var_2e3b8.z;
+    highp vec3 var_db82c = normalize(var_00911 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
     if (var_9b186)
@@ -1190,29 +1178,29 @@ void main() {
     {
         var_68aa1 = var_2b2d2;
     }
-    highp vec3 var_aacc4;
+    highp vec3 var_d9480;
     if (var_68aa1)
     {
-        highp vec4 var_2fd23 = vec4(1.0);
-        highp vec4 var_8490a = SkyAmbientLightColorIntensity;
-        var_aacc4 = max(((clamp(vec3(1.0 + (var_2fd23.x * var_2fd23.w), 1.0 + (var_2fd23.y * var_2fd23.w), 1.0 + (var_2fd23.z * var_2fd23.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * 1.0) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_8490a.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
+        highp vec4 var_0e954 = vec4(1.0);
+        highp vec4 var_4c0ec = SkyAmbientLightColorIntensity;
+        var_d9480 = max((clamp(vec3(1.0 + (var_0e954.x * var_0e954.w), 1.0 + (var_0e954.y * var_0e954.w), 1.0 + (var_0e954.z * var_0e954.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_4c0ec.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
     }
     else
     {
-        var_aacc4 = vec3(0.0);
+        var_d9480 = vec3(0.0);
     }
     highp vec3 var_1bb57;
     highp float var_bdb1d;
     if (AtmosphericScatteringToggles.x != 0.0)
     {
-        highp float var_79b3e = clamp((((length(var_f3829) / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) * FogAndDistanceControl.y, 0.0, 1.0);
+        highp float var_79b3e = clamp((((length(var_279a9) / FogAndDistanceControl.z) + RenderChunkFogAlpha.x) - FogAndDistanceControl.x) * FogAndDistanceControl.y, 0.0, 1.0);
         highp vec3 var_138a7;
         if (var_79b3e > 0.0)
         {
             highp vec3 var_fe67e;
             if (AtmosphericScatteringToggles.y != 0.0)
             {
-                var_fe67e = FogColor.xyz * max(var_aacc4, vec3(1.0));
+                var_fe67e = FogColor.xyz * max(var_d9480, vec3(1.0));
             }
             else
             {
@@ -1244,9 +1232,9 @@ void main() {
         var_bdb1d = 0.0;
         var_1bb57 = vec3(0.0);
     }
-    highp vec4 var_7c1c5 = vec4(var_1bb57, var_bdb1d);
-    highp vec4 var_4613c = var_7c1c5;
-    highp vec4 var_274a8;
+    highp vec4 var_ef5ff = vec4(var_1bb57, var_bdb1d);
+    highp vec4 var_2fb0b = var_ef5ff;
+    highp vec4 var_d76ce;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
@@ -1257,23 +1245,23 @@ void main() {
         highp vec3 var_9bf69 = vec3(var_8cf8f, var_115ba.y, log((53.598148345947265625 * ((((-var_cf4b5.z) / var_cf4b5.w) - var_65315.x) / (var_65315.y - var_65315.x))) + 1.0) * 0.25);
         highp float var_14f4f = (var_9bf69.z * float(var_dbde4.z)) - 0.5;
         int var_0e80b = clamp(int(var_14f4f), 0, var_dbde4.z - 2);
-        var_274a8 = mix(textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_115ba.y, float(var_0e80b)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_115ba.y, float(var_0e80b + 1)), 0.0), vec4(clamp(var_14f4f - float(var_0e80b), 0.0, 1.0)));
+        var_d76ce = mix(textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_115ba.y, float(var_0e80b)), 0.0), textureLod(s_ScatteringBuffer, vec3(var_8cf8f, var_115ba.y, float(var_0e80b + 1)), 0.0), vec4(clamp(var_14f4f - float(var_0e80b), 0.0, 1.0)));
     }
     else
     {
-        var_274a8 = vec4(0.0, 0.0, 0.0, 1.0);
+        var_d76ce = vec4(0.0, 0.0, 0.0, 1.0);
     }
-    highp vec4 var_52a80 = var_274a8;
-    highp vec4 var_88519 = vec4(var_274a8.xyz + (mix((((((var_d1d8e * (1.0 - var_89af8)) * max(((clamp(vec3(var_70d6e + (var_a97e2.x * var_a97e2.w), (var_70d6e * ((((var_70d6e * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_a97e2.y * var_a97e2.w), (var_70d6e * (((var_70d6e * var_70d6e) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_a97e2.z * var_a97e2.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) * var_20c11) + ((SkyAmbientLightColorIntensity.xyz * mix((var_bd4f6 * var_bd4f6) * var_cbefb.z, (var_cbefb.z * var_cbefb.z) * var_cbefb.z, CameraLightIntensity.y)) * var_00308.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_0fd64) + var_dcaab) + (((mix(var_d1d8e, vec3(dot(var_d1d8e, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_cbefb.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_7c1c5.xyz, vec3(var_4613c.w)) * var_52a80.w), 1.0);
+    highp vec4 var_7be2f = var_d76ce;
+    highp vec4 var_d47c1 = vec4(var_d76ce.xyz + (mix((((((var_2b918 * (1.0 - var_4d4cd)) * max((clamp(vec3(var_b2f6b + (var_eb9be.x * var_eb9be.w), (var_b2f6b * ((((var_b2f6b * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_eb9be.y * var_eb9be.w), (var_b2f6b * (((var_b2f6b * var_b2f6b) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_eb9be.z * var_eb9be.w)), vec3(0.0), vec3(1.0)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_e48a6 * var_e48a6) * var_2e3b8.z, (var_2e3b8.z * var_2e3b8.z) * var_2e3b8.z, CameraLightIntensity.y)) * var_86e61.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_c45ad) + var_f8b9a) + (((mix(var_2b918, vec3(dot(var_2b918, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_2e3b8.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_ef5ff.xyz, vec3(var_2fb0b.w)) * var_7be2f.w), 1.0);
     highp vec4 var_38beb;
     if (PreExposureEnabled.x > 0.0)
     {
-        highp vec3 var_02f69 = var_88519.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
-        var_38beb = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_88519.w);
+        highp vec3 var_02f69 = var_d47c1.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_38beb = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_d47c1.w);
     }
     else
     {
-        var_38beb = var_88519;
+        var_38beb = var_d47c1;
     }
     bgfx_FragColor = var_38beb;
 }
