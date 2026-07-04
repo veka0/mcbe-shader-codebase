@@ -15,19 +15,80 @@
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_MERSTexture;
 * - uniform lowp sampler2D s_NormalTexture;
 * - uniform lowp sampler2D s_ParticleTexture;
+* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
+* - uniform highp sampler2DArray s_ScatteringBuffer;
+* - uniform highp sampler2DArray s_ShadowCascades;
+* - layout(binding = 8, std430) buffer s_zGpuEntryBufferBuffer { GpuVolumeEntry s_zGpuEntryBuffer[]; };
+* - layout(binding = 9, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 10, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 11, std430) buffer s_zVoxelBufferBuffer { VoxelNode s_zVoxelBuffer[]; };
 *
 * Uniforms:
+* - uniform vec4 AmbientLightParams;
+* - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
+* - uniform vec4 CameraLightIntensity;
+* - uniform vec4 CascadesParameters[8];
+* - uniform vec4 CascadesPerSet;
+* - uniform mat4 CascadesShadowInvProj[8];
+* - uniform mat4 CascadesShadowProj[8];
+* - uniform vec4 CausticsParameters;
+* - uniform vec4 CausticsTextureParameters;
+* - uniform mat4 CloudShadowProj;
+* - uniform vec4 CloudShadowsVisible;
+* - uniform vec4 ClusterDepthBounds;
+* - uniform vec4 ClusterDimensions;
+* - uniform vec4 ClusterNearFarWidthHeight;
+* - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
+* - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
+* - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
+* - uniform vec4 DirectionalLightSourceShadowDirection;
+* - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
+* - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MERSUniforms;
+* - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MaterialID;
+* - uniform vec4 NdLFloor;
 * - uniform vec4 PBRTextureFlags;
+* - uniform mat4 PlayerShadowProj;
+* - uniform vec4 PointLightAttenuationWindow;
+* - uniform vec4 PointLightAttenuationWindowEnabled;
+* - uniform mat4 PointLightInvProj;
+* - uniform vec4 PointLightNdLFloor;
+* - uniform vec4 PointLightPreCalcValues;
+* - uniform mat4 PointLightProj;
+* - uniform vec4 PointLightShadowParams1;
+* - uniform vec4 PreExposureEnabled;
+* - uniform vec4 QuantizationParameters;
+* - uniform vec4 QuantizationPrecisionRoundingParameters;
+* - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
+* - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SubPixelOffset;
+* - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
+* - uniform vec4 Time;
+* - uniform vec4 ViewportScale;
+* - uniform vec4 VolumeDimensions;
+* - uniform vec4 VolumeNearFar;
+* - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
+* - uniform vec4 WaterAlbedoExtinction;
+* - uniform vec4 WaterExtinctionCoefficients;
+* - uniform vec4 WorldOrigin;
 */
 
 uniform mat4 u_model[4];

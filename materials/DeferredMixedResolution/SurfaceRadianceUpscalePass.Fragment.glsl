@@ -10,6 +10,10 @@
 * - FALLBACK_PASS (not used)
 * - SURFACE_RADIANCE_UPSCALE_PASS (not used)
 *
+* GPUBlockLighting:
+* - GPU_BLOCK_LIGHTING__OFF (not used)
+* - GPU_BLOCK_LIGHTING__ON (not used)
+*
 * PointLightShading:
 * - POINT_LIGHT_SHADING__OFF (not used)
 * - POINT_LIGHT_SHADING__ON (not used)
@@ -35,8 +39,10 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform lowp sampler2D s_SpecularLighting;
-* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 14, std430) buffer s_zGpuEntryBufferBuffer { GpuVolumeEntry s_zGpuEntryBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 17, std430) buffer s_zVoxelBufferBuffer { VoxelNode s_zVoxelBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -64,7 +70,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -72,6 +78,7 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 LightingUpscaleParams;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
@@ -293,7 +300,7 @@ void main() {
         highp vec3 var_84f2b = var_b1215;
         highp float var_59022 = (var_84f2b.z * 0.5) + 0.5;
         highp vec2 var_3fd73 = (floor((v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy) - vec2(0.5)) + vec2(0.5)) * DownsampleResolutionAndRecipResolution.zw;
-        highp vec2 var_1445f[4] = vec2[](var_3fd73, var_3fd73 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + DownsampleResolutionAndRecipResolution.zw);
+        highp vec2 var_9819f[4] = vec2[](var_3fd73, var_3fd73 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + DownsampleResolutionAndRecipResolution.zw);
         highp vec2 var_5d6bf = fract((v_texcoord0.xy - var_3fd73) * DownsampleResolutionAndRecipResolution.xy);
         highp vec4 var_cf9a1 = vec4(0.0);
         var_cf9a1.x = (1.0 - var_5d6bf.x) * (1.0 - var_5d6bf.y);
@@ -301,10 +308,10 @@ void main() {
         var_cf9a1.z = (1.0 - var_5d6bf.x) * var_5d6bf.y;
         var_cf9a1.w = var_5d6bf.x * var_5d6bf.y;
         highp vec4 var_68619 = var_cf9a1;
-        highp vec4 var_ab5de = vec4(0.0);
+        highp vec4 var_a2d89 = vec4(0.0);
         for (int var_f6465 = 0; var_f6465 < 4; var_f6465++)
         {
-            highp vec4 var_66319 = texture(s_NormalsAndDepthLighting, var_1445f[var_f6465]);
+            highp vec4 var_66319 = texture(s_NormalsAndDepthLighting, var_9819f[var_f6465]);
             highp vec2 var_7bee0 = (var_66319.xy * 2.0) - vec2(1.0);
             highp vec2 var_5e4f9 = var_7bee0;
             highp vec3 var_2af73 = vec3(var_7bee0, (1.0 - abs(var_5e4f9.x)) - abs(var_5e4f9.y));
@@ -321,18 +328,18 @@ void main() {
             var_2af73 = vec3(var_39782.x, var_39782.y, var_ba3b8.z);
             highp vec2 var_e5a13 = var_66319.zw;
             highp float var_a451c = ((var_e5a13.x * 65535.0) + var_e5a13.y) * 1.525902189314365386962890625e-05;
-            var_ab5de[var_f6465] = (clamp(exp2((dot(normalize(normalize(vec3(var_39782.x, var_39782.y, var_ba3b8.z))), var_4c056) - 1.0) * LightingUpscaleParams.x), 0.0, 1.0) * mix(6.1999999161344021558761596679688e-05 / (6.1999999161344021558761596679688e-05 + abs(var_59022 - var_a451c)), 0.0, max(step(1.0, var_59022), step(1.0, var_a451c)))) * var_68619[var_f6465];
+            var_a2d89[var_f6465] = (clamp(exp2((dot(normalize(normalize(vec3(var_39782.x, var_39782.y, var_ba3b8.z))), var_4c056) - 1.0) * LightingUpscaleParams.x), 0.0, 1.0) * mix(6.1999999161344021558761596679688e-05 / (6.1999999161344021558761596679688e-05 + abs(var_59022 - var_a451c)), 0.0, max(step(1.0, var_59022), step(1.0, var_a451c)))) * var_68619[var_f6465];
         }
-        highp vec2 var_efdab = var_ab5de.xy;
-        highp vec2 var_d1a8a = var_ab5de.zw;
-        highp vec2 var_e56de = vec2(var_efdab.x + var_efdab.y, var_d1a8a.x + var_d1a8a.y);
-        highp vec4 var_ef400 = mix(vec4(var_1445f[0], var_1445f[2]), vec4(var_1445f[1], var_1445f[3]), var_ab5de.yyww / (var_e56de.xxyy + vec4(6.1999999161344021558761596679688e-05)));
-        highp vec2 var_a039c = var_e56de;
-        highp vec2 var_6c09d = var_e56de / vec2((var_a039c.x + var_a039c.y) + 6.1999999161344021558761596679688e-05);
+        highp vec2 var_efdab = var_a2d89.xy;
+        highp vec2 var_d1a8a = var_a2d89.zw;
+        highp vec2 var_ab005 = vec2(var_efdab.x + var_efdab.y, var_d1a8a.x + var_d1a8a.y);
+        highp vec4 var_a3568 = mix(vec4(var_9819f[0], var_9819f[2]), vec4(var_9819f[1], var_9819f[3]), mix(vec4(0.0), var_a2d89.yyww / var_ab005.xxyy, greaterThan(var_ab005.xxyy, vec4(0.0))));
+        highp vec2 var_a039c = var_ab005;
+        highp vec2 var_6c09d = var_ab005 / vec2((var_a039c.x + var_a039c.y) + 6.1999999161344021558761596679688e-05);
         highp vec2 var_02a54 = var_6c09d;
         highp vec2 var_f2139 = var_6c09d;
-        var_cd655 = var_b4d3f * ((texture(s_DiffuseLighting, var_ef400.xy).xyz * var_02a54.x) + (texture(s_DiffuseLighting, var_ef400.zw).xyz * var_02a54.y));
-        var_0e02e = (texture(s_SpecularLighting, var_ef400.xy).xyz * var_f2139.x) + (texture(s_SpecularLighting, var_ef400.zw).xyz * var_f2139.y);
+        var_cd655 = var_b4d3f * ((texture(s_DiffuseLighting, var_a3568.xy).xyz * var_02a54.x) + (texture(s_DiffuseLighting, var_a3568.zw).xyz * var_02a54.y));
+        var_0e02e = (texture(s_SpecularLighting, var_a3568.xy).xyz * var_f2139.x) + (texture(s_SpecularLighting, var_a3568.zw).xyz * var_f2139.y);
 #endif
     }
     else
