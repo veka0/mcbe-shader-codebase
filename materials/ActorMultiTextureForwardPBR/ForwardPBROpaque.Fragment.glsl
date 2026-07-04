@@ -1097,50 +1097,18 @@ void main() {
         highp vec3 var_0d7aa;
         if ((var_f71fc & 8) == 8)
         {
-            highp vec2 var_ac6af = v_texcoord0;
-            highp vec3 var_73501 = vec3(0.0, 0.0, 1.0);
-            highp vec2 var_2b303 = var_ac6af;
-            highp vec2 var_4dc97 = var_2b303 * vec2(textureSize(s_NormalTexture, 0));
-            highp vec2 var_700bf = fract(var_4dc97);
-            if (abs(var_700bf.x - 0.5) < 0.0625)
-            {
-                var_ac6af.x += ((var_700bf.x > 0.5) ? 3.814697265625e-06 : (-3.814697265625e-06));
-            }
-            if (abs(var_700bf.y - 0.5) < 0.0625)
-            {
-                var_ac6af.y += ((var_700bf.y > 0.5) ? 3.814697265625e-06 : (-3.814697265625e-06));
-            }
-            highp vec4 var_fbe6c = textureGather(s_NormalTexture, var_ac6af);
-            highp vec2 var_6748a = fract(var_4dc97 + vec2(0.5));
-            highp vec2 var_2054b;
-            if (var_6748a.y > 0.5)
-            {
-                var_2054b = var_fbe6c.xy;
-            }
-            else
-            {
-                var_2054b = var_fbe6c.wz;
-            }
-            highp vec2 var_97412 = var_2054b;
-            ivec2 var_85f5c = ivec2(clamp(vec2(var_6748a.x - 0.083333335816860198974609375, var_6748a.x + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-            var_73501.x = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
-            highp vec2 var_d2f6f;
-            if (var_6748a.x > 0.5)
-            {
-                var_d2f6f = var_fbe6c.zy;
-            }
-            else
-            {
-                var_d2f6f = var_fbe6c.wx;
-            }
-            var_97412 = var_d2f6f;
-            var_85f5c = ivec2(clamp(vec2(var_6748a.y - 0.083333335816860198974609375, var_6748a.y + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-            var_73501.y = var_97412[var_85f5c.x] - var_97412[var_85f5c.y];
-            var_73501.z = 0.25;
-            highp vec3 var_822b4 = normalize(var_73501);
+            highp vec3 var_fdf06 = vec3(0.0, 0.0, 1.0);
+            highp vec4 var_7da43 = textureLod(s_NormalTexture, v_texcoord0, 0.0);
+            highp vec2 var_06cb5 = fract(v_texcoord0 * vec2(textureSize(s_NormalTexture, 0)));
+            var_fdf06.x = (step(0.916666686534881591796875, var_06cb5.x) * ((var_7da43.y * 2.0) - 1.0)) + (step(var_06cb5.x, 0.083333335816860198974609375) * (1.0 - (var_7da43.w * 2.0)));
+            var_fdf06.y = (step(0.916666686534881591796875, var_06cb5.y) * ((var_7da43.z * 2.0) - 1.0)) + (step(var_06cb5.y, 0.083333335816860198974609375) * (1.0 - (var_7da43.x * 2.0)));
+            var_fdf06.x = step(0.004999999888241291046142578125, abs(var_fdf06.x)) * var_fdf06.x;
+            var_fdf06.y = step(0.004999999888241291046142578125, abs(var_fdf06.y)) * var_fdf06.y;
+            var_fdf06.z = 0.25;
+            highp vec3 var_822b4 = normalize(var_fdf06);
             highp vec2 var_2df8f = var_822b4.xy * 1.0;
-            var_73501 = vec3(var_2df8f.x, var_2df8f.y, var_822b4.z);
-            var_0d7aa = normalize(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal)) * var_73501);
+            var_fdf06 = vec3(var_2df8f.x, var_2df8f.y, var_822b4.z);
+            var_0d7aa = normalize(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(v_normal)) * var_fdf06);
         }
         else
         {

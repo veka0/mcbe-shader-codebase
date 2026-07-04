@@ -168,7 +168,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_dc62c(inout highp float arg_e6305) {
     if (SkySamplesConfig.x > 0.5)
     {
@@ -449,15 +449,15 @@ void main() {
     }
     highp vec4 var_e68c0 = var_c8bd4;
     highp vec4 var_42ec2 = vec4(var_c8bd4.xyz + (mix((var_cd655 + var_0e02e) + (((mix(var_b4d3f, vec3(dot(var_b4d3f, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_c1cfe.y)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_5353f.xyz, vec3(var_8e056.w)) * var_e68c0.w), 1.0);
-    highp vec4 var_38beb;
+    highp vec4 var_d912f;
     if (PreExposureEnabled.x > 0.0)
     {
         highp vec3 var_02f69 = var_42ec2.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
-        var_38beb = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_42ec2.w);
+        var_d912f = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_42ec2.w);
     }
     else
     {
-        var_38beb = var_42ec2;
+        var_d912f = var_42ec2;
     }
-    bgfx_FragColor = var_38beb;
+    bgfx_FragData0 = var_d912f;
 }

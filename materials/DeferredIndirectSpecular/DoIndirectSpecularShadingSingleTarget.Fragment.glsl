@@ -162,7 +162,7 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -557,14 +557,14 @@ void main() {
     {
         var_f2e5a = var_51636;
     }
-    highp vec3 var_ec787;
+    highp vec3 var_0ffa6;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_ec787 = var_f2e5a * ((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
+        var_0ffa6 = var_f2e5a * ((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_ec787 = var_f2e5a;
+        var_0ffa6 = var_f2e5a;
     }
-    bgfx_FragColor = vec4(var_ec787, 1.0);
+    bgfx_FragData0 = vec4(var_0ffa6, 1.0);
 }

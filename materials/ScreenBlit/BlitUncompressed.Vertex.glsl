@@ -5,6 +5,7 @@
 *
 * Passes:
 * - BLIT_PASS (not used)
+* - BLIT_DEPTH_PASS (not used)
 * - BLIT_UNCOMPRESSED_PASS (not used)
 *
 * Available Resources:
