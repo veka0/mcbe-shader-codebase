@@ -79,6 +79,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -87,6 +88,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -181,6 +185,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec4 v_layerUv;
 out vec3 v_normal;
@@ -216,22 +221,24 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_abb3b = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_96145 = var_e43a8 * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__OFF
-    vec4 var_abb3b = var_c7bcb * vec4(a_position, 1.0);
+    vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
 #endif
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_bab0b = u_proj;
+    var_bab0b[2].x += SubPixelOffset.x;
+    var_bab0b[2].y -= SubPixelOffset.y;
+    vec4 var_c804c = var_bab0b * (u_view * vec4(var_96145.xyz, 1.0));
     vec4 var_4c816 = a_tangent;
     v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
+    v_clipPosition = var_c804c;
     v_color0 = a_color0;
     v_layerUv = vec4(var_1a9e2.x, var_1a9e2.y, var_fa5b0.x, var_fa5b0.y);
     v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_worldPos = var_abb3b.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_abb3b.xyz, 1.0));
+    v_worldPos = var_96145.xyz;
+    gl_Position = var_c804c;
 }

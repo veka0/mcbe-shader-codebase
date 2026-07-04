@@ -46,6 +46,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
@@ -73,7 +76,9 @@
 
 precision mediump float;
 precision highp int;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_view;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MERSTexture;
 uniform highp sampler2D s_MatTexture1;
@@ -85,6 +90,9 @@ uniform highp vec4 ActorFPEpsilon;
 uniform highp vec4 ChangeColor;
 #endif
 uniform highp vec4 ColorBased;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 EmissiveUniform;
 uniform highp vec4 MatColor;
 uniform highp vec4 MetalnessUniform;
@@ -98,6 +106,7 @@ uniform highp vec4 SubsurfaceUniform;
 uniform highp vec4 TileLightIntensity;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_bitangent;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
 in highp vec3 v_prevWorldPos;
@@ -118,6 +127,7 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+    highp mat4 View = u_view;
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
@@ -153,14 +163,14 @@ void main() {
 #endif
     var_d75c6.w = max(0.0, var_d75c6.w);
     highp vec4 var_e99e5 = texture(s_MatTexture1, v_texcoord0);
-    highp vec4 var_96f0e = var_e99e5;
+    highp vec4 var_18df3 = var_e99e5;
 #ifdef COLOR_SECOND_TEXTURE__ON
-    highp vec3 var_41dfa = mix(var_d75c6.xyz, var_e99e5.xyz, vec3(var_96f0e.w));
+    highp vec3 var_41dfa = mix(var_d75c6.xyz, var_e99e5.xyz, vec3(var_18df3.w));
 #endif
     highp vec4 var_27ca0 = texture(s_MatTexture2, v_texcoord0);
     highp vec4 var_b022d = var_27ca0;
 #ifdef COLOR_SECOND_TEXTURE__OFF
-    highp vec3 var_74dd6 = mix((mix(mix(var_d75c6.xyz, var_e99e5.xyz, vec3(var_96f0e.w)).xyz, var_27ca0.xyz, vec3(var_b022d.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec3 var_74dd6 = mix((mix(mix(var_d75c6.xyz, var_e99e5.xyz, vec3(var_18df3.w)).xyz, var_27ca0.xyz, vec3(var_b022d.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
 #endif
 #ifdef COLOR_SECOND_TEXTURE__ON
     highp vec4 var_ae4e6;
@@ -179,18 +189,42 @@ void main() {
 #ifdef COLOR_SECOND_TEXTURE__OFF
     highp vec4 var_3bf1c = vec4(var_74dd6.x, var_74dd6.y, var_74dd6.z, var_d75c6.w);
 #endif
-    highp vec4 var_128ce = var_3bf1c;
-    bool var_e5367 = var_128ce.w < 0.5;
-    bool var_f37f6;
-    if (var_e5367)
+    highp vec4 var_630c7 = var_3bf1c;
+    highp vec4 var_0ddfd = v_clipPosition;
+    highp vec2 var_77469 = DitherParams2[0].xy;
+    bool var_e71ae;
+    if (DitheringEnabledToggle.x != 0.0)
     {
-        var_f37f6 = var_96f0e.w < ActorFPEpsilon.x;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_0ddfd.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
+        highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
+        highp vec2 var_ccfe4 = floor(var_886c2);
+        var_e71ae = smoothstep(var_77469.x, var_77469.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_f37f6 = var_e5367;
+        var_e71ae = false;
     }
-    if (var_f37f6)
+    bool var_7df86;
+    if (!var_e71ae)
+    {
+        bool var_80f22 = var_630c7.w < 0.5;
+        bool var_f1731;
+        if (var_80f22)
+        {
+            var_f1731 = var_18df3.w < ActorFPEpsilon.x;
+        }
+        else
+        {
+            var_f1731 = var_80f22;
+        }
+        var_7df86 = var_f1731;
+    }
+    else
+    {
+        var_7df86 = var_e71ae;
+    }
+    if (var_7df86)
     {
         discard;
     }

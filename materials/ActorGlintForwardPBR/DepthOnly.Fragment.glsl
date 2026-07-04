@@ -69,6 +69,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -77,6 +78,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -163,18 +167,18 @@ centroid in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
 #ifdef MASKED_MULTITEXTURE__OFF
-    highp vec4 var_dca30 = MatColor * texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_6bc1f = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
 #ifdef MASKED_MULTITEXTURE__ON
     highp vec4 var_ade26 = texture(s_MatTexture1, v_texcoord0);
     highp vec4 var_76534 = var_ade26;
-    highp vec4 var_dca30 = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
+    highp vec4 var_6bc1f = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
 #endif
 #ifndef CHANGE_COLOR__OFF
-    if (mix(var_dca30.w, var_dca30.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x)
+    if (false || (mix(var_6bc1f.w, var_6bc1f.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x))
 #endif
 #ifdef CHANGE_COLOR__OFF
-    if (mix(var_dca30.w, var_dca30.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5)
+    if (false || (mix(var_6bc1f.w, var_6bc1f.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5))
 #endif
     {
         discard;

@@ -39,6 +39,9 @@
 * - uniform vec4 OcclusionHeightOffset;
 * - uniform vec4 PositionBaseOffset;
 * - uniform vec4 PositionForwardOffset;
+* - uniform vec4 PrevPositionBaseOffset;
+* - uniform vec4 PrevPositionForwardOffset;
+* - uniform vec4 SubPixelOffset;
 * - uniform vec4 UVOffsetAndScale;
 * - uniform vec4 Velocity;
 * - uniform vec4 ViewPosition;

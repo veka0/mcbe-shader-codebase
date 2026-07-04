@@ -46,6 +46,9 @@
 *
 * Uniforms:
 * - uniform vec4 CurrentColor;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
@@ -81,15 +84,21 @@ struct PBRTextureData {
 };
 
 layout(binding = 1, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_5f101;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_view;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
 #ifdef SEASONS__ON
 uniform highp sampler2D s_SeasonsTexture;
 #endif
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 TileLightIntensity;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_bitangent;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
 flat in int v_pbrTextureId;
@@ -230,10 +239,26 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+    highp mat4 View = u_view;
     highp vec4 var_47d7b = v_color0;
     highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_b580a = var_fe617;
-    if (var_b580a.w < 0.5)
+    highp vec4 var_a9bff = var_fe617;
+    highp vec4 var_0bfeb = v_clipPosition;
+    highp vec2 var_ded9f = DitherParams2[1].xy;
+    bool var_95a90;
+    if (DitheringEnabledToggle.x != 0.0)
+    {
+        highp vec2 var_376f6 = floor(((((v_clipPosition.xyz / vec3(var_0bfeb.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[1].z)) * DitherParams2[1].z;
+        highp vec2 var_c27b1 = floor(var_376f6 * 0.25);
+        highp vec2 var_a5f3b = floor(var_376f6 * 0.5);
+        highp vec2 var_ccfe4 = floor(var_376f6);
+        var_95a90 = smoothstep(var_ded9f.x, var_ded9f.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+    }
+    else
+    {
+        var_95a90 = false;
+    }
+    if (var_95a90 || (var_a9bff.w < 0.5))
     {
         discard;
     }

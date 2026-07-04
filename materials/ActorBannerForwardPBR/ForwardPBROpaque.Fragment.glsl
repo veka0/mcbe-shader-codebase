@@ -75,6 +75,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -83,6 +84,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -256,42 +260,6 @@ in highp vec3 v_tangent;
 centroid in highp vec4 v_texcoords;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
-void func_65dae(inout highp vec3 arg_14c07, inout highp float arg_3d8de) {
-    if (arg_14c07.x <= 0.040449999272823333740234375)
-    {
-        arg_3d8de = arg_14c07.x * 0.077399380505084991455078125;
-        return;
-    }
-    else
-    {
-        arg_3d8de = pow((arg_14c07.x + 0.054999999701976776123046875) * 0.947867333889007568359375, 2.400000095367431640625);
-        return;
-    }
-}
-void func_78d48(inout highp vec3 arg_ad8f4, inout highp float arg_d93f4) {
-    if (arg_ad8f4.y <= 0.040449999272823333740234375)
-    {
-        arg_d93f4 = arg_ad8f4.y * 0.077399380505084991455078125;
-        return;
-    }
-    else
-    {
-        arg_d93f4 = pow((arg_ad8f4.y + 0.054999999701976776123046875) * 0.947867333889007568359375, 2.400000095367431640625);
-        return;
-    }
-}
-void func_50a1f(inout highp vec3 arg_4e442, inout highp float arg_3aa09) {
-    if (arg_4e442.z <= 0.040449999272823333740234375)
-    {
-        arg_3aa09 = arg_4e442.z * 0.077399380505084991455078125;
-        return;
-    }
-    else
-    {
-        arg_3aa09 = pow((arg_4e442.z + 0.054999999701976776123046875) * 0.947867333889007568359375, 2.400000095367431640625);
-        return;
-    }
-}
 void func_59bf3(inout highp vec3 arg_3a8bb, inout highp float arg_13db0, inout highp vec4 arg_f7c69, inout highp float arg_7a26d) {
     highp vec4 loc_90e3d = PlayerShadowProj * vec4(arg_3a8bb, 1.0);
     highp float loc_fcb6d = clamp(arg_13db0, arg_f7c69.x, 1.0);
@@ -1176,19 +1144,45 @@ void main() {
     highp vec4 var_1e2a8 = var_773de;
     highp vec3 var_e9521 = var_1e2a8.xyz * var_13038.xyz;
     var_773de = vec4(var_e9521.x, var_e9521.y, var_e9521.z, var_1e2a8.w);
-    highp vec3 var_574b1 = var_e9521.xyz;
+    highp vec3 var_53e42 = var_e9521.xyz;
 #endif
 #ifdef TINTING__DISABLED
-    highp vec3 var_574b1 = var_1e2a8.xyz;
+    highp vec3 var_53e42 = var_1e2a8.xyz;
 #endif
-    highp float var_33fb0;
-    func_65dae(var_574b1, var_33fb0);
-    highp float var_1eaae;
-    func_78d48(var_574b1, var_1eaae);
-    highp float var_d75e7;
-    func_50a1f(var_574b1, var_d75e7);
-    highp vec3 var_a0775 = vec3(var_33fb0, var_1eaae, var_d75e7);
-    highp vec4 var_00ffb = vec4(var_a0775.x, var_a0775.y, var_a0775.z, var_1e2a8.w);
+    highp vec3 var_0fefe = var_53e42;
+    highp vec3 var_83526 = var_53e42 * vec3(0.077399380505084991455078125);
+    highp vec3 var_138ce = pow((var_53e42 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
+    highp float var_8f9f2;
+    if (var_0fefe.x <= 0.040449999272823333740234375)
+    {
+        var_8f9f2 = var_83526.x;
+    }
+    else
+    {
+        var_8f9f2 = var_138ce.x;
+    }
+    var_0fefe.x = var_8f9f2;
+    highp float var_96ac3;
+    if (var_0fefe.y <= 0.040449999272823333740234375)
+    {
+        var_96ac3 = var_83526.y;
+    }
+    else
+    {
+        var_96ac3 = var_138ce.y;
+    }
+    var_0fefe.y = var_96ac3;
+    highp float var_8ff8b;
+    if (var_0fefe.z <= 0.040449999272823333740234375)
+    {
+        var_8ff8b = var_83526.z;
+    }
+    else
+    {
+        var_8ff8b = var_138ce.z;
+    }
+    var_0fefe.z = var_8ff8b;
+    highp vec4 var_00ffb = vec4(var_0fefe.x, var_0fefe.y, var_0fefe.z, var_1e2a8.w);
     var_00ffb.w *= HudOpacity.x;
     highp vec4 var_d4180 = var_00ffb;
     highp vec4 var_9f386 = u_view * (u_model[0] * vec4(v_worldPos, 1.0));

@@ -41,6 +41,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 GlintColor;
@@ -87,6 +90,7 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec4 v_fog;
 out vec4 v_layerUv;
@@ -138,8 +142,9 @@ void main() {
     mat4 var_bab0b = u_proj;
     var_bab0b[2].x += SubPixelOffset.x;
     var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_cd7d8 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
-    vec4 var_27f6b = var_cd7d8;
+    vec4 var_04ab5 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
+    vec4 var_27f6b = var_04ab5;
+    v_clipPosition = var_04ab5;
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
     v_layerUv = vec4(var_1a9e2.x, var_1a9e2.y, var_fa5b0.x, var_fa5b0.y);
@@ -151,5 +156,5 @@ void main() {
 #endif
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_04231.xyz;
-    gl_Position = var_cd7d8;
+    gl_Position = var_04ab5;
 }

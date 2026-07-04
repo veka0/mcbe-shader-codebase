@@ -4,39 +4,41 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
-* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
+* - MOTION_ONLY_PASS (not used)
+* - TRANSPARENT_PASS (not used)
+*
+* FlipOcclusion:
+* - FLIP_OCCLUSION__OFF (not used)
+* - FLIP_OCCLUSION__ON (not used)
 *
 * Instancing:
-* - INSTANCING__OFF
-* - INSTANCING__ON
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON (not used)
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF
-* - RENDER_AS_BILLBOARDS__ON
+* NoOcclusion:
+* - NO_OCCLUSION__OFF (not used)
+* - NO_OCCLUSION__ON (not used)
 *
-* Seasons:
-* - SEASONS__OFF (not used)
-* - SEASONS__ON (not used)
+* NoVariety:
+* - NO_VARIETY__OFF
+* - NO_VARIETY__ON
 *
 * Available Resources:
 *
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform lowp sampler2D s_LightMapTexture;
-* - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 4, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - uniform lowp sampler2D s_LightingTexture;
+* - uniform lowp sampler2D s_OcclusionTexture;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
-* - uniform lowp sampler2D s_SeasonsTexture;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 11, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 12, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - uniform lowp sampler2D s_WeatherTexture;
+* - layout(binding = 10, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 11, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -60,6 +62,7 @@
 * - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
+* - uniform vec4 Dimensions;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
@@ -71,7 +74,6 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
-* - uniform vec4 GlobalRoughness;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -82,6 +84,7 @@
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
+* - uniform vec4 OcclusionHeightOffset;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
@@ -92,7 +95,11 @@
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PointLightSpecularFadeOutParameters;
+* - uniform vec4 PositionBaseOffset;
+* - uniform vec4 PositionForwardOffset;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 PrevPositionBaseOffset;
+* - uniform vec4 PrevPositionForwardOffset;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
@@ -105,103 +112,81 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
-* - uniform vec4 ViewPositionAndTime;
+* - uniform vec4 UVOffsetAndScale;
+* - uniform vec4 Velocity;
+* - uniform vec4 ViewPosition;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
-* - uniform vec4 WaterSurfaceOctaveParameters;
-* - uniform vec4 WaterSurfaceParameters;
-* - uniform vec4 WaterSurfaceWaveParameters;
 * - uniform vec4 WorldOrigin;
 */
 
-#ifdef INSTANCING__OFF
-uniform mat4 u_model[4];
-#endif
 uniform mat4 u_proj;
 uniform mat4 u_view;
+uniform vec4 Dimensions;
+uniform vec4 FogAndDistanceControl;
+uniform vec4 FogColor;
+uniform vec4 PositionBaseOffset;
+uniform vec4 PositionForwardOffset;
+uniform vec4 PrevPositionBaseOffset;
+uniform vec4 PrevPositionForwardOffset;
 uniform vec4 SubPixelOffset;
-#ifdef RENDER_AS_BILLBOARDS__ON
-uniform vec4 ViewPositionAndTime;
-#endif
+uniform vec4 UVOffsetAndScale;
+uniform vec4 Velocity;
+uniform vec4 ViewPosition;
 in vec4 a_color0;
-in vec2 a_texcoord1;
 in vec3 a_position;
 in vec2 a_texcoord0;
-#ifdef INSTANCING__ON
-in vec4 i_data1;
-in vec4 i_data2;
-in vec4 i_data3;
-#endif
-out vec3 v_bitangent;
 out vec4 v_color0;
-out vec2 v_ditheringAndMaskTinting;
-out vec2 v_lightmapUV;
-out vec3 v_normal;
-flat out int v_pbrTextureId;
-out vec3 v_tangent;
-centroid out vec2 v_texcoord0;
+out vec4 v_fog;
+out float v_occlusionHeight;
+out vec2 v_occlusionUV;
+out vec3 v_prevWorldPos;
+out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
+#ifdef NO_VARIETY__OFF
+    vec4 var_6c969 = a_color0;
 #endif
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (u_model[0] * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
+    vec2 var_49187 = a_texcoord0;
+#ifdef NO_VARIETY__OFF
+    vec2 var_181bc = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
+    var_181bc.x += ((var_6c969.x * 255.0) * UVOffsetAndScale.z);
 #endif
-#ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_cc6b6;
-    var_cc6b6[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_cc6b6[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_cc6b6[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_cc6b6[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = var_cc6b6 * vec4(a_position, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
-#endif
-    mat4 var_52789 = u_proj;
-    var_52789[2].x += SubPixelOffset.x;
-    var_52789[2].y -= SubPixelOffset.y;
-    vec2 var_c34f1 = a_texcoord1;
-    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
-    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
-    v_bitangent = vec3(0.0);
-#ifdef RENDER_AS_BILLBOARDS__OFF
+    vec3 var_5bfc0 = a_position + PositionBaseOffset.xyz;
+    vec3 var_4108f = vec3(30.0);
+    vec3 var_61547 = (vec3(var_5bfc0.x - (var_4108f.x * trunc(var_5bfc0.x / var_4108f.x)), var_5bfc0.y - (var_4108f.y * trunc(var_5bfc0.y / var_4108f.y)), var_5bfc0.z - (var_4108f.z * trunc(var_5bfc0.z / var_4108f.z))) - vec3(15.0)) + PositionForwardOffset.xyz;
+    vec3 var_91624 = var_61547;
+    mat4 var_e3981 = u_proj;
+    var_e3981[2].x += SubPixelOffset.x;
+    var_e3981[2].y -= SubPixelOffset.y;
+    vec4 var_1e5d3 = var_e3981 * (u_view * vec4(var_61547, 1.0));
+    vec4 var_8dd4e = var_1e5d3;
+    mat4 var_f9799 = u_proj;
+    var_f9799[2].x += SubPixelOffset.x;
+    var_f9799[2].y -= SubPixelOffset.y;
+    vec4 var_ac686 = var_f9799 * (u_view * vec4(var_61547 + (Velocity.xyz * Dimensions.y), 1.0));
+    vec4 var_fe173 = var_ac686;
+    vec2 var_67f44 = (var_ac686.xy / vec2(var_fe173.w)) - (var_1e5d3.xy / vec2(var_8dd4e.w));
+    vec4 var_defd3 = mix(var_ac686, var_1e5d3, vec4(var_49187.y));
+    vec2 var_4cdd6 = var_defd3.xy + ((normalize(vec2(-var_67f44.y, var_67f44.x)) * (0.5 - var_49187.x)) * Dimensions.x);
+    vec4 var_36755 = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
+    vec3 var_fe13b = a_position + PrevPositionBaseOffset.xyz;
+    vec3 var_293b1 = vec3(30.0);
     v_color0 = a_color0;
+    v_fog = vec4(FogColor.xyz, clamp(((var_36755.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_occlusionHeight = (var_91624.y + (ViewPosition.y - 0.5)) * 0.0039215688593685626983642578125;
+    v_occlusionUV = ((var_61547.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);
+    v_prevWorldPos = (vec3(var_fe13b.x - (var_293b1.x * trunc(var_fe13b.x / var_293b1.x)), var_fe13b.y - (var_293b1.y * trunc(var_fe13b.y / var_293b1.y)), var_fe13b.z - (var_293b1.z * trunc(var_fe13b.z / var_293b1.z))) - vec3(15.0)) + PrevPositionForwardOffset.xyz;
+#ifdef NO_VARIETY__OFF
+    v_texcoord0 = var_181bc;
 #endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_color0 = vec4(1.0);
+#ifdef NO_VARIETY__ON
+    v_texcoord0 = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
 #endif
-    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
-    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
-    v_normal = vec3(0.0);
-    v_pbrTextureId = 0;
-    v_tangent = vec3(0.0);
-    v_texcoord0 = a_texcoord0;
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_52789 * (u_view * vec4(var_a67a8.xyz, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_worldPos = var_91aa3;
-    gl_Position = var_52789 * (u_view * vec4(var_2cae0 - ((cross(var_b9097, var_3d861) * (var_0e57e.z - 0.5)) + (var_3d861 * (var_0e57e.x - 0.5))), 1.0));
-#endif
+    v_worldPos = var_61547;
+    gl_Position = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
 }

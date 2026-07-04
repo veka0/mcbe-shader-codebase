@@ -40,6 +40,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform mat4 CubemapRotation;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -89,6 +90,7 @@ uniform highp mat4 u_invProj;
 uniform highp sampler2D s_MatTexture;
 uniform highp sampler2DArray s_ScatteringBuffer;
 uniform highp vec4 BlockBaseAmbientLightColorIntensity;
+uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 PreExposureEnabled;
 uniform highp vec4 SkyAmbientLightColorIntensity;
@@ -99,14 +101,62 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec4 v_clipPosition;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
+    if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
+    {
+        arg_3007f = pow(max(arg_87bd1, vec3(0.0)), vec3(2.2000000476837158203125));
+        return;
+    }
+    else
+    {
+        highp vec3 loc_407b7 = arg_87bd1;
+        highp vec3 loc_67ff9 = arg_87bd1 * vec3(0.077399380505084991455078125);
+        highp vec3 loc_b63b1 = pow((arg_87bd1 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
+        highp float loc_e81ff;
+        if (loc_407b7.x <= 0.040449999272823333740234375)
+        {
+            loc_e81ff = loc_67ff9.x;
+        }
+        else
+        {
+            loc_e81ff = loc_b63b1.x;
+        }
+        loc_407b7.x = loc_e81ff;
+        highp float loc_007b0;
+        if (loc_407b7.y <= 0.040449999272823333740234375)
+        {
+            loc_007b0 = loc_67ff9.y;
+        }
+        else
+        {
+            loc_007b0 = loc_b63b1.y;
+        }
+        loc_407b7.y = loc_007b0;
+        highp float loc_fa4a6;
+        if (loc_407b7.z <= 0.040449999272823333740234375)
+        {
+            loc_fa4a6 = loc_67ff9.z;
+        }
+        else
+        {
+            loc_fa4a6 = loc_b63b1.z;
+        }
+        loc_407b7.z = loc_fa4a6;
+        arg_3007f = loc_407b7;
+        return;
+    }
+}
 void main() {
     highp vec4 var_a3e18 = v_clipPosition;
     highp vec4 var_8e462 = v_clipPosition;
-    highp vec4 var_1133e = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_b6fe8 = var_1133e;
-    highp vec4 var_80032 = vec4(pow(max(var_1133e.xyz, vec3(0.0)), vec3(2.2000000476837158203125)), var_b6fe8.w);
-    highp vec4 var_2ee7a = var_80032;
-    highp vec3 var_33407 = (var_80032.xyz * ((BlockBaseAmbientLightColorIntensity.xyz * BlockBaseAmbientLightColorIntensity.w) + (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
+    highp vec4 var_fe390 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_ab9d7 = var_fe390;
+    highp vec3 var_9e11a = var_fe390.xyz;
+    highp vec3 var_a32a9;
+    func_9b87e(var_a32a9, var_9e11a);
+    highp vec4 var_613a3 = vec4(var_a32a9, var_ab9d7.w);
+    highp vec4 var_2ee7a = var_613a3;
+    highp vec3 var_33407 = (var_613a3.xyz * ((BlockBaseAmbientLightColorIntensity.xyz * BlockBaseAmbientLightColorIntensity.w) + (SkyAmbientLightColorIntensity.xyz * SkyAmbientLightColorIntensity.w))) * DiffuseSpecularEmissiveAmbientTermToggles.w;
     highp vec3 var_f79a5;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {

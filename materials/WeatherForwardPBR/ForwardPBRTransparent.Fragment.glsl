@@ -5,6 +5,7 @@
 *
 * Passes:
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
+* - MOTION_ONLY_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
 * FlipOcclusion:
@@ -58,6 +59,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 Dimensions;
@@ -96,6 +98,8 @@
 * - uniform vec4 PositionBaseOffset;
 * - uniform vec4 PositionForwardOffset;
 * - uniform vec4 PreExposureEnabled;
+* - uniform vec4 PrevPositionBaseOffset;
+* - uniform vec4 PrevPositionForwardOffset;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
@@ -103,6 +107,7 @@
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
 * - uniform vec4 SkyZenithColor;
+* - uniform vec4 SubPixelOffset;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;

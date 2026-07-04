@@ -69,6 +69,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -77,6 +78,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -209,6 +213,9 @@ uniform highp vec4 DirectionalLightSourceShadowDirection;
 uniform highp vec4 DirectionalLightSourceWorldSpaceDirection;
 uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform highp vec4 FogAndDistanceControl;
@@ -247,6 +254,7 @@ uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
 centroid in highp vec2 v_texcoord0;
@@ -964,6 +972,7 @@ void func_275f9(inout highp vec4 arg_78b9f) {
     arg_78b9f = vec4(0.0, 0.0, 0.0, 1.0);
 }
 void main() {
+    highp mat4 View = u_view;
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
@@ -1000,12 +1009,36 @@ void main() {
     var_db6c1.w = max(0.0, var_db6c1.w);
     highp vec4 var_b3af7 = texture(s_MatTexture1, v_texcoord0);
     highp vec4 var_666d2 = var_b3af7;
-    highp float var_d3c71 = var_666d2.w;
+    highp float var_a5a49 = var_666d2.w;
     highp vec3 var_4f2f0 = var_b3af7.xyz * MultiplicativeTintColor.xyz;
     var_666d2 = vec4(var_4f2f0.x, var_4f2f0.y, var_4f2f0.z, var_b3af7.w);
     highp vec3 var_9d0de = mix(var_db6c1.xyz, var_4f2f0.xyz, vec3(var_666d2.w));
-    highp vec4 var_530a0 = vec4(var_9d0de.x, var_9d0de.y, var_9d0de.z, var_db6c1.w);
-    if ((var_530a0.w + var_d3c71) < ActorFPEpsilon.x)
+    highp vec4 var_178f6 = vec4(var_9d0de.x, var_9d0de.y, var_9d0de.z, var_db6c1.w);
+    highp vec4 var_0ddfd = v_clipPosition;
+    highp vec2 var_77469 = DitherParams2[0].xy;
+    bool var_e71ae;
+    if (DitheringEnabledToggle.x != 0.0)
+    {
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_0ddfd.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
+        highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
+        highp vec2 var_ccfe4 = floor(var_886c2);
+        var_e71ae = smoothstep(var_77469.x, var_77469.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+    }
+    else
+    {
+        var_e71ae = false;
+    }
+    bool var_ed89e;
+    if (!var_e71ae)
+    {
+        var_ed89e = (var_178f6.w + var_a5a49) < ActorFPEpsilon.x;
+    }
+    else
+    {
+        var_ed89e = var_e71ae;
+    }
+    if (var_ed89e)
     {
         discard;
     }

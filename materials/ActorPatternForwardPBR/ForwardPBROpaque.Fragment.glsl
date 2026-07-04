@@ -81,6 +81,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -89,6 +90,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -231,6 +235,9 @@ uniform highp vec4 DirectionalLightSourceShadowDirection;
 uniform highp vec4 DirectionalLightSourceWorldSpaceDirection;
 uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform highp vec4 EmissiveUniform;
 uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -279,6 +286,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_bitangent;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
 in highp vec3 v_tangent;
@@ -1047,72 +1055,91 @@ void func_17044(inout highp float arg_0d97d, inout highp vec4 arg_85834) {
     arg_85834 = vec4(loc_02aca, 1.0);
 }
 void main() {
-#if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
-    highp vec4 var_e462f = MatColor * texture(s_MatTexture, v_texcoord0);
+    highp mat4 View = u_view;
+#ifdef EMISSIVE__EMISSIVE
+    highp vec4 var_a25d1 = texture(s_MatTexture, v_texcoord0);
 #endif
-#if defined(MASKED_MULTITEXTURE__OFF) && !defined(EMISSIVE__EMISSIVE)
-    highp vec4 var_32d02 = MatColor * texture(s_MatTexture, v_texcoord0);
+#if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
+    highp vec4 var_d9ac1 = MatColor * var_a25d1;
 #endif
 #ifdef MASKED_MULTITEXTURE__ON
-    highp vec4 var_7fef3 = texture(s_MatTexture1, v_texcoord0);
-    highp vec4 var_0b7d3 = var_7fef3;
+    highp vec4 var_174cf = texture(s_MatTexture1, v_texcoord0);
+    highp vec4 var_f3ddc = var_174cf;
 #endif
 #if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
-    highp vec4 var_32d02 = var_e462f;
-#endif
-#if defined(MASKED_MULTITEXTURE__ON) && !defined(EMISSIVE__EMISSIVE)
-    highp vec4 var_32d02 = mix(var_7fef3, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_0b7d3.x + var_0b7d3.y) + var_0b7d3.z) * (1.0 - var_0b7d3.w)) > 0.0)));
+    highp vec4 var_8afd1 = var_d9ac1;
 #endif
 #if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__ON)
-    highp vec4 var_e462f = mix(var_7fef3, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_0b7d3.x + var_0b7d3.y) + var_0b7d3.z) * (1.0 - var_0b7d3.w)) > 0.0)));
-    highp vec4 var_32d02 = var_e462f;
+    highp vec4 var_d9ac1 = mix(var_174cf, MatColor * var_a25d1, vec4(float((((var_f3ddc.x + var_f3ddc.y) + var_f3ddc.z) * (1.0 - var_f3ddc.w)) > 0.0)));
+    highp vec4 var_8afd1 = var_d9ac1;
 #endif
-#ifdef EMISSIVE__EMISSIVE
-    if (dot(vec4(var_e462f.xyz, mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x)
+#if defined(MASKED_MULTITEXTURE__OFF) && !defined(EMISSIVE__EMISSIVE)
+    highp vec4 var_8afd1 = MatColor * texture(s_MatTexture, v_texcoord0);
+#endif
+#if defined(MASKED_MULTITEXTURE__ON) && !defined(EMISSIVE__EMISSIVE)
+    highp vec4 var_8afd1 = mix(var_174cf, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_f3ddc.x + var_f3ddc.y) + var_f3ddc.z) * (1.0 - var_f3ddc.w)) > 0.0)));
 #endif
 #ifdef EMISSIVE__EMISSIVE_ONLY
-    highp float var_a8620 = mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x);
+    highp float var_a8620 = mix(var_8afd1.w, var_8afd1.w * OverlayColor.w, TintedAlphaTestEnabled.x);
     bool var_e7bf9 = var_a8620 < ActorFPEpsilon.x;
-    bool var_330ac;
+    bool var_bd07c;
     if (!var_e7bf9)
-#endif
-#if defined(EMISSIVE__OFF) && !defined(CHANGE_COLOR__OFF)
-    if (mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x)
-#endif
-#if defined(CHANGE_COLOR__OFF) && defined(EMISSIVE__OFF)
-    if (mix(var_32d02.w, var_32d02.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5)
-#endif
     {
-#ifdef EMISSIVE__EMISSIVE_ONLY
-        var_330ac = var_a8620 > (1.0 - ActorFPEpsilon.x);
+        var_bd07c = var_a8620 > (1.0 - ActorFPEpsilon.x);
     }
     else
     {
-        var_330ac = var_e7bf9;
+        var_bd07c = var_e7bf9;
     }
-    if (var_330ac)
-    {
 #endif
+    highp vec4 var_0ddfd = v_clipPosition;
+    highp vec2 var_77469 = DitherParams2[0].xy;
+    bool var_37b65;
+    if (DitheringEnabledToggle.x != 0.0)
+    {
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_0ddfd.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
+        highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
+        highp vec2 var_ccfe4 = floor(var_886c2);
+        var_37b65 = smoothstep(var_77469.x, var_77469.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+    }
+    else
+    {
+        var_37b65 = false;
+    }
+#ifdef EMISSIVE__EMISSIVE
+    if (var_37b65 || (dot(vec4(var_d9ac1.xyz, mix(var_8afd1.w, var_8afd1.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x))
+#endif
+#ifdef EMISSIVE__EMISSIVE_ONLY
+    if (var_37b65 || var_bd07c)
+#endif
+#if defined(EMISSIVE__OFF) && !defined(CHANGE_COLOR__OFF)
+    if (var_37b65 || (mix(var_8afd1.w, var_8afd1.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x))
+#endif
+#if defined(CHANGE_COLOR__OFF) && defined(EMISSIVE__OFF)
+    if (var_37b65 || (mix(var_8afd1.w, var_8afd1.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5))
+#endif
+    {
         discard;
     }
 #ifdef CHANGE_COLOR__MULTI
-    highp vec2 var_459de = var_32d02.xy;
-    highp vec3 var_1099e = mix((var_32d02.xxx * ChangeColor.xyz).xyz, var_32d02.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_459de.y)));
-    highp vec4 var_6ee95 = vec4(var_1099e.x, var_1099e.y, var_1099e.z, var_32d02.w);
+    highp vec2 var_459de = var_8afd1.xy;
+    highp vec3 var_1099e = mix((var_8afd1.xxx * ChangeColor.xyz).xyz, var_8afd1.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_459de.y)));
+    highp vec4 var_6ee95 = vec4(var_1099e.x, var_1099e.y, var_1099e.z, var_8afd1.w);
 #endif
 #ifndef CHANGE_COLOR__MULTI
-    highp vec4 var_6ee95 = var_32d02;
+    highp vec4 var_6ee95 = var_8afd1;
 #endif
 #ifdef CHANGE_COLOR__ON
     highp vec4 var_8a135 = ChangeColor;
-    highp vec3 var_fba6e = mix(var_32d02.xyz, var_32d02.xyz * ChangeColor.xyz, vec3(var_6ee95.w));
-    var_6ee95 = vec4(var_fba6e.x, var_fba6e.y, var_fba6e.z, var_32d02.w);
+    highp vec3 var_fba6e = mix(var_8afd1.xyz, var_8afd1.xyz * ChangeColor.xyz, vec3(var_6ee95.w));
+    var_6ee95 = vec4(var_fba6e.x, var_fba6e.y, var_fba6e.z, var_8afd1.w);
     var_6ee95.w *= var_8a135.w;
 #endif
     var_6ee95.w = max(UseAlphaRewrite.x, var_6ee95.w);
-    var_32d02 = var_6ee95;
-    highp vec3 var_491ab = mix((var_32d02.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_f039a = vec4(var_491ab.x, var_491ab.y, var_491ab.z, var_32d02.w);
+    var_8afd1 = var_6ee95;
+    highp vec3 var_491ab = mix((var_8afd1.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_f039a = vec4(var_491ab.x, var_491ab.y, var_491ab.z, var_8afd1.w);
     highp vec3 var_16bd0 = var_491ab.xyz;
     int var_f71fc = int(PBRTextureFlags.x);
     highp float var_8e635;

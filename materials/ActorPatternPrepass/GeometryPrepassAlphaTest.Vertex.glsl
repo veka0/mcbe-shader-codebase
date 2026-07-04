@@ -53,6 +53,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
@@ -101,6 +104,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
@@ -109,7 +113,7 @@ centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
-    vec4 var_19bff = (u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0);
+    vec4 var_04231 = (u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -120,17 +124,19 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_19bff = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_04231 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_bab0b = u_proj;
+    var_bab0b[2].x += SubPixelOffset.x;
+    var_bab0b[2].y -= SubPixelOffset.y;
+    vec4 var_c804c = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
     v_bitangent = vec3(0.0);
+    v_clipPosition = var_c804c;
     v_color0 = a_color0;
     v_normal = vec3(0.0);
     v_prevWorldPos = vec3(0.0);
     v_tangent = vec3(0.0);
     v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
-    v_worldPos = var_19bff.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_19bff.xyz, 1.0));
+    v_worldPos = var_04231.xyz;
+    gl_Position = var_c804c;
 }

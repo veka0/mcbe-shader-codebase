@@ -35,7 +35,7 @@
 *
 * Uniforms:
 * - uniform vec4 DitherParams;
-* - uniform vec4 DitherParams2;
+* - uniform vec4 DitherParams2[3];
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
@@ -67,17 +67,19 @@ struct PBRTextureData {
 
 layout(binding = 2, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_147c9;
 uniform highp mat4 u_prevViewProj;
+#ifdef DITHERING__ON
 uniform highp mat4 u_view;
+#endif
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
 #ifdef SEASONS__ON
 uniform highp sampler2D s_SeasonsTexture;
 #endif
 #ifdef DITHERING__ON
-uniform highp vec4 DitherParams2;
+uniform highp vec4 DitherParams2[3];
 uniform highp vec4 DitherParams;
-#endif
 uniform highp vec4 ViewPositionAndTime;
+#endif
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_bitangent;
 #ifdef DITHERING__ON
@@ -225,43 +227,45 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+#ifdef DITHERING__ON
     highp mat4 View = u_view;
+#endif
     highp vec4 var_47d7b = v_color0;
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
     highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
     highp vec4 var_a9bff = var_fe617;
 #ifdef DITHERING__OFF
-    highp vec2 var_47338 = vec2(0.0);
+    highp vec2 var_95233 = vec2(0.0);
 #endif
 #ifdef DITHERING__ON
-    highp vec4 var_5f8be = v_clipPosition;
-    highp vec2 var_5d8a5 = vec2(DitherParams.z, DitherParams.w);
+    highp vec4 var_84222 = v_clipPosition;
+    highp vec2 var_fe616 = DitherParams2[2].xy;
 #endif
-    bool var_9d408;
+    bool var_0c774;
     if (var_4f8e7.x > 0.5)
     {
 #ifdef DITHERING__OFF
         highp vec2 var_01f17 = floor(vec2(0.0));
-        highp vec2 var_d1dd1 = var_01f17;
+        highp vec2 var_75d5b = var_01f17;
         highp vec2 var_51242 = floor(vec2(0.0));
-        highp vec2 var_ada7f = var_51242;
+        highp vec2 var_7633c = var_51242;
         highp vec2 var_39049 = floor(vec2(0.0));
-        highp vec2 var_6c222 = var_39049;
-        var_9d408 = smoothstep(var_47338.x, var_47338.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), -ViewPositionAndTime.xyz)) <= (((((((fract((var_d1dd1.x * 0.5) + ((var_d1dd1.y * var_d1dd1.y) * 0.75)) * 0.25) + fract((var_ada7f.x * 0.5) + ((var_ada7f.y * var_ada7f.y) * 0.75))) * 0.25) + fract((var_6c222.x * 0.5) + ((var_6c222.y * var_6c222.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_9c296 = var_39049;
+        var_0c774 = smoothstep(var_95233.x, var_95233.y, 0.0) <= (((((((fract((var_75d5b.x * 0.5) + ((var_75d5b.y * var_75d5b.y) * 0.75)) * 0.25) + fract((var_7633c.x * 0.5) + ((var_7633c.y * var_7633c.y) * 0.75))) * 0.25) + fract((var_9c296.x * 0.5) + ((var_9c296.y * var_9c296.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
 #endif
 #ifdef DITHERING__ON
-        highp vec2 var_a47f5 = floor(((((v_clipPosition.xyz / vec3(var_5f8be.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2.x)) * DitherParams2.x;
-        highp vec2 var_de637 = floor(var_a47f5 * 0.25);
-        highp vec2 var_23224 = floor(var_a47f5 * 0.5);
-        highp vec2 var_f0b21 = floor(var_a47f5);
-        var_9d408 = smoothstep(var_5d8a5.x, var_5d8a5.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_de637.x * 0.5) + ((var_de637.y * var_de637.y) * 0.75)) * 0.25) + fract((var_23224.x * 0.5) + ((var_23224.y * var_23224.y) * 0.75))) * 0.25) + fract((var_f0b21.x * 0.5) + ((var_f0b21.y * var_f0b21.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_84222.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
+        highp vec2 var_de637 = floor(var_b2538 * 0.25);
+        highp vec2 var_23224 = floor(var_b2538 * 0.5);
+        highp vec2 var_f0b21 = floor(var_b2538);
+        var_0c774 = smoothstep(var_fe616.x, var_fe616.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_de637.x * 0.5) + ((var_de637.y * var_de637.y) * 0.75)) * 0.25) + fract((var_23224.x * 0.5) + ((var_23224.y * var_23224.y) * 0.75))) * 0.25) + fract((var_f0b21.x * 0.5) + ((var_f0b21.y * var_f0b21.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
 #endif
     }
     else
     {
-        var_9d408 = false;
+        var_0c774 = false;
     }
-    if (var_9d408 || (var_a9bff.w < 0.5))
+    if (var_0c774 || (var_a9bff.w < 0.5))
     {
         discard;
     }

@@ -50,6 +50,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 CurrentFace;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
@@ -125,6 +126,7 @@ uniform highp vec4 AtmosphericScatteringToggles;
 uniform highp vec4 BlockBaseAmbientLightColorIntensity;
 uniform highp vec4 CameraLightIntensity;
 uniform highp vec4 ClampViewVectors;
+uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 uniform highp vec4 CurrentFace;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -147,6 +149,51 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
+    if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
+    {
+        arg_3007f = pow(max(arg_87bd1, vec3(0.0)), vec3(2.2000000476837158203125));
+        return;
+    }
+    else
+    {
+        highp vec3 loc_407b7 = arg_87bd1;
+        highp vec3 loc_67ff9 = arg_87bd1 * vec3(0.077399380505084991455078125);
+        highp vec3 loc_b63b1 = pow((arg_87bd1 + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625));
+        highp float loc_e81ff;
+        if (loc_407b7.x <= 0.040449999272823333740234375)
+        {
+            loc_e81ff = loc_67ff9.x;
+        }
+        else
+        {
+            loc_e81ff = loc_b63b1.x;
+        }
+        loc_407b7.x = loc_e81ff;
+        highp float loc_007b0;
+        if (loc_407b7.y <= 0.040449999272823333740234375)
+        {
+            loc_007b0 = loc_67ff9.y;
+        }
+        else
+        {
+            loc_007b0 = loc_b63b1.y;
+        }
+        loc_407b7.y = loc_007b0;
+        highp float loc_fa4a6;
+        if (loc_407b7.z <= 0.040449999272823333740234375)
+        {
+            loc_fa4a6 = loc_67ff9.z;
+        }
+        else
+        {
+            loc_fa4a6 = loc_b63b1.z;
+        }
+        loc_407b7.z = loc_fa4a6;
+        arg_3007f = loc_407b7;
+        return;
+    }
+}
 void main() {
     highp vec4 var_38911 = vec4(0.0);
     highp vec4 var_11add = texture(s_SceneDepth, v_texcoord0.xy);
@@ -163,10 +210,12 @@ void main() {
     highp float var_d799e = var_df846.w;
     highp vec4 var_98bb3 = var_9666f / vec4(var_d799e);
     var_df846 = var_98bb3;
-    highp vec4 var_0fa22 = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
+    highp vec4 var_bde9b = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
     highp vec4 var_3fc14 = texture(s_EmissiveAmbientLinearRoughness, v_texcoord0.xy);
     highp vec3 var_900f6 = vec3(v_projPosition.xy, var_971b7);
-    highp vec3 var_ce195 = pow(max(var_0fa22.xyz, vec3(0.0)), vec3(2.2000000476837158203125));
+    highp vec3 var_9e11a = var_bde9b.xyz;
+    highp vec3 var_5717a;
+    func_9b87e(var_5717a, var_9e11a);
     highp vec3 var_50289 = normalize((u_invView * vec4(var_98bb3.xyz, 1.0)).xyz - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
     bool var_431a3 = var_50289.y < 0.100000001490116119384765625;
     bool var_2588b;
@@ -276,7 +325,7 @@ void main() {
         var_35476 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_2c40b = var_35476;
-    highp vec3 var_57de7 = var_35476.xyz + (mix(((mix(var_ce195, vec3(dot(var_ce195, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_3fc14.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x, var_1d2c8.xyz, vec3(var_f6a93.w)) * var_2c40b.w);
+    highp vec3 var_57de7 = var_35476.xyz + (mix(((mix(var_5717a, vec3(dot(var_5717a, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_3fc14.x)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x, var_1d2c8.xyz, vec3(var_f6a93.w)) * var_2c40b.w);
     highp vec3 var_a3b9e;
     if (CurrentFace.x == 3.0)
     {
