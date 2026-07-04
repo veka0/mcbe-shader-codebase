@@ -25,6 +25,10 @@
 * - LIT__OFF (not used)
 * - LIT__ON (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * UseTextures:
 * - USE_TEXTURES__OFF (not used)
 * - USE_TEXTURES__ON (not used)
@@ -35,7 +39,7 @@
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;

@@ -12,16 +12,13 @@
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
 * - uniform lowp sampler2D s_WaterDepth;
-* - layout(binding = 10, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 11, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 12, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 9, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -42,10 +39,6 @@
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
 * - uniform vec4 CloudShadowsVisible;
-* - uniform vec4 ClusterDepthBounds;
-* - uniform vec4 ClusterDimensions;
-* - uniform vec4 ClusterNearFarWidthHeight;
-* - uniform vec4 ClusterSize;
 * - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
@@ -63,18 +56,13 @@
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
-* - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
-* - uniform vec4 PointLightAttenuationWindow;
-* - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
-* - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
@@ -111,7 +99,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 10, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_acba2;
+layout(binding = 9, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_3cc78;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -124,7 +112,7 @@ uniform highp vec4 WaterExtinctionCoefficients;
 uniform highp vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_8ab59(inout bool arg_5e3ed) {
     if (BiomeBlendingParameters.x > 0.0)
     {
@@ -146,13 +134,13 @@ void func_a4cbd(inout highp vec3 arg_c6525, inout highp vec4 arg_a01ef) {
     int loc_86c64 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
     if (((loc_35590 == loc_d7d5b) && (loc_d7d5b == loc_80f2f)) && (loc_80f2f == loc_86c64))
     {
-        arg_a01ef = var_acba2.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients;
+        arg_a01ef = var_3cc78.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients;
         return;
     }
     highp float loc_77c49 = fract(loc_6b94b);
     highp float loc_33836 = fract(loc_c8c2e);
     highp vec4 loc_47197 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
-    arg_a01ef = (((var_acba2.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients * loc_47197.x) + (var_acba2.zBiomeInfoBuffer[loc_d7d5b].waterExtinctionCoefficients * loc_47197.y)) + (var_acba2.zBiomeInfoBuffer[loc_80f2f].waterExtinctionCoefficients * loc_47197.z)) + (var_acba2.zBiomeInfoBuffer[loc_86c64].waterExtinctionCoefficients * loc_47197.w);
+    arg_a01ef = (((var_3cc78.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients * loc_47197.x) + (var_3cc78.zBiomeInfoBuffer[loc_d7d5b].waterExtinctionCoefficients * loc_47197.y)) + (var_3cc78.zBiomeInfoBuffer[loc_80f2f].waterExtinctionCoefficients * loc_47197.z)) + (var_3cc78.zBiomeInfoBuffer[loc_86c64].waterExtinctionCoefficients * loc_47197.w);
 }
 void func_40f6a(inout highp vec4 arg_8331b, inout highp vec4 arg_a6615) {
     bool loc_a9f27;
@@ -182,8 +170,8 @@ void main() {
     highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_365e3 = var_9666f;
     highp float var_d799e = var_365e3.w;
-    highp vec4 var_620de = var_9666f / vec4(var_d799e);
-    var_365e3 = var_620de;
+    highp vec4 var_f84ab = var_9666f / vec4(var_d799e);
+    var_365e3 = var_f84ab;
     highp vec4 var_7101d = vec4(v_projPosition.xy, (texture(s_WaterDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
     highp mat4 var_2949d = u_invProj;
     highp mat4 var_e6914 = u_invProj;
@@ -198,9 +186,9 @@ void main() {
     highp vec4 var_fa2eb = vec4(var_a6256 * var_2949d[0].x, var_05401 * var_e6914[1].y, var_b8669 * var_164c7[3].z, (var_259fc * var_b5866[2].w) + (var_f8db3 * var_bb46a[3].w));
     var_7101d = var_fa2eb;
     highp float var_f7138 = var_7101d.w;
-    highp vec4 var_30a3d = var_fa2eb / vec4(var_f7138);
-    var_7101d = var_30a3d;
-    highp vec4 var_d0593;
-    func_40f6a(var_30a3d, var_d0593);
-    bgfx_FragColor = vec4(exp((-var_d0593.xyz) * ((min(length(var_620de), FogAndDistanceControl.z) - min(length(var_30a3d), FogAndDistanceControl.z)) + WaterSurfaceEnabledAndExtinctionDistShift.y)), 1.0);
+    highp vec4 var_d62a6 = var_fa2eb / vec4(var_f7138);
+    var_7101d = var_d62a6;
+    highp vec4 var_736e7;
+    func_40f6a(var_d62a6, var_736e7);
+    bgfx_FragData0 = vec4(exp((-var_736e7.xyz) * ((min(length(var_f84ab), FogAndDistanceControl.z) - min(length(var_d62a6), FogAndDistanceControl.z)) + WaterSurfaceEnabledAndExtinctionDistShift.y)), 1.0);
 }

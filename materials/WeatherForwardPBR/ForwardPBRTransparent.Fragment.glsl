@@ -24,6 +24,10 @@
 * - NO_VARIETY__OFF (not used)
 * - NO_VARIETY__ON (not used)
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -31,7 +35,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_LightingTexture;
 * - uniform lowp sampler2D s_OcclusionTexture;
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;

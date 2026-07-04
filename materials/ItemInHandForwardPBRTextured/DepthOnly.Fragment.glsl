@@ -22,6 +22,10 @@
 * - MULTI_COLOR_TINT__OFF
 * - MULTI_COLOR_TINT__ON
 *
+* PointLightShading:
+* - POINT_LIGHT_SHADING__OFF (not used)
+* - POINT_LIGHT_SHADING__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:
@@ -29,7 +33,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_MatTexture;
 * - layout(binding = 8, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;

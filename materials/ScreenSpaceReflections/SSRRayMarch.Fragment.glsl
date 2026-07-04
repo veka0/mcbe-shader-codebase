@@ -50,7 +50,7 @@ uniform highp vec4 ScreenSize;
 uniform highp vec4 ViewportScale;
 in highp vec4 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_7a080(inout bool arg_3514b, inout highp vec3 arg_6cf39) {
     if (CameraData.x < CameraData.y)
     {
@@ -237,10 +237,10 @@ void main() {
     uvec2 var_e21cd = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_92e53 = vec2(float(var_e21cd.x), var_ab8ec) * vec2(0.0039215688593685626983642578125);
     highp float var_e080c = var_92e53.x;
-    highp vec4 var_53578;
+    highp vec4 var_2c222;
     if (var_e080c > SSRRoughnessCutoffParams.x)
     {
-        var_53578 = vec4(0.0, 0.0, 0.0, -1.0);
+        var_2c222 = vec4(0.0, 0.0, 0.0, -1.0);
     }
     else
     {
@@ -280,7 +280,7 @@ void main() {
         highp vec3 var_05fb6 = normalize((transpose(u_invView) * vec4(normalize(normalize(vec3(var_a8234.x, var_a8234.y, var_01dc5.z))), 0.0)).xyz);
         highp vec4 var_7f57a;
         func_d31db(var_87acf, var_05fb6, var_7f57a, var_935ff, var_e080c);
-        var_53578 = var_7f57a;
+        var_2c222 = var_7f57a;
     }
-    bgfx_FragColor = var_53578;
+    bgfx_FragData0 = var_2c222;
 }

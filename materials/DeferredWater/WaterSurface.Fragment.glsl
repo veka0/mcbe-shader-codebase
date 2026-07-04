@@ -20,7 +20,7 @@
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
@@ -213,7 +213,7 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_dc62c(inout highp float arg_e6305) {
     if (SkySamplesConfig.x > 0.5)
     {
@@ -1010,7 +1010,7 @@ void main() {
     highp vec3 var_b4d5b = mix(((((vec3(0.0199999995529651641845703125) + (vec3(0.980000019073486328125) * ((var_edda2 * var_edda2) * var_45a56))) * (1.0 - (((var_37e4f * var_37e4f) * var_37e4f) * IBLParameters.x))) * max((((var_4de3a.xyz * var_13aee.w) * 6.0) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_b040e * var_b040e) * var_e4742, (var_e4742 * var_e4742) * var_e4742, CameraLightIntensity.y)) * var_e4639.w), AmbientLightParams.xyz * AmbientLightParams.w)) + var_66f3b) + (((mix(vec3(0.0), vec3(0.0), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_1fc8b.y)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_04d76.xyz, vec3(var_2bdb9.w)) * var_8b3de.w;
 #endif
     highp vec4 var_d0687 = vec4(var_31066.xyz + var_b4d5b, 1.0);
-    highp vec4 var_e9949 = var_d0687;
+    highp vec4 var_f66c8 = var_d0687;
     highp vec4 var_eea6e;
     if (PreExposureEnabled.x > 0.0)
     {
@@ -1021,10 +1021,10 @@ void main() {
     {
         var_eea6e = var_d0687;
     }
-    var_e9949 = var_eea6e;
+    var_f66c8 = var_eea6e;
     highp float var_9aa0f = dot(var_614bf, var_d9513);
     highp float var_29ef9;
     func_4efb5(var_9aa0f, var_29ef9);
-    var_e9949.w = 1.0 - var_29ef9;
-    bgfx_FragColor = var_e9949;
+    var_f66c8.w = 1.0 - var_29ef9;
+    bgfx_FragData0 = var_f66c8;
 }
