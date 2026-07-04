@@ -56,9 +56,10 @@ struct TextureShiftBuffer {
     int packedPBRId;
     highp float globalAlpha;
     highp float localShiftLength;
+    highp float noiseSpread;
 };
 
-layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_95f1f;
+layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_803cb;
 uniform highp sampler2D s_LightMapTexture;
 uniform highp sampler2D s_MatTexture;
 uniform highp vec4 FogColor;
@@ -69,25 +70,53 @@ in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
 flat in highp vec2 v_textureShift;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-void main() {
-    highp vec4 var_29486 = v_color0;
-    highp vec2 var_558f1 = v_textureShift;
-    int var_ec921 = int(var_558f1.y * 65535.0);
-    highp vec2 var_571c5 = v_texcoord0;
-    highp vec2 var_7bd33 = v_ditheringAndMaskTinting;
-    highp vec4 var_76414 = mix(texture(s_MatTexture, vec2(var_571c5.x + var_95f1f.TextureShiftBufferData[var_ec921].preUV0, var_571c5.y + var_95f1f.TextureShiftBufferData[var_ec921].preUV1)), texture(s_MatTexture, vec2(var_571c5.x + var_95f1f.TextureShiftBufferData[var_ec921].postUV0, var_571c5.y + var_95f1f.TextureShiftBufferData[var_ec921].postUV1)), vec4(clamp((var_95f1f.TextureShiftBufferData[var_ec921].globalAlpha - ((1.0 - var_95f1f.TextureShiftBufferData[var_ec921].localShiftLength) * var_558f1.x)) / var_95f1f.TextureShiftBufferData[var_ec921].localShiftLength, 0.0, 1.0)));
-    if (var_7bd33.y > 0.5)
+void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
+    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_803cb.TextureShiftBufferData[arg_651a0].noiseSpread);
+    if (var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
     {
-        highp vec3 var_5e4d7 = mix(var_76414.xyz, var_76414.xyz * v_color0.xyz, vec3(var_76414.w)).xyz * var_29486.w;
-        var_76414 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_76414.w);
-        var_76414.w = 1.0;
+        arg_0da03 = step(loc_47c38, var_803cb.TextureShiftBufferData[arg_651a0].globalAlpha);
+        return;
     }
     else
     {
-        highp vec3 var_55928 = var_76414.xyz * v_color0.xyz;
-        var_76414 = vec4(var_55928.x, var_55928.y, var_55928.z, var_76414.w);
-        var_76414.w = var_29486.w;
+        arg_0da03 = 1.0 - clamp((loc_47c38 - var_803cb.TextureShiftBufferData[arg_651a0].globalAlpha) / var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        return;
+    }
+}
+void main() {
+    highp vec4 var_29486 = v_color0;
+    highp vec2 var_1614a = v_textureShift;
+    int var_d0c42 = int(var_1614a.y * 65535.0);
+    highp float var_b4fa2;
+    func_f1932(var_1614a, var_d0c42, var_b4fa2);
+    highp vec2 var_f486c = v_texcoord0;
+    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].preUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].preUV1));
+    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].postUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].postUV1));
+    highp vec4 var_da3c1 = var_4b671;
+    highp vec4 var_e65e5 = var_2e873;
+    highp float var_7dfb9;
+    if (var_b4fa2 > 0.5)
+    {
+        var_7dfb9 = var_e65e5.w;
+    }
+    else
+    {
+        var_7dfb9 = var_da3c1.w;
+    }
+    highp vec2 var_7bd33 = v_ditheringAndMaskTinting;
+    highp vec4 var_65905 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
+    if (var_7bd33.y > 0.5)
+    {
+        highp vec3 var_5e4d7 = mix(var_65905.xyz, var_65905.xyz * v_color0.xyz, vec3(var_65905.w)).xyz * var_29486.w;
+        var_65905 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_65905.w);
+        var_65905.w = 1.0;
+    }
+    else
+    {
+        highp vec3 var_55928 = var_65905.xyz * v_color0.xyz;
+        var_65905 = vec4(var_55928.x, var_55928.y, var_55928.z, var_65905.w);
+        var_65905.w = var_29486.w;
     }
     highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_76414.xyz, var_76414.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_76414.w);
+    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_65905.xyz, var_65905.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_65905.w);
 }

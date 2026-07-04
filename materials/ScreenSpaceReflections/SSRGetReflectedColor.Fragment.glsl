@@ -7,6 +7,7 @@
 * - SSR_FILL_GAPS_PASS (not used)
 * - SSR_GET_REFLECTED_COLOR_PASS (not used)
 * - SSR_RAY_MARCH_PASS (not used)
+* - SSR_RAY_MARCH_HZB_PASS (not used)
 *
 * ExtendedGapFill:
 * - EXTENDED_GAP_FILL__OFF (not used)
@@ -18,17 +19,21 @@
 * - uniform lowp sampler2D s_GbufferDepth;
 * - uniform lowp sampler2D s_GbufferNormal;
 * - uniform lowp usampler2D s_GbufferRoughness;
+* - uniform lowp sampler2D s_HiZBuffer;
 * - uniform lowp sampler2D s_InputTexture;
 * - uniform lowp sampler2D s_PreviousReflectionBuffer;
 * - uniform lowp sampler2D s_RasterColor;
 *
 * Uniforms:
 * - uniform vec4 CameraData;
+* - uniform vec4 HiZMipCount;
+* - uniform vec4 HiZViewportDimensionsAndBufferDimensions;
 * - uniform vec4 SSRFadingParamsAndThickness;
 * - uniform vec4 SSRRayMarchingParams;
 * - uniform vec4 SSRRoughnessCutoffParams;
 * - uniform vec4 SSRTemporalAccumulationParams;
 * - uniform vec4 ScreenSize;
+* - uniform vec4 ScreenSpaceRayOffset;
 * - uniform vec4 UnitPlaneExtents;
 * - uniform vec4 ViewportScale;
 */

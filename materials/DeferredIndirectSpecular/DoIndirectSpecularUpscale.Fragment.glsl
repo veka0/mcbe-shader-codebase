@@ -168,9 +168,13 @@ void main() {
 #ifdef UPSCALING__ON
         highp vec3 var_84f2b = var_66b50;
         highp float var_dad33 = (var_84f2b.z * 0.5) + 0.5;
-        highp vec2 var_3fd73 = (floor((v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy) - vec2(0.5)) + vec2(0.5)) * DownsampleResolutionAndRecipResolution.zw;
-        highp vec2 var_9819f[4] = vec2[](var_3fd73, var_3fd73 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw), var_3fd73 + DownsampleResolutionAndRecipResolution.zw);
-        highp vec2 var_5d6bf = fract((v_texcoord0.xy - var_3fd73) * DownsampleResolutionAndRecipResolution.xy);
+        highp vec2 var_c2ae4 = (floor((v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy) - vec2(0.5)) + vec2(0.5)) * DownsampleResolutionAndRecipResolution.zw;
+        highp vec2 var_7fc08[4];
+        var_7fc08[0] = var_c2ae4;
+        var_7fc08[1] = var_c2ae4 + (vec2(1.0, 0.0) * DownsampleResolutionAndRecipResolution.zw);
+        var_7fc08[2] = var_c2ae4 + (vec2(0.0, 1.0) * DownsampleResolutionAndRecipResolution.zw);
+        var_7fc08[3] = var_c2ae4 + DownsampleResolutionAndRecipResolution.zw;
+        highp vec2 var_5d6bf = fract((v_texcoord0.xy - var_c2ae4) * DownsampleResolutionAndRecipResolution.xy);
         highp vec4 var_cf9a1 = vec4(0.0);
         var_cf9a1.x = (1.0 - var_5d6bf.x) * (1.0 - var_5d6bf.y);
         var_cf9a1.y = var_5d6bf.x * (1.0 - var_5d6bf.y);
@@ -180,7 +184,7 @@ void main() {
         highp vec4 var_119a3 = vec4(0.0);
         for (int var_e1ef0 = 0; var_e1ef0 < 4; var_e1ef0++)
         {
-            highp vec4 var_66319 = texture(s_NormalsAndDepthLighting, var_9819f[var_e1ef0]);
+            highp vec4 var_66319 = texture(s_NormalsAndDepthLighting, var_7fc08[var_e1ef0]);
             highp vec2 var_7bee0 = (var_66319.xy * 2.0) - vec2(1.0);
             highp vec2 var_5e4f9 = var_7bee0;
             highp vec3 var_2af73 = vec3(var_7bee0, (1.0 - abs(var_5e4f9.x)) - abs(var_5e4f9.y));
@@ -201,7 +205,7 @@ void main() {
         highp vec2 var_efdab = var_119a3.xy;
         highp vec2 var_d1a8a = var_119a3.zw;
         highp vec2 var_ab005 = vec2(var_efdab.x + var_efdab.y, var_d1a8a.x + var_d1a8a.y);
-        highp vec4 var_76ccc = mix(vec4(var_9819f[0], var_9819f[2]), vec4(var_9819f[1], var_9819f[3]), mix(vec4(0.0), var_119a3.yyww / var_ab005.xxyy, greaterThan(var_ab005.xxyy, vec4(0.0))));
+        highp vec4 var_76ccc = mix(vec4(var_7fc08[0], var_7fc08[2]), vec4(var_7fc08[1], var_7fc08[3]), mix(vec4(0.0), var_119a3.yyww / var_ab005.xxyy, greaterThan(var_ab005.xxyy, vec4(0.0))));
         highp vec2 var_a039c = var_ab005;
         highp vec2 var_c1b78 = var_ab005 / vec2((var_a039c.x + var_a039c.y) + 6.1999999161344021558761596679688e-05);
         var_84f7f = (texture(s_SpecularLighting, var_76ccc.xy).xyz * var_c1b78.x) + (texture(s_SpecularLighting, var_76ccc.zw).xyz * var_c1b78.y);

@@ -56,12 +56,13 @@ struct TextureShiftBuffer {
     int packedPBRId;
     highp float globalAlpha;
     highp float localShiftLength;
+    highp float noiseSpread;
 };
 
 #ifdef DITHERING__ON
 float var_466e6;
 #endif
-layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_95f1f;
+layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_803cb;
 #ifdef DITHERING__ON
 uniform highp mat4 u_view;
 #endif
@@ -88,16 +89,44 @@ flat in highp vec2 v_textureShift;
 in highp vec4 v_worldPosition;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
+    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_803cb.TextureShiftBufferData[arg_651a0].noiseSpread);
+    if (var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
+    {
+        arg_0da03 = step(loc_47c38, var_803cb.TextureShiftBufferData[arg_651a0].globalAlpha);
+        return;
+    }
+    else
+    {
+        arg_0da03 = 1.0 - clamp((loc_47c38 - var_803cb.TextureShiftBufferData[arg_651a0].globalAlpha) / var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        return;
+    }
+}
 void main() {
-    highp vec2 var_558f1 = v_textureShift;
-    int var_ec921 = int(var_558f1.y * 65535.0);
-    highp vec2 var_571c5 = v_texcoord0;
+    highp vec2 var_1614a = v_textureShift;
+    int var_d0c42 = int(var_1614a.y * 65535.0);
+    highp float var_b4fa2;
+    func_f1932(var_1614a, var_d0c42, var_b4fa2);
+    highp vec2 var_f486c = v_texcoord0;
+    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].preUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].preUV1));
+    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].postUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].postUV1));
+    highp vec4 var_da3c1 = var_4b671;
+    highp vec4 var_e65e5 = var_2e873;
+    highp float var_7dfb9;
+    if (var_b4fa2 > 0.5)
+    {
+        var_7dfb9 = var_e65e5.w;
+    }
+    else
+    {
+        var_7dfb9 = var_da3c1.w;
+    }
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_407d1 = mix(texture(s_MatTexture, vec2(var_571c5.x + var_95f1f.TextureShiftBufferData[var_ec921].preUV0, var_571c5.y + var_95f1f.TextureShiftBufferData[var_ec921].preUV1)), texture(s_MatTexture, vec2(var_571c5.x + var_95f1f.TextureShiftBufferData[var_ec921].postUV0, var_571c5.y + var_95f1f.TextureShiftBufferData[var_ec921].postUV1)), vec4(clamp((var_95f1f.TextureShiftBufferData[var_ec921].globalAlpha - ((1.0 - var_95f1f.TextureShiftBufferData[var_ec921].localShiftLength) * var_558f1.x)) / var_95f1f.TextureShiftBufferData[var_ec921].localShiftLength, 0.0, 1.0)));
+    highp vec4 var_5e5e8 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
 #ifdef DITHERING__OFF
-    if (false || (var_407d1.w < 0.5))
+    if (false || (var_5e5e8.w < 0.5))
 #endif
 #ifdef DITHERING__ON
     highp vec2 var_42b21 = DitherParams2[2].xy;
@@ -118,14 +147,14 @@ void main() {
     {
         var_2935c = false;
     }
-    if (var_2935c || (var_407d1.w < 0.5))
+    if (var_2935c || (var_5e5e8.w < 0.5))
     {
 #endif
         discard;
     }
-    highp vec4 var_15f8b = var_407d1;
+    highp vec4 var_15f8b = var_5e5e8;
     highp vec3 var_877b8 = var_15f8b.xyz * v_color0.xyz;
-    var_407d1 = vec4(var_877b8.x, var_877b8.y, var_877b8.z, var_15f8b.w);
+    var_5e5e8 = vec4(var_877b8.x, var_877b8.y, var_877b8.z, var_15f8b.w);
     highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_877b8.xyz, var_407d1.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_407d1.w);
+    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_877b8.xyz, var_5e5e8.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_5e5e8.w);
 }

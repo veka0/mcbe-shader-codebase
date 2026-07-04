@@ -209,15 +209,15 @@ uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
-void func_dc62c(inout highp float arg_e6305) {
+void func_3785d(inout highp float arg_63999, inout highp vec2 arg_df074) {
     if (SkySamplesConfig.x > 0.5)
     {
-        arg_e6305 = textureLod(s_SkyAmbientSamples, vec3(v_texcoord0.xy, 1.0), 0.0).y;
+        arg_63999 = textureLod(s_SkyAmbientSamples, vec3(arg_df074.x, arg_df074.y, 1.0), 0.0).y;
         return;
     }
     else
     {
-        arg_e6305 = 1.0;
+        arg_63999 = 1.0;
         return;
     }
 }
@@ -1037,9 +1037,10 @@ void main() {
     highp float var_d7433;
     if (var_12373 == 1.0)
     {
-        highp float var_92116;
-        func_dc62c(var_92116);
-        var_d7433 = var_92116;
+        highp vec2 var_5ba1d = v_texcoord0.xy;
+        highp float var_ef4d6;
+        func_3785d(var_ef4d6, var_5ba1d);
+        var_d7433 = var_ef4d6;
     }
     else
     {

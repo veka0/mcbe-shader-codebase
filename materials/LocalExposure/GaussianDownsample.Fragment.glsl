@@ -35,10 +35,10 @@ uniform highp vec4 ViewportScale;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    int var_af86b = int(GaussianBlurParams.x);
+    int var_4eb5d = int(GaussianBlurParams.x);
     int var_bf101 = int(GaussianBlurParams.y);
-    int var_f75fa = var_af86b / var_bf101;
-    highp float var_46797 = (0.5 * float(var_af86b)) * float(var_af86b);
+    int var_f75fa = var_4eb5d / var_bf101;
+    highp float var_12786 = 0.5 * float(var_4eb5d * var_4eb5d);
     int var_ede4a = -var_f75fa;
     highp float var_1c31c;
     highp float var_92006;
@@ -57,7 +57,7 @@ void main() {
         {
             highp vec2 var_e2264 = vec2(float(var_4101a), float(var_502e7)) * float(var_bf101);
             highp vec2 var_2c069 = var_e2264;
-            highp float var_796da = exp((-((var_2c069.x * var_2c069.x) + (var_2c069.y * var_2c069.y))) / var_46797);
+            highp float var_796da = exp((-((var_2c069.x * var_2c069.x) + (var_2c069.y * var_2c069.y))) / var_12786);
             var_4529f = var_e1fa9 + (var_796da * log2(clamp(dot(texture(s_SceneColor, min(v_texcoord0 + (var_e2264 * RecipSceneResolution.xy), ViewportScale.zw)).xyz, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)), LuminanceRangeParams.z, LuminanceRangeParams.w)));
             var_718be = var_75a6e + var_796da;
         }
