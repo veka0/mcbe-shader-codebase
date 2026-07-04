@@ -41,10 +41,11 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 1, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 2, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 CurrentColor;
 * - uniform vec4 DitherParams;
 * - uniform vec4 DitherParams2[3];
@@ -83,10 +84,13 @@ struct PBRTextureData {
     highp float maxMipNormal;
 };
 
-layout(binding = 1, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_5f101;
+layout(binding = 2, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_147c9;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
+#ifdef SEASONS__OFF
+uniform highp vec4 AlphaMaskedTint;
+#endif
 #ifdef SEASONS__ON
 uniform highp sampler2D s_SeasonsTexture;
 #endif
@@ -110,21 +114,21 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_59055 = vec2(var_5f101.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_5f101.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_39ca3 = vec2(var_5f101.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_5f101.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec2 loc_59055 = vec2(var_147c9.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_147c9.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_39ca3 = vec2(var_147c9.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_147c9.PBRData[v_pbrTextureId].colourToNormalUvBias1);
     highp vec3 loc_b4ff6;
-    if ((var_5f101.PBRData[v_pbrTextureId].flags & 4) == 4)
+    if ((var_147c9.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
         loc_b4ff6 = (texture(s_MatTexture, (v_texcoord0 * loc_59055) + loc_39ca3).xyz * 2.0) - vec3(1.0);
     }
     else
     {
         highp vec3 loc_9252d;
-        if ((var_5f101.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_147c9.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
             highp vec2 loc_218fe = (v_texcoord0 * loc_59055) + loc_39ca3;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_5f101.PBRData[v_pbrTextureId].maxMipNormal - var_5f101.PBRData[v_pbrTextureId].maxMipColour, var_5f101.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_147c9.PBRData[v_pbrTextureId].maxMipNormal - var_147c9.PBRData[v_pbrTextureId].maxMipColour, var_147c9.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -181,17 +185,17 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_5f101.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_147c9.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_5f101.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_5f101.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_5f101.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_5f101.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_5f101.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_147c9.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_5f101.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_147c9.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -200,10 +204,10 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_5f101.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_5f101.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_5f101.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_5f101.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_147c9.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_147c9.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_147c9.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_147c9.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
@@ -238,20 +242,29 @@ void main() {
     highp vec4 var_b65d1 = texture(s_MatTexture, v_texcoord0);
 #endif
 #ifdef SEASONS__OFF
-    highp vec4 var_84c3e = texture(s_MatTexture, v_texcoord0);
-    highp vec3 var_82cf8 = var_84c3e.xyz * v_color0.xyz;
-    var_84c3e = vec4(var_82cf8.x, var_82cf8.y, var_82cf8.z, var_84c3e.w);
+    highp vec4 var_9510d = texture(s_MatTexture, v_texcoord0);
+    if (AlphaMaskedTint.x != 0.0)
+    {
+        highp vec3 var_c7ec1 = mix(var_9510d.xyz, var_9510d.xyz * v_color0.xyz, vec3(var_9510d.w));
+        var_9510d = vec4(var_c7ec1.x, var_c7ec1.y, var_c7ec1.z, var_9510d.w);
+        var_9510d.w = 1.0;
+    }
+    else
+    {
+        highp vec3 var_55928 = var_9510d.xyz * v_color0.xyz;
+        var_9510d = vec4(var_55928.x, var_55928.y, var_55928.z, var_9510d.w);
+    }
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
     highp vec3 var_2b07f = (var_b65d1.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_57380.w);
-    highp vec4 var_84c3e = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_b65d1.w);
-    var_84c3e.w = 1.0;
+    highp vec4 var_9510d = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_b65d1.w);
+    var_9510d.w = 1.0;
 #endif
-    highp vec4 var_d117f = var_84c3e;
+    highp vec4 var_d117f = var_9510d;
 #ifdef SEASONS__OFF
     highp vec3 var_cdbd7 = var_d117f.xyz * var_57380.w;
-    var_84c3e = vec4(var_cdbd7.x, var_cdbd7.y, var_cdbd7.z, var_d117f.w);
+    var_9510d = vec4(var_cdbd7.x, var_cdbd7.y, var_cdbd7.z, var_d117f.w);
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
@@ -260,10 +273,10 @@ void main() {
     highp float var_5431f;
     func_a72a6(var_5431f, var_17b33, var_42cdf, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
-    highp vec4 var_b71d9 = vec4(var_cdbd7, var_84c3e.w);
+    highp vec4 var_b71d9 = vec4(var_cdbd7, var_9510d.w);
 #endif
 #ifdef SEASONS__ON
-    highp vec4 var_b71d9 = vec4(var_84c3e.xyz, var_d117f.w);
+    highp vec4 var_b71d9 = vec4(var_9510d.xyz, var_d117f.w);
 #endif
     highp vec4 var_6de71 = vec4(var_b71d9.x, var_b71d9.y, var_b71d9.z, var_b71d9.w);
     highp float var_7aa46;

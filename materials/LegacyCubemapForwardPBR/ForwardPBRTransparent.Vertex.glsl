@@ -25,8 +25,11 @@
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
+* - uniform vec4 AtmosphericScattering;
+* - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -34,6 +37,7 @@
 * - uniform mat4 CascadesShadowProj[8];
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
+* - uniform vec4 CloudRenderDistanceAndCloudHeight;
 * - uniform mat4 CloudShadowProj;
 * - uniform vec4 CloudShadowsVisible;
 * - uniform vec4 ClusterDepthBounds;
@@ -51,10 +55,15 @@
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
+* - uniform vec4 FogAndDistanceControl;
+* - uniform vec4 FogColor;
+* - uniform vec4 FogSkyBlend;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MaterialID;
+* - uniform vec4 MoonColor;
+* - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
@@ -69,12 +78,20 @@
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
+* - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
+* - uniform vec4 SkyHorizonColor;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkyZenithColor;
+* - uniform vec4 SkyboxAmbientIlluminance;
+* - uniform vec4 SkyboxParameters;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
+* - uniform vec4 SunColor;
+* - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;

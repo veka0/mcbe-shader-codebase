@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AverageLuminance;
-* - layout(binding = 1, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
+* - layout(binding = 4, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
 * - uniform lowp sampler3D s_FilteredBilateralGridOutput;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SceneColor;
@@ -42,7 +42,7 @@ struct GridCell {
     uint value;
 };
 
-layout(binding = 1, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_1f7e0;
+layout(binding = 4, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_e9645;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp sampler2D s_SceneColor;
 uniform vec4 GridDimensions;
@@ -85,9 +85,9 @@ void main() {
         uint var_78299 = (((var_8f053.z * var_3e70a.x) * var_3e70a.y) + (var_8f053.y * var_3e70a.x)) + var_8f053.x;
         float var_b5d7d = clamp(var_a69ee - float(var_79fc6), 0.0, 1.0);
         float var_ce1f7 = 1.0 - var_b5d7d;
-        uint var_aa3f4 = atomicAdd(var_1f7e0.BilateralGrid[var_6324c].weight, uint(var_ce1f7 * 256.0));
-        uint var_0bf9a = atomicAdd(var_1f7e0.BilateralGrid[var_6324c].value, uint((var_ce1f7 * var_86ba0) * 256.0));
-        uint var_4e27e = atomicAdd(var_1f7e0.BilateralGrid[var_78299].weight, uint(var_b5d7d * 256.0));
-        uint var_88e9f = atomicAdd(var_1f7e0.BilateralGrid[var_78299].value, uint((var_b5d7d * var_86ba0) * 256.0));
+        uint var_aa3f4 = atomicAdd(var_e9645.BilateralGrid[var_6324c].weight, uint(var_ce1f7 * 256.0));
+        uint var_0bf9a = atomicAdd(var_e9645.BilateralGrid[var_6324c].value, uint((var_ce1f7 * var_86ba0) * 256.0));
+        uint var_4e27e = atomicAdd(var_e9645.BilateralGrid[var_78299].weight, uint(var_b5d7d * 256.0));
+        uint var_88e9f = atomicAdd(var_e9645.BilateralGrid[var_78299].value, uint((var_b5d7d * var_86ba0) * 256.0));
     }
 }

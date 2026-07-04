@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AdaptedFrameAverageLuminance;
-* - layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
+* - layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
 * - uniform lowp sampler2D s_GameColor;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
@@ -38,7 +38,7 @@ struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_d3341;
+layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_15670;
 layout(location = 0, binding = 2, r32f) uniform writeonly highp image2D s_AdaptedFrameAverageLuminance;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform vec4 Adaptation;
@@ -52,7 +52,7 @@ void main() {
     float var_f1fcc;
     for (uint var_f44ea = 1u; var_f44ea < 256u; var_df095 = var_f1fcc, var_f44ea++)
     {
-        var_f1fcc = var_df095 + (float(var_d3341.CurFrameLuminanceHistogram[var_f44ea].count) * 0.00390625);
+        var_f1fcc = var_df095 + (float(var_15670.CurFrameLuminanceHistogram[var_f44ea].count) * 0.00390625);
     }
     float var_ff753 = var_df095 * QuantileBounds.x;
     float var_07558 = var_df095 * QuantileBounds.y;
@@ -67,7 +67,7 @@ void main() {
     float var_d0fba = 0.0;
     for (; var_78056 < 256u; var_d0fba = var_78bcc, var_fded9 = var_75fd1, var_da4f3 = var_8242f, var_78056++)
     {
-        float var_0faa1 = float(var_d3341.CurFrameLuminanceHistogram[var_78056].count) * 0.00390625;
+        float var_0faa1 = float(var_15670.CurFrameLuminanceHistogram[var_78056].count) * 0.00390625;
         float var_e821e = max(var_d0fba, var_ff753);
         float var_05327 = max(min(var_d0fba + var_0faa1, var_07558), var_e821e) - var_e821e;
         var_8242f = var_da4f3 + (var_05327 * float(var_78056));

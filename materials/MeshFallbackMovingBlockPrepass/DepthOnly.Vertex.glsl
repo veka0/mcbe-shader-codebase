@@ -41,10 +41,11 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 1, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 2, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 CurrentColor;
 * - uniform vec4 DitherParams;
 * - uniform vec4 DitherParams2[3];

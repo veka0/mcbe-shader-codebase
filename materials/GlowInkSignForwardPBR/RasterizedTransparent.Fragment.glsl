@@ -49,6 +49,7 @@
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -113,6 +114,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
@@ -169,6 +171,7 @@ uniform highp vec4 AmbientLightParams;
 uniform highp vec4 AtmosphericScattering;
 uniform highp vec4 AtmosphericScatteringToggles;
 uniform highp vec4 BlockBaseAmbientLightColorIntensity;
+uniform highp vec4 CameraAmbientContribution;
 uniform highp vec4 CameraLightIntensity;
 uniform highp vec4 CascadesParameters[8];
 uniform highp vec4 CascadesPerSet;
@@ -220,6 +223,7 @@ uniform highp vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloff
 uniform highp vec4 SunColor;
 uniform highp vec4 SunDir;
 uniform highp vec4 TileLightIntensity;
+uniform highp vec4 UndergroundFogColor;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -1167,28 +1171,38 @@ void main() {
             highp vec3 var_740c9;
             if (var_ae598 > 0.0)
             {
-                highp vec3 var_e98ed;
+                highp vec3 var_8c014;
                 if (AtmosphericScatteringToggles.y != 0.0)
                 {
-                    var_e98ed = FogColor.xyz * max(var_9be01, vec3(1.0));
+                    var_8c014 = FogColor.xyz * max(var_9be01, vec3(1.0));
                 }
                 else
                 {
-                    highp vec4 var_2957d = SunColor;
-                    highp vec4 var_18983 = MoonColor;
+                    highp vec4 var_9494e = SunColor;
+                    highp vec4 var_4c1a5 = MoonColor;
                     highp vec3 var_31294 = var_c2692;
-                    highp float var_bafee = smoothstep(FogSkyBlend.z - FogSkyBlend.w, FogSkyBlend.x - FogSkyBlend.w, var_31294.y);
-                    highp float var_7e369 = dot(var_c2692, SunDir.xyz);
-                    highp float var_69eec = dot(var_c2692, MoonDir.xyz);
+                    highp float var_639ce = smoothstep(FogSkyBlend.z - FogSkyBlend.w, FogSkyBlend.x - FogSkyBlend.w, var_31294.y);
+                    highp float var_e92e1 = dot(var_c2692, SunDir.xyz);
+                    highp float var_cd598 = dot(var_c2692, MoonDir.xyz);
                     highp vec3 var_845e4 = var_c2692;
-                    highp float var_1ced9 = smoothstep(FogSkyBlend.y, FogSkyBlend.x - FogSkyBlend.w, var_845e4.y);
-                    highp float var_b230a = clamp(pow(max(var_7e369, 0.0), AtmosphericScattering.w), 0.0, 1.0);
-                    highp float var_0d49f = clamp(pow(max(var_69eec, 0.0), AtmosphericScattering.w), 0.0, 1.0);
-                    highp float var_981a9 = 1.809999942779541015625 - (var_b230a * 1.7999999523162841796875);
-                    highp float var_91ebb = 1.809999942779541015625 - (var_0d49f * 1.7999999523162841796875);
-                    var_e98ed = (((mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3(clamp((var_1ced9 * var_1ced9) * var_1ced9, 0.0, 1.0))) * AtmosphericScattering.x) * 0.079577468335628509521484375) * ((var_2957d.w * (0.75 * ((var_7e369 * var_7e369) + 1.0))) + (var_18983.w * (0.75 * ((var_69eec * var_69eec) + 1.0))))) + (((SkyHorizonColor.xyz * clamp((var_bafee * var_bafee) * var_bafee, 0.0, 1.0)) * 0.079577468335628509521484375) * (((((SunColor.xyz * var_2957d.w) * AtmosphericScattering.y) * var_b230a) * (0.0361000001430511474609375 / (var_981a9 * sqrt(var_981a9)))) + ((((MoonColor.xyz * var_18983.w) * AtmosphericScattering.z) * var_0d49f) * (0.0361000001430511474609375 / (var_91ebb * sqrt(var_91ebb))))));
+                    highp float var_5803d = smoothstep(FogSkyBlend.y, FogSkyBlend.x - FogSkyBlend.w, var_845e4.y);
+                    highp float var_837b5 = clamp(pow(max(var_e92e1, 0.0), AtmosphericScattering.w), 0.0, 1.0);
+                    highp float var_b541a = clamp(pow(max(var_cd598, 0.0), AtmosphericScattering.w), 0.0, 1.0);
+                    highp float var_82b5e = 1.809999942779541015625 - (var_837b5 * 1.7999999523162841796875);
+                    highp float var_b76c3 = 1.809999942779541015625 - (var_b541a * 1.7999999523162841796875);
+                    highp vec3 var_d3c51 = (((mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3(clamp((var_5803d * var_5803d) * var_5803d, 0.0, 1.0))) * AtmosphericScattering.x) * 0.079577468335628509521484375) * ((var_9494e.w * (0.75 * ((var_e92e1 * var_e92e1) + 1.0))) + (var_4c1a5.w * (0.75 * ((var_cd598 * var_cd598) + 1.0))))) + (((SkyHorizonColor.xyz * clamp((var_639ce * var_639ce) * var_639ce, 0.0, 1.0)) * 0.079577468335628509521484375) * (((((SunColor.xyz * var_9494e.w) * AtmosphericScattering.y) * var_837b5) * (0.0361000001430511474609375 / (var_82b5e * sqrt(var_82b5e)))) + ((((MoonColor.xyz * var_4c1a5.w) * AtmosphericScattering.z) * var_b541a) * (0.0361000001430511474609375 / (var_b76c3 * sqrt(var_b76c3))))));
+                    highp vec3 var_52a1b;
+                    if (AtmosphericScatteringToggles.w != 0.0)
+                    {
+                        var_52a1b = mix(UndergroundFogColor.xyz, var_d3c51, vec3(max(CameraAmbientContribution.y, TileLightIntensity.y)));
+                    }
+                    else
+                    {
+                        var_52a1b = var_d3c51;
+                    }
+                    var_8c014 = var_52a1b;
                 }
-                var_740c9 = var_e98ed;
+                var_740c9 = var_8c014;
             }
             else
             {

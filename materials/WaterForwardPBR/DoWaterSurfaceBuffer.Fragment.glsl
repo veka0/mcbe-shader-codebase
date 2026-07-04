@@ -28,7 +28,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 12, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -48,6 +48,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -109,6 +110,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewPositionAndTime;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -152,7 +154,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 5, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_19767;
+layout(binding = 12, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_79193;
 layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_e1398;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
@@ -185,10 +187,10 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_5c197 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_3ee66 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec2 loc_5c197 = vec2(var_79193.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_79193.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_3ee66 = vec2(var_79193.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_79193.PBRData[v_pbrTextureId].colourToNormalUvBias1);
     highp vec3 loc_c8345;
-    if ((var_19767.PBRData[v_pbrTextureId].flags & 4) == 4)
+    if ((var_79193.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
         highp vec2 loc_01aa0 = (v_texcoord0 * loc_5c197) + loc_3ee66;
         highp vec3 loc_f7401 = vec3(0.0, 0.0, 1.0);
@@ -207,11 +209,11 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     else
     {
         highp vec3 loc_9252d;
-        if ((var_19767.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_79193.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
             highp vec2 loc_218fe = (v_texcoord0 * loc_5c197) + loc_3ee66;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_19767.PBRData[v_pbrTextureId].maxMipNormal - var_19767.PBRData[v_pbrTextureId].maxMipColour, var_19767.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_79193.PBRData[v_pbrTextureId].maxMipNormal - var_79193.PBRData[v_pbrTextureId].maxMipColour, var_79193.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -268,17 +270,17 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_19767.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_79193.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_79193.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_79193.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_79193.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_79193.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_19767.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_79193.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_79193.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -287,10 +289,10 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_19767.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_19767.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_19767.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_79193.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_79193.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_79193.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_79193.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
