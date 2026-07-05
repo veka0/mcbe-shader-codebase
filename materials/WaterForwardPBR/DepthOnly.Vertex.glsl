@@ -137,7 +137,7 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
-out float v_dithering;
+out vec2 v_ditheringAndMaskTinting;
 out vec2 v_lightmapUV;
 out vec3 v_normal;
 out vec3 v_tangent;
@@ -158,11 +158,12 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_9b079 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec2 var_e91ee = a_texcoord1;
-    uint var_960bd = uint(floor(var_e91ee.x * 255.0));
+    vec2 var_c34f1 = a_texcoord1;
+    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
+    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
     v_bitangent = vec3(0.0);
     v_color0 = a_color0;
-    v_dithering = float(uint(floor(var_e91ee.y * 255.0)) & 1u);
+    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
     v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
     v_normal = vec3(0.0);
     v_tangent = vec3(0.0);

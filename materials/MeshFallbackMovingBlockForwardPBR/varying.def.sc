@@ -12,17 +12,17 @@ vec4 i_data1 : TEXCOORD7;
 vec4 i_data2 : TEXCOORD6;
 vec4 i_data3 : TEXCOORD5;
 
-vec3          v_bitangent    : BITANGENT;
-vec4          v_color0       : COLOR0;
-float         v_dithering    : TEXCOORD2;
+vec3          v_bitangent               : BITANGENT;
+vec4          v_color0                  : COLOR0;
+vec2          v_ditheringAndMaskTinting : TEXCOORD2;
 #ifdef FORWARD_PBR_TRANSPARENT_PASS
-flat int      v_frontFacing  : FRONTFACING;
+flat int      v_frontFacing             : FRONTFACING;
 #endif
-vec2          v_lightmapUV   : TEXCOORD1;
-vec3          v_normal       : NORMAL;
+vec2          v_lightmapUV              : TEXCOORD1;
+vec3          v_normal                  : NORMAL;
 #if defined(FORWARD_PBR_TRANSPARENT_PASS) || defined(OPAQUE_PASS)
-flat int      v_pbrTextureId : TEXCOORD4;
+flat int      v_pbrTextureId            : TEXCOORD4;
 #endif
-vec3          v_tangent      : TANGENT;
-centroid vec2 v_texcoord0    : TEXCOORD0;
-vec3          v_worldPos     : TEXCOORD3;
+vec3          v_tangent                 : TANGENT;
+centroid vec2 v_texcoord0               : TEXCOORD0;
+vec3          v_worldPos                : TEXCOORD3;

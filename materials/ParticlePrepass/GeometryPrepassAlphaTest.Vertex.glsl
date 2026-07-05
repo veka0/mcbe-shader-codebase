@@ -15,7 +15,7 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_MERTexture;
+* - uniform lowp sampler2D s_MERSTexture;
 * - uniform lowp sampler2D s_NormalTexture;
 * - uniform lowp sampler2D s_ParticleTexture;
 *
@@ -30,9 +30,7 @@
 * - uniform vec4 SubPixelOffset;
 */
 
-#ifdef INSTANCING__OFF
 uniform mat4 u_model[4];
-#endif
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 FogAndDistanceControl;
@@ -42,6 +40,7 @@ in vec2 a_texcoord1;
 in vec4 a_color0;
 in vec4 a_normal;
 in vec3 a_position;
+in vec4 a_tangent;
 in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 in vec4 i_data1;
@@ -60,7 +59,7 @@ out vec3 v_worldPos;
 void main() {
     vec4 var_ab86e = vec4(0.0);
 #ifdef INSTANCING__OFF
-    vec4 var_93fa5 = u_model[0] * vec4(a_position, 1.0);
+    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -71,20 +70,20 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_93fa5 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec3 var_845e8 = var_93fa5.xyz;
+    vec4 var_4938b = a_tangent;
     mat4 var_be69c = u_proj;
     var_be69c[2].x += SubPixelOffset.x;
     var_be69c[2].y -= SubPixelOffset.y;
     v_ambientLight = a_texcoord1;
-    v_bitangent = vec3(0.0);
+    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_ab86e.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_normal = a_normal.xyz;
-    v_prevWorldPos = var_845e8;
-    v_tangent = vec3(0.0);
+    v_prevWorldPos = vec3(0.0);
+    v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_worldPos = var_845e8;
-    gl_Position = var_be69c * (u_view * vec4(var_93fa5.xyz, 1.0));
+    v_worldPos = var_a67a8.xyz;
+    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

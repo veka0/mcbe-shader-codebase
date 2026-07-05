@@ -84,7 +84,7 @@ in highp vec3 v_bitangent;
 in highp vec4 v_clipPosition;
 #endif
 in highp vec4 v_color0;
-in highp float v_dithering;
+in highp vec2 v_ditheringAndMaskTinting;
 in highp vec2 v_lightmapUV;
 in highp vec3 v_normal;
 flat in int v_pbrTextureId;
@@ -227,6 +227,7 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
 void main() {
     highp mat4 View = u_view;
     highp vec4 var_47d7b = v_color0;
+    highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
     highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
     highp vec4 var_a9bff = var_fe617;
 #ifdef DITHERING__OFF
@@ -237,7 +238,7 @@ void main() {
     highp vec2 var_5d8a5 = vec2(DitherParams.z, DitherParams.w);
 #endif
     bool var_9d408;
-    if (v_dithering > 0.5)
+    if (var_4f8e7.x > 0.5)
     {
 #ifdef DITHERING__OFF
         highp vec2 var_01f17 = floor(vec2(0.0));

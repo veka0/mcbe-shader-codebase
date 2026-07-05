@@ -16,7 +16,6 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_MatTexture;
-* - uniform lowp sampler2D s_ShadowTexture;
 *
 * Uniforms:
 * - uniform vec4 Ambient;
@@ -24,9 +23,6 @@
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 MaterialID;
-* - uniform vec4 ShadowFilterSize;
-* - uniform vec4 ShadowTexel;
-* - uniform mat4 ShadowTransform;
 */
 
 #ifdef INSTANCING__OFF

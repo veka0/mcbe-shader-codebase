@@ -161,10 +161,10 @@ in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-void func_7355d(inout highp vec2 arg_f694b) {
+void func_73dd7(inout highp vec2 arg_0a9f5) {
     highp vec4 loc_175e8 = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_7116a = loc_175e8.x;
-    highp float loc_2c54e = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
+    highp float loc_fd51f = loc_175e8.x;
+    highp float loc_5dbf2 = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
     bool loc_47b39 = v_occlusionUV.x >= 0.0;
     bool loc_77737;
     if (loc_47b39)
@@ -193,30 +193,30 @@ void func_7355d(inout highp vec2 arg_f694b) {
     {
         loc_1a0b7 = loc_8f253;
     }
-    if (loc_1a0b7 && (v_occlusionHeight < loc_2c54e))
+    if (loc_1a0b7 && (v_occlusionHeight < loc_5dbf2))
     {
-        arg_f694b = vec2(0.0);
+        arg_0a9f5 = vec2(0.0);
         return;
     }
     else
     {
-        arg_f694b = vec2(loc_7116a - (((v_occlusionHeight - loc_2c54e) * 25.0) * loc_7116a), 1.0);
+        arg_0a9f5 = vec2(clamp(loc_fd51f - (((v_occlusionHeight - loc_5dbf2) * 25.0) * loc_fd51f), 0.0, 1.0), 1.0);
         return;
     }
 }
 #endif
 #ifdef NO_OCCLUSION__ON
-void func_2e092(inout highp vec2 arg_003d1) {
-    highp vec4 loc_6e6a0 = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_a92e4 = loc_6e6a0.x;
-    arg_003d1 = vec2(loc_a92e4 - (((v_occlusionHeight - ((loc_6e6a0.y + (loc_6e6a0.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))) * 25.0) * loc_a92e4), 1.0);
+void func_b79af(inout highp vec2 arg_c6309) {
+    highp vec4 loc_afabb = texture(s_OcclusionTexture, v_occlusionUV);
+    highp float loc_97536 = loc_afabb.x;
+    arg_c6309 = vec2(clamp(loc_97536 - (((v_occlusionHeight - ((loc_afabb.y + (loc_afabb.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))) * 25.0) * loc_97536), 0.0, 1.0), 1.0);
 }
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-void func_195f6(inout highp vec2 arg_f694b) {
+void func_f0c66(inout highp vec2 arg_0a9f5) {
     highp vec4 loc_175e8 = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_7116a = loc_175e8.x;
-    highp float loc_c2c30 = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
+    highp float loc_fd51f = loc_175e8.x;
+    highp float loc_15941 = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
     bool loc_47b39 = v_occlusionUV.x >= 0.0;
     bool loc_77737;
     if (loc_47b39)
@@ -245,14 +245,14 @@ void func_195f6(inout highp vec2 arg_f694b) {
     {
         loc_65342 = loc_8f253;
     }
-    if (loc_65342 && (v_occlusionHeight > loc_c2c30))
+    if (loc_65342 && (v_occlusionHeight > loc_15941))
     {
-        arg_f694b = vec2(0.0);
+        arg_0a9f5 = vec2(0.0);
         return;
     }
     else
     {
-        arg_f694b = vec2(loc_7116a - (((v_occlusionHeight - loc_c2c30) * 25.0) * loc_7116a), 1.0);
+        arg_0a9f5 = vec2(clamp(loc_fd51f - (((v_occlusionHeight - loc_15941) * 25.0) * loc_fd51f), 0.0, 1.0), 1.0);
         return;
     }
 }
@@ -263,14 +263,14 @@ void main() {
 #endif
     highp vec2 var_3c0b9;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-    func_7355d(var_3c0b9);
+    func_73dd7(var_3c0b9);
 #endif
 #ifdef NO_OCCLUSION__ON
     highp vec4 var_3b155 = texture(s_WeatherTexture, v_texcoord0);
-    func_2e092(var_3c0b9);
+    func_b79af(var_3c0b9);
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-    func_195f6(var_3c0b9);
+    func_f0c66(var_3c0b9);
 #endif
     highp vec2 var_5d463 = var_3c0b9;
     highp vec4 var_9a675 = var_3b155;
