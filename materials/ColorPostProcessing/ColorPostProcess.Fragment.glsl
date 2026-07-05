@@ -672,86 +672,17 @@ void main() {
         func_8e34f(var_9e2e1, var_19d0d, var_a5fbb);
         var_95052 = var_9e2e1;
     }
-    highp vec3 var_394a3 = clamp(var_95052, vec3(0.0), vec3(1.0));
-    highp vec3 var_cb1f6;
+    highp vec3 var_b53eb = clamp(var_95052, vec3(0.0), vec3(1.0));
+    highp vec3 var_d9d1b;
     if (RasterizedColorEnabled.x > 0.0)
     {
-        highp vec4 var_ca109 = texture(s_RasterizedColor, v_texcoord0.xy);
-        highp vec4 var_e0355 = var_ca109;
-        highp vec3 var_5e18f = var_ca109.xyz;
-        highp float var_9c8a9 = dot(var_5e18f, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-        bool var_f6d86 = ColorGrading_Gamma_Highlights.w != 0.0;
-        bool var_6db0b = ColorGrading_Gamma_Shadows.w != 0.0;
-        bool var_32b29;
-        if (var_f6d86)
-        {
-            var_32b29 = var_9c8a9 >= (0.180000007152557373046875 * ColorGrading_Misc.y);
-        }
-        else
-        {
-            var_32b29 = var_f6d86;
-        }
-        highp vec3 var_8fa0f;
-        if (var_32b29)
-        {
-            var_8fa0f = ColorGrading_Gamma_Highlights.xyz;
-        }
-        else
-        {
-            bool var_a8c3a;
-            if (var_6db0b)
-            {
-                var_a8c3a = var_9c8a9 <= (0.180000007152557373046875 * ColorGrading_Misc.z);
-            }
-            else
-            {
-                var_a8c3a = var_6db0b;
-            }
-            highp vec3 var_0167c;
-            if (var_a8c3a)
-            {
-                var_0167c = ColorGrading_Gamma_Shadows.xyz;
-            }
-            else
-            {
-                highp vec3 var_d53fd;
-                if (ColorGrading_Gamma_Midtones.w != 0.0)
-                {
-                    highp vec3 var_feb39;
-                    if ((var_9c8a9 < 0.180000007152557373046875) && var_6db0b)
-                    {
-                        var_feb39 = mix(ColorGrading_Gamma_Shadows.xyz, ColorGrading_Gamma_Midtones.xyz, vec3((var_9c8a9 - (0.180000007152557373046875 * ColorGrading_Misc.z)) / (0.180000007152557373046875 - (0.180000007152557373046875 * ColorGrading_Misc.z))));
-                    }
-                    else
-                    {
-                        highp vec3 var_0298a;
-                        if ((var_9c8a9 > 0.180000007152557373046875) && var_f6d86)
-                        {
-                            var_0298a = mix(ColorGrading_Gamma_Midtones.xyz, ColorGrading_Gamma_Highlights.xyz, vec3((var_9c8a9 - 0.180000007152557373046875) / ((0.180000007152557373046875 * ColorGrading_Misc.y) - 0.180000007152557373046875)));
-                        }
-                        else
-                        {
-                            var_0298a = ColorGrading_Gamma_Midtones.xyz;
-                        }
-                        var_feb39 = var_0298a;
-                    }
-                    var_d53fd = var_feb39;
-                }
-                else
-                {
-                    var_d53fd = vec3(2.2000000476837158203125);
-                }
-                var_0167c = var_d53fd;
-            }
-            var_8fa0f = var_0167c;
-        }
-        highp vec3 var_a2e34;
-        func_8e34f(var_a2e34, var_5e18f, var_8fa0f);
-        var_cb1f6 = (var_394a3 * (1.0 - var_e0355.w)) + var_a2e34;
+        highp vec4 var_3c414 = texture(s_RasterizedColor, v_texcoord0.xy);
+        highp vec4 var_bfce0 = var_3c414;
+        var_d9d1b = (var_b53eb * (1.0 - var_bfce0.w)) + var_3c414.xyz;
     }
     else
     {
-        var_cb1f6 = var_394a3;
+        var_d9d1b = var_b53eb;
     }
-    bgfx_FragColor = vec4(var_cb1f6, 1.0);
+    bgfx_FragColor = vec4(var_d9d1b, 1.0);
 }

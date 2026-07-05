@@ -723,7 +723,7 @@ void main() {
         var_ce339 = var_b3851;
     }
     highp vec4 var_e30b2 = vec4(texture(s_MatTexture, v_texcoord0).xyz, 1.0);
-    highp vec2 var_3c821 = v_lightmapUV;
+    highp vec2 var_58222 = v_lightmapUV;
     highp vec4 var_6bfdc = vec4(var_e30b2.x, var_e30b2.y, var_e30b2.z, var_e30b2.w);
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
@@ -750,12 +750,12 @@ void main() {
     highp float var_9ef48 = var_96bda.w;
     highp vec4 var_d0ebc = ((var_eaa92 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_d0ebc;
-    highp vec3 var_086ac = v_lightColor;
+    highp vec3 var_2b55b = v_lightColor;
     highp vec3 var_5c15e;
-    if ((((var_086ac.x + var_086ac.y) + var_086ac.z) <= 9.9999997473787516355514526367188e-05) && (var_3c821.x >= 9.9999997473787516355514526367188e-05))
+    if ((((var_2b55b.x + var_2b55b.y) + var_2b55b.z) < 9.9999997473787516355514526367188e-05) && (var_58222.x > 9.9999997473787516355514526367188e-05))
     {
         highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_9a19a = var_3c821.x * var_3c821.x;
+        highp float var_9a19a = var_58222.x * var_58222.x;
         var_5c15e = clamp(vec3(var_9a19a + (var_0bc6f.x * var_0bc6f.w), (var_9a19a * ((((var_9a19a * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_9a19a * (((var_9a19a * var_9a19a) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
     }
     else
@@ -773,7 +773,7 @@ void main() {
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
     uvec2 var_12195 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
     uvec2 var_73d15 = uvec2(uint(clamp(var_08af3, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_de0d6, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_73d15.x << 8u) | var_73d15.y, var_12195.x, var_12195.y, uint(clamp(var_3c821.y, 0.0, 1.0) * 255.0));
+    bgfx_FragData0 = uvec4((var_73d15.x << 8u) | var_73d15.y, var_12195.x, var_12195.y, uint(clamp(var_58222.y, 0.0, 1.0) * 255.0));
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }

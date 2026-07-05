@@ -44,14 +44,15 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
-out vec2 v_ambientLight;
 out vec3 v_bitangent;
 out vec4 v_color0;
+out vec3 v_coloredLighting;
 out vec4 v_fog;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
+out vec2 v_vanillaLighting;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
@@ -70,14 +71,15 @@ void main() {
 #endif
     vec4 var_32522 = u_viewProj * vec4(var_12727.xyz, 1.0);
     vec4 var_b4024 = var_32522;
-    v_ambientLight = vec2(0.0);
     v_bitangent = vec3(0.0);
     v_color0 = a_color0;
+    v_coloredLighting = vec3(0.0);
     v_fog = vec4(FogColor.xyz, clamp(((var_b4024.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_normal = vec3(0.0);
     v_prevWorldPos = vec3(0.0);
     v_tangent = vec3(0.0);
     v_texcoord0 = a_texcoord0;
+    v_vanillaLighting = vec2(0.0);
     v_worldPos = var_12727.xyz;
     gl_Position = var_32522;
 }

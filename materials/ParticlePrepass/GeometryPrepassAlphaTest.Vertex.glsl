@@ -36,9 +36,9 @@ uniform mat4 u_view;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
 uniform vec4 SubPixelOffset;
-in vec2 a_texcoord1;
 in vec4 a_color0;
 in vec4 a_normal;
+in vec2 a_texcoord1;
 in vec3 a_position;
 in vec4 a_tangent;
 in vec2 a_texcoord0;
@@ -47,17 +47,24 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
-out vec2 v_ambientLight;
 out vec3 v_bitangent;
 out vec4 v_color0;
+out vec3 v_coloredLighting;
 out vec4 v_fog;
 out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
+out vec2 v_vanillaLighting;
 out vec3 v_worldPos;
 void main() {
     vec4 var_ab86e = vec4(0.0);
+    vec2 var_962be = a_texcoord1;
+    uint var_acaed = uint(var_962be.x * 65535.0) & 65535u;
+    uint var_ff4c7 = uint(var_962be.y * 65535.0) & 65535u;
+    uvec4 var_36a75 = uvec4(var_acaed >> 8u, var_acaed & 255u, var_ff4c7 >> 8u, var_ff4c7 & 255u);
+    uvec4 var_fc127 = var_36a75;
+    uvec4 var_0245b = var_36a75;
 #ifdef INSTANCING__OFF
     vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
@@ -79,14 +86,15 @@ void main() {
     var_67767.y -= SubPixelOffset.y;
     mat4 var_8e1af = u_proj;
     var_8e1af[2] = var_67767;
-    v_ambientLight = a_texcoord1;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
     v_color0 = a_color0;
+    v_coloredLighting = vec3(var_36a75.xyz) * vec3(0.0039215688593685626983642578125);
     v_fog = vec4(FogColor.xyz, clamp(((var_ab86e.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_normal = a_normal.xyz;
     v_prevWorldPos = vec3(0.0);
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
+    v_vanillaLighting = vec2(float((var_fc127.w >> uint(4)) & 15u) * 0.066666670143604278564453125, float(var_0245b.w & 15u) * 0.066666670143604278564453125);
     v_worldPos = var_a67a8.xyz;
     gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }
