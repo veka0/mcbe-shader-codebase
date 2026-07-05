@@ -48,14 +48,12 @@ precision mediump float;
 precision highp int;
 uniform highp sampler2D s_MatTexture;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
     highp vec4 var_0b949 = texture(s_MatTexture, v_texcoord0);
     if (var_0b949.w < 0.5)
     {
         discard;
     }
-    bgfx_FragData[0] = vec4(1.0);
-    bgfx_FragData[1] = vec4(0.0);
-    bgfx_FragData[2] = vec4(0.0);
+    bgfx_FragColor = vec4(1.0);
 }

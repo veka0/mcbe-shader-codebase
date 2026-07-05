@@ -105,9 +105,12 @@ void main() {
     vec3 var_0c400 = a_color0.xyz;
     vec3 var_edeb8 = var_2071d - ((cross(var_85f78, var_e10ad) * (var_0c400.z - 0.5)) + (var_e10ad * (var_0c400.x - 0.5)));
 #endif
-    mat4 var_dd47a = u_proj;
-    var_dd47a[2].x += SubPixelOffset.x;
-    var_dd47a[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_fab2f = u_proj;
+    var_fab2f[2] = var_67767;
     vec4 var_4938b = a_tangent;
     vec4 var_57c72 = a_normal;
     uvec2 var_b33a4 = uvec2(round(a_texcoord1 * 65535.0));
@@ -134,10 +137,10 @@ void main() {
     v_texcoord0 = a_texcoord0;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_dd47a * (u_view * vec4(var_a67a8.xyz, 1.0));
+    gl_Position = var_fab2f * (u_view * vec4(var_a67a8.xyz, 1.0));
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_worldPos = var_edeb8;
-    gl_Position = var_dd47a * (u_view * vec4(var_edeb8, 1.0));
+    gl_Position = var_fab2f * (u_view * vec4(var_edeb8, 1.0));
 #endif
 }

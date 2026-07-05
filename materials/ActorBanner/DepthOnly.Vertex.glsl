@@ -43,6 +43,7 @@
 * - uniform vec4 ActorFPEpsilon;
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -133,10 +134,13 @@ void main() {
     vec4 var_04231 = var_3e234 * vec4(a_position, 1.0);
 #endif
     vec4 var_db20e = a_color0;
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_04ab5 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_04ab5 = var_cbf5d * (u_view * vec4(var_04231.xyz, 1.0));
     vec4 var_27f6b = var_04ab5;
     int var_e5df4 = int(var_db20e.w * 255.0);
     vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_6a5c3) + BannerUVOffsetsAndScales[var_e5df4].xy;

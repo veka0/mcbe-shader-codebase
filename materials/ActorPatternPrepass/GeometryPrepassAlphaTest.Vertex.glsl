@@ -50,6 +50,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -84,19 +85,19 @@
 * - uniform vec4 ViewPositionAndTime;
 */
 
-#ifdef INSTANCING__OFF
 uniform mat4 Bones[8];
+uniform mat4 PrevBones[8];
+uniform mat4 PrevWorld;
 uniform mat4 u_model[4];
-#endif
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
 uniform vec4 UVAnimation;
-#ifdef INSTANCING__OFF
 in float a_indices;
-#endif
 in vec4 a_color0;
+in vec4 a_normal;
 in vec3 a_position;
+in vec4 a_tangent;
 in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 in vec4 i_data1;
@@ -112,9 +113,8 @@ out vec3 v_tangent;
 centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-#ifdef INSTANCING__OFF
-    vec4 var_04231 = (u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0);
-#endif
+    int var_c8e27 = int(a_indices);
+    mat4 var_c7bcb = u_model[0] * Bones[var_c8e27];
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
     vec4 var_e67a8 = i_data2;
@@ -124,19 +124,26 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_04231 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_96145 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_c804c = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
-    v_bitangent = vec3(0.0);
+#ifdef INSTANCING__OFF
+    vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
+#endif
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_c804c = var_cbf5d * (u_view * vec4(var_96145.xyz, 1.0));
+    vec4 var_4c816 = a_tangent;
+    v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
     v_clipPosition = var_c804c;
     v_color0 = a_color0;
-    v_normal = vec3(0.0);
-    v_prevWorldPos = vec3(0.0);
-    v_tangent = vec3(0.0);
+    v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
+    v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
+    v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
-    v_worldPos = var_04231.xyz;
+    v_worldPos = var_96145.xyz;
     gl_Position = var_c804c;
 }

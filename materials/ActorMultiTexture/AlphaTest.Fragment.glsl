@@ -43,6 +43,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -68,6 +69,7 @@
 
 precision mediump float;
 precision highp int;
+float var_33fae;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_view;
 uniform highp sampler2D s_MatTexture1;
@@ -94,7 +96,6 @@ centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp mat4 View = u_view;
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
@@ -137,7 +138,7 @@ void main() {
     highp vec4 var_5f29b = texture(s_MatTexture2, v_texcoord0);
     highp vec4 var_a1438 = var_5f29b;
 #ifdef COLOR_SECOND_TEXTURE__OFF
-    highp vec3 var_1a87f = mix((mix(mix(var_df431.xyz, var_47058.xyz, vec3(var_69be9.w)).xyz, var_5f29b.xyz, vec3(var_a1438.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec3 var_7f8f2 = mix((mix(mix(var_df431.xyz, var_47058.xyz, vec3(var_69be9.w)).xyz, var_5f29b.xyz, vec3(var_a1438.w)).xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
 #endif
 #ifdef COLOR_SECOND_TEXTURE__ON
     highp vec4 var_419cb;
@@ -150,31 +151,32 @@ void main() {
     {
         var_419cb = vec4(var_41dfa.x, var_41dfa.y, var_41dfa.z, var_df431.w);
     }
-    highp vec3 var_1a87f = mix((var_419cb.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_d381b = vec4(var_1a87f.x, var_1a87f.y, var_1a87f.z, var_419cb.w);
+    highp vec3 var_7f8f2 = mix((var_419cb.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_f38db = vec4(var_7f8f2.x, var_7f8f2.y, var_7f8f2.z, var_419cb.w);
 #endif
 #ifdef COLOR_SECOND_TEXTURE__OFF
-    highp vec4 var_d381b = vec4(var_1a87f.x, var_1a87f.y, var_1a87f.z, var_df431.w);
+    highp vec4 var_f38db = vec4(var_7f8f2.x, var_7f8f2.y, var_7f8f2.z, var_df431.w);
 #endif
-    highp vec2 var_77469 = DitherParams2[0].xy;
-    bool var_e71ae;
+    highp vec2 var_7c9c5 = DitherParams2[0].xy;
+    bool var_9e7dd;
     if (DitheringEnabledToggle.x != 0.0)
     {
+        highp mat4 var_4971e = u_view;
         highp vec4 var_d36cf = v_clipPosition;
         highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
-        highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
-        highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
-        highp vec2 var_ccfe4 = floor(var_886c2);
-        var_e71ae = smoothstep(var_77469.x, var_77469.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_f4989 = floor(var_886c2 * 0.25);
+        highp vec2 var_85686 = floor(var_886c2 * 0.5);
+        highp vec2 var_09c49 = floor(var_886c2);
+        var_9e7dd = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_e71ae = false;
+        var_9e7dd = false;
     }
     bool var_7df86;
-    if (!var_e71ae)
+    if (!var_9e7dd)
     {
-        bool var_80f22 = var_d381b.w < 0.5;
+        bool var_80f22 = var_f38db.w < 0.5;
         bool var_f1731;
         if (var_80f22)
         {
@@ -188,14 +190,12 @@ void main() {
     }
     else
     {
-        var_7df86 = var_e71ae;
+        var_7df86 = var_9e7dd;
     }
     if (var_7df86)
     {
         discard;
     }
-    highp vec4 var_baf55 = vec4(var_1a87f, var_d381b.w);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_baf55.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_baf55.w);
+    highp vec4 var_dc02c = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_7f8f2, var_f38db.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_f38db.w);
 }

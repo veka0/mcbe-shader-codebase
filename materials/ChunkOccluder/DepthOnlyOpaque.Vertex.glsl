@@ -12,7 +12,7 @@
 uniform mat4 u_modelViewProj;
 in vec3 a_position;
 void main() {
-    vec4 var_58502 = u_modelViewProj * vec4(a_position, 1.0);
-    var_58502.z = max(var_58502.z, -var_58502.w);
-    gl_Position = var_58502;
+    vec4 var_619a2 = u_modelViewProj * vec4(a_position, 1.0);
+    var_619a2.z = max(var_619a2.z, -1.0);
+    gl_Position = var_619a2;
 }

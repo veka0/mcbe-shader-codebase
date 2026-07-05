@@ -118,7 +118,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -133,13 +133,13 @@ uniform highp mat4 u_viewProj;
 uniform highp vec4 VolumeNearFar;
 in highp vec3 v_normal;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_83731 = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_b8928 = var_83731;
     highp vec3 var_41902 = var_83731.xyz / vec3(var_b8928.w);
     highp vec2 var_c838f = VolumeNearFar.xy;
     highp vec4 var_c1bef = u_invProj * vec4(var_41902, 1.0);
-    highp vec3 var_3d37c = vec3((var_41902.xy + vec2(1.0)) * 0.5, log((53.598148345947265625 * ((((-var_c1bef.z) / var_c1bef.w) - var_c838f.x) / (var_c838f.y - var_c838f.x))) + 1.0) * 0.25);
-    bgfx_FragData[0] = vec4(var_3d37c.z, abs(dot(v_normal, normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz))), 0.0, 1.0);
+    highp vec3 var_fe513 = vec3((var_41902.xy + vec2(1.0)) * 0.5, log((53.598148345947265625 * ((((-var_c1bef.z) / var_c1bef.w) - var_c838f.x) / (var_c838f.y - var_c838f.x))) + 1.0) * 0.25);
+    bgfx_FragData0 = vec4(var_fe513.z, abs(dot(v_normal, normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz))), 0.0, 1.0);
 }

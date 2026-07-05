@@ -63,8 +63,6 @@ void main() {
     {
         discard;
     }
-    highp vec4 var_72347 = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
-    highp vec4 var_67e99 = v_fog;
-    highp vec3 var_2a3e1 = mix(var_72347.xyz, FogColor.xyz, vec3(var_67e99.w));
-    bgfx_FragColor = vec4(var_2a3e1.x, var_2a3e1.y, var_2a3e1.z, var_72347.w);
+    highp vec4 var_89572 = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0).xyz, FogColor.xyz, vec3(var_89572.w)), 1.0);
 }

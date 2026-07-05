@@ -29,8 +29,12 @@
 *
 * Uniforms:
 * - uniform vec4 AlphaMaskedTint;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
@@ -57,6 +61,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 flat out int v_frontFacing;
 out vec4 v_mers;
@@ -82,6 +87,7 @@ void main() {
     vec4 var_9b079 = var_e43a8 * vec4(a_position, 1.0);
 #endif
     v_bitangent = vec3(0.0);
+    v_clipPosition = vec4(0.0);
     v_color0 = vec4(0.0);
     v_frontFacing = 0;
     v_mers = vec4(0.0);

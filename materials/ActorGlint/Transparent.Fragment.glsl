@@ -38,6 +38,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -121,11 +122,10 @@ void main() {
 #endif
     var_a3804.w = max(0.0, var_a3804.w);
     highp vec4 var_61669 = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
-    highp vec4 var_e07b8 = vec4(var_61669.xyz * var_61669.xyz, abs(var_61669.w)) + vec4(mix((var_a3804.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
-    var_e07b8.w = var_a3804.w;
-    highp vec4 var_f83be = var_e07b8;
-    highp vec4 var_ae171 = vec4(var_e07b8.xyz, var_f83be.w * HudOpacity.x);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_ae171.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_ae171.w);
+    highp vec4 var_902d3 = vec4(var_61669.xyz * var_61669.xyz, abs(var_61669.w)) + vec4(mix((var_a3804.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    var_902d3.w = var_a3804.w;
+    highp vec4 var_47c70 = var_902d3;
+    highp float var_3a28f = var_47c70.w * HudOpacity.x;
+    highp vec4 var_24d33 = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_902d3.xyz, var_3a28f).xyz, v_fog.xyz, vec3(var_24d33.w)), var_3a28f);
 }

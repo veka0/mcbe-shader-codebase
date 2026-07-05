@@ -28,9 +28,12 @@ in vec3 a_position;
 in vec2 a_texcoord0;
 out vec2 v_texcoord0;
 void main() {
-    mat4 var_b058a = u_proj;
-    var_b058a[2].x += SubPixelOffset.x;
-    var_b058a[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_4992e = u_proj;
+    var_4992e[2] = var_67767;
     v_texcoord0 = a_texcoord0 * UVScale.xy;
-    gl_Position = var_b058a * (u_view * vec4(((u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0)).xyz, 1.0));
+    gl_Position = var_4992e * (u_view * vec4(((u_model[0] * Bones[int(a_indices)]) * vec4(a_position, 1.0)).xyz, 1.0));
 }

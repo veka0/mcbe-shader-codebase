@@ -17,7 +17,7 @@
 * Buffers:
 * - uniform lowp sampler2D s_GbufferDepth;
 * - uniform lowp sampler2D s_GbufferNormal;
-* - uniform lowp sampler2D s_GbufferRoughness;
+* - uniform lowp usampler2D s_GbufferRoughness;
 * - uniform lowp sampler2D s_InputTexture;
 * - uniform lowp sampler2D s_PreviousReflectionBuffer;
 * - uniform lowp sampler2D s_RasterColor;
@@ -35,12 +35,13 @@
 
 precision mediump float;
 precision highp int;
+float var_ab8ec;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_proj;
 uniform highp sampler2D s_GbufferDepth;
 uniform highp sampler2D s_GbufferNormal;
-uniform highp sampler2D s_GbufferRoughness;
+uniform highp usampler2D s_GbufferRoughness;
 uniform highp vec4 CameraData;
 uniform highp vec4 SSRFadingParamsAndThickness;
 uniform highp vec4 SSRRayMarchingParams;
@@ -230,26 +231,33 @@ void func_d31db(inout highp vec3 arg_0a9df, inout highp vec3 arg_b97ab, inout hi
     arg_0418b = vec4(loc_34e0b.xy, loc_34e0b.z, min(min(min((1.0 - loc_919c5.x) * (1.0 - loc_919c5.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, loc_39c99 / float(loc_ca178))), clamp(1.0 - dot(normalize(normalize(vec3(loc_ba96a.x, loc_ba96a.y, loc_2be11.z))), normalize((u_invView * vec4(loc_fe905, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_cf4e3, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
 }
 void main() {
-    highp vec2 var_3fe8c = (floor(v_texcoord0.xy * ScreenSize.xy) + vec2(0.5)) * ScreenSize.zw;
-    highp vec4 var_42413 = texture(s_GbufferRoughness, var_3fe8c.xy);
-    highp float var_dbbfe = var_42413.w;
+    highp vec2 var_d7236 = (floor(v_texcoord0.xy * ScreenSize.xy) + vec2(0.5)) * ScreenSize.zw;
+    uvec4 var_6dbc5 = texelFetch(s_GbufferRoughness, ivec2(vec2(textureSize(s_GbufferRoughness, 0)) * var_d7236.xy), 0);
+    uint var_4b676 = var_6dbc5.x & 65535u;
+    uvec2 var_e21cd = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
+    highp vec2 var_92e53 = vec2(float(var_e21cd.x), var_ab8ec) * vec2(0.0039215688593685626983642578125);
+    highp float var_e080c = var_92e53.x;
     highp vec4 var_53578;
-    if (var_dbbfe > SSRRoughnessCutoffParams.x)
+    if (var_e080c > SSRRoughnessCutoffParams.x)
     {
         var_53578 = vec4(0.0, 0.0, 0.0, -1.0);
     }
     else
     {
         int var_935ff = int(SSRRayMarchingParams.w);
-        highp vec2 var_fe7f4 = var_3fe8c.xy;
+        highp vec2 var_fe7f4 = var_d7236.xy;
         highp vec4 var_f1c12 = vec4(v_projPosition.xy, (texture(s_GbufferDepth, var_fe7f4).x * 2.0) - 1.0, 1.0);
-        highp mat4 var_1356c = u_invProj;
+        highp mat4 var_66373 = u_invProj;
+        highp mat4 var_27f4c = u_invProj;
+        highp mat4 var_fb307 = u_invProj;
+        highp mat4 var_622c9 = u_invProj;
+        highp mat4 var_88001 = u_invProj;
         highp float var_a1967 = var_f1c12.x;
         highp float var_ccc39 = var_f1c12.y;
         highp float var_071ba = var_f1c12.w;
         highp float var_55419 = var_f1c12.z;
         highp float var_10bf4 = var_f1c12.w;
-        highp vec4 var_67b7b = vec4(var_a1967 * var_1356c[0].x, var_ccc39 * var_1356c[1].y, var_071ba * var_1356c[3].z, (var_55419 * var_1356c[2].w) + (var_10bf4 * var_1356c[3].w));
+        highp vec4 var_67b7b = vec4(var_a1967 * var_66373[0].x, var_ccc39 * var_27f4c[1].y, var_071ba * var_fb307[3].z, (var_55419 * var_622c9[2].w) + (var_10bf4 * var_88001[3].w));
         var_f1c12 = var_67b7b;
         highp float var_750bb = var_f1c12.w;
         highp vec4 var_f9757 = var_67b7b / vec4(var_750bb);
@@ -271,7 +279,7 @@ void main() {
         var_f857f = vec3(var_a8234.x, var_a8234.y, var_01dc5.z);
         highp vec3 var_05fb6 = normalize((transpose(u_invView) * vec4(normalize(normalize(vec3(var_a8234.x, var_a8234.y, var_01dc5.z))), 0.0)).xyz);
         highp vec4 var_7f57a;
-        func_d31db(var_87acf, var_05fb6, var_7f57a, var_935ff, var_dbbfe);
+        func_d31db(var_87acf, var_05fb6, var_7f57a, var_935ff, var_e080c);
         var_53578 = var_7f57a;
     }
     bgfx_FragColor = var_53578;

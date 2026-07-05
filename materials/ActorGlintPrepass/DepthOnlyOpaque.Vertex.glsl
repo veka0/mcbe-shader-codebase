@@ -38,6 +38,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -114,10 +115,13 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_04231 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_c804c = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_c804c = var_cbf5d * (u_view * vec4(var_04231.xyz, 1.0));
     v_bitangent = vec3(0.0);
     v_clipPosition = var_c804c;
     v_color0 = a_color0;

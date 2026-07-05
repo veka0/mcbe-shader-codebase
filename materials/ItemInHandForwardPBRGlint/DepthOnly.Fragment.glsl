@@ -41,6 +41,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
@@ -67,6 +68,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -121,7 +125,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -130,67 +134,82 @@
 
 precision mediump float;
 precision highp int;
-float var_aaae6;
+float var_33fae;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_view;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp vec4 ChangeColor;
 uniform highp vec4 ColorBased;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 #ifdef MULTI_COLOR_TINT__ON
 uniform highp vec4 MultiplicativeTintColor;
 #endif
 uniform highp vec4 OverlayColor;
 uniform highp vec4 PreExposureEnabled;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_prevWorldPos;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_517fd = v_color0;
-    highp vec3 var_05ab4 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #endif
+    highp vec3 var_d1539 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_620d5 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_35473 = var_620d5.xy;
-    highp vec3 var_7f614 = mix(mix((var_620d5.xxx * ChangeColor.xyz).xyz, var_620d5.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_cdf31 = vec4(var_7f614.x, var_7f614.y, var_7f614.z, vec4(1.0).w);
+    highp vec2 var_35473 = var_d1539.xy;
+    highp vec3 var_9489a = mix(mix((var_d1539.xxx * ChangeColor.xyz).xyz, var_d1539.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_35473.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_9bac9 = vec4(var_9489a.x, var_9489a.y, var_9489a.z, vec4(1.0).w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_e2f60 = vec4(var_05ab4.x, var_05ab4.y, var_05ab4.z, vec4(1.0).w);
-    highp vec3 var_3b8c4 = mix(mix(var_e2f60, var_e2f60 * ChangeColor, vec4(var_517fd.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_cdf31 = vec4(var_3b8c4.x, var_3b8c4.y, var_3b8c4.z, vec4(1.0).w);
+    highp vec4 var_e2f60 = vec4(var_d1539.x, var_d1539.y, var_d1539.z, vec4(1.0).w);
+    highp vec3 var_a7fd7 = mix(mix(var_e2f60, var_e2f60 * ChangeColor, vec4(var_517fd.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_9bac9 = vec4(var_a7fd7.x, var_a7fd7.y, var_a7fd7.z, vec4(1.0).w);
 #endif
-    if (var_cdf31.w < 0.5)
+    highp vec2 var_7c9c5 = DitherParams2[0].xy;
+    bool var_ab7ce;
+    if (DitheringEnabledToggle.x != 0.0)
     {
-        discard;
-    }
-#ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_0ce89 = var_3b8c4.xyz;
-#endif
-#ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_0ce89 = var_7f614.xyz;
-#endif
-    highp vec3 var_cb832;
-    if (PreExposureEnabled.x > 0.0)
-    {
-        var_cb832 = var_0ce89 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        highp mat4 var_4971e = u_view;
+        highp vec4 var_d36cf = v_clipPosition;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_f4989 = floor(var_886c2 * 0.25);
+        highp vec2 var_85686 = floor(var_886c2 * 0.5);
+        highp vec2 var_09c49 = floor(var_886c2);
+        var_ab7ce = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_cb832 = var_0ce89;
+        var_ab7ce = false;
+    }
+    if (var_ab7ce || (var_9bac9.w < 0.5))
+    {
+        discard;
+    }
+    highp vec3 var_39de3;
+    if (PreExposureEnabled.x > 0.0)
+    {
+        var_39de3 = var_9bac9.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+    }
+    else
+    {
+        var_39de3 = var_9bac9.xyz;
     }
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_7ed87;
+    highp vec4 var_93f7a = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_93f7a;
     highp vec4 var_c6f70 = u_prevViewProj * vec4(v_prevWorldPos, 1.0);
     highp vec4 var_96bda = var_c6f70;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_82203 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_82203;
-    highp vec2 var_e953a = var_7ed87.xy - var_82203.xy;
-    bgfx_FragData[0] = vec4(var_cb832.x, var_cb832.y, var_cb832.z, vec4(var_aaae6, var_aaae6, var_aaae6, var_cdf31.w).w);
-    bgfx_FragData[1] = vec4(vec4(0.0).x, vec4(0.0).y, var_e953a.x, var_e953a.y);
+    highp vec4 var_cd007 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_cd007;
+    bgfx_FragData0 = vec4(var_39de3, var_9bac9.w);
+    bgfx_FragData1 = vec4(0.0, 0.0, var_93f7a.xy - var_cd007.xy);
 }

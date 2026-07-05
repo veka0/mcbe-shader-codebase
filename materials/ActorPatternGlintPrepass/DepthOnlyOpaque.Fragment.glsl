@@ -48,6 +48,7 @@
 *
 * Uniforms:
 * - uniform vec4 ActorFPEpsilon;
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -86,9 +87,7 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    bgfx_FragData[0] = vec4(1.0);
-    bgfx_FragData[1] = vec4(0.0);
-    bgfx_FragData[2] = vec4(0.0);
+    bgfx_FragColor = vec4(1.0);
 }

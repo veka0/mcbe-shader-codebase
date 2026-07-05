@@ -105,15 +105,18 @@ void main() {
     float var_e3e0a = length(ViewPositionAndTime.xyz - var_7848e);
 #endif
     vec4 var_ade36 = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
-    mat4 var_f3461 = u_proj;
-    var_f3461[2].x += SubPixelOffset.x;
-    var_f3461[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_4d882 = u_proj;
+    var_4d882[2] = var_67767;
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    vec4 var_d80ab = var_f3461 * (u_view * vec4(var_a77b2.xyz, 1.0));
+    vec4 var_d80ab = var_4d882 * (u_view * vec4(var_a77b2.xyz, 1.0));
     vec4 var_ca76d = a_color0;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    vec4 var_d80ab = var_f3461 * (u_view * vec4(var_d4226, 1.0));
+    vec4 var_d80ab = var_4d882 * (u_view * vec4(var_d4226, 1.0));
     vec4 var_ca76d = vec4(1.0);
 #endif
     if (var_9d5b1.w < 0.949999988079071044921875)

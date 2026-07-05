@@ -20,8 +20,9 @@
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
-* - layout(binding = 6, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 7, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - uniform lowp sampler3D s_SkyAmbientSamples;
+* - layout(binding = 7, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 8, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -83,6 +84,7 @@
 * - uniform vec4 SkyAmbientLightColorIntensity;
 * - uniform vec4 SkyHorizonColor;
 * - uniform vec4 SkyProbeUVFadeParameters;
+* - uniform vec4 SkySamplesConfig;
 * - uniform vec4 SkyZenithColor;
 * - uniform vec4 SkyboxAmbientIlluminance;
 * - uniform vec4 SkyboxParameters;
@@ -115,10 +117,13 @@ out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
     vec4 var_e795d = u_model[0] * (CubemapRotation * vec4(a_position, 1.0));
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_c804c = var_bab0b * (u_view * vec4(var_e795d.xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_c804c = var_cbf5d * (u_view * vec4(var_e795d.xyz, 1.0));
     v_clipPosition = var_c804c;
     v_color0 = a_color0;
     v_texcoord0 = a_texcoord0;

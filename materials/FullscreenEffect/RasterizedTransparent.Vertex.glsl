@@ -48,10 +48,13 @@ out vec4 v_fog;
 out vec4 v_light;
 centroid out vec2 v_texCoords;
 void main() {
-    mat4 var_3ce99 = u_proj;
-    var_3ce99[2].x += SubPixelOffset.x;
-    var_3ce99[2].y -= SubPixelOffset.y;
-    vec4 var_137b0 = var_3ce99 * (u_view * vec4((u_model[0] * vec4(a_position, 1.0)).xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_4d7fb = u_proj;
+    var_4d7fb[2] = var_67767;
+    vec4 var_137b0 = var_4d7fb * (u_view * vec4((u_model[0] * vec4(a_position, 1.0)).xyz, 1.0));
     var_137b0.z += ZShiftValue.x;
     v_color = a_color0;
     v_fog = vec4(0.0);

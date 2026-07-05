@@ -236,25 +236,24 @@ void func_f0c66(inout highp vec2 arg_0a9f5) {
 #endif
 void main() {
 #ifdef NO_OCCLUSION__OFF
-    highp vec4 var_de9a8 = texture(s_WeatherTexture, v_texcoord0);
+    highp vec4 var_2ffec = texture(s_WeatherTexture, v_texcoord0);
 #endif
     highp vec2 var_3e492;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
     func_73dd7(var_3e492);
 #endif
 #ifdef NO_OCCLUSION__ON
-    highp vec4 var_de9a8 = texture(s_WeatherTexture, v_texcoord0);
+    highp vec4 var_2ffec = texture(s_WeatherTexture, v_texcoord0);
     func_b79af(var_3e492);
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
     func_f0c66(var_3e492);
 #endif
-    highp vec2 var_7e6be = var_3e492;
-    highp vec4 var_66861 = var_de9a8;
-    highp vec3 var_035d8 = var_66861.xyz * texture(s_LightingTexture, var_3e492).xyz;
-    var_de9a8 = vec4(var_035d8.x, var_035d8.y, var_035d8.z, var_66861.w);
-    highp vec4 var_a82ec = vec4(var_035d8, var_de9a8.w * var_7e6be.y);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_a82ec.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_a82ec.w);
+    highp vec2 var_cbd4c = var_3e492;
+    highp vec4 var_66861 = var_2ffec;
+    highp vec3 var_97ad4 = var_66861.xyz * texture(s_LightingTexture, var_3e492).xyz;
+    var_2ffec = vec4(var_97ad4.x, var_97ad4.y, var_97ad4.z, var_66861.w);
+    highp float var_f4bd6 = var_2ffec.w * var_cbd4c.y;
+    highp vec4 var_16b44 = v_fog;
+    bgfx_FragColor = vec4(mix(vec4(var_97ad4, var_f4bd6).xyz, v_fog.xyz, vec3(var_16b44.w)), var_f4bd6);
 }

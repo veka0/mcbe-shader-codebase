@@ -8,7 +8,6 @@
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
-* - TRANSPARENT_PASS (not used)
 *
 * Change_Color:
 * - CHANGE_COLOR__MULTI (not used)
@@ -45,6 +44,7 @@
 * - uniform vec4 BannerBasePBRTextureData[4];
 * - uniform vec4 BannerColors[7];
 * - uniform vec4 BannerUVOffsetsAndScales[7];
+* - uniform vec4 BlockLightColor;
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
@@ -128,10 +128,13 @@ void main() {
     vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
 #endif
     vec4 var_db20e = a_color0;
-    mat4 var_bab0b = u_proj;
-    var_bab0b[2].x += SubPixelOffset.x;
-    var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_c804c = var_bab0b * (u_view * vec4(var_96145.xyz, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_cbf5d = u_proj;
+    var_cbf5d[2] = var_67767;
+    vec4 var_c804c = var_cbf5d * (u_view * vec4(var_96145.xyz, 1.0));
     int var_e5df4 = int(var_db20e.w * 255.0);
     vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_be3b2) + BannerUVOffsetsAndScales[var_e5df4].xy;
     vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_be3b2) + BannerUVOffsetsAndScales[0].xy;

@@ -25,7 +25,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_ColorMetalnessSubsurface;
 * - uniform lowp sampler2D s_DiffuseLighting;
-* - uniform lowp sampler2D s_EmissiveAmbientLinearRoughness;
+* - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_NormalsAndDepthLighting;
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
@@ -109,7 +109,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -128,17 +128,21 @@ uniform highp vec4 CausticsTextureParameters;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_99c96 = texture(s_Normal, v_texcoord0.xy);
     highp vec4 var_365e3 = vec4(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
-    highp mat4 var_3460a = u_invProj;
+    highp mat4 var_4fa47 = u_invProj;
+    highp mat4 var_498b7 = u_invProj;
+    highp mat4 var_4882d = u_invProj;
+    highp mat4 var_78c1b = u_invProj;
+    highp mat4 var_40575 = u_invProj;
     highp float var_eb413 = var_365e3.x;
     highp float var_ac116 = var_365e3.y;
     highp float var_f2b7c = var_365e3.w;
     highp float var_0357c = var_365e3.z;
     highp float var_2c821 = var_365e3.w;
-    highp vec4 var_9666f = vec4(var_eb413 * var_3460a[0].x, var_ac116 * var_3460a[1].y, var_f2b7c * var_3460a[3].z, (var_0357c * var_3460a[2].w) + (var_2c821 * var_3460a[3].w));
+    highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_365e3 = var_9666f;
     highp float var_d799e = var_365e3.w;
     highp vec4 var_ff065 = var_9666f / vec4(var_d799e);
@@ -166,14 +170,14 @@ void main() {
     {
         var_94c07 = var_ff669;
     }
-    highp float var_f193e;
+    highp float var_2eabb;
     if (var_94c07)
     {
-        var_f193e = pow((texture(s_CausticsTexture, vec3(((u_invView * vec4(var_ff065.xyz, 1.0)).xyz - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(normalize(normalize(vec3(var_1dbd4.x, var_1dbd4.y, var_8fc34.z))).y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
+        var_2eabb = pow((texture(s_CausticsTexture, vec3(((u_invView * vec4(var_ff065.xyz, 1.0)).xyz - WorldOrigin.xyz).xz * CausticsParameters.y, CausticsTextureParameters.y)).x * 2.0) * clamp(normalize(normalize(vec3(var_1dbd4.x, var_1dbd4.y, var_8fc34.z))).y, 0.0, 1.0), CausticsParameters.z) * (CausticsParameters.z + 1.0);
     }
     else
     {
-        var_f193e = 1.0;
+        var_2eabb = 1.0;
     }
-    bgfx_FragData[0] = vec4(var_f193e, 1.0, 1.0, 1.0);
+    bgfx_FragData0 = vec4(var_2eabb, 1.0, 1.0, 1.0);
 }

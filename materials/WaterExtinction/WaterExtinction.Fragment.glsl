@@ -25,6 +25,8 @@
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
+* - uniform vec4 AtmosphericScattering;
+* - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BiomeBlendingLastUpdatePosition;
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
@@ -55,10 +57,15 @@
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
+* - uniform vec4 FogAndDistanceControl;
+* - uniform vec4 FogColor;
+* - uniform vec4 FogSkyBlend;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
+* - uniform vec4 MoonColor;
+* - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
@@ -73,17 +80,23 @@
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
+* - uniform vec4 RenderChunkFogAlpha;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
 * - uniform vec4 SkyAmbientLightColorIntensity;
+* - uniform vec4 SkyHorizonColor;
+* - uniform vec4 SkyZenithColor;
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
+* - uniform vec4 SunColor;
+* - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -108,7 +121,9 @@ uniform highp sampler2D s_SceneDepth;
 uniform highp sampler2D s_WaterDepth;
 uniform highp vec4 BiomeBlendingLastUpdatePosition;
 uniform highp vec4 BiomeBlendingParameters;
+uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 WaterExtinctionCoefficients;
+uniform highp vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
@@ -141,14 +156,14 @@ void func_a4cbd(inout highp vec3 arg_c6525, inout highp vec4 arg_a01ef) {
     highp vec4 loc_47197 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
     arg_a01ef = (((var_acba2.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients * loc_47197.x) + (var_acba2.zBiomeInfoBuffer[loc_d7d5b].waterExtinctionCoefficients * loc_47197.y)) + (var_acba2.zBiomeInfoBuffer[loc_80f2f].waterExtinctionCoefficients * loc_47197.z)) + (var_acba2.zBiomeInfoBuffer[loc_86c64].waterExtinctionCoefficients * loc_47197.w);
 }
-void func_c5ae0(inout highp vec4 arg_5dc29, inout highp vec4 arg_a6615) {
+void func_40f6a(inout highp vec4 arg_8331b, inout highp vec4 arg_a6615) {
     bool loc_a9f27;
     func_8ab59(loc_a9f27);
     if (loc_a9f27)
     {
-        highp vec3 loc_b7e0e = arg_5dc29.xyz;
+        highp vec3 loc_e7b22 = (u_invView * vec4(arg_8331b.xyz, 1.0)).xyz;
         highp vec4 loc_baef6;
-        func_a4cbd(loc_b7e0e, loc_baef6);
+        func_a4cbd(loc_e7b22, loc_baef6);
         arg_a6615 = loc_baef6;
         return;
     }
@@ -156,31 +171,38 @@ void func_c5ae0(inout highp vec4 arg_5dc29, inout highp vec4 arg_a6615) {
 }
 void main() {
     highp vec4 var_365e3 = vec4(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
-    highp mat4 var_3460a = u_invProj;
+    highp mat4 var_4fa47 = u_invProj;
+    highp mat4 var_498b7 = u_invProj;
+    highp mat4 var_4882d = u_invProj;
+    highp mat4 var_78c1b = u_invProj;
+    highp mat4 var_40575 = u_invProj;
     highp float var_eb413 = var_365e3.x;
     highp float var_ac116 = var_365e3.y;
     highp float var_f2b7c = var_365e3.w;
     highp float var_0357c = var_365e3.z;
     highp float var_2c821 = var_365e3.w;
-    highp vec4 var_9666f = vec4(var_eb413 * var_3460a[0].x, var_ac116 * var_3460a[1].y, var_f2b7c * var_3460a[3].z, (var_0357c * var_3460a[2].w) + (var_2c821 * var_3460a[3].w));
+    highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_365e3 = var_9666f;
     highp float var_d799e = var_365e3.w;
-    highp vec4 var_bae5b = var_9666f / vec4(var_d799e);
-    var_365e3 = var_bae5b;
+    highp vec4 var_620de = var_9666f / vec4(var_d799e);
+    var_365e3 = var_620de;
     highp vec4 var_7101d = vec4(v_projPosition.xy, (texture(s_WaterDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
-    highp mat4 var_3ebcc = u_invProj;
+    highp mat4 var_2949d = u_invProj;
+    highp mat4 var_e6914 = u_invProj;
+    highp mat4 var_164c7 = u_invProj;
+    highp mat4 var_b5866 = u_invProj;
+    highp mat4 var_bb46a = u_invProj;
     highp float var_a6256 = var_7101d.x;
     highp float var_05401 = var_7101d.y;
     highp float var_b8669 = var_7101d.w;
     highp float var_259fc = var_7101d.z;
     highp float var_f8db3 = var_7101d.w;
-    highp vec4 var_fa2eb = vec4(var_a6256 * var_3ebcc[0].x, var_05401 * var_3ebcc[1].y, var_b8669 * var_3ebcc[3].z, (var_259fc * var_3ebcc[2].w) + (var_f8db3 * var_3ebcc[3].w));
+    highp vec4 var_fa2eb = vec4(var_a6256 * var_2949d[0].x, var_05401 * var_e6914[1].y, var_b8669 * var_164c7[3].z, (var_259fc * var_b5866[2].w) + (var_f8db3 * var_bb46a[3].w));
     var_7101d = var_fa2eb;
     highp float var_f7138 = var_7101d.w;
-    highp vec4 var_4f566 = var_fa2eb / vec4(var_f7138);
-    var_7101d = var_4f566;
-    highp vec4 var_a803b = u_invView * vec4(var_4f566.xyz, 1.0);
-    highp vec4 var_05771;
-    func_c5ae0(var_a803b, var_05771);
-    bgfx_FragColor = vec4(exp((-var_05771.xyz) * length((u_invView * vec4(var_bae5b.xyz, 1.0)) - var_a803b)), 1.0);
+    highp vec4 var_30a3d = var_fa2eb / vec4(var_f7138);
+    var_7101d = var_30a3d;
+    highp vec4 var_d0593;
+    func_40f6a(var_30a3d, var_d0593);
+    bgfx_FragColor = vec4(exp((-var_d0593.xyz) * ((min(length(var_620de), FogAndDistanceControl.z) - min(length(var_30a3d), FogAndDistanceControl.z)) + WaterSurfaceEnabledAndExtinctionDistShift.y)), 1.0);
 }

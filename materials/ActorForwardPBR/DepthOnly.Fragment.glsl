@@ -54,6 +54,7 @@
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
+* - uniform vec4 BlockLightColor;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
 * - uniform vec4 CameraAmbientContribution;
@@ -146,7 +147,7 @@
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
-* - uniform vec4 WaterSurfaceEnabled;
+* - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;
 * - uniform vec4 WaterSurfaceOctaveParameters;
 * - uniform vec4 WaterSurfaceParameters;
 * - uniform vec4 WaterSurfaceWaveParameters;
@@ -166,7 +167,7 @@ uniform highp vec4 MatColor;
 uniform highp vec4 OverlayColor;
 uniform highp vec4 TintedAlphaTestEnabled;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef MASKED_MULTITEXTURE__OFF
     highp vec4 var_a1e09 = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -212,5 +213,5 @@ void main() {
 #endif
         discard;
     }
-    bgfx_FragData[0] = vec4(1.0);
+    bgfx_FragData0 = vec4(1.0);
 }

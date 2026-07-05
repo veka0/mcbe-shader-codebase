@@ -152,9 +152,12 @@ void main() {
     vec4 var_a67a8 = var_e43a8 * vec4(a_position, 1.0);
 #endif
     vec2 var_62d4f = vec2(0.0);
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     vec3 var_71df9 = clamp(CloudColor.xyz * a_color0.xyz, vec3(0.0), vec3(1.0));
     vec3 var_a2482;
     int var_0f149;
@@ -177,5 +180,5 @@ void main() {
     v_texcoord0 = a_texcoord0;
     v_tilePosition = var_62d4f;
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_a67a8.xyz, 1.0));
+    gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

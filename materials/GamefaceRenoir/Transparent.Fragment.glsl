@@ -9,74 +9,75 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2D s_Texture0;
-* - uniform lowp sampler2D s_Texture1;
-* - uniform lowp sampler2D s_Texture2;
+* - uniform lowp sampler2D s_txBuffer;
+* - uniform lowp sampler2D s_txBuffer1;
+* - uniform lowp sampler2D s_txBuffer2;
 *
 * Uniforms:
-* - uniform mat4 CoordTransformVS;
+* - uniform vec4 Data_PS[128];
+* - uniform vec4 Data_VS[128];
 * - uniform vec4 GradientEndColor;
 * - uniform vec4 GradientMidColor;
 * - uniform vec4 GradientStartColor;
 * - uniform vec4 GradientYCoord;
 * - uniform vec4 MaskScaleAndOffset;
-* - uniform vec4 ShaderType;
-* - uniform mat4 Transform;
 */
 
 precision mediump float;
 precision highp int;
-uniform highp sampler2D s_Texture0;
-uniform highp sampler2D s_Texture1;
-uniform highp sampler2D s_Texture2;
-uniform highp vec4 GradientEndColor;
-uniform highp vec4 GradientMidColor;
-uniform highp vec4 GradientStartColor;
-uniform highp vec4 GradientYCoord;
-uniform highp vec4 ShaderType;
-in highp vec4 v_additional;
-in highp vec4 v_varyingParam0;
-in highp vec4 v_varyingParam1;
+uniform highp sampler2D s_txBuffer1;
+uniform highp sampler2D s_txBuffer2;
+uniform highp sampler2D s_txBuffer;
+uniform highp vec4 Data_PS[128];
+in highp vec4 v_Additional;
+flat in highp vec4 v_VaryingData;
+in highp vec4 v_VaryingParam0;
+in highp vec4 v_VaryingParam1;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_f5f14 = v_additional;
-    highp vec4 var_86567 = v_varyingParam0;
+    highp vec4 var_46800 = v_Additional;
+    highp vec4 var_55b3f = v_VaryingParam0;
+    uvec4 var_c4012 = uvec4(v_VaryingData);
+    int var_2e59a = int((var_c4012.z << uint(4)) | ((var_c4012.y & 240u) >> uint(4)));
+    int var_ce8e3 = int(Data_PS[var_2e59a].x);
+    highp vec4 var_0962a = Data_PS[var_2e59a + 1];
+    int var_7e92c = int(var_0962a.w);
     highp float var_ac5a3;
-    if ((int(ShaderType.x) & 2) != 0)
+    if ((var_ce8e3 & 2) != 0)
     {
-        var_ac5a3 = var_86567.x;
+        var_ac5a3 = var_55b3f.x;
     }
     else
     {
-        highp float var_385d0;
-        if ((int(ShaderType.x) & 4) != 0)
+        highp float var_dcb77;
+        if ((var_ce8e3 & 4) != 0)
         {
-            var_385d0 = length(v_varyingParam0.xy);
+            var_dcb77 = length(v_VaryingParam0.xy);
         }
         else
         {
             highp float var_d6a52;
-            if ((int(ShaderType.x) & 8) != 0)
+            if ((var_ce8e3 & 8) != 0)
             {
-                var_d6a52 = (3.1415927410125732421875 + atan(var_86567.y, var_86567.x)) * 0.15915493667125701904296875;
+                var_d6a52 = (3.1415927410125732421875 + atan(var_55b3f.y, var_55b3f.x)) * 0.15915493667125701904296875;
             }
             else
             {
                 var_d6a52 = 0.0;
             }
-            var_385d0 = var_d6a52;
+            var_dcb77 = var_d6a52;
         }
-        var_ac5a3 = var_385d0;
+        var_ac5a3 = var_dcb77;
     }
-    highp float var_90552;
-    if ((int(ShaderType.x) & 256) != 0)
+    highp float var_f9d53;
+    if ((var_ce8e3 & 256) != 0)
     {
-        var_90552 = fract(var_ac5a3);
+        var_f9d53 = fract(var_ac5a3);
     }
     else
     {
         highp float var_669fd;
-        if ((int(ShaderType.x) & 512) != 0)
+        if ((var_ce8e3 & 512) != 0)
         {
             highp float var_f4252 = 2.0 * fract(var_ac5a3 * 0.5);
             highp float var_e18f1;
@@ -94,54 +95,54 @@ void main() {
         {
             var_669fd = var_ac5a3;
         }
-        var_90552 = var_669fd;
+        var_f9d53 = var_669fd;
     }
-    highp vec4 var_01d41;
-    if ((int(ShaderType.x) & 16) != 0)
+    highp vec4 var_5db22;
+    if ((var_ce8e3 & 16) != 0)
     {
-        var_01d41 = mix(GradientStartColor, GradientEndColor, vec4(clamp(var_90552, 0.0, 1.0)));
+        var_5db22 = mix(Data_PS[var_7e92c], Data_PS[var_7e92c + 1], vec4(clamp(var_f9d53, 0.0, 1.0)));
     }
     else
     {
-        highp vec4 var_c56fa;
-        if ((int(ShaderType.x) & 32) != 0)
+        highp vec4 var_3ed45;
+        if ((var_ce8e3 & 32) != 0)
         {
-            highp float var_15763 = 2.0 * var_90552;
-            highp float var_367df = 1.0 - var_15763;
-            var_c56fa = ((GradientStartColor * clamp(var_367df, 0.0, 1.0)) + (GradientMidColor * (1.0 - min(abs(var_367df), 1.0)))) + (GradientEndColor * clamp(var_15763 - 1.0, 0.0, 1.0));
+            highp float var_6a899 = 2.0 * var_f9d53;
+            highp float var_bee6c = 1.0 - var_6a899;
+            var_3ed45 = ((Data_PS[var_7e92c] * clamp(var_bee6c, 0.0, 1.0)) + (Data_PS[var_7e92c + 1] * (1.0 - min(abs(var_bee6c), 1.0)))) + (Data_PS[var_7e92c + 2] * clamp(var_6a899 - 1.0, 0.0, 1.0));
         }
         else
         {
-            highp vec4 var_e510f;
-            if ((int(ShaderType.x) & 64) != 0)
+            highp vec4 var_e7fa9;
+            if ((var_ce8e3 & 64) != 0)
             {
-                var_e510f = texture(s_Texture2, vec2(var_90552, GradientYCoord.x));
+                var_e7fa9 = texture(s_txBuffer2, vec2(var_f9d53, Data_PS[var_7e92c].x));
             }
             else
             {
-                highp vec4 var_dd35c;
-                if ((int(ShaderType.x) & 1) != 0)
+                highp vec4 var_95660;
+                if ((var_ce8e3 & 1) != 0)
                 {
-                    var_dd35c = texture(s_Texture0, vec2(v_additional.x, 1.0 - v_additional.y));
+                    var_95660 = texture(s_txBuffer, vec2(var_46800.x, 1.0 - var_46800.y));
                 }
                 else
                 {
-                    var_dd35c = vec4(0.0);
+                    var_95660 = vec4(0.0);
                 }
-                var_e510f = var_dd35c;
+                var_e7fa9 = var_95660;
             }
-            var_c56fa = var_e510f;
+            var_3ed45 = var_e7fa9;
         }
-        var_01d41 = var_c56fa;
+        var_5db22 = var_3ed45;
     }
-    highp vec4 var_f6024;
-    if ((int(ShaderType.x) & 128) != 0)
+    highp vec4 var_f6a9d;
+    if ((var_ce8e3 & 128) != 0)
     {
-        var_f6024 = var_01d41 * texture(s_Texture1, v_varyingParam1.xy).w;
+        var_f6a9d = var_5db22 * texture(s_txBuffer1, v_VaryingParam1.xy).w;
     }
     else
     {
-        var_f6024 = var_01d41;
+        var_f6a9d = var_5db22;
     }
-    bgfx_FragColor = var_f6024 * clamp(var_f5f14.z, 0.0, 1.0);
+    bgfx_FragColor = var_f6a9d * clamp(var_46800.z, 0.0, 1.0);
 }

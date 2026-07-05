@@ -47,10 +47,13 @@ out vec4 v_fog;
 out vec4 v_light;
 out vec2 v_texCoords;
 void main() {
-    mat4 var_96cfc = u_proj;
-    var_96cfc[2].x += SubPixelOffset.x;
-    var_96cfc[2].y -= SubPixelOffset.y;
-    vec4 var_bc91e = var_96cfc * (u_view * vec4(a_position, 1.0));
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_b69c4 = u_proj;
+    var_b69c4[2] = var_67767;
+    vec4 var_bc91e = var_b69c4 * (u_view * vec4(a_position, 1.0));
     vec4 var_b4024 = var_bc91e;
 #ifdef FANCY__ON
     vec3 var_f099e = normalize(u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;

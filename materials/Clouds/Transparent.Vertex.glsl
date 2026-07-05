@@ -56,13 +56,16 @@ void main() {
     vec4 var_93fa5 = var_e43a8 * vec4(a_position, 1.0);
 #endif
     vec3 var_57752 = var_93fa5.xyz;
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_83c3f = u_proj;
+    vec4 var_67767 = var_83c3f[2];
+    var_67767.x += SubPixelOffset.x;
+    var_67767.y -= SubPixelOffset.y;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     vec4 var_80820 = a_color0 * CloudColor;
     var_80820.w *= clamp(1.0 - max((length(var_57752) / DistanceControl.x) - 0.89999997615814208984375, 0.0), 0.0, 1.0);
     v_color0 = var_80820;
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_57752;
-    gl_Position = var_be69c * (u_view * vec4(var_93fa5.xyz, 1.0));
+    gl_Position = var_8e1af * (u_view * vec4(var_93fa5.xyz, 1.0));
 }
