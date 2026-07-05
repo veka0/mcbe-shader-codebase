@@ -4,18 +4,17 @@
 * Available Macros:
 *
 * Passes:
+* - DEPTH_AND_NORMAL_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
-* - DEPTH_ONLY_OPAQUE_PASS (not used)
-* - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
+* - DO_WATER_SURFACE_BUFFER_PASS (not used)
 *
 * Instancing:
-* - INSTANCING__OFF
-* - INSTANCING__ON
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON (not used)
 *
 * RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF
-* - RENDER_AS_BILLBOARDS__ON
+* - RENDER_AS_BILLBOARDS__OFF (not used)
+* - RENDER_AS_BILLBOARDS__ON (not used)
 *
 * Seasons:
 * - SEASONS__OFF (not used)
@@ -24,25 +23,29 @@
 * Available Resources:
 *
 * Buffers:
+* - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 10, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 12, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
+* - uniform lowp sampler2D s_SceneDepth;
 * - uniform lowp sampler2D s_SeasonsTexture;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 11, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 12, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
-* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 AmbientLightParams;
 * - uniform vec4 AtmosphericScattering;
 * - uniform vec4 AtmosphericScatteringToggles;
+* - uniform vec4 BiomeBlendingLastUpdatePosition;
+* - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform vec4 CameraAmbientContribution;
@@ -106,7 +109,6 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
-* - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewPositionAndTime;
@@ -123,88 +125,21 @@
 * - uniform vec4 WorldOrigin;
 */
 
-#ifdef INSTANCING__OFF
-uniform mat4 u_model[4];
-#endif
-uniform mat4 u_proj;
-uniform mat4 u_view;
-uniform vec4 SubPixelOffset;
-#ifdef RENDER_AS_BILLBOARDS__ON
-uniform vec4 ViewPositionAndTime;
-#endif
-in vec4 a_color0;
-in vec2 a_texcoord1;
-in vec3 a_position;
-in vec2 a_texcoord0;
-#ifdef INSTANCING__ON
-in vec4 i_data1;
-in vec4 i_data2;
-in vec4 i_data3;
-#endif
-out vec3 v_bitangent;
-out vec4 v_color0;
-out vec2 v_ditheringAndMaskTinting;
-out vec2 v_lightmapUV;
-out vec3 v_normal;
-flat out int v_pbrTextureId;
-out vec3 v_tangent;
-centroid out vec2 v_texcoord0;
-out vec3 v_worldPos;
+precision mediump float;
+precision highp int;
+uniform highp mat4 u_invProj;
+uniform highp mat4 u_invView;
+uniform highp mat4 u_viewProj;
+uniform highp vec4 VolumeNearFar;
+in highp vec3 v_normal;
+in highp vec3 v_worldPos;
+layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
-#endif
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (u_model[0] * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
-#endif
-#ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_cc6b6;
-    var_cc6b6[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_cc6b6[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_cc6b6[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_cc6b6[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = var_cc6b6 * vec4(a_position, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
-#endif
-    mat4 var_52789 = u_proj;
-    var_52789[2].x += SubPixelOffset.x;
-    var_52789[2].y -= SubPixelOffset.y;
-    uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
-    uvec2 var_5e4ed = var_6d79f;
-    v_bitangent = vec3(0.0);
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    v_color0 = a_color0;
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_color0 = vec4(1.0);
-#endif
-    v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
-    v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
-    v_normal = vec3(0.0);
-    v_pbrTextureId = 0;
-    v_tangent = vec3(0.0);
-    v_texcoord0 = a_texcoord0;
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    v_worldPos = var_a67a8.xyz;
-    gl_Position = var_52789 * (u_view * vec4(var_a67a8.xyz, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_worldPos = var_91aa3;
-    gl_Position = var_52789 * (u_view * vec4(var_2cae0 - ((cross(var_b9097, var_3d861) * (var_0e57e.z - 0.5)) + (var_3d861 * (var_0e57e.x - 0.5))), 1.0));
-#endif
+    highp vec4 var_83731 = u_viewProj * vec4(v_worldPos, 1.0);
+    highp vec4 var_b8928 = var_83731;
+    highp vec3 var_41902 = var_83731.xyz / vec3(var_b8928.w);
+    highp vec2 var_c838f = VolumeNearFar.xy;
+    highp vec4 var_c1bef = u_invProj * vec4(var_41902, 1.0);
+    highp vec3 var_3d37c = vec3((var_41902.xy + vec2(1.0)) * 0.5, log((53.598148345947265625 * ((((-var_c1bef.z) / var_c1bef.w) - var_c838f.x) / (var_c838f.y - var_c838f.x))) + 1.0) * 0.25);
+    bgfx_FragData[0] = vec4(var_3d37c.z, abs(dot(v_normal, normalize(v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz))), 0.0, 1.0);
 }

@@ -137,6 +137,7 @@ uniform vec4 ViewPositionAndTime;
 #endif
 in vec4 a_color0;
 in vec2 a_texcoord1;
+in vec4 a_normal;
 in vec3 a_position;
 in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
@@ -149,6 +150,7 @@ out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec2 v_ditheringAndMaskTinting;
 flat out int v_frontFacing;
+out vec3 v_lightColor;
 out vec2 v_lightmapUV;
 out vec3 v_normal;
 flat out int v_pbrTextureId;
@@ -186,9 +188,14 @@ void main() {
     vec3 var_e8e55 = normalize(cross(vec3(0.0, 1.0, 0.0), var_28a72));
     vec3 var_08866 = a_color0.xyz;
 #endif
-    vec2 var_c34f1 = a_texcoord1;
-    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
-    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
+    vec4 var_57c72 = a_normal;
+    uvec2 var_b33a4 = uvec2(round(a_texcoord1 * 65535.0));
+    uvec2 var_5e4ed = var_b33a4;
+    uvec2 var_09f26 = (var_b33a4 >> uvec2(8u)) & uvec2(255u);
+    uvec2 var_ebbee = var_b33a4 & uvec2(255u);
+    uvec2 var_c4862 = var_09f26 & uvec2(254u);
+    vec4 var_d5790 = vec4(vec3(float(var_c4862.x), float(var_ebbee.x), float(var_c4862.y)) * vec3(0.0039215688593685626983642578125), (var_57c72.w * 0.5) + 0.5);
+    vec4 var_22492 = var_d5790;
     v_bitangent = vec3(0.0);
     v_clipPosition = vec4(0.0);
 #ifdef RENDER_AS_BILLBOARDS__OFF
@@ -197,9 +204,10 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
-    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
+    v_ditheringAndMaskTinting = vec2(notEqual((var_09f26 & uvec2(1u)), uvec2(0u)));
     v_frontFacing = 0;
-    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
+    v_lightColor = (var_d5790.xyz * var_22492.w) * 6.0;
+    v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_normal = vec3(0.0);
     v_pbrTextureId = 0;
     v_tangent = vec3(0.0);

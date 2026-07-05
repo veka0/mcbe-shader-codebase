@@ -121,14 +121,13 @@ void main() {
         vec4 var_cb46d = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
         var_ca76d.w = mix(var_9d5b1.w, 1.0, clamp(var_e3e0a / var_cb46d.w, 0.0, 1.0));
     }
-    vec2 var_c34f1 = a_texcoord1;
-    uint var_960bd = uint(floor(var_c34f1.x * 255.0));
-    uint var_d0d1e = uint(floor(var_c34f1.y * 255.0));
+    uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
+    uvec2 var_5e4ed = var_6d79f;
     v_clipPosition = var_d80ab;
     v_color0 = var_ca76d;
-    v_ditheringAndMaskTinting = vec2(float(var_d0d1e & 1u), float(var_d0d1e & 2u));
+    v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
     v_fog = vec4(FogColor.xyz, clamp((((var_e3e0a / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
-    v_lightmapUV = vec2(clamp(float(var_960bd & 15u) * 0.0625, 0.0, 1.0), clamp(float((var_960bd & 240u) >> uint(4)) * 0.0625, 0.0, 1.0));
+    v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_texcoord0 = a_texcoord0;
     v_worldPos = var_7848e;
     v_worldPosition = vec4(var_a77b2.xyz, 0.0);

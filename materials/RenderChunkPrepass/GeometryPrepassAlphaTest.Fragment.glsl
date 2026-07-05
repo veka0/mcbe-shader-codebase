@@ -86,7 +86,7 @@ in highp vec3 v_bitangent;
 in highp vec4 v_clipPosition;
 #endif
 in highp vec4 v_color0;
-#ifdef DITHERING__ON
+#if defined(DITHERING__ON) || defined(SEASONS__OFF)
 in highp vec2 v_ditheringAndMaskTinting;
 #endif
 in highp vec2 v_lightmapUV;
@@ -232,19 +232,19 @@ void main() {
 #ifdef DITHERING__ON
     highp mat4 View = u_view;
 #endif
-    highp vec4 var_47d7b = v_color0;
-#ifdef DITHERING__ON
-    highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
+    highp vec4 var_5b49c = v_color0;
+#if defined(DITHERING__ON) || defined(SEASONS__OFF)
+    highp vec2 var_0a028 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_b902c = var_fe617;
+    highp vec4 var_929ad = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_b902c = var_929ad;
 #ifdef DITHERING__OFF
     if (false || (var_b902c.w < 0.5))
 #endif
 #ifdef DITHERING__ON
     highp vec2 var_fe616 = DitherParams2[2].xy;
     bool var_4bb61;
-    if (var_4f8e7.x > 0.5)
+    if (var_0a028.x > 0.5)
 #endif
     {
 #ifdef DITHERING__ON
@@ -264,20 +264,27 @@ void main() {
 #endif
         discard;
     }
-#ifdef SEASONS__OFF
-    highp vec3 var_0255a = var_fe617.xyz * v_color0.xyz;
-#endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_0255a = (var_fe617.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_47d7b.w);
+    highp vec3 var_2b07f = (var_929ad.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_5b49c.w);
+    highp vec4 var_1c880 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_929ad.w);
+    var_1c880.w = 1.0;
+    highp vec4 var_1d587 = var_1c880;
 #endif
-    highp vec4 var_94b70 = vec4(var_0255a.x, var_0255a.y, var_0255a.z, var_fe617.w);
 #ifdef SEASONS__OFF
-    var_94b70.w *= var_47d7b.w;
-#endif
-#ifdef SEASONS__ON
-    var_94b70.w = 1.0;
-    highp vec4 var_1d587 = var_94b70;
+    highp vec4 var_3eefe = var_929ad;
+    if (var_0a028.y != 0.0)
+    {
+        highp vec3 var_5e4d7 = mix(var_3eefe.xyz, var_3eefe.xyz * v_color0.xyz, vec3(var_3eefe.w)).xyz * var_5b49c.w;
+        var_3eefe = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_3eefe.w);
+        var_3eefe.w = 1.0;
+    }
+    else
+    {
+        highp vec3 var_55928 = var_3eefe.xyz * v_color0.xyz;
+        var_3eefe = vec4(var_55928.x, var_55928.y, var_55928.z, var_3eefe.w);
+        var_3eefe.w *= var_5b49c.w;
+    }
 #endif
     highp vec3 var_d2ce2;
     highp float var_bd3b6;
@@ -286,10 +293,10 @@ void main() {
     highp float var_5431f;
     func_a72a6(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_d2ce2);
 #ifdef SEASONS__OFF
-    highp vec4 var_53507 = vec4(var_94b70.xyz, var_94b70.w);
+    highp vec4 var_53507 = vec4(var_3eefe.xyz, var_3eefe.w);
 #endif
 #ifdef SEASONS__ON
-    highp vec4 var_53507 = vec4(var_94b70.xyz, var_1d587.w);
+    highp vec4 var_53507 = vec4(var_1c880.xyz, var_1d587.w);
 #endif
     highp vec2 var_ea830 = v_lightmapUV;
     highp vec4 var_6de71 = vec4(var_53507.x, var_53507.y, var_53507.z, var_53507.w);
