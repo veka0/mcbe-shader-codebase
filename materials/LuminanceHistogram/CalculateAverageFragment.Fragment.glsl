@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AdaptedFrameAverageLuminance;
-* - layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
+* - layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
 * - uniform lowp sampler2D s_GameColor;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
@@ -39,7 +39,7 @@ struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_39887;
+layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_8357e;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp vec4 Adaptation;
 uniform highp vec4 AdaptiveParameters;
@@ -53,7 +53,7 @@ void main() {
     highp float var_c0db6;
     for (uint var_f44ea = 1u; var_f44ea < 256u; var_f0692 = var_c0db6, var_f44ea++)
     {
-        var_c0db6 = var_f0692 + (float(var_39887.CurFrameLuminanceHistogram[var_f44ea].count) * 0.00390625);
+        var_c0db6 = var_f0692 + (float(var_8357e.CurFrameLuminanceHistogram[var_f44ea].count) * 0.00390625);
     }
     highp float var_f6a30 = var_f0692 * QuantileBounds.x;
     highp float var_eb933 = var_f0692 * QuantileBounds.y;
@@ -68,7 +68,7 @@ void main() {
     highp float var_f9f72 = 0.0;
     for (; var_b3b25 < 256u; var_f9f72 = var_335c2, var_fd30c = var_70cee, var_54186 = var_ac7e9, var_b3b25++)
     {
-        highp float var_a0cf6 = float(var_39887.CurFrameLuminanceHistogram[var_b3b25].count) * 0.00390625;
+        highp float var_a0cf6 = float(var_8357e.CurFrameLuminanceHistogram[var_b3b25].count) * 0.00390625;
         highp float var_23720 = max(var_f9f72, var_f6a30);
         highp float var_c37ba = max(min(var_f9f72 + var_a0cf6, var_eb933), var_23720) - var_23720;
         var_ac7e9 = var_54186 + (var_c37ba * float(var_b3b25));

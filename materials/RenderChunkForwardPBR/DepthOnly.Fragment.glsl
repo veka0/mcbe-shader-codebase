@@ -6,8 +6,13 @@
 * Passes:
 * - DEPTH_ONLY_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
+* - FORWARD_PBR_ALPHA_TEST_PASS (not used)
+* - FORWARD_PBR_OPAQUE_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
-* - OPAQUE_PASS (not used)
+*
+* Dithering:
+* - DITHERING__OFF (not used)
+* - DITHERING__ON (not used)
 *
 * Instancing:
 * - INSTANCING__OFF (not used)
@@ -28,7 +33,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 4, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 10, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -44,6 +49,7 @@
 * - uniform vec4 AtmosphericScatteringToggles;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -57,6 +63,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -65,6 +72,8 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -104,6 +113,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewPositionAndTime;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -124,12 +134,12 @@ uniform highp sampler2D s_LightMapTexture;
 uniform highp sampler2D s_MatTexture;
 in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
     highp vec4 var_0b949 = texture(s_MatTexture, v_texcoord0);
     if (var_0b949.w < 0.5)
     {
         discard;
     }
-    bgfx_FragColor = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
+    bgfx_FragData[0] = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0);
 }

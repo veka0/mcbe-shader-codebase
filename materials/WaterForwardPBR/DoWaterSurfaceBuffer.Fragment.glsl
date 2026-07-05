@@ -28,7 +28,7 @@
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 5, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 12, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
@@ -48,6 +48,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -61,6 +62,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -108,6 +110,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewPositionAndTime;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -151,8 +154,8 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 5, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_19767;
-layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_06448;
+layout(binding = 12, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_79193;
+layout(binding = 13, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_e1398;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -184,10 +187,10 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_5c197 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_3ee66 = vec2(var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_19767.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec2 loc_5c197 = vec2(var_79193.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_79193.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_3ee66 = vec2(var_79193.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_79193.PBRData[v_pbrTextureId].colourToNormalUvBias1);
     highp vec3 loc_c8345;
-    if ((var_19767.PBRData[v_pbrTextureId].flags & 4) == 4)
+    if ((var_79193.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
         highp vec2 loc_01aa0 = (v_texcoord0 * loc_5c197) + loc_3ee66;
         highp vec3 loc_f7401 = vec3(0.0, 0.0, 1.0);
@@ -206,11 +209,11 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     else
     {
         highp vec3 loc_9252d;
-        if ((var_19767.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_79193.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
             highp vec2 loc_218fe = (v_texcoord0 * loc_5c197) + loc_3ee66;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_19767.PBRData[v_pbrTextureId].maxMipNormal - var_19767.PBRData[v_pbrTextureId].maxMipColour, var_19767.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_79193.PBRData[v_pbrTextureId].maxMipNormal - var_79193.PBRData[v_pbrTextureId].maxMipColour, var_79193.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -267,17 +270,17 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_19767.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_79193.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_19767.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_79193.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_79193.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_79193.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_79193.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_19767.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_79193.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_79193.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -286,10 +289,10 @@ void func_9052b(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_19767.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_19767.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_19767.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_19767.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_79193.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_79193.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_79193.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_79193.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
@@ -314,48 +317,331 @@ void func_8ab59(inout bool arg_5e3ed) {
     }
     arg_5e3ed = false;
 }
-void func_20c38(inout highp float arg_27e9a, inout highp float arg_a66d0, inout highp float arg_5b991, inout highp float arg_11702, inout highp float arg_85f79, inout highp float arg_62dbf, inout highp float arg_6c048, inout highp float arg_12931, inout highp float arg_89c42, inout highp float arg_5d066) {
+void func_15a8f(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout highp vec4 arg_2f7bf, inout highp vec4 arg_451b0) {
+    int loc_738fb = int(BiomeBlendingParameters.z * 0.5);
+    highp float loc_6b94b = (arg_c6525.x - BiomeBlendingLastUpdatePosition.x) / BiomeBlendingLastUpdatePosition.w;
+    highp float loc_c8c2e = (arg_c6525.z - BiomeBlendingLastUpdatePosition.z) / BiomeBlendingLastUpdatePosition.w;
+    ivec2 loc_f487d = ivec2(loc_738fb + int(floor(loc_6b94b)), loc_738fb + int(floor(loc_c8c2e)));
+    loc_f487d.x = clamp(loc_f487d.x, 0, int(BiomeBlendingParameters.z) - 1);
+    loc_f487d.y = clamp(loc_f487d.y, 0, int(BiomeBlendingParameters.z) - 1);
+    int loc_05a8c = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
+    int loc_7c209 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
+    int loc_16b81 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
+    int loc_970b0 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
+    if (((loc_05a8c == loc_7c209) && (loc_7c209 == loc_16b81)) && (loc_16b81 == loc_970b0))
+    {
+        arg_3fac7 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
+        arg_2f7bf = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
+        arg_451b0 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
+        return;
+    }
+    highp float loc_77c49 = fract(loc_6b94b);
+    highp float loc_33836 = fract(loc_c8c2e);
+    highp vec4 loc_2f2a8 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
+    highp vec4 loc_329f6 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
+    highp vec4 loc_085ea = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
+    highp vec4 loc_889f2 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
+    highp vec4 loc_a8d02 = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters;
+    highp vec4 loc_853ce = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters;
+    highp vec4 loc_bc30c = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters;
+    bool loc_733bf = loc_329f6.x == loc_a8d02.x;
+    bool loc_3293c;
+    if (loc_733bf)
+    {
+        loc_3293c = loc_329f6.y == loc_a8d02.y;
+    }
+    else
+    {
+        loc_3293c = loc_733bf;
+    }
+    bool loc_57ff0;
+    if (loc_3293c)
+    {
+        loc_57ff0 = loc_329f6.z == loc_a8d02.z;
+    }
+    else
+    {
+        loc_57ff0 = loc_3293c;
+    }
+    bool loc_6c960;
+    if (loc_57ff0)
+    {
+        loc_6c960 = loc_085ea.x == loc_853ce.x;
+    }
+    else
+    {
+        loc_6c960 = loc_57ff0;
+    }
+    bool loc_8353a;
+    if (loc_6c960)
+    {
+        loc_8353a = loc_085ea.y == loc_853ce.y;
+    }
+    else
+    {
+        loc_8353a = loc_6c960;
+    }
+    bool loc_780d7;
+    if (loc_8353a)
+    {
+        loc_780d7 = loc_889f2.x == loc_bc30c.x;
+    }
+    else
+    {
+        loc_780d7 = loc_8353a;
+    }
+    bool loc_c6748;
+    if (loc_780d7)
+    {
+        loc_c6748 = loc_889f2.y == loc_bc30c.y;
+    }
+    else
+    {
+        loc_c6748 = loc_780d7;
+    }
+    bool loc_62033;
+    if (loc_c6748)
+    {
+        loc_62033 = loc_889f2.z == loc_bc30c.z;
+    }
+    else
+    {
+        loc_62033 = loc_c6748;
+    }
+    bool loc_3002e;
+    if (loc_62033)
+    {
+        loc_3002e = loc_889f2.w == loc_bc30c.w;
+    }
+    else
+    {
+        loc_3002e = loc_62033;
+    }
+    bool loc_56442;
+    if (loc_3002e)
+    {
+        highp vec4 loc_ce828 = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters;
+        highp vec4 loc_a645a = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters;
+        highp vec4 loc_d0726 = var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters;
+        highp vec4 loc_af7f0 = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters;
+        highp vec4 loc_4e4b3 = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters;
+        highp vec4 loc_e43d7 = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters;
+        bool loc_5bdec = loc_ce828.x == loc_af7f0.x;
+        bool loc_a63e8;
+        if (loc_5bdec)
+        {
+            loc_a63e8 = loc_ce828.y == loc_af7f0.y;
+        }
+        else
+        {
+            loc_a63e8 = loc_5bdec;
+        }
+        bool loc_e610a;
+        if (loc_a63e8)
+        {
+            loc_e610a = loc_ce828.z == loc_af7f0.z;
+        }
+        else
+        {
+            loc_e610a = loc_a63e8;
+        }
+        bool loc_b5305;
+        if (loc_e610a)
+        {
+            loc_b5305 = loc_a645a.x == loc_4e4b3.x;
+        }
+        else
+        {
+            loc_b5305 = loc_e610a;
+        }
+        bool loc_9de97;
+        if (loc_b5305)
+        {
+            loc_9de97 = loc_a645a.y == loc_4e4b3.y;
+        }
+        else
+        {
+            loc_9de97 = loc_b5305;
+        }
+        bool loc_5e6c7;
+        if (loc_9de97)
+        {
+            loc_5e6c7 = loc_d0726.x == loc_e43d7.x;
+        }
+        else
+        {
+            loc_5e6c7 = loc_9de97;
+        }
+        bool loc_f5e38;
+        if (loc_5e6c7)
+        {
+            loc_f5e38 = loc_d0726.y == loc_e43d7.y;
+        }
+        else
+        {
+            loc_f5e38 = loc_5e6c7;
+        }
+        bool loc_3d07c;
+        if (loc_f5e38)
+        {
+            loc_3d07c = loc_d0726.z == loc_e43d7.z;
+        }
+        else
+        {
+            loc_3d07c = loc_f5e38;
+        }
+        bool loc_ec124;
+        if (loc_3d07c)
+        {
+            loc_ec124 = loc_d0726.w == loc_e43d7.w;
+        }
+        else
+        {
+            loc_ec124 = loc_3d07c;
+        }
+        loc_56442 = loc_ec124;
+    }
+    else
+    {
+        loc_56442 = loc_3002e;
+    }
+    bool loc_7df86;
+    if (loc_56442)
+    {
+        highp vec4 loc_ce025 = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters;
+        highp vec4 loc_0ec9a = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters;
+        highp vec4 loc_5db96 = var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters;
+        highp vec4 loc_0847f = var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceParameters;
+        highp vec4 loc_09e9a = var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceWaveParameters;
+        highp vec4 loc_fba83 = var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceOctaveParameters;
+        bool loc_0a03f = loc_ce025.x == loc_0847f.x;
+        bool loc_b5adf;
+        if (loc_0a03f)
+        {
+            loc_b5adf = loc_ce025.y == loc_0847f.y;
+        }
+        else
+        {
+            loc_b5adf = loc_0a03f;
+        }
+        bool loc_6a5f4;
+        if (loc_b5adf)
+        {
+            loc_6a5f4 = loc_ce025.z == loc_0847f.z;
+        }
+        else
+        {
+            loc_6a5f4 = loc_b5adf;
+        }
+        bool loc_6b57e;
+        if (loc_6a5f4)
+        {
+            loc_6b57e = loc_0ec9a.x == loc_09e9a.x;
+        }
+        else
+        {
+            loc_6b57e = loc_6a5f4;
+        }
+        bool loc_424f8;
+        if (loc_6b57e)
+        {
+            loc_424f8 = loc_0ec9a.y == loc_09e9a.y;
+        }
+        else
+        {
+            loc_424f8 = loc_6b57e;
+        }
+        bool loc_b3038;
+        if (loc_424f8)
+        {
+            loc_b3038 = loc_5db96.x == loc_fba83.x;
+        }
+        else
+        {
+            loc_b3038 = loc_424f8;
+        }
+        bool loc_c98d1;
+        if (loc_b3038)
+        {
+            loc_c98d1 = loc_5db96.y == loc_fba83.y;
+        }
+        else
+        {
+            loc_c98d1 = loc_b3038;
+        }
+        bool loc_685df;
+        if (loc_c98d1)
+        {
+            loc_685df = loc_5db96.z == loc_fba83.z;
+        }
+        else
+        {
+            loc_685df = loc_c98d1;
+        }
+        bool loc_9bef1;
+        if (loc_685df)
+        {
+            loc_9bef1 = loc_5db96.w == loc_fba83.w;
+        }
+        else
+        {
+            loc_9bef1 = loc_685df;
+        }
+        loc_7df86 = loc_9bef1;
+    }
+    else
+    {
+        loc_7df86 = loc_56442;
+    }
+    highp vec4 loc_855f6;
+    highp vec4 loc_5e290;
+    highp vec4 loc_2ffee;
+    if (loc_7df86)
+    {
+        loc_2ffee = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
+        loc_5e290 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
+        loc_855f6 = var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
+    }
+    else
+    {
+        highp vec4 loc_1ebe3 = loc_2f2a8;
+        highp vec4 loc_e512d = loc_2f2a8;
+        highp vec4 loc_f426e = loc_2f2a8;
+        loc_2ffee = (((var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters * loc_1ebe3.x) + (var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters * loc_1ebe3.y)) + (var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters * loc_1ebe3.z)) + (var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceParameters * loc_1ebe3.w);
+        loc_5e290 = (((var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters * loc_e512d.x) + (var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters * loc_e512d.y)) + (var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters * loc_e512d.z)) + (var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceWaveParameters * loc_e512d.w);
+        loc_855f6 = (((var_e1398.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters * loc_f426e.x) + (var_e1398.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters * loc_f426e.y)) + (var_e1398.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters * loc_f426e.z)) + (var_e1398.zBiomeInfoBuffer[loc_970b0].waterSurfaceOctaveParameters * loc_f426e.w);
+    }
+    arg_3fac7 = loc_2ffee;
+    arg_2f7bf = loc_5e290;
+    arg_451b0 = loc_855f6;
+}
+void func_94180(inout highp float arg_27e9a, inout highp float arg_a66d0, inout highp float arg_5b991, inout highp float arg_85f79, inout highp float arg_62dbf, inout highp float arg_6c048, inout highp float arg_12931, inout highp float arg_89c42, inout highp float arg_5d066) {
     bool loc_a9f27;
     func_8ab59(loc_a9f27);
     if (loc_a9f27)
     {
-        highp vec3 loc_f0fba = v_worldPos;
-        int loc_b9c0c = int(BiomeBlendingParameters.z * 0.5);
-        highp vec3 loc_4aab1 = BiomeBlendingLastUpdatePosition.xyz + WorldOrigin.xyz;
-        highp float loc_ab857 = (loc_f0fba.x - loc_4aab1.x) / BiomeBlendingLastUpdatePosition.w;
-        highp float loc_ddaf2 = (loc_f0fba.z - loc_4aab1.z) / BiomeBlendingLastUpdatePosition.w;
-        ivec2 loc_542fb = ivec2(loc_b9c0c + int(floor(loc_ab857)), loc_b9c0c + int(floor(loc_ddaf2)));
-        loc_542fb.x = clamp(loc_542fb.x, 0, int(BiomeBlendingParameters.z) - 1);
-        loc_542fb.y = clamp(loc_542fb.y, 0, int(BiomeBlendingParameters.z) - 1);
-        int loc_f1489 = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb, 0).x * 255.0));
-        int loc_73e2a = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(1, 0), 0).x * 255.0));
-        int loc_eaf0b = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(0, 1), 0).x * 255.0));
-        int loc_b7a42 = int(round(texelFetch(s_BiomeBlendingMap, loc_542fb + ivec2(1), 0).x * 255.0));
-        highp float loc_01a09 = fract(loc_ab857);
-        highp float loc_9e036 = fract(loc_ddaf2);
-        highp vec4 loc_7acdf = vec4((1.0 - loc_01a09) * (1.0 - loc_9e036), loc_01a09 * (1.0 - loc_9e036), (1.0 - loc_01a09) * loc_9e036, loc_01a09 * loc_9e036);
-        highp vec4 loc_c6eaa = loc_7acdf;
-        highp vec4 loc_1b4b8 = loc_7acdf;
-        highp vec4 loc_afb1c = loc_7acdf;
-        highp vec4 loc_a08d9 = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceParameters * loc_c6eaa.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceParameters * loc_c6eaa.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceParameters * loc_c6eaa.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceParameters * loc_c6eaa.w);
-        highp vec4 loc_0770f = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceWaveParameters * loc_1b4b8.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceWaveParameters * loc_1b4b8.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceWaveParameters * loc_1b4b8.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceWaveParameters * loc_1b4b8.w);
-        highp vec4 loc_cd64d = (((var_06448.zBiomeInfoBuffer[loc_f1489].waterSurfaceOctaveParameters * loc_afb1c.x) + (var_06448.zBiomeInfoBuffer[loc_73e2a].waterSurfaceOctaveParameters * loc_afb1c.y)) + (var_06448.zBiomeInfoBuffer[loc_eaf0b].waterSurfaceOctaveParameters * loc_afb1c.z)) + (var_06448.zBiomeInfoBuffer[loc_b7a42].waterSurfaceOctaveParameters * loc_afb1c.w);
-        arg_27e9a = loc_a08d9.x;
-        arg_a66d0 = loc_a08d9.y;
-        arg_5b991 = loc_a08d9.z;
-        arg_11702 = loc_a08d9.w;
-        arg_85f79 = loc_0770f.x;
-        arg_62dbf = loc_0770f.y;
-        arg_6c048 = loc_cd64d.x;
-        arg_12931 = loc_cd64d.y;
-        arg_89c42 = loc_cd64d.z;
-        arg_5d066 = loc_cd64d.w;
+        highp vec3 loc_418df = v_worldPos;
+        highp vec4 loc_24013;
+        highp vec4 loc_71f1d;
+        highp vec4 loc_b5465;
+        func_15a8f(loc_418df, loc_b5465, loc_71f1d, loc_24013);
+        highp vec4 loc_b96be = loc_b5465;
+        highp vec4 loc_2949f = loc_71f1d;
+        highp vec4 loc_be428 = loc_24013;
+        arg_27e9a = loc_b96be.x;
+        arg_a66d0 = loc_b96be.y;
+        arg_5b991 = loc_b96be.z;
+        arg_85f79 = loc_2949f.x;
+        arg_62dbf = loc_2949f.y;
+        arg_6c048 = loc_be428.x;
+        arg_12931 = loc_be428.y;
+        arg_89c42 = loc_be428.z;
+        arg_5d066 = loc_be428.w;
         return;
     }
     arg_27e9a = WaterSurfaceParameters.x;
     arg_a66d0 = WaterSurfaceParameters.y;
     arg_5b991 = WaterSurfaceParameters.z;
-    arg_11702 = WaterSurfaceParameters.w;
     arg_85f79 = WaterSurfaceWaveParameters.x;
     arg_62dbf = WaterSurfaceWaveParameters.y;
     arg_6c048 = WaterSurfaceOctaveParameters.x;
@@ -382,125 +668,56 @@ void main() {
     highp float var_0e0cd;
     highp float var_5431f;
     func_9052b(var_5431f, var_0e0cd, var_8ed44, var_bd3b6, var_b3851);
-    highp float var_84772;
-    highp float var_afa04;
-    highp float var_32de0;
-    highp float var_50295;
-    highp float var_13f6b;
-    highp float var_e5452;
-    highp float var_c9298;
-    highp float var_63531;
-    highp float var_28912;
-    highp float var_7fae3;
-    func_20c38(var_7fae3, var_28912, var_63531, var_c9298, var_e5452, var_13f6b, var_50295, var_32de0, var_afa04, var_84772);
-    highp vec3 var_1343e;
+    highp float var_074a9;
+    highp float var_0222e;
+    highp float var_e7eec;
+    highp float var_6c1ae;
+    highp float var_7b985;
+    highp float var_a6a44;
+    highp float var_35d96;
+    highp float var_a1ab3;
+    highp float var_30ff1;
+    func_94180(var_30ff1, var_a1ab3, var_35d96, var_a6a44, var_7b985, var_6c1ae, var_e7eec, var_0222e, var_074a9);
+    highp vec3 var_ce339;
     if (WaterSurfaceEnabled.x > 0.0)
     {
-        highp float var_3037b = ViewPositionAndTime.w * 0.5;
-        highp vec2 var_db8aa = (v_worldPos - WorldOrigin.xyz).xz;
-        highp vec2 var_17fa3 = var_db8aa;
-        highp float var_82f84;
-        highp float var_af08e;
-        highp vec2 var_2ef0e;
-        var_2ef0e = var_db8aa;
-        var_af08e = 0.0;
-        var_82f84 = 0.0;
-        highp float var_d9f2a;
-        highp float var_38665;
-        highp vec2 var_e296e;
-        highp float var_1721e;
-        highp float var_c2e94;
-        highp float var_feadc;
-        highp float var_deb76;
-        uint var_0ff26 = 0u;
-        highp float var_71294 = 0.0;
-        highp float var_b8c75 = var_e5452;
-        highp float var_c3b5f = var_7fae3;
-        highp float var_4422c = 1.0;
-        for (; var_0ff26 < uint(var_28912); var_4422c = var_1721e, var_c3b5f = var_c2e94, var_2ef0e = var_e296e, var_b8c75 = var_feadc, var_71294 = var_deb76, var_af08e = var_38665, var_82f84 = var_d9f2a, var_0ff26++)
+        highp float var_93df6 = ViewPositionAndTime.w * 0.5;
+        highp vec2 var_dea28 = vec2(0.0);
+        highp float var_1ba4d;
+        highp vec2 var_16625;
+        var_16625 = (v_worldPos - WorldOrigin.xyz).xz;
+        var_1ba4d = 0.0;
+        highp float var_ad209;
+        highp vec2 var_5e840;
+        highp float var_1f165;
+        highp float var_308b8;
+        highp float var_76a0b;
+        highp float var_f2008;
+        uint var_f415d = 0u;
+        highp float var_726f4 = 0.0;
+        highp float var_43afb = var_a6a44;
+        highp float var_5b08b = var_30ff1;
+        highp float var_2006b = 1.0;
+        for (; var_f415d < uint(var_a1ab3); var_2006b = var_1f165, var_5b08b = var_308b8, var_16625 = var_5e840, var_43afb = var_76a0b, var_726f4 = var_f2008, var_1ba4d = var_ad209, var_f415d++)
         {
-            highp vec2 var_3ac84 = vec2(sin(var_71294), cos(var_71294));
-            highp float var_93224 = (dot(var_3ac84, var_2ef0e) * var_c3b5f) + (var_3037b * var_b8c75);
-            highp float var_29a12 = pow((sin(var_93224) + 1.0) * 0.5, var_13f6b);
-            highp vec2 var_221b8 = vec2(var_29a12, (var_29a12 * cos(var_93224)) * (-1.0));
-            var_d9f2a = var_82f84 + (var_221b8.x * var_4422c);
-            var_38665 = var_af08e + var_4422c;
-            var_e296e = var_2ef0e + (((var_3ac84 * var_221b8.y) * var_4422c) * var_50295);
-            var_1721e = mix(var_4422c, 0.0, var_32de0);
-            var_c2e94 = var_c3b5f * var_afa04;
-            var_feadc = var_b8c75 * var_84772;
-            var_deb76 = var_71294 + 1.39900004863739013671875;
+            highp vec2 var_f2d63 = vec2(sin(var_726f4), cos(var_726f4));
+            highp float var_9fbcc = (dot(var_f2d63, var_16625) * var_5b08b) + (var_93df6 * var_43afb);
+            highp float var_932f5 = cos(var_9fbcc);
+            highp float var_e853a = sin(var_9fbcc);
+            var_dea28 += ((((((((var_f2d63 * (-1.0)) * var_35d96) * var_2006b) * var_5b08b) * var_7b985) * var_932f5) * pow(0.5 * (var_e853a + 1.0), var_7b985)) * (1.0 / (var_e853a + 1.00010001659393310546875)));
+            var_ad209 = var_1ba4d + var_2006b;
+            var_5e840 = var_16625 + ((var_f2d63 * (((var_2006b * pow((var_e853a + 1.0) * 0.5, var_7b985)) * var_932f5) * (-1.0))) * var_6c1ae);
+            var_1f165 = mix(var_2006b, 0.0, var_e7eec);
+            var_308b8 = var_5b08b * var_0222e;
+            var_76a0b = var_43afb * var_074a9;
+            var_f2008 = var_726f4 + 1.39900004863739013671875;
         }
-        highp vec3 var_47405 = vec3(var_17fa3.x, (var_82f84 / var_af08e) * var_63531, var_17fa3.y);
-        highp float var_2b4ee;
-        highp float var_38c87;
-        highp vec2 var_cbc38;
-        var_cbc38 = var_db8aa - vec2(var_c9298, 0.0);
-        var_38c87 = 0.0;
-        var_2b4ee = 0.0;
-        highp float var_6090e;
-        highp float var_c3e6b;
-        highp vec2 var_c361b;
-        highp float var_acbf1;
-        highp float var_5712c;
-        highp float var_c8f66;
-        highp float var_e0c56;
-        uint var_a50de = 0u;
-        highp float var_07f85 = 0.0;
-        highp float var_d7ca3 = var_e5452;
-        highp float var_671a8 = var_7fae3;
-        highp float var_f78b2 = 1.0;
-        for (; var_a50de < uint(var_28912); var_f78b2 = var_acbf1, var_671a8 = var_5712c, var_cbc38 = var_c361b, var_d7ca3 = var_c8f66, var_07f85 = var_e0c56, var_38c87 = var_c3e6b, var_2b4ee = var_6090e, var_a50de++)
-        {
-            highp vec2 var_547d9 = vec2(sin(var_07f85), cos(var_07f85));
-            highp float var_0051f = (dot(var_547d9, var_cbc38) * var_671a8) + (var_3037b * var_d7ca3);
-            highp float var_83598 = pow((sin(var_0051f) + 1.0) * 0.5, var_13f6b);
-            highp vec2 var_3ef36 = vec2(var_83598, (var_83598 * cos(var_0051f)) * (-1.0));
-            var_6090e = var_2b4ee + (var_3ef36.x * var_f78b2);
-            var_c3e6b = var_38c87 + var_f78b2;
-            var_c361b = var_cbc38 + (((var_547d9 * var_3ef36.y) * var_f78b2) * var_50295);
-            var_acbf1 = mix(var_f78b2, 0.0, var_32de0);
-            var_5712c = var_671a8 * var_afa04;
-            var_c8f66 = var_d7ca3 * var_84772;
-            var_e0c56 = var_07f85 + 1.39900004863739013671875;
-        }
-        highp float var_9f652;
-        highp float var_1f9c0;
-        highp vec2 var_0cccf;
-        var_0cccf = var_db8aa + vec2(0.0, var_c9298);
-        var_1f9c0 = 0.0;
-        var_9f652 = 0.0;
-        highp float var_19150;
-        highp float var_d5aed;
-        highp vec2 var_a6b58;
-        highp float var_8f034;
-        highp float var_6e9d6;
-        highp float var_94331;
-        highp float var_f1ae6;
-        uint var_afc8f = 0u;
-        highp float var_4a2b4 = 0.0;
-        highp float var_6a7fe = var_e5452;
-        highp float var_21493 = var_7fae3;
-        highp float var_3e15d = 1.0;
-        for (; var_afc8f < uint(var_28912); var_3e15d = var_8f034, var_21493 = var_6e9d6, var_0cccf = var_a6b58, var_6a7fe = var_94331, var_4a2b4 = var_f1ae6, var_1f9c0 = var_d5aed, var_9f652 = var_19150, var_afc8f++)
-        {
-            highp vec2 var_beff8 = vec2(sin(var_4a2b4), cos(var_4a2b4));
-            highp float var_ae2ba = (dot(var_beff8, var_0cccf) * var_21493) + (var_3037b * var_6a7fe);
-            highp float var_74e08 = pow((sin(var_ae2ba) + 1.0) * 0.5, var_13f6b);
-            highp vec2 var_f90b3 = vec2(var_74e08, (var_74e08 * cos(var_ae2ba)) * (-1.0));
-            var_19150 = var_9f652 + (var_f90b3.x * var_3e15d);
-            var_d5aed = var_1f9c0 + var_3e15d;
-            var_a6b58 = var_0cccf + (((var_beff8 * var_f90b3.y) * var_3e15d) * var_50295);
-            var_8f034 = mix(var_3e15d, 0.0, var_32de0);
-            var_6e9d6 = var_21493 * var_afa04;
-            var_94331 = var_6a7fe * var_84772;
-            var_f1ae6 = var_4a2b4 + 1.39900004863739013671875;
-        }
-        var_1343e = normalize(mix(v_normal, normalize(cross(var_47405 - vec3(var_17fa3.x - var_c9298, (var_2b4ee / var_38c87) * var_63531, var_17fa3.y), var_47405 - vec3(var_17fa3.x, (var_9f652 / var_1f9c0) * var_63531, var_17fa3.y + var_c9298))), vec3(v_normal.y)));
+        var_dea28 /= vec2(var_1ba4d);
+        var_ce339 = normalize(mix(v_normal, normalize(vec3(var_dea28.x, 1.0, var_dea28.y)), vec3(v_normal.y)));
     }
     else
     {
-        var_1343e = var_b3851;
+        var_ce339 = var_b3851;
     }
     highp vec4 var_e30b2 = vec4(texture(s_MatTexture, v_texcoord0).xyz, 1.0);
     highp vec2 var_ea830 = v_lightmapUV;
@@ -508,7 +725,7 @@ void main() {
     highp float var_7aa46;
     func_fb7ab(var_5431f, var_bd3b6, var_7aa46);
     var_6de71.w = var_7aa46;
-    highp vec3 var_089df = normalize(var_1343e);
+    highp vec3 var_089df = normalize(var_ce339);
     highp vec3 var_cd914 = var_089df;
     highp vec2 var_645ff = var_089df.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
     highp vec2 var_5a694;

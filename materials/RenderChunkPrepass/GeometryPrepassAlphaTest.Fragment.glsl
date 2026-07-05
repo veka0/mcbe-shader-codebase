@@ -30,12 +30,12 @@
 * Buffers:
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 2, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 3, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_SeasonsTexture;
 *
 * Uniforms:
 * - uniform vec4 DitherParams;
-* - uniform vec4 DitherParams2;
+* - uniform vec4 DitherParams2[3];
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
@@ -65,26 +65,30 @@ struct PBRTextureData {
     highp float maxMipNormal;
 };
 
-layout(binding = 2, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_147c9;
+layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_907b9;
 uniform highp mat4 u_prevViewProj;
+#ifdef DITHERING__ON
 uniform highp mat4 u_view;
+#endif
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
 #ifdef SEASONS__ON
 uniform highp sampler2D s_SeasonsTexture;
 #endif
 #ifdef DITHERING__ON
-uniform highp vec4 DitherParams2;
+uniform highp vec4 DitherParams2[3];
 uniform highp vec4 DitherParams;
-#endif
 uniform highp vec4 ViewPositionAndTime;
+#endif
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_bitangent;
 #ifdef DITHERING__ON
 in highp vec4 v_clipPosition;
 #endif
 in highp vec4 v_color0;
+#ifdef DITHERING__ON
 in highp vec2 v_ditheringAndMaskTinting;
+#endif
 in highp vec2 v_lightmapUV;
 in highp vec3 v_normal;
 flat in int v_pbrTextureId;
@@ -102,21 +106,21 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_59055 = vec2(var_147c9.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_147c9.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_39ca3 = vec2(var_147c9.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_147c9.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec2 loc_59055 = vec2(var_907b9.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_907b9.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_39ca3 = vec2(var_907b9.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_907b9.PBRData[v_pbrTextureId].colourToNormalUvBias1);
     highp vec3 loc_b4ff6;
-    if ((var_147c9.PBRData[v_pbrTextureId].flags & 4) == 4)
+    if ((var_907b9.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
         loc_b4ff6 = (texture(s_MatTexture, (v_texcoord0 * loc_59055) + loc_39ca3).xyz * 2.0) - vec3(1.0);
     }
     else
     {
         highp vec3 loc_9252d;
-        if ((var_147c9.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_907b9.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
             highp vec2 loc_218fe = (v_texcoord0 * loc_59055) + loc_39ca3;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_147c9.PBRData[v_pbrTextureId].maxMipNormal - var_147c9.PBRData[v_pbrTextureId].maxMipColour, var_147c9.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_907b9.PBRData[v_pbrTextureId].maxMipNormal - var_907b9.PBRData[v_pbrTextureId].maxMipColour, var_907b9.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -173,17 +177,17 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_147c9.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_907b9.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_147c9.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_907b9.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_907b9.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_907b9.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_907b9.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_147c9.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_907b9.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_147c9.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_907b9.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -192,10 +196,10 @@ void func_a72a6(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_147c9.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_147c9.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_147c9.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_147c9.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_907b9.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_907b9.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_907b9.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_907b9.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
@@ -225,44 +229,39 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+#ifdef DITHERING__ON
     highp mat4 View = u_view;
+#endif
     highp vec4 var_47d7b = v_color0;
+#ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
+#endif
     highp vec4 var_fe617 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_a9bff = var_fe617;
+    highp vec4 var_b902c = var_fe617;
 #ifdef DITHERING__OFF
-    highp vec2 var_47338 = vec2(0.0);
+    if (false || (var_b902c.w < 0.5))
 #endif
 #ifdef DITHERING__ON
-    highp vec4 var_5f8be = v_clipPosition;
-    highp vec2 var_5d8a5 = vec2(DitherParams.z, DitherParams.w);
-#endif
-    bool var_9d408;
+    highp vec2 var_fe616 = DitherParams2[2].xy;
+    bool var_4bb61;
     if (var_4f8e7.x > 0.5)
+#endif
     {
-#ifdef DITHERING__OFF
-        highp vec2 var_01f17 = floor(vec2(0.0));
-        highp vec2 var_d1dd1 = var_01f17;
-        highp vec2 var_51242 = floor(vec2(0.0));
-        highp vec2 var_ada7f = var_51242;
-        highp vec2 var_39049 = floor(vec2(0.0));
-        highp vec2 var_6c222 = var_39049;
-        var_9d408 = smoothstep(var_47338.x, var_47338.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), -ViewPositionAndTime.xyz)) <= (((((((fract((var_d1dd1.x * 0.5) + ((var_d1dd1.y * var_d1dd1.y) * 0.75)) * 0.25) + fract((var_ada7f.x * 0.5) + ((var_ada7f.y * var_ada7f.y) * 0.75))) * 0.25) + fract((var_6c222.x * 0.5) + ((var_6c222.y * var_6c222.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
-#endif
 #ifdef DITHERING__ON
-        highp vec2 var_a47f5 = floor(((((v_clipPosition.xyz / vec3(var_5f8be.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2.x)) * DitherParams2.x;
-        highp vec2 var_de637 = floor(var_a47f5 * 0.25);
-        highp vec2 var_23224 = floor(var_a47f5 * 0.5);
-        highp vec2 var_f0b21 = floor(var_a47f5);
-        var_9d408 = smoothstep(var_5d8a5.x, var_5d8a5.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_de637.x * 0.5) + ((var_de637.y * var_de637.y) * 0.75)) * 0.25) + fract((var_23224.x * 0.5) + ((var_23224.y * var_23224.y) * 0.75))) * 0.25) + fract((var_f0b21.x * 0.5) + ((var_f0b21.y * var_f0b21.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
-#endif
+        highp vec4 var_bb748 = v_clipPosition;
+        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_bb748.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
+        highp vec2 var_de637 = floor(var_b2538 * 0.25);
+        highp vec2 var_23224 = floor(var_b2538 * 0.5);
+        highp vec2 var_f0b21 = floor(var_b2538);
+        var_4bb61 = smoothstep(var_fe616.x, var_fe616.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - ViewPositionAndTime.xyz)) <= (((((((fract((var_de637.x * 0.5) + ((var_de637.y * var_de637.y) * 0.75)) * 0.25) + fract((var_23224.x * 0.5) + ((var_23224.y * var_23224.y) * 0.75))) * 0.25) + fract((var_f0b21.x * 0.5) + ((var_f0b21.y * var_f0b21.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_9d408 = false;
+        var_4bb61 = false;
     }
-    if (var_9d408 || (var_a9bff.w < 0.5))
+    if (var_4bb61 || (var_b902c.w < 0.5))
     {
+#endif
         discard;
     }
 #ifdef SEASONS__OFF

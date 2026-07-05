@@ -14,8 +14,8 @@
 * Available Resources:
 *
 * Buffers:
-* - layout(binding = 1, std430) buffer s_ExtendsBuffer { LightExtends s_Extends[]; };
-* - layout(binding = 0, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 0, std430) buffer s_ExtendsBuffer { LightExtends s_Extends[]; };
+* - layout(binding = 1, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
 *
 * Uniforms:
 * - uniform vec4 CameraFarPlane;
@@ -47,8 +47,8 @@ struct LightData {
     float lookup;
 };
 
-layout(binding = 1, std430) buffer s_Extends { LightExtends Extends[]; } var_0a883;
-layout(binding = 0, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_dac50;
+layout(binding = 0, std430) buffer s_Extends { LightExtends Extends[]; } var_9d713;
+layout(binding = 1, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_0bc25;
 uniform vec4 ClusterDepthBounds;
 uniform vec4 ClusterDimensions;
 uniform vec4 LightsPerCluster;
@@ -115,10 +115,10 @@ void func_b5ad2() {
     int loc_e8108;
     for (int loc_0c57c = 0; loc_0c57c < loc_6f4b5; loc_25246 = loc_e8108, loc_0c57c++)
     {
-        vec4 loc_e9fdb = var_0a883.Extends[loc_0c57c].pos;
-        int loc_51439 = var_0a883.Extends[loc_0c57c].index;
-        vec4 loc_30d7f = var_0a883.Extends[loc_0c57c]._min;
-        vec4 loc_035a0 = var_0a883.Extends[loc_0c57c]._max;
+        vec4 loc_e9fdb = var_9d713.Extends[loc_0c57c].pos;
+        int loc_51439 = var_9d713.Extends[loc_0c57c].index;
+        vec4 loc_30d7f = var_9d713.Extends[loc_0c57c]._min;
+        vec4 loc_035a0 = var_9d713.Extends[loc_0c57c]._max;
         bool loc_25a54 = loc_286a7 < loc_30d7f.z;
         bool loc_a8060;
         if (!loc_25a54)
@@ -208,7 +208,7 @@ void func_b5ad2() {
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
             loc_73e0b[loc_8aa6b].indexInLookUp = loc_25246;
-            var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = float(loc_51439);
+            var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = float(loc_51439);
             loc_10073 = loc_25246 + 1;
         }
         else
@@ -222,21 +222,21 @@ void func_b5ad2() {
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
             loc_73e0b[loc_8aa6b].indexInLookUp = loc_ce739;
-            var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_ce739].lookup = float(loc_51439);
+            var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_ce739].lookup = float(loc_51439);
             loc_10073 = loc_25246;
         }
         loc_e8108 = loc_10073;
     }
     if (loc_25246 < loc_a217b)
     {
-        var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = -1.0;
+        var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_25246].lookup = -1.0;
     }
 }
 #endif
 #ifdef ANGULAR_REFINEMENT__ON
 void func_4c579(inout vec4 arg_706f7, inout int arg_c27ae, inout bool arg_a7aac, inout uvec3 arg_a28c9, inout vec3 arg_dbfed, inout vec3 arg_ced6e) {
     float loc_06cc8 = dot(arg_706f7.xyz, arg_706f7.xyz);
-    float loc_792b3 = var_0a883.Extends[arg_c27ae].radius * var_0a883.Extends[arg_c27ae].radius;
+    float loc_792b3 = var_9d713.Extends[arg_c27ae].radius * var_9d713.Extends[arg_c27ae].radius;
     if (loc_06cc8 <= loc_792b3)
     {
         arg_a7aac = true;
@@ -308,10 +308,10 @@ void func_c58cd() {
     int loc_7e4e3;
     for (int loc_060b7 = 0; loc_060b7 < loc_6f4b5; loc_e762b = loc_7e4e3, loc_060b7++)
     {
-        vec4 loc_79899 = var_0a883.Extends[loc_060b7].pos;
-        int loc_51439 = var_0a883.Extends[loc_060b7].index;
-        vec4 loc_30d7f = var_0a883.Extends[loc_060b7]._min;
-        vec4 loc_035a0 = var_0a883.Extends[loc_060b7]._max;
+        vec4 loc_79899 = var_9d713.Extends[loc_060b7].pos;
+        int loc_51439 = var_9d713.Extends[loc_060b7].index;
+        vec4 loc_30d7f = var_9d713.Extends[loc_060b7]._min;
+        vec4 loc_035a0 = var_9d713.Extends[loc_060b7]._max;
         bool loc_25a54 = loc_3ebdd < loc_30d7f.z;
         bool loc_a8060;
         if (!loc_25a54)
@@ -411,7 +411,7 @@ void func_c58cd() {
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
             loc_73e0b[loc_8aa6b].indexInLookUp = loc_e762b;
-            var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_e762b].lookup = float(loc_51439);
+            var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_e762b].lookup = float(loc_51439);
             loc_10073 = loc_e762b + 1;
         }
         else
@@ -425,14 +425,14 @@ void func_c58cd() {
             }
             loc_73e0b[loc_8aa6b].contribution = loc_d9ac7;
             loc_73e0b[loc_8aa6b].indexInLookUp = loc_ce739;
-            var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_ce739].lookup = float(loc_51439);
+            var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_ce739].lookup = float(loc_51439);
             loc_10073 = loc_e762b;
         }
         loc_7e4e3 = loc_10073;
     }
     if (loc_e762b < loc_a217b)
     {
-        var_dac50.zLightLookupArray[(loc_026da * loc_a217b) + loc_e762b].lookup = -1.0;
+        var_0bc25.zLightLookupArray[(loc_026da * loc_a217b) + loc_e762b].lookup = -1.0;
     }
 }
 #endif

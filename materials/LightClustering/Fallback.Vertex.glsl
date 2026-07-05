@@ -14,8 +14,8 @@
 * Available Resources:
 *
 * Buffers:
-* - layout(binding = 1, std430) buffer s_ExtendsBuffer { LightExtends s_Extends[]; };
-* - layout(binding = 0, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 0, std430) buffer s_ExtendsBuffer { LightExtends s_Extends[]; };
+* - layout(binding = 1, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
 *
 * Uniforms:
 * - uniform vec4 CameraFarPlane;

@@ -48,6 +48,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
@@ -97,6 +100,7 @@ in vec4 i_data2;
 in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
+out vec4 v_clipPosition;
 out vec4 v_color0;
 flat out int v_frontFacing;
 out vec3 v_normal;
@@ -118,15 +122,16 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_abb3b = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_96145 = var_e43a8 * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__OFF
-    vec4 var_abb3b = var_c7bcb * vec4(a_position, 1.0);
+    vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
 #endif
     vec4 var_db20e = a_color0;
-    mat4 var_be69c = u_proj;
-    var_be69c[2].x += SubPixelOffset.x;
-    var_be69c[2].y -= SubPixelOffset.y;
+    mat4 var_bab0b = u_proj;
+    var_bab0b[2].x += SubPixelOffset.x;
+    var_bab0b[2].y -= SubPixelOffset.y;
+    vec4 var_c804c = var_bab0b * (u_view * vec4(var_96145.xyz, 1.0));
     int var_e5df4 = int(var_db20e.w * 255.0);
     vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_be3b2) + BannerUVOffsetsAndScales[var_e5df4].xy;
     vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_be3b2) + BannerUVOffsetsAndScales[0].xy;
@@ -140,6 +145,7 @@ void main() {
 #endif
     vec4 var_4c816 = a_tangent;
     v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
+    v_clipPosition = var_c804c;
 #ifdef TINTING__DISABLED
     v_color0 = a_color0;
 #endif
@@ -152,6 +158,6 @@ void main() {
     v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = var_be3b2;
     v_texcoords = vec4(var_838f4.x, var_838f4.y, var_ad668.x, var_ad668.y);
-    v_worldPos = var_abb3b.xyz;
-    gl_Position = var_be69c * (u_view * vec4(var_abb3b.xyz, 1.0));
+    v_worldPos = var_96145.xyz;
+    gl_Position = var_c804c;
 }

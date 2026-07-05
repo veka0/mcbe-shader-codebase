@@ -54,6 +54,7 @@
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -69,6 +70,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -77,6 +79,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -133,6 +138,7 @@
 * - uniform vec4 TintedAlphaTestEnabled;
 * - uniform vec4 UVAnimation;
 * - uniform vec4 UVScale;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 UseAlphaRewrite;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;

@@ -13,7 +13,7 @@
 * - uniform lowp sampler2D s_RasterColor;
 *
 * Uniforms:
-* - uniform vec4 ColorGrading_Gamma_PlayerUI;
+* - uniform vec4 ColorGrading_Misc;
 * - uniform vec4 ScreenSize;
 * - uniform vec4 ViewportScale;
 */

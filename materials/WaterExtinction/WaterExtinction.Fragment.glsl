@@ -19,9 +19,9 @@
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
 * - uniform lowp sampler2D s_WaterDepth;
-* - layout(binding = 9, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 3, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 4, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 10, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 11, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 12, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -29,6 +29,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraIsUnderwater;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
@@ -43,6 +44,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -98,7 +100,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 9, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_48860;
+layout(binding = 10, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_acba2;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -107,7 +109,6 @@ uniform highp sampler2D s_WaterDepth;
 uniform highp vec4 BiomeBlendingLastUpdatePosition;
 uniform highp vec4 BiomeBlendingParameters;
 uniform highp vec4 WaterExtinctionCoefficients;
-uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
@@ -119,26 +120,39 @@ void func_8ab59(inout bool arg_5e3ed) {
     }
     arg_5e3ed = false;
 }
-void func_6a0d0(inout highp vec4 arg_5dc29, inout highp vec4 arg_073df) {
+void func_a4cbd(inout highp vec3 arg_c6525, inout highp vec4 arg_a01ef) {
+    int loc_738fb = int(BiomeBlendingParameters.z * 0.5);
+    highp float loc_6b94b = (arg_c6525.x - BiomeBlendingLastUpdatePosition.x) / BiomeBlendingLastUpdatePosition.w;
+    highp float loc_c8c2e = (arg_c6525.z - BiomeBlendingLastUpdatePosition.z) / BiomeBlendingLastUpdatePosition.w;
+    ivec2 loc_f487d = ivec2(loc_738fb + int(floor(loc_6b94b)), loc_738fb + int(floor(loc_c8c2e)));
+    loc_f487d.x = clamp(loc_f487d.x, 0, int(BiomeBlendingParameters.z) - 1);
+    loc_f487d.y = clamp(loc_f487d.y, 0, int(BiomeBlendingParameters.z) - 1);
+    int loc_35590 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
+    int loc_d7d5b = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
+    int loc_80f2f = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
+    int loc_86c64 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
+    if (((loc_35590 == loc_d7d5b) && (loc_d7d5b == loc_80f2f)) && (loc_80f2f == loc_86c64))
+    {
+        arg_a01ef = var_acba2.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients;
+        return;
+    }
+    highp float loc_77c49 = fract(loc_6b94b);
+    highp float loc_33836 = fract(loc_c8c2e);
+    highp vec4 loc_47197 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
+    arg_a01ef = (((var_acba2.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients * loc_47197.x) + (var_acba2.zBiomeInfoBuffer[loc_d7d5b].waterExtinctionCoefficients * loc_47197.y)) + (var_acba2.zBiomeInfoBuffer[loc_80f2f].waterExtinctionCoefficients * loc_47197.z)) + (var_acba2.zBiomeInfoBuffer[loc_86c64].waterExtinctionCoefficients * loc_47197.w);
+}
+void func_c5ae0(inout highp vec4 arg_5dc29, inout highp vec4 arg_a6615) {
     bool loc_a9f27;
     func_8ab59(loc_a9f27);
     if (loc_a9f27)
     {
-        highp vec3 loc_5d5b9 = arg_5dc29.xyz;
-        int loc_b9c0c = int(BiomeBlendingParameters.z * 0.5);
-        highp vec3 loc_4aab1 = BiomeBlendingLastUpdatePosition.xyz + WorldOrigin.xyz;
-        highp float loc_ab857 = (loc_5d5b9.x - loc_4aab1.x) / BiomeBlendingLastUpdatePosition.w;
-        highp float loc_ddaf2 = (loc_5d5b9.z - loc_4aab1.z) / BiomeBlendingLastUpdatePosition.w;
-        ivec2 loc_827d0 = ivec2(loc_b9c0c + int(floor(loc_ab857)), loc_b9c0c + int(floor(loc_ddaf2)));
-        loc_827d0.x = clamp(loc_827d0.x, 0, int(BiomeBlendingParameters.z) - 1);
-        loc_827d0.y = clamp(loc_827d0.y, 0, int(BiomeBlendingParameters.z) - 1);
-        highp float loc_01a09 = fract(loc_ab857);
-        highp float loc_9e036 = fract(loc_ddaf2);
-        highp vec4 loc_2717d = vec4((1.0 - loc_01a09) * (1.0 - loc_9e036), loc_01a09 * (1.0 - loc_9e036), (1.0 - loc_01a09) * loc_9e036, loc_01a09 * loc_9e036);
-        arg_073df = (((var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0, 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.x) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1, 0), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.y)) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(0, 1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.z)) + (var_48860.zBiomeInfoBuffer[int(round(texelFetch(s_BiomeBlendingMap, loc_827d0 + ivec2(1), 0).x * 255.0))].waterExtinctionCoefficients * loc_2717d.w);
+        highp vec3 loc_b7e0e = arg_5dc29.xyz;
+        highp vec4 loc_baef6;
+        func_a4cbd(loc_b7e0e, loc_baef6);
+        arg_a6615 = loc_baef6;
         return;
     }
-    arg_073df = WaterExtinctionCoefficients;
+    arg_a6615 = WaterExtinctionCoefficients;
 }
 void main() {
     highp vec4 var_365e3 = vec4(v_projPosition.xy, (texture(s_SceneDepth, v_texcoord0.xy).x * 2.0) - 1.0, 1.0);
@@ -167,6 +181,6 @@ void main() {
     var_7101d = var_4f566;
     highp vec4 var_a803b = u_invView * vec4(var_4f566.xyz, 1.0);
     highp vec4 var_05771;
-    func_6a0d0(var_a803b, var_05771);
+    func_c5ae0(var_a803b, var_05771);
     bgfx_FragColor = vec4(exp((-var_05771.xyz) * length((u_invView * vec4(var_bae5b.xyz, 1.0)) - var_a803b)), 1.0);
 }

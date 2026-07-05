@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AdaptedFrameAverageLuminance;
-* - layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
+* - layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
 * - uniform lowp sampler2D s_GameColor;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
@@ -43,7 +43,7 @@ struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_894e2;
+layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_b7280;
 uniform highp sampler2D s_GameColor;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform vec4 CenterWeight;
@@ -122,6 +122,6 @@ void main() {
 #ifdef THREAD_LIMIT__NATIVE
         uint var_c8bf6 = (var_2edda * 256u) + gl_LocalInvocationIndex;
 #endif
-        uint var_1dd77 = atomicAdd(var_894e2.CurFrameLuminanceHistogram[var_c8bf6].count, curFrameLuminanceHistogramShared[var_c8bf6]);
+        uint var_1dd77 = atomicAdd(var_b7280.CurFrameLuminanceHistogram[var_c8bf6].count, curFrameLuminanceHistogramShared[var_c8bf6]);
     }
 }

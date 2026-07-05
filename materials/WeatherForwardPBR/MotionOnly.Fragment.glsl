@@ -18,7 +18,7 @@
 *
 * NoOcclusion:
 * - NO_OCCLUSION__OFF
-* - NO_OCCLUSION__ON
+* - NO_OCCLUSION__ON (not used)
 *
 * NoVariety:
 * - NO_VARIETY__OFF (not used)
@@ -128,133 +128,102 @@
 
 precision mediump float;
 precision highp int;
-uniform highp sampler2D s_LightingTexture;
+uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_viewProj;
+#ifdef NO_OCCLUSION__OFF
 uniform highp sampler2D s_OcclusionTexture;
+#endif
 uniform highp sampler2D s_WeatherTexture;
+#ifdef NO_OCCLUSION__OFF
 uniform highp vec4 OcclusionHeightOffset;
-in highp vec4 v_fog;
+#endif
+uniform highp vec4 u_prevWorldPosOffset;
+#ifdef NO_OCCLUSION__OFF
 in highp float v_occlusionHeight;
 in highp vec2 v_occlusionUV;
+#endif
+in highp vec3 v_prevWorldPos;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
-#if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-void func_73dd7(inout highp vec2 arg_0a9f5) {
-    highp vec4 loc_175e8 = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_fd51f = loc_175e8.x;
-    highp float loc_5dbf2 = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
-    bool loc_47b39 = v_occlusionUV.x >= 0.0;
-    bool loc_77737;
-    if (loc_47b39)
-    {
-        loc_77737 = v_occlusionUV.x <= 1.0;
-    }
-    else
-    {
-        loc_77737 = loc_47b39;
-    }
-    bool loc_8f253;
-    if (loc_77737)
-    {
-        loc_8f253 = v_occlusionUV.y >= 0.0;
-    }
-    else
-    {
-        loc_8f253 = loc_77737;
-    }
-    bool loc_1a0b7;
-    if (loc_8f253)
-    {
-        loc_1a0b7 = v_occlusionUV.y <= 1.0;
-    }
-    else
-    {
-        loc_1a0b7 = loc_8f253;
-    }
-    if (loc_1a0b7 && (v_occlusionHeight < loc_5dbf2))
-    {
-        arg_0a9f5 = vec2(0.0);
-        return;
-    }
-    else
-    {
-        arg_0a9f5 = vec2(clamp(loc_fd51f - (((v_occlusionHeight - loc_5dbf2) * 25.0) * loc_fd51f), 0.0, 1.0), 1.0);
-        return;
-    }
-}
-#endif
-#ifdef NO_OCCLUSION__ON
-void func_b79af(inout highp vec2 arg_c6309) {
-    highp vec4 loc_afabb = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_97536 = loc_afabb.x;
-    arg_c6309 = vec2(clamp(loc_97536 - (((v_occlusionHeight - ((loc_afabb.y + (loc_afabb.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))) * 25.0) * loc_97536), 0.0, 1.0), 1.0);
-}
-#endif
-#if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-void func_f0c66(inout highp vec2 arg_0a9f5) {
-    highp vec4 loc_175e8 = texture(s_OcclusionTexture, v_occlusionUV);
-    highp float loc_fd51f = loc_175e8.x;
-    highp float loc_15941 = (loc_175e8.y + (loc_175e8.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125);
-    bool loc_47b39 = v_occlusionUV.x >= 0.0;
-    bool loc_77737;
-    if (loc_47b39)
-    {
-        loc_77737 = v_occlusionUV.x <= 1.0;
-    }
-    else
-    {
-        loc_77737 = loc_47b39;
-    }
-    bool loc_8f253;
-    if (loc_77737)
-    {
-        loc_8f253 = v_occlusionUV.y >= 0.0;
-    }
-    else
-    {
-        loc_8f253 = loc_77737;
-    }
-    bool loc_65342;
-    if (loc_8f253)
-    {
-        loc_65342 = v_occlusionUV.y <= 1.0;
-    }
-    else
-    {
-        loc_65342 = loc_8f253;
-    }
-    if (loc_65342 && (v_occlusionHeight > loc_15941))
-    {
-        arg_0a9f5 = vec2(0.0);
-        return;
-    }
-    else
-    {
-        arg_0a9f5 = vec2(clamp(loc_fd51f - (((v_occlusionHeight - loc_15941) * 25.0) * loc_fd51f), 0.0, 1.0), 1.0);
-        return;
-    }
-}
-#endif
+in highp vec3 v_worldPos;
+layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
+    highp vec4 var_b7c4a = texture(s_WeatherTexture, v_texcoord0);
+    if (var_b7c4a.w < 0.5)
+    {
+        discard;
+    }
 #ifdef NO_OCCLUSION__OFF
-    highp vec4 var_de9a8 = texture(s_WeatherTexture, v_texcoord0);
+    highp vec4 var_18fd7 = texture(s_OcclusionTexture, v_occlusionUV);
+    bool var_47b39 = v_occlusionUV.x >= 0.0;
+    bool var_77737;
+    if (var_47b39)
+    {
+        var_77737 = v_occlusionUV.x <= 1.0;
+    }
+    else
+    {
+        var_77737 = var_47b39;
+    }
+    bool var_8f253;
+    if (var_77737)
+    {
+        var_8f253 = v_occlusionUV.y >= 0.0;
+    }
+    else
+    {
+        var_8f253 = var_77737;
+    }
+    bool var_ac78e;
+    if (var_8f253)
+    {
+        var_ac78e = v_occlusionUV.y <= 1.0;
+    }
+    else
+    {
+        var_ac78e = var_8f253;
+    }
 #endif
-    highp vec2 var_3e492;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-    func_73dd7(var_3e492);
-#endif
-#ifdef NO_OCCLUSION__ON
-    highp vec4 var_de9a8 = texture(s_WeatherTexture, v_texcoord0);
-    func_b79af(var_3e492);
+    if (var_ac78e && (v_occlusionHeight < ((var_18fd7.y + (var_18fd7.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))))
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-    func_f0c66(var_3e492);
+    if (var_ac78e && (v_occlusionHeight > ((var_18fd7.y + (var_18fd7.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))))
 #endif
-    highp vec2 var_7e6be = var_3e492;
-    highp vec4 var_66861 = var_de9a8;
-    highp vec3 var_035d8 = var_66861.xyz * texture(s_LightingTexture, var_3e492).xyz;
-    var_de9a8 = vec4(var_035d8.x, var_035d8.y, var_035d8.z, var_66861.w);
-    highp vec4 var_a82ec = vec4(var_035d8, var_de9a8.w * var_7e6be.y);
-    highp vec4 var_6ca24 = v_fog;
-    highp vec3 var_14685 = mix(var_a82ec.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    bgfx_FragColor = vec4(var_14685.x, var_14685.y, var_14685.z, var_a82ec.w);
+#ifdef NO_OCCLUSION__OFF
+    {
+        discard;
+    }
+#endif
+    highp vec4 var_f90b5;
+    if (distance(v_worldPos, v_prevWorldPos - u_prevWorldPosOffset.xyz) > 27.0)
+    {
+        highp vec4 var_7293e = u_viewProj * vec4(v_worldPos, 1.0);
+        highp vec4 var_c092d = var_7293e;
+        highp float var_9025d = var_c092d.w;
+        highp vec4 var_b74ea = ((var_7293e / vec4(var_9025d)) * 0.5) + vec4(0.5);
+        var_c092d = var_b74ea;
+        highp vec4 var_40af8 = u_prevViewProj * vec4(v_worldPos, 1.0);
+        highp vec4 var_9f128 = var_40af8;
+        highp float var_a08f7 = var_9f128.w;
+        highp vec4 var_b3184 = ((var_40af8 / vec4(var_a08f7)) * 0.5) + vec4(0.5);
+        var_9f128 = var_b3184;
+        highp vec2 var_95189 = var_b74ea.xy - var_b3184.xy;
+        var_f90b5 = vec4(vec4(1.0).x, vec4(1.0).y, var_95189.x, var_95189.y);
+    }
+    else
+    {
+        highp vec4 var_e3385 = u_viewProj * vec4(v_worldPos, 1.0);
+        highp vec4 var_d1196 = var_e3385;
+        highp float var_36ae1 = var_d1196.w;
+        highp vec4 var_58273 = ((var_e3385 / vec4(var_36ae1)) * 0.5) + vec4(0.5);
+        var_d1196 = var_58273;
+        highp vec4 var_3d686 = u_prevViewProj * vec4(v_prevWorldPos - u_prevWorldPosOffset.xyz, 1.0);
+        highp vec4 var_42184 = var_3d686;
+        highp float var_5148a = var_42184.w;
+        highp vec4 var_ff2a0 = ((var_3d686 / vec4(var_5148a)) * 0.5) + vec4(0.5);
+        var_42184 = var_ff2a0;
+        highp vec2 var_26dea = var_58273.xy - var_ff2a0.xy;
+        var_f90b5 = vec4(vec4(1.0).x, vec4(1.0).y, var_26dea.x, var_26dea.y);
+    }
+    bgfx_FragData[0] = var_f90b5;
 }

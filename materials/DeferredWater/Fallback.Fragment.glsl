@@ -39,7 +39,7 @@
 * - uniform vec4 BiomeBlendingParameters;
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
-* - uniform vec4 CameraAmbientSamples;
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraIsUnderwater;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
@@ -54,6 +54,7 @@
 * - uniform vec4 ClusterDimensions;
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -67,7 +68,6 @@
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
-* - uniform vec4 GameplayWorldStatus;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;

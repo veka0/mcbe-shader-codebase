@@ -25,9 +25,9 @@
 * - uniform vec4 ColorGrading_Gain_Shadows;
 * - uniform vec4 ColorGrading_Gamma_Highlights;
 * - uniform vec4 ColorGrading_Gamma_Midtones;
-* - uniform vec4 ColorGrading_Gamma_PlayerUI;
 * - uniform vec4 ColorGrading_Gamma_Shadows;
 * - uniform vec4 ColorGrading_Misc;
+* - uniform vec4 ColorGrading_Misc2;
 * - uniform vec4 ColorGrading_Offset_Highlights;
 * - uniform vec4 ColorGrading_Offset_Midtones;
 * - uniform vec4 ColorGrading_Offset_Shadows;
@@ -60,8 +60,8 @@ uniform highp vec4 ColorGrading_Gain_Midtones;
 uniform highp vec4 ColorGrading_Gain_Shadows;
 uniform highp vec4 ColorGrading_Gamma_Highlights;
 uniform highp vec4 ColorGrading_Gamma_Midtones;
-uniform highp vec4 ColorGrading_Gamma_PlayerUI;
 uniform highp vec4 ColorGrading_Gamma_Shadows;
+uniform highp vec4 ColorGrading_Misc2;
 uniform highp vec4 ColorGrading_Misc;
 uniform highp vec4 ColorGrading_Offset_Highlights;
 uniform highp vec4 ColorGrading_Offset_Midtones;
@@ -78,6 +78,51 @@ uniform highp vec4 RasterizedColorEnabled;
 uniform highp vec4 TonemapParams0;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragColor;
+void func_8e34f(inout highp vec3 arg_c3a8d, inout highp vec3 arg_95aa6, inout highp vec3 arg_2c425) {
+    if (ColorGrading_Misc2.x != 0.0)
+    {
+        arg_c3a8d = pow(max(arg_95aa6, vec3(0.0)), vec3(1.0) / (arg_2c425 * ColorGrading_Misc.w));
+        return;
+    }
+    else
+    {
+        highp vec3 loc_a7dcf = arg_95aa6;
+        highp vec3 loc_f65c2 = arg_95aa6 * 12.9200000762939453125;
+        highp vec3 loc_3a1d5 = (pow(abs(arg_95aa6), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875);
+        highp float loc_e81ff;
+        if (loc_a7dcf.x <= 0.003130800090730190277099609375)
+        {
+            loc_e81ff = loc_f65c2.x;
+        }
+        else
+        {
+            loc_e81ff = loc_3a1d5.x;
+        }
+        loc_a7dcf.x = loc_e81ff;
+        highp float loc_007b0;
+        if (loc_a7dcf.y <= 0.003130800090730190277099609375)
+        {
+            loc_007b0 = loc_f65c2.y;
+        }
+        else
+        {
+            loc_007b0 = loc_3a1d5.y;
+        }
+        loc_a7dcf.y = loc_007b0;
+        highp float loc_fa4a6;
+        if (loc_a7dcf.z <= 0.003130800090730190277099609375)
+        {
+            loc_fa4a6 = loc_f65c2.z;
+        }
+        else
+        {
+            loc_fa4a6 = loc_3a1d5.z;
+        }
+        loc_a7dcf.z = loc_fa4a6;
+        arg_c3a8d = pow(loc_a7dcf, vec3(2.2000000476837158203125) / (arg_2c425 * ColorGrading_Misc.w));
+        return;
+    }
+}
 void main() {
     highp vec4 var_be1e6 = texture(s_ColorTexture, v_texcoord0.xy);
     highp vec3 var_f0fbb = var_be1e6.xyz;
@@ -414,7 +459,7 @@ void main() {
         }
         var_3ee3f = var_7f804;
     }
-    highp vec3 var_bfb98 = max(max(max(mix(vec3(dot(var_9ec15, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), var_9ec15, var_71176), vec3(0.0)) * var_e1a95, vec3(0.0)) + (vec3(var_b9f0e) * var_3ee3f), vec3(0.0));
+    highp vec3 var_19d0d = max(max(max(mix(vec3(dot(var_9ec15, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), var_9ec15, var_71176), vec3(0.0)) * var_e1a95, vec3(0.0)) + (vec3(var_b9f0e) * var_3ee3f), vec3(0.0));
     highp float var_4a042;
     if (LuminanceMinMaxAndWhitePointAndMinWhitePoint.z < LuminanceMinMaxAndWhitePointAndMinWhitePoint.w)
     {
@@ -425,17 +470,17 @@ void main() {
         var_4a042 = LuminanceMinMaxAndWhitePointAndMinWhitePoint.z;
     }
     highp float var_cc29b = (0.180000007152557373046875 / var_b9f0e) * var_482cd;
-    highp vec3 var_1f38f = var_bfb98 * var_cc29b;
-    highp vec3 var_97858;
+    highp vec3 var_1f38f = var_19d0d * var_cc29b;
+    highp vec3 var_95052;
     if (TonemapParams0.y >= 0.5)
     {
         highp float var_a6dfd = var_cc29b * var_4a042;
         int var_fde43 = int(TonemapParams0.x);
         highp float var_8a41a = var_a6dfd * var_a6dfd;
-        highp vec3 var_f1975;
+        highp vec3 var_667b0;
         if (var_fde43 == 1)
         {
-            var_f1975 = (var_1f38f * (vec3(1.0) + (var_1f38f / vec3(var_8a41a)))) / (vec3(1.0) + var_1f38f);
+            var_667b0 = (var_1f38f * (vec3(1.0) + (var_1f38f / vec3(var_8a41a)))) / (vec3(1.0) + var_1f38f);
         }
         else
         {
@@ -483,9 +528,9 @@ void main() {
                 }
                 var_3a319 = var_b9221;
             }
-            var_f1975 = var_3a319;
+            var_667b0 = var_3a319;
         }
-        highp float var_94025 = dot(var_f1975, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+        highp float var_94025 = dot(var_667b0, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         bool var_e978a = ColorGrading_Gamma_Highlights.w != 0.0;
         bool var_5a844 = ColorGrading_Gamma_Shadows.w != 0.0;
         bool var_b6f77;
@@ -497,10 +542,10 @@ void main() {
         {
             var_b6f77 = var_e978a;
         }
-        highp vec3 var_6cd50;
+        highp vec3 var_2da86;
         if (var_b6f77)
         {
-            var_6cd50 = ColorGrading_Gamma_Highlights.xyz;
+            var_2da86 = ColorGrading_Gamma_Highlights.xyz;
         }
         else
         {
@@ -520,7 +565,7 @@ void main() {
             }
             else
             {
-                highp vec3 var_d7ae5;
+                highp vec3 var_bea16;
                 if (ColorGrading_Gamma_Midtones.w != 0.0)
                 {
                     highp vec3 var_98ab8;
@@ -541,21 +586,23 @@ void main() {
                         }
                         var_98ab8 = var_feb1b;
                     }
-                    var_d7ae5 = var_98ab8;
+                    var_bea16 = var_98ab8;
                 }
                 else
                 {
-                    var_d7ae5 = vec3(1.0);
+                    var_bea16 = vec3(2.2000000476837158203125);
                 }
-                var_8da2a = var_d7ae5;
+                var_8da2a = var_bea16;
             }
-            var_6cd50 = var_8da2a;
+            var_2da86 = var_8da2a;
         }
-        var_97858 = pow(max(var_f1975, vec3(0.0)), vec3(1.0) / (var_6cd50 * ColorGrading_Gamma_PlayerUI.x));
+        highp vec3 var_c1949;
+        func_8e34f(var_c1949, var_667b0, var_2da86);
+        var_95052 = var_c1949;
     }
     else
     {
-        highp float var_349d1 = dot(var_bfb98, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+        highp float var_349d1 = dot(var_19d0d, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         bool var_a33a7 = ColorGrading_Gamma_Highlights.w != 0.0;
         bool var_e8f26 = ColorGrading_Gamma_Shadows.w != 0.0;
         bool var_fe369;
@@ -567,10 +614,10 @@ void main() {
         {
             var_fe369 = var_a33a7;
         }
-        highp vec3 var_debbb;
+        highp vec3 var_a5fbb;
         if (var_fe369)
         {
-            var_debbb = ColorGrading_Gamma_Highlights.xyz;
+            var_a5fbb = ColorGrading_Gamma_Highlights.xyz;
         }
         else
         {
@@ -590,7 +637,7 @@ void main() {
             }
             else
             {
-                highp vec3 var_65dc1;
+                highp vec3 var_80288;
                 if (ColorGrading_Gamma_Midtones.w != 0.0)
                 {
                     highp vec3 var_9e026;
@@ -611,26 +658,28 @@ void main() {
                         }
                         var_9e026 = var_0e667;
                     }
-                    var_65dc1 = var_9e026;
+                    var_80288 = var_9e026;
                 }
                 else
                 {
-                    var_65dc1 = vec3(1.0);
+                    var_80288 = vec3(2.2000000476837158203125);
                 }
-                var_a72da = var_65dc1;
+                var_a72da = var_80288;
             }
-            var_debbb = var_a72da;
+            var_a5fbb = var_a72da;
         }
-        var_97858 = pow(max(var_bfb98, vec3(0.0)), vec3(1.0) / (var_debbb * ColorGrading_Gamma_PlayerUI.x));
+        highp vec3 var_9e2e1;
+        func_8e34f(var_9e2e1, var_19d0d, var_a5fbb);
+        var_95052 = var_9e2e1;
     }
-    highp vec3 var_6e831 = clamp(var_97858, vec3(0.0), vec3(1.0));
-    highp vec3 var_5d198;
+    highp vec3 var_394a3 = clamp(var_95052, vec3(0.0), vec3(1.0));
+    highp vec3 var_cb1f6;
     if (RasterizedColorEnabled.x > 0.0)
     {
         highp vec4 var_ca109 = texture(s_RasterizedColor, v_texcoord0.xy);
-        highp vec4 var_f8ebf = var_ca109;
-        highp vec3 var_c19c0 = var_ca109.xyz;
-        highp float var_9c8a9 = dot(var_c19c0, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+        highp vec4 var_e0355 = var_ca109;
+        highp vec3 var_5e18f = var_ca109.xyz;
+        highp float var_9c8a9 = dot(var_5e18f, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         bool var_f6d86 = ColorGrading_Gamma_Highlights.w != 0.0;
         bool var_6db0b = ColorGrading_Gamma_Shadows.w != 0.0;
         bool var_32b29;
@@ -642,10 +691,10 @@ void main() {
         {
             var_32b29 = var_f6d86;
         }
-        highp vec3 var_35f75;
+        highp vec3 var_8fa0f;
         if (var_32b29)
         {
-            var_35f75 = ColorGrading_Gamma_Highlights.xyz;
+            var_8fa0f = ColorGrading_Gamma_Highlights.xyz;
         }
         else
         {
@@ -665,7 +714,7 @@ void main() {
             }
             else
             {
-                highp vec3 var_2dd12;
+                highp vec3 var_d53fd;
                 if (ColorGrading_Gamma_Midtones.w != 0.0)
                 {
                     highp vec3 var_feb39;
@@ -686,21 +735,23 @@ void main() {
                         }
                         var_feb39 = var_0298a;
                     }
-                    var_2dd12 = var_feb39;
+                    var_d53fd = var_feb39;
                 }
                 else
                 {
-                    var_2dd12 = vec3(1.0);
+                    var_d53fd = vec3(2.2000000476837158203125);
                 }
-                var_0167c = var_2dd12;
+                var_0167c = var_d53fd;
             }
-            var_35f75 = var_0167c;
+            var_8fa0f = var_0167c;
         }
-        var_5d198 = (var_6e831 * (1.0 - var_f8ebf.w)) + pow(max(var_c19c0, vec3(0.0)), vec3(1.0) / (var_35f75 * ColorGrading_Gamma_PlayerUI.x));
+        highp vec3 var_a2e34;
+        func_8e34f(var_a2e34, var_5e18f, var_8fa0f);
+        var_cb1f6 = (var_394a3 * (1.0 - var_e0355.w)) + var_a2e34;
     }
     else
     {
-        var_5d198 = var_6e831;
+        var_cb1f6 = var_394a3;
     }
-    bgfx_FragColor = vec4(var_5d198, 1.0);
+    bgfx_FragColor = vec4(var_cb1f6, 1.0);
 }

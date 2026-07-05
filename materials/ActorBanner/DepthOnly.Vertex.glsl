@@ -46,6 +46,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 HudOpacity;
@@ -93,6 +96,7 @@ in vec4 i_data1;
 in vec4 i_data2;
 in vec4 i_data3;
 #endif
+out vec4 v_clipPosition;
 out vec4 v_color0;
 out vec4 v_fog;
 out vec4 v_light;
@@ -132,14 +136,11 @@ void main() {
     mat4 var_bab0b = u_proj;
     var_bab0b[2].x += SubPixelOffset.x;
     var_bab0b[2].y -= SubPixelOffset.y;
-    vec4 var_cd7d8 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
-    vec4 var_27f6b = var_cd7d8;
+    vec4 var_04ab5 = var_bab0b * (u_view * vec4(var_04231.xyz, 1.0));
+    vec4 var_27f6b = var_04ab5;
     int var_e5df4 = int(var_db20e.w * 255.0);
     vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_6a5c3) + BannerUVOffsetsAndScales[var_e5df4].xy;
     vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_6a5c3) + BannerUVOffsetsAndScales[0].xy;
-#ifdef TINTING__DISABLED
-    v_color0 = vec4(0.0);
-#endif
 #ifdef TINTING__ENABLED
     vec4 var_55bfd = BannerColors[var_e5df4];
     var_55bfd.w = 1.0;
@@ -147,6 +148,12 @@ void main() {
     {
         var_55bfd.w = 0.0;
     }
+#endif
+    v_clipPosition = var_04ab5;
+#ifdef TINTING__DISABLED
+    v_color0 = vec4(0.0);
+#endif
+#ifdef TINTING__ENABLED
     v_color0 = var_55bfd;
 #endif
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
@@ -159,5 +166,5 @@ void main() {
     v_texcoord0 = vec2(0.0);
     v_texcoords = vec4(var_838f4.x, var_838f4.y, var_ad668.x, var_ad668.y);
     v_worldPos = var_04231.xyz;
-    gl_Position = var_cd7d8;
+    gl_Position = var_04ab5;
 }

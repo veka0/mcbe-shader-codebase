@@ -18,6 +18,7 @@
 * - uniform lowp sampler2D s_ParallaxTexture;
 *
 * Uniforms:
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 EndPortalEmissiveMultiplierAndDesaturation;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;

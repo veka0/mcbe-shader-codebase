@@ -38,7 +38,6 @@ precision highp int;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_proj;
-uniform highp mat4 u_view;
 uniform highp sampler2D s_GbufferDepth;
 uniform highp sampler2D s_GbufferNormal;
 uniform highp sampler2D s_GbufferRoughness;
@@ -259,20 +258,20 @@ void main() {
         highp vec4 var_5fee2 = texture(s_GbufferNormal, var_fe7f4);
         highp vec2 var_34a65 = var_5fee2.xy;
         highp vec3 var_f857f = vec3(var_5fee2.xy, (1.0 - abs(var_34a65.x)) - abs(var_34a65.y));
-        highp vec2 var_573ac;
+        highp vec2 var_a8234;
         if (var_f857f.z < 0.0)
         {
-            var_573ac = (vec2(1.0) - abs(var_f857f.yx)) * ((step(vec2(0.0), var_f857f.xy) * 2.0) - vec2(1.0));
+            var_a8234 = (vec2(1.0) - abs(var_f857f.yx)) * ((step(vec2(0.0), var_f857f.xy) * 2.0) - vec2(1.0));
         }
         else
         {
-            var_573ac = var_f857f.xy;
+            var_a8234 = var_f857f.xy;
         }
-        highp vec3 var_6923d = var_f857f;
-        var_f857f = vec3(var_573ac.x, var_573ac.y, var_6923d.z);
-        highp vec3 var_ebc61 = normalize((u_view * vec4(normalize(normalize(vec3(var_573ac.x, var_573ac.y, var_6923d.z))), 0.0)).xyz);
+        highp vec3 var_01dc5 = var_f857f;
+        var_f857f = vec3(var_a8234.x, var_a8234.y, var_01dc5.z);
+        highp vec3 var_05fb6 = normalize((transpose(u_invView) * vec4(normalize(normalize(vec3(var_a8234.x, var_a8234.y, var_01dc5.z))), 0.0)).xyz);
         highp vec4 var_7f57a;
-        func_d31db(var_87acf, var_ebc61, var_7f57a, var_935ff, var_dbbfe);
+        func_d31db(var_87acf, var_05fb6, var_7f57a, var_935ff, var_dbbfe);
         var_53578 = var_7f57a;
     }
     bgfx_FragColor = var_53578;

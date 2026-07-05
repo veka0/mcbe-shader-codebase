@@ -66,6 +66,7 @@
 * - uniform vec4 BlockBaseAmbientLightColorIntensity;
 * - uniform vec4 BlockLightIndirectSpecularIntensity;
 * - uniform mat4 Bones[8];
+* - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CascadesParameters[8];
 * - uniform vec4 CascadesPerSet;
@@ -81,6 +82,7 @@
 * - uniform vec4 ClusterNearFarWidthHeight;
 * - uniform vec4 ClusterSize;
 * - uniform vec4 ColorBased;
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
@@ -89,6 +91,9 @@
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -146,6 +151,7 @@
 * - uniform vec4 Time;
 * - uniform vec4 TintedAlphaTestEnabled;
 * - uniform vec4 UVAnimation;
+* - uniform vec4 UndergroundFogColor;
 * - uniform vec4 UseAlphaRewrite;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -176,45 +182,45 @@ centroid in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData[gl_MaxDrawBuffers];
 void main() {
 #ifdef MASKED_MULTITEXTURE__OFF
-    highp vec4 var_9bc6f = MatColor * texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_a1e09 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
 #ifdef MASKED_MULTITEXTURE__ON
     highp vec4 var_ade26 = texture(s_MatTexture1, v_texcoord0);
 #endif
 #if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__OFF)
-    highp vec4 var_7d9c6 = var_9bc6f;
+    highp vec4 var_74106 = var_a1e09;
 #endif
 #ifdef MASKED_MULTITEXTURE__ON
     highp vec4 var_76534 = var_ade26;
-    highp vec4 var_9bc6f = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
+    highp vec4 var_a1e09 = mix(var_ade26, MatColor * texture(s_MatTexture, v_texcoord0), vec4(float((((var_76534.x + var_76534.y) + var_76534.z) * (1.0 - var_76534.w)) > 0.0)));
 #endif
 #if defined(EMISSIVE__EMISSIVE) && defined(MASKED_MULTITEXTURE__ON)
-    highp vec4 var_7d9c6 = var_9bc6f;
+    highp vec4 var_74106 = var_a1e09;
 #endif
 #ifdef EMISSIVE__EMISSIVE
-    if (dot(vec4(var_9bc6f.xyz, mix(var_7d9c6.w, var_7d9c6.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x)
+    if (false || (dot(vec4(var_a1e09.xyz, mix(var_74106.w, var_74106.w * OverlayColor.w, TintedAlphaTestEnabled.x)), vec4(1.0)) < ActorFPEpsilon.x))
 #endif
 #ifdef EMISSIVE__EMISSIVE_ONLY
-    highp float var_a8620 = mix(var_9bc6f.w, var_9bc6f.w * OverlayColor.w, TintedAlphaTestEnabled.x);
+    highp float var_a8620 = mix(var_a1e09.w, var_a1e09.w * OverlayColor.w, TintedAlphaTestEnabled.x);
     bool var_e7bf9 = var_a8620 < ActorFPEpsilon.x;
-    bool var_330ac;
+    bool var_19a24;
     if (!var_e7bf9)
 #endif
 #if defined(EMISSIVE__OFF) && !defined(CHANGE_COLOR__OFF)
-    if (mix(var_9bc6f.w, var_9bc6f.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x)
+    if (false || (mix(var_a1e09.w, var_a1e09.w * OverlayColor.w, TintedAlphaTestEnabled.x) < ActorFPEpsilon.x))
 #endif
 #if defined(CHANGE_COLOR__OFF) && defined(EMISSIVE__OFF)
-    if (mix(var_9bc6f.w, var_9bc6f.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5)
+    if (false || (mix(var_a1e09.w, var_a1e09.w * OverlayColor.w, TintedAlphaTestEnabled.x) < 0.5))
 #endif
     {
 #ifdef EMISSIVE__EMISSIVE_ONLY
-        var_330ac = var_a8620 > (1.0 - ActorFPEpsilon.x);
+        var_19a24 = var_a8620 > (1.0 - ActorFPEpsilon.x);
     }
     else
     {
-        var_330ac = var_e7bf9;
+        var_19a24 = var_e7bf9;
     }
-    if (var_330ac)
+    if (false || var_19a24)
     {
 #endif
         discard;

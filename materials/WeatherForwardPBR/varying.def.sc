@@ -13,5 +13,8 @@ vec3  v_ndcPosition     : COLOR2;
 #endif
 float v_occlusionHeight : TEXCOORD2;
 vec2  v_occlusionUV     : TEXCOORD1;
+#ifdef MOTION_ONLY_PASS
+vec3  v_prevWorldPos    : TEXCOORD4;
+#endif
 vec2  v_texcoord0       : TEXCOORD0;
 vec3  v_worldPos        : TEXCOORD3;

@@ -15,6 +15,7 @@
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
 * Uniforms:
+* - uniform vec4 ColorGrading_OptimizeGammaCorrection;
 * - uniform mat4 CubemapRotation;
 * - uniform vec4 PreExposureEnabled;
 */

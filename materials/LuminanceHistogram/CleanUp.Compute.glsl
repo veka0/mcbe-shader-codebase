@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AdaptedFrameAverageLuminance;
-* - layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
+* - layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogramBuffer { Histogram s_CurFrameLuminanceHistogram[]; };
 * - uniform lowp sampler2D s_GameColor;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 *
@@ -43,8 +43,8 @@ struct Histogram {
     uint count;
 };
 
-layout(binding = 1, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_609c4;
+layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_a2117;
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    var_609c4.CurFrameLuminanceHistogram[(GlobalInvocationID.y * 16u) + GlobalInvocationID.x].count = 0u;
+    var_a2117.CurFrameLuminanceHistogram[(GlobalInvocationID.y * 16u) + GlobalInvocationID.x].count = 0u;
 }

@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AverageLuminance;
-* - layout(binding = 1, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
+* - layout(binding = 4, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
 * - uniform lowp sampler3D s_FilteredBilateralGridOutput;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SceneColor;
@@ -45,7 +45,7 @@ struct GridCell {
     uint value;
 };
 
-layout(binding = 1, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_2890f;
+layout(binding = 4, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_f763a;
 uniform vec4 GridDimensions;
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
@@ -71,7 +71,7 @@ void main() {
     if (var_86d1f)
     {
         uint var_dfcaa = (((GlobalInvocationID.y * uint(GridDimensions.x)) + GlobalInvocationID.x) * uint(GridDimensions.z)) + GlobalInvocationID.z;
-        var_2890f.BilateralGrid[var_dfcaa].weight = 0u;
-        var_2890f.BilateralGrid[var_dfcaa].value = 0u;
+        var_f763a.BilateralGrid[var_dfcaa].weight = 0u;
+        var_f763a.BilateralGrid[var_dfcaa].value = 0u;
     }
 }

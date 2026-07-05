@@ -43,6 +43,9 @@
 * - uniform mat4 Bones[8];
 * - uniform vec4 ChangeColor;
 * - uniform vec4 ColorBased;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 EmissiveUniform;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
@@ -70,7 +73,9 @@
 
 precision mediump float;
 precision highp int;
+uniform highp mat4 u_invView;
 uniform highp mat4 u_prevViewProj;
+uniform highp mat4 u_view;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MERSTexture;
 #ifdef MASKED_MULTITEXTURE__ON
@@ -82,6 +87,9 @@ uniform highp sampler2D s_NormalTexture;
 uniform highp vec4 ChangeColor;
 #endif
 uniform highp vec4 ColorBased;
+uniform highp vec4 DitherParams2[3];
+uniform highp vec4 DitherParams;
+uniform highp vec4 DitheringEnabledToggle;
 uniform highp vec4 EmissiveUniform;
 uniform highp vec4 MatColor;
 uniform highp vec4 MetalnessUniform;
@@ -95,6 +103,7 @@ uniform highp vec4 SubsurfaceUniform;
 uniform highp vec4 TileLightIntensity;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_bitangent;
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec3 v_normal;
 in highp vec3 v_prevWorldPos;
@@ -115,6 +124,7 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+    highp mat4 View = u_view;
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
 #endif
@@ -149,9 +159,25 @@ void main() {
     var_29d0e.w *= var_8a135.w;
 #endif
     var_29d0e.w = max(0.0, var_29d0e.w);
-    highp vec4 var_393c6 = var_29d0e;
-    highp vec3 var_f710c = mix((var_393c6.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_393c6.w);
+    highp vec4 var_ca0de = var_29d0e;
+    highp vec2 var_77469 = DitherParams2[0].xy;
+    bool var_3efc8;
+    if (DitheringEnabledToggle.x != 0.0)
+    {
+        highp vec4 var_d36cf = v_clipPosition;
+        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_c27b1 = floor(var_886c2 * 0.25);
+        highp vec2 var_a5f3b = floor(var_886c2 * 0.5);
+        highp vec2 var_ccfe4 = floor(var_886c2);
+        var_3efc8 = smoothstep(var_77469.x, var_77469.y, dot(-normalize(vec3(View[0].z, View[1].z, View[2].z)), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c27b1.x * 0.5) + ((var_c27b1.y * var_c27b1.y) * 0.75)) * 0.25) + fract((var_a5f3b.x * 0.5) + ((var_a5f3b.y * var_a5f3b.y) * 0.75))) * 0.25) + fract((var_ccfe4.x * 0.5) + ((var_ccfe4.y * var_ccfe4.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+    }
+    else
+    {
+        var_3efc8 = false;
+    }
+    var_ca0de.w *= (var_3efc8 ? 0.0 : 1.0);
+    highp vec3 var_f710c = mix((var_ca0de.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_ca0de.w);
     int var_f71fc = int(PBRTextureFlags.x);
     highp float var_f7888;
     highp float var_5e9c5;

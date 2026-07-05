@@ -18,7 +18,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2D s_AverageLuminance;
-* - layout(binding = 1, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
+* - layout(binding = 4, std430) buffer s_BilateralGridBuffer { GridCell s_BilateralGrid[]; };
 * - uniform lowp sampler3D s_FilteredBilateralGridOutput;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_SceneColor;
@@ -45,8 +45,8 @@ struct GridCell {
     uint value;
 };
 
-layout(binding = 1, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_18ab7;
-layout(location = 0, binding = 2, rgba16f) uniform writeonly highp image3D s_FilteredBilateralGridOutput;
+layout(binding = 4, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_04520;
+layout(location = 0, binding = 3, rgba16f) uniform writeonly highp image3D s_FilteredBilateralGridOutput;
 uniform vec4 BilateralFilterParams;
 uniform vec4 GridDimensions;
 void main() {
@@ -102,8 +102,8 @@ void main() {
                 uint var_274b7 = (((var_e40a1.z * var_9920a.x) * var_9920a.y) + (var_e40a1.y * var_9920a.x)) + var_e40a1.x;
                 vec2 var_dcf15 = vec2(float(var_c27ce) - float(GlobalInvocationID.x), float(var_b0725) - float(GlobalInvocationID.y));
                 float var_064ee = exp((-((var_dcf15.x * var_dcf15.x) + (var_dcf15.y * var_dcf15.y))) / var_7aa16);
-                var_8de10 = var_fb52b + (var_064ee * (float(var_18ab7.BilateralGrid[var_274b7].weight) * 0.00390625));
-                var_73852 = var_d321f + (var_064ee * (float(var_18ab7.BilateralGrid[var_274b7].value) * 0.00390625));
+                var_8de10 = var_fb52b + (var_064ee * (float(var_04520.BilateralGrid[var_274b7].weight) * 0.00390625));
+                var_73852 = var_d321f + (var_064ee * (float(var_04520.BilateralGrid[var_274b7].value) * 0.00390625));
                 var_5593e = var_c5565 + var_064ee;
             }
         }

@@ -35,9 +35,13 @@
 * - uniform lowp sampler2D s_MatTexture;
 *
 * Uniforms:
+* - uniform vec4 AlphaMaskedTint;
 * - uniform vec4 ChangeColor;
 * - uniform vec4 CurrentColor;
 * - uniform vec4 DiscardValue;
+* - uniform vec4 DitherParams;
+* - uniform vec4 DitherParams2[3];
+* - uniform vec4 DitheringEnabledToggle;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogControl;
 * - uniform vec4 HudOpacity;
