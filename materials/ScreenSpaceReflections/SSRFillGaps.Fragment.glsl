@@ -38,11 +38,11 @@ precision highp int;
 uniform highp sampler2D s_InputTexture;
 uniform highp vec4 ScreenSize;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_e8909 = ScreenSize.zw;
-    highp vec4 var_d1dd3 = texture(s_InputTexture, v_texcoord0.xy);
-    if (!(var_d1dd3.w >= 0.0))
+    highp vec4 var_55922 = texture(s_InputTexture, v_texcoord0.xy);
+    if (!(var_55922.w >= 0.0))
     {
 #ifdef EXTENDED_GAP_FILL__OFF
         highp vec4 var_b481d = texture(s_InputTexture, v_texcoord0.xy + vec2(0.0, var_e8909.y));
@@ -80,8 +80,8 @@ void main() {
         }
         if (var_8cdf6)
         {
-            var_d1dd3 = (var_b481d + var_3262b) * 0.5;
+            var_55922 = (var_b481d + var_3262b) * 0.5;
         }
     }
-    bgfx_FragColor = var_d1dd3;
+    bgfx_FragData0 = var_55922;
 }

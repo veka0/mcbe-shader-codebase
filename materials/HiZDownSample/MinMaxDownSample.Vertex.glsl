@@ -5,10 +5,7 @@
 *
 * Passes:
 * - MIN_MAX_DOWN_SAMPLE_PASS (not used)
-*
-* Mode:
-* - MODE__INITIALIZE (not used)
-* - MODE__MIP (not used)
+* - MIN_MAX_INITIALIZE_PASS (not used)
 *
 * Available Resources:
 *
@@ -17,6 +14,7 @@
 * - uniform lowp sampler2D s_RasterColor;
 *
 * Uniforms:
+* - uniform vec4 MipLevel;
 * - uniform vec4 MipResolutionAndRecipResolution;
 * - uniform vec4 PreviousMipResolutionAndRecipResolution;
 * - uniform vec4 ScreenSize;

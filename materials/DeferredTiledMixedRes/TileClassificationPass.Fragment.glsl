@@ -31,7 +31,7 @@
 * - uniform lowp usampler2D s_EmissiveAmbientLinearRoughness;
 * - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_NormalsAndDepthLighting;
-* - uniform highp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
@@ -128,7 +128,7 @@ uniform highp vec4 CascadesPerSet;
 uniform highp vec4 SceneResolutionAndRecipResolution;
 uniform highp vec4 TilingParams;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_76944 = ceil(SceneResolutionAndRecipResolution.xyxy * (1.0 / TilingParams.x));
     highp vec2 var_d1338 = vec2(1.0) / var_76944.zw;
@@ -149,7 +149,7 @@ void main() {
     {
         var_e8ba3 = var_6ab7d;
     }
-    int var_725a3;
+    int var_30a71;
     if (var_e8ba3)
     {
         highp vec2 var_81347 = vec2(1.00050008296966552734375) - (vec2(0.5) / (var_9ee6b.xy * 999.75));
@@ -604,11 +604,11 @@ void main() {
         {
             var_1b6d4 = 7;
         }
-        var_725a3 = var_1b6d4;
+        var_30a71 = var_1b6d4;
     }
     else
     {
-        var_725a3 = 8;
+        var_30a71 = 8;
     }
-    bgfx_FragColor = vec4(float(var_725a3) * 0.0039215688593685626983642578125, 0.0, 0.0, 1.0);
+    bgfx_FragData0 = vec4(float(var_30a71) * 0.0039215688593685626983642578125, 0.0, 0.0, 1.0);
 }

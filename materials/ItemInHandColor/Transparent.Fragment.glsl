@@ -6,6 +6,7 @@
 * Passes:
 * - ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *

@@ -12,6 +12,9 @@ flat int    v_adjacentClouds : TEXCOORD4;
 vec4        v_color0         : COLOR0;
 vec4        v_fragCoord      : UNKNOWN0;
 vec3        v_normal         : NORMAL;
+#ifdef MOTION_ONLY_PASS
+vec3        v_prevWorldPos   : TEXCOORD6;
+#endif
 vec2        v_texcoord0      : TEXCOORD0;
 smooth vec2 v_tilePosition   : TEXCOORD5;
 vec3        v_worldPos       : TEXCOORD3;
