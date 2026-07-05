@@ -218,8 +218,8 @@ void main() {
     var_6ee95.w = max(UseAlphaRewrite.x, var_6ee95.w);
     var_8afd1 = var_6ee95;
     highp vec3 var_f710c = mix((var_8afd1.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_8afd1.w);
     int var_f71fc = int(PBRTextureFlags.x);
+    highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_8afd1.w);
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;

@@ -135,21 +135,54 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
+#ifdef TINTING__ENABLED
+    int var_75c93 = int(PBRTextureFlags.x);
+#endif
 #ifdef TINTING__DISABLED
+    int var_2ca46 = int(PBRTextureFlags.x);
     highp vec4 var_5f0f8 = texture(s_MatTexture, v_texcoord0);
 #endif
 #ifdef TINTING__ENABLED
     highp vec4 var_90407 = texture(s_MatTexture, v_texcoord0);
     highp vec4 var_5f0f8 = var_90407;
     highp vec4 var_a6640 = var_90407;
-    for (int var_f2336 = 0; var_f2336 < int(PatternCount.x); var_f2336++)
+    bool var_4bad2;
+    var_4bad2 = true;
+    bool var_882cd;
+    for (int var_55d98 = 0; var_55d98 < int(PatternCount.x); var_4bad2 = var_882cd, var_55d98++)
     {
-        highp vec4 var_96930 = texture(s_MatTexture2, (PatternUVOffsetsAndScales[var_f2336].zw * v_texcoord0) + PatternUVOffsetsAndScales[var_f2336].xy) * PatternColors[var_f2336];
-        highp vec4 var_df244 = var_96930;
-        var_a6640 = mix(var_a6640, var_96930, vec4(var_df244.w));
+        highp vec4 var_96930 = texture(s_MatTexture2, (PatternUVOffsetsAndScales[var_55d98].zw * v_texcoord0) + PatternUVOffsetsAndScales[var_55d98].xy) * PatternColors[var_55d98];
+        highp vec4 var_b767e = var_96930;
+        var_a6640 = mix(var_a6640, var_96930, vec4(var_b767e.w));
+        bool var_36460;
+        if (var_4bad2)
+        {
+            var_36460 = var_b767e.w > 0.5;
+        }
+        else
+        {
+            var_36460 = var_4bad2;
+        }
+        if (var_36460)
+        {
+            var_882cd = false;
+        }
+        else
+        {
+            var_882cd = var_4bad2;
+        }
     }
     var_a6640.w = 1.0;
     var_5f0f8 = var_a6640;
+    int var_2ca46;
+    if (var_4bad2 == false)
+    {
+        var_2ca46 = var_75c93 & (-2);
+    }
+    else
+    {
+        var_2ca46 = var_75c93;
+    }
 #endif
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
     bool var_410b5;
@@ -175,16 +208,15 @@ void main() {
     var_0d8a1.w *= HudOpacity.x;
     var_5f0f8 = var_0d8a1;
     highp vec4 var_1d587 = var_0d8a1;
-    int var_7ba9c = int(PBRTextureFlags.x);
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;
     highp float var_da7e2;
-    if ((var_7ba9c & 1) == 1)
+    if ((var_2ca46 & 1) == 1)
     {
         highp vec4 var_4035b = texture(s_MERSTexture, v_texcoord0);
         highp float var_ae1fa;
-        if ((var_7ba9c & 2) == 2)
+        if ((var_2ca46 & 2) == 2)
         {
             var_ae1fa = var_4035b.w;
         }

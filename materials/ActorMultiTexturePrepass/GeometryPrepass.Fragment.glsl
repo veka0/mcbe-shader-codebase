@@ -183,12 +183,14 @@ void main() {
         var_ae4e6 = vec4(var_41dfa.x, var_41dfa.y, var_41dfa.z, var_d75c6.w);
     }
     highp vec3 var_74dd6 = mix((var_ae4e6.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-    highp vec4 var_42067 = vec4(var_74dd6.x, var_74dd6.y, var_74dd6.z, var_ae4e6.w);
 #endif
+    int var_f71fc = int(PBRTextureFlags.x);
 #ifdef COLOR_SECOND_TEXTURE__OFF
     highp vec4 var_42067 = vec4(var_74dd6.x, var_74dd6.y, var_74dd6.z, var_d75c6.w);
 #endif
-    int var_f71fc = int(PBRTextureFlags.x);
+#ifdef COLOR_SECOND_TEXTURE__ON
+    highp vec4 var_42067 = vec4(var_74dd6.x, var_74dd6.y, var_74dd6.z, var_ae4e6.w);
+#endif
     highp float var_f7888;
     highp float var_c77d1;
     highp float var_5ad51;

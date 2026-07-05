@@ -89,13 +89,11 @@
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
-* - uniform vec4 PointLightDiffuseFadeOutParameters;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
 * - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowParams1;
-* - uniform vec4 PointLightSpecularFadeOutParameters;
 * - uniform vec4 PositionBaseOffset;
 * - uniform vec4 PositionForwardOffset;
 * - uniform vec4 PreExposureEnabled;
@@ -153,7 +151,8 @@ void main() {
         discard;
     }
 #ifdef NO_OCCLUSION__OFF
-    highp vec4 var_18fd7 = texture(s_OcclusionTexture, v_occlusionUV);
+    highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
+    uvec4 var_6037a = uvec4(round(var_e5cb6 * 255.0));
     bool var_47b39 = v_occlusionUV.x >= 0.0;
     bool var_77737;
     if (var_47b39)
@@ -173,21 +172,21 @@ void main() {
     {
         var_8f253 = var_77737;
     }
-    bool var_ac78e;
+    bool var_3ff3f;
     if (var_8f253)
     {
-        var_ac78e = v_occlusionUV.y <= 1.0;
+        var_3ff3f = v_occlusionUV.y <= 1.0;
     }
     else
     {
-        var_ac78e = var_8f253;
+        var_3ff3f = var_8f253;
     }
 #endif
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-    if (var_ac78e && (v_occlusionHeight < ((var_18fd7.y + (var_18fd7.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))))
+    if (var_3ff3f && (v_occlusionHeight < ((float((var_6037a.x | (var_6037a.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125)))
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-    if (var_ac78e && (v_occlusionHeight > ((var_18fd7.y + (var_18fd7.z * 255.0)) - (OcclusionHeightOffset.x * 0.0039215688593685626983642578125))))
+    if (var_3ff3f && (v_occlusionHeight > ((float((var_6037a.x | (var_6037a.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125)))
 #endif
 #ifdef NO_OCCLUSION__OFF
     {
