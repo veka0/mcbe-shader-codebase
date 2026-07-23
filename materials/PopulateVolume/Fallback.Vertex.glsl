@@ -25,22 +25,21 @@
 * Buffers:
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
+* - uniform lowp sampler2DArray s_CascadedShadowBuffer;
 * - uniform lowp sampler2DArray s_CausticsTexture;
 * - uniform lowp sampler2DArray s_CurrentLightingBuffer;
-* - layout(binding = 13, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - layout(binding = 12, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_PointLightShadowTextureAtlas;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_PreviousLightingBuffer;
-* - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_ScreenSpaceWaterBackFaceDepthAndNormal;
 * - uniform lowp sampler2D s_ScreenSpaceWaterFrontFaceDepthAndNormal;
-* - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 14, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
-* - layout(binding = 15, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 16, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 17, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 13, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
@@ -54,10 +53,6 @@
 * - uniform vec4 CameraAmbientContribution;
 * - uniform vec4 CameraLightIntensity;
 * - uniform vec4 CameraUnderwaterAndWaterSurfaceBiasAndFalloff;
-* - uniform vec4 CascadesParameters[8];
-* - uniform vec4 CascadesPerSet;
-* - uniform mat4 CascadesShadowInvProj[8];
-* - uniform mat4 CascadesShadowProj[8];
 * - uniform vec4 CausticsParameters;
 * - uniform vec4 CausticsTextureParameters;
 * - uniform mat4 CloudShadowProj;
