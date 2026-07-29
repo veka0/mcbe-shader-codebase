@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -77,7 +77,7 @@ centroid in highp vec2 v_texcoord0;
 #ifdef DITHERING__ON
 in highp vec4 v_worldPosition;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef SEASONS__ON
     highp vec4 var_6c86c = v_color0;
@@ -85,9 +85,9 @@ void main() {
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_d14c5 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_cf110 = texture(s_MatTexture, v_texcoord0);
 #ifdef DITHERING__OFF
-    if (false || (var_d14c5.w < 0.5))
+    if (false || (var_cf110.w < 0.5))
 #endif
 #ifdef DITHERING__ON
     highp vec2 var_42b21 = DitherParams2[2].xy;
@@ -108,23 +108,23 @@ void main() {
     {
         var_2935c = false;
     }
-    if (var_2935c || (var_d14c5.w < 0.5))
+    if (var_2935c || (var_cf110.w < 0.5))
     {
 #endif
         discard;
     }
 #ifdef SEASONS__OFF
-    highp vec4 var_15f8b = var_d14c5;
-    highp vec3 var_440e8 = var_15f8b.xyz * v_color0.xyz;
-    var_d14c5 = vec4(var_440e8.x, var_440e8.y, var_440e8.z, var_15f8b.w);
+    highp vec4 var_15f8b = var_cf110;
+    highp vec3 var_fffd0 = var_15f8b.xyz * v_color0.xyz;
+    var_cf110 = vec4(var_fffd0.x, var_fffd0.y, var_fffd0.z, var_15f8b.w);
 #endif
 #ifdef SEASONS__ON
     highp vec3 var_2455e = v_color0.xyz;
-    highp vec3 var_2b07f = (var_d14c5.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_6c86c.w);
-    highp vec4 var_440e8 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_d14c5.w);
-    var_440e8.w = 1.0;
-    var_d14c5 = var_440e8;
+    highp vec3 var_2b07f = (var_cf110.xyz * mix(vec3(1.0), texture(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3(var_2455e.z))).xyz * vec3(var_6c86c.w);
+    highp vec4 var_fffd0 = vec4(var_2b07f.x, var_2b07f.y, var_2b07f.z, var_cf110.w);
+    var_fffd0.w = 1.0;
+    var_cf110 = var_fffd0;
 #endif
-    highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_440e8.xyz, var_d14c5.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_d14c5.w);
+    highp vec4 var_713a6 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_fffd0.xyz, var_cf110.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_cf110.w);
 }

@@ -144,10 +144,11 @@ uniform vec4 SubPixelOffset;
 uniform vec4 UVOffsetAndScale;
 uniform vec4 Velocity;
 uniform vec4 ViewPosition;
+#ifdef NO_VARIETY__OFF
 in vec4 a_color0;
+#endif
 in vec3 a_position;
 in vec2 a_texcoord0;
-out vec4 v_color0;
 out vec4 v_fog;
 out float v_occlusionHeight;
 out vec2 v_occlusionUV;
@@ -189,7 +190,6 @@ void main() {
     vec4 var_36755 = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
     vec3 var_fe13b = a_position + PrevPositionBaseOffset.xyz;
     vec3 var_293b1 = vec3(30.0);
-    v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_36755.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_occlusionHeight = (var_91624.y + (ViewPosition.y - 0.5)) * 0.0039215688593685626983642578125;
     v_occlusionUV = ((var_61547.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);

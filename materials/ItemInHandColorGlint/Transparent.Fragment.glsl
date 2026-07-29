@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -71,7 +71,7 @@ in highp vec4 v_fog;
 in highp vec4 v_glintUV;
 in highp vec4 v_light;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_f8735 = v_color0;
@@ -85,13 +85,13 @@ void main() {
 #endif
     highp vec4 var_d4311 = (GlintColor * (texture(s_GlintTexture, fract(v_glintUV.xy)).xyzx + texture(s_GlintTexture, fract(v_glintUV.zw)).xyzx)) * TileLightColor;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_cb282 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix(var_01aa6, var_01aa6 * ChangeColor, vec4(var_f8735.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    highp vec4 var_3beff = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix(var_01aa6, var_01aa6 * ChangeColor, vec4(var_f8735.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec4 var_cb282 = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix((var_ac065.xxx * ChangeColor.xyz).xyz, var_ac065.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_449c5.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    highp vec4 var_3beff = vec4(var_d4311.xyz * var_d4311.xyz, abs(var_d4311.w)) + vec4(mix(mix((var_ac065.xxx * ChangeColor.xyz).xyz, var_ac065.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_449c5.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
 #endif
-    var_cb282.w = 1.0;
-    highp vec4 var_90c06 = var_cb282;
+    var_3beff.w = 1.0;
+    highp vec4 var_90c06 = var_3beff;
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
     bool var_c20f0;
     if (DitheringEnabledToggle.x != 0.0)
@@ -108,7 +108,7 @@ void main() {
     {
         var_c20f0 = false;
     }
-    highp float var_7a295 = var_90c06.w * (var_c20f0 ? 0.0 : 1.0);
-    highp vec4 var_24d33 = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_cb282.xyz, var_7a295).xyz, v_fog.xyz, vec3(var_24d33.w)), var_7a295);
+    highp float var_4e479 = var_90c06.w * (var_c20f0 ? 0.0 : 1.0);
+    highp vec4 var_60149 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_3beff.xyz, var_4e479).xyz, v_fog.xyz, vec3(var_60149.w)), var_4e479);
 }

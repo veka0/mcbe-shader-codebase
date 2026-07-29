@@ -26,7 +26,7 @@ uniform highp vec4 ConvolutionParameters;
 uniform highp vec4 ConvolutionType;
 uniform highp vec4 CurrentFace;
 in highp vec2 v_texCoord;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_f95e1 = v_texCoord;
     var_f95e1 = (var_f95e1 * 2.0) - vec2(1.0);
@@ -70,7 +70,7 @@ void main() {
         }
     }
     highp vec3 var_55706 = normalize(var_8731e);
-    highp vec3 var_76913;
+    highp vec3 var_e3c43;
     if (int(ConvolutionType.x) == 1)
     {
         highp vec3 var_e8170;
@@ -165,7 +165,7 @@ void main() {
             }
             var_e8170 = var_5270f / vec3(max(0.001000000047497451305389404296875, var_50730));
         }
-        var_76913 = var_e8170;
+        var_e3c43 = var_e8170;
     }
     else
     {
@@ -188,7 +188,7 @@ void main() {
         {
             var_eaf53.y *= (-1.0);
         }
-        var_76913 = textureLod(s_CubeMap, var_eaf53, float(int(ConvolutionParameters.y))).xyz;
+        var_e3c43 = textureLod(s_CubeMap, var_eaf53, float(int(ConvolutionParameters.y))).xyz;
     }
-    bgfx_FragColor = vec4(var_76913, 1.0);
+    bgfx_FragData0 = vec4(var_e3c43, 1.0);
 }

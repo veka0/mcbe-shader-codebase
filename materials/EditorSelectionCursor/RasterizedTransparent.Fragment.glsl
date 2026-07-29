@@ -20,9 +20,9 @@ precision mediump float;
 precision highp int;
 uniform highp vec4 FrameTime;
 uniform highp vec4 MatColor;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_46b26 = MatColor;
-    var_46b26.w += (sin(FrameTime.x * 6.28318023681640625) * 0.015625);
-    bgfx_FragColor = var_46b26;
+    highp vec4 var_687b6 = MatColor;
+    var_687b6.w += (sin(FrameTime.x * 6.28318023681640625) * 0.015625);
+    bgfx_FragData0 = var_687b6;
 }

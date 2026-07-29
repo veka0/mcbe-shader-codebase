@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -137,11 +137,9 @@ uniform mat4 u_model[4];
 uniform mat4 u_viewProj;
 #ifdef RENDER_AS_BILLBOARDS__ON
 uniform vec4 ViewPositionAndTime;
-#endif
 in vec4 a_color0;
-in vec2 a_texcoord1;
+#endif
 in vec3 a_position;
-in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 in vec4 i_data1;
 in vec4 i_data2;
@@ -186,21 +184,20 @@ void main() {
     vec3 var_e8e55 = normalize(cross(vec3(0.0, 1.0, 0.0), var_28a72));
     vec3 var_08866 = a_color0.xyz;
 #endif
-    uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
-    vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
-    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
-    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
-    uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
-    uvec2 var_5e4ed = var_6d79f;
+    vec2 var_09d1c = round(vec2(0.0));
+    uvec2 var_27852 = uvec2(var_09d1c);
+    vec2 var_45935 = vec2(float((var_27852.x & 32767u) << uint(1)), float((var_27852.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
+    var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_27852.x & 32768u) >> uint(15))) - 1.0));
+    var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_27852.y & 32768u) >> uint(15))) - 1.0));
     v_bitangent = vec3(0.0);
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    v_color0 = a_color0;
+    v_color0 = vec4(0.0);
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
-    v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
-    v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
+    v_ditheringAndMaskTinting = vec2(0.0);
+    v_lightmapUV = vec2(0.0);
     v_normal = vec3(0.0);
     v_tangent = vec3(0.0);
     v_texcoord0 = var_45935;

@@ -35,7 +35,7 @@ centroid in highp vec2 v_colorUV;
 in highp float v_encodedPlane;
 in highp vec4 v_fog;
 centroid in highp vec2 v_parallaxUV;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_66b9c(inout highp vec3 arg_5a7d1, inout highp vec4 arg_37ddf) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -94,10 +94,10 @@ void main() {
     {
         var_447cc = vec4((var_73e16.xyz * (var_bebe3.xyz * (1.0 - v_encodedPlane))).xyz * (1.0 - var_1d0b7.w), 0.0);
     }
-    highp vec4 var_d1f0c = var_447cc;
+    highp vec4 var_9bf51 = var_447cc;
     highp vec3 var_a32a9;
     func_66b9c(var_a32a9, var_447cc);
-    highp vec4 var_ea076 = vec4(var_a32a9, var_d1f0c.w);
-    highp vec3 var_9af17 = var_ea076.xyz;
-    bgfx_FragColor = vec4(var_ea076.xyz + (mix(var_9af17, vec3(dot(var_9af17, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x), var_d1f0c.w);
+    highp vec4 var_a6595 = vec4(var_a32a9, var_9bf51.w);
+    highp vec3 var_f5c34 = var_a6595.xyz;
+    bgfx_FragData0 = vec4(var_a6595.xyz + (mix(var_f5c34, vec3(dot(var_f5c34, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x), var_9bf51.w);
 }

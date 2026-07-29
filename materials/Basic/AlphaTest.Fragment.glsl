@@ -41,7 +41,7 @@ in highp vec4 v_color0;
 #ifdef SAMPLE_MAT_TEXTURE__ON
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef SAMPLE_MAT_TEXTURE__OFF
     highp vec4 var_b6a96 = MatColor;
@@ -54,7 +54,7 @@ void main() {
         discard;
     }
     highp vec4 var_02495 = var_b6a96;
-    highp vec4 var_a56ce = var_02495 * v_color0;
-    var_b6a96 = var_a56ce;
-    bgfx_FragColor = var_a56ce;
+    highp vec4 var_baee2 = var_02495 * v_color0;
+    var_b6a96 = var_baee2;
+    bgfx_FragData0 = var_baee2;
 }

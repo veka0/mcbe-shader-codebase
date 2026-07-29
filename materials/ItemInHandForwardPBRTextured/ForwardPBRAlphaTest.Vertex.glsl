@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -139,9 +139,7 @@
 
 uniform mat4 PrevWorld;
 uniform mat4 u_model[4];
-uniform mat4 u_proj;
-uniform mat4 u_view;
-uniform vec4 SubPixelOffset;
+uniform mat4 u_viewProj;
 in vec4 a_color0;
 in vec4 a_texcoord8;
 in vec4 a_normal;
@@ -167,7 +165,7 @@ out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
-    vec4 var_e2d09 = u_model[0] * vec4(a_position, 1.0);
+    vec4 var_12727 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
     vec4 var_78b44 = i_data1;
@@ -178,30 +176,24 @@ void main() {
     var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
     var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_e2d09 = var_e43a8 * vec4(a_position, 1.0);
+    vec4 var_12727 = var_e43a8 * vec4(a_position, 1.0);
 #endif
+    vec4 var_715f9 = u_viewProj * vec4(var_12727.xyz, 1.0);
     vec4 var_4938b = a_tangent;
-    mat4 var_83c3f = u_proj;
-    vec4 var_67767 = var_83c3f[2];
-    var_67767.x += SubPixelOffset.x;
-    var_67767.y -= SubPixelOffset.y;
-    mat4 var_cbf5d = u_proj;
-    var_cbf5d[2] = var_67767;
-    vec4 var_c804c = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
-    v_clipPosition = var_c804c;
+    v_clipPosition = var_715f9;
     v_color0 = a_color0;
     v_frontFacing = 0;
     v_mers = a_texcoord8;
-    v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
+    v_normal = (u_model[0] * vec4(a_normal.xyz, 1.0)).xyz;
     v_pbrTextureId = int(a_texcoord4);
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = var_45935;
-    v_worldPos = var_e2d09.xyz;
-    gl_Position = var_c804c;
+    v_worldPos = var_12727.xyz;
+    gl_Position = var_715f9;
 }

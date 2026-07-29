@@ -29,7 +29,7 @@ uniform highp vec4 UVTransform[5];
 in highp vec4 v_Additional;
 in highp vec4 v_Color_;
 flat in highp vec4 v_VaryingData;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_011ac(inout highp float arg_6b2b2, inout highp float arg_ca2fb) {
     if (arg_6b2b2 <= 0.003130800090730190277099609375)
     {
@@ -162,5 +162,5 @@ void main() {
     {
         discard;
     }
-    bgfx_FragColor = vec4(0.0);
+    bgfx_FragData0 = vec4(0.0);
 }

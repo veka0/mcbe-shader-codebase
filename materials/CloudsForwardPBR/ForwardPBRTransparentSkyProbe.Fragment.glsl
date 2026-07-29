@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 * - MOTION_ONLY_PASS (not used)
@@ -145,7 +145,7 @@ in highp vec4 v_color0;
 in highp vec3 v_normal;
 in highp vec2 v_tilePosition;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_1e7c4(inout highp vec3 arg_ee209, inout highp vec4 arg_78b9f) {
     if (dot(arg_ee209, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)) >= 0.0)
     {
@@ -848,29 +848,29 @@ void main() {
     highp vec3 var_a871a = var_c28fe;
     bool var_0db97;
     func_2be34(var_a871a, var_0db97);
-    highp float var_23c1b;
+    highp float var_c1723;
     highp vec3 var_5e945;
     if (!var_0db97)
     {
         var_5e945 = vec3(0.0);
-        var_23c1b = 0.0;
+        var_c1723 = 0.0;
     }
     else
     {
         var_5e945 = var_2c946;
-        var_23c1b = var_78a79.w;
+        var_c1723 = var_78a79.w;
     }
     highp vec4 var_a7a58 = u_proj * (u_view * vec4(v_worldPos, 1.0));
     highp vec4 var_f3cab = var_a7a58;
-    highp vec2 var_7b30f = ((var_a7a58.xyz / vec3(var_f3cab.w)).xy + vec2(1.0)) * vec2(0.5);
-    highp vec3 var_c20f0;
+    highp vec2 var_96bdb = ((var_a7a58.xyz / vec3(var_f3cab.w)).xy + vec2(1.0)) * vec2(0.5);
+    highp vec3 var_2b08a;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_c20f0 = var_5e945 * 0.0033142860047519207000732421875;
+        var_2b08a = var_5e945 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_c20f0 = var_5e945;
+        var_2b08a = var_5e945;
     }
-    bgfx_FragColor = vec4(var_c20f0, ((clamp(var_7b30f.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06)) * var_23c1b);
+    bgfx_FragData0 = vec4(var_2b08a, ((clamp(var_96bdb.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06)) * var_c1723);
 }

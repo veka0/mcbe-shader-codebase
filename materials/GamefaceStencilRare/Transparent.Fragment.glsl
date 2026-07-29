@@ -31,7 +31,7 @@ uniform highp vec4 UVTransform[5];
 in highp vec4 v_Additional;
 in highp vec3 v_ScreenNormalPosition;
 flat in highp vec4 v_VaryingData;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_b96d4(inout highp vec3 arg_9109e, inout highp float arg_fc78a) {
     if (arg_9109e.x <= 0.040449999272823333740234375)
     {
@@ -764,5 +764,5 @@ void main() {
     {
         discard;
     }
-    bgfx_FragColor = vec4(0.0);
+    bgfx_FragData0 = vec4(0.0);
 }

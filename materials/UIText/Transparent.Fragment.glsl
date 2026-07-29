@@ -55,13 +55,13 @@ in highp vec4 v_color0;
 in highp vec4 v_linearClampBounds;
 #endif
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #if defined(ALPHA_TEST__OFF) && defined(FONT_TYPE__BITMAP)
-    highp vec4 var_276fb = (v_color0 * texture(s_GlyphTexture, min(max(v_texcoord0, v_linearClampBounds.xy), v_linearClampBounds.zw))) * TintColor;
+    highp vec4 var_86cb1 = (v_color0 * texture(s_GlyphTexture, min(max(v_texcoord0, v_linearClampBounds.xy), v_linearClampBounds.zw))) * TintColor;
 #endif
 #if defined(ALPHA_TEST__OFF) && defined(FONT_TYPE__BITMAP_SMOOTH)
-    highp vec4 var_276fb = (v_color0 * smoothstep(vec4(0.300000011920928955078125), vec4(0.5), texture(s_GlyphTexture, min(max(v_texcoord0, v_linearClampBounds.xy), v_linearClampBounds.zw)))) * TintColor;
+    highp vec4 var_86cb1 = (v_color0 * smoothstep(vec4(0.300000011920928955078125), vec4(0.5), texture(s_GlyphTexture, min(max(v_texcoord0, v_linearClampBounds.xy), v_linearClampBounds.zw)))) * TintColor;
 #endif
 #ifdef FONT_TYPE__MSDF
     highp vec2 var_b3742;
@@ -116,14 +116,14 @@ void main() {
     var_46c40 = var_87383;
     highp vec2 var_739a8 = floor(v_texcoord0 * vec2(16.0)) * 0.0625;
     highp vec4 var_bc321 = texture(s_GlyphTexture, clamp(v_texcoord0 - ShadowOffset.xy, var_739a8, var_739a8 + vec2(0.0625)));
-    highp vec4 var_276fb = mix(vec4(ShadowColor.xyz, ShadowColor.w * smoothstep(max(0.0, OutlineCutoff.x - ShadowSmoothRadius.x), min(1.0, OutlineCutoff.x + ShadowSmoothRadius.x), var_bc321.w)), var_87383, vec4(var_ae182)) * TintColor;
+    highp vec4 var_86cb1 = mix(vec4(ShadowColor.xyz, ShadowColor.w * smoothstep(max(0.0, OutlineCutoff.x - ShadowSmoothRadius.x), min(1.0, OutlineCutoff.x + ShadowSmoothRadius.x), var_bc321.w)), var_87383, vec4(var_ae182)) * TintColor;
 #endif
 #if defined(ALPHA_TEST__OFF) && defined(FONT_TYPE__TRUE_TYPE)
-    highp vec4 var_276fb = (v_color0 * texture(s_GlyphTexture, v_texcoord0)) * TintColor;
+    highp vec4 var_86cb1 = (v_color0 * texture(s_GlyphTexture, v_texcoord0)) * TintColor;
 #endif
 #if defined(ALPHA_TEST__ON) && !defined(FONT_TYPE__MSDF)
-    highp vec4 var_276fb = (v_color0 * var_77356) * TintColor;
+    highp vec4 var_86cb1 = (v_color0 * var_77356) * TintColor;
 #endif
-    var_276fb.w *= HudOpacity.x;
-    bgfx_FragColor = var_276fb;
+    var_86cb1.w *= HudOpacity.x;
+    bgfx_FragData0 = var_86cb1;
 }

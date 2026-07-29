@@ -1,0 +1,55 @@
+#version 310 es
+
+/*
+* Available Macros:
+*
+* Passes:
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - GEOMETRY_PREPASS_PASS (not used)
+* - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
+*
+* AlphaTest:
+* - ALPHA_TEST__OFF (not used)
+* - ALPHA_TEST__ON_DISCARD_VALUE_BASED (not used)
+* - ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED (not used)
+*
+* Fancy:
+* - FANCY__ON (not used)
+*
+* Instancing:
+* - INSTANCING__OFF (not used)
+* - INSTANCING__ON (not used)
+*
+* Lit:
+* - LIT__OFF (not used)
+* - LIT__ON (not used)
+*
+* UseTextures:
+* - USE_TEXTURES__OFF (not used)
+* - USE_TEXTURES__ON (not used)
+*
+* Available Resources:
+*
+* Buffers:
+* - uniform lowp sampler2D s_MatTexture;
+*
+* Uniforms:
+* - uniform vec4 BlockLightColor;
+* - uniform vec4 CurrentColor;
+* - uniform vec4 LightDiffuseColorAndIlluminance;
+* - uniform vec4 LightWorldSpaceDirection;
+* - uniform vec4 MERSUniforms;
+* - uniform vec4 OverlayColor;
+* - uniform mat4 PrevWorld;
+* - uniform vec4 SubPixelOffset;
+* - uniform vec4 TileLightIntensity;
+* - uniform vec4 UVAnimation;
+* - uniform vec4 ZShiftValue;
+*/
+
+precision mediump float;
+precision highp int;
+layout(location = 0) out highp vec4 bgfx_FragColor;
+void main() {
+    bgfx_FragColor = vec4(0.0);
+}

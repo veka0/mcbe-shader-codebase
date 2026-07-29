@@ -15,7 +15,7 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragColor = vec4(1.0);
+    bgfx_FragData0 = vec4(1.0);
 }

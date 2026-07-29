@@ -20,11 +20,11 @@ precision mediump float;
 precision highp int;
 uniform highp vec4 MatColor;
 in highp float v_w;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     if (mod(v_w, 0.5) > 0.375)
     {
         discard;
     }
-    bgfx_FragColor = MatColor;
+    bgfx_FragData0 = MatColor;
 }

@@ -222,12 +222,16 @@ uniform highp vec4 ClusterDimensions;
 uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 #endif
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-#if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-#endif
-#ifdef POINT_LIGHT_SHADING__ON
+#if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__ON)
 uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 #endif
+#ifdef GPU_BLOCK_LIGHTING__ON
+uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+#endif
+#if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
+uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+#endif
+uniform highp vec4 DownsampleResolutionAndRecipResolution;
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
 uniform highp vec4 GpuEntryBufferCapacity;
 #endif
@@ -243,7 +247,6 @@ uniform highp vec4 QuantizationParameters;
 uniform highp vec4 QuantizationPrecisionRoundingParameters;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 uniform highp vec4 GpuEntryBufferCapacity;
 #endif
 uniform highp vec4 SceneResolutionAndRecipResolution;
@@ -727,8 +730,10 @@ void func_593c8(inout highp vec3 arg_ca7c6, inout highp vec3 arg_951a8, inout ui
 }
 #endif
 void main() {
-    highp vec2 var_879a5 = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
-    highp vec2 var_1fa6b = var_879a5.xy;
+    highp vec2 var_f7d5f = max(vec2(1.0), SceneResolutionAndRecipResolution.xy * DownsampleResolutionAndRecipResolution.zw);
+    highp vec2 var_3972c = floor(v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy);
+    highp vec2 var_4961c = (((var_3972c * var_f7d5f) + (mod(var_3972c, vec2(2.0)) * max(var_f7d5f - vec2(1.0), vec2(0.0)))) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
+    highp vec2 var_1fa6b = var_4961c.xy;
     var_1fa6b = vec2(var_1fa6b.x, 1.0 - var_1fa6b.y);
     highp float var_c2b62 = var_1fa6b.x;
     highp float var_ace1a = var_1fa6b.y;
@@ -737,15 +742,15 @@ void main() {
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
     highp vec2 var_8c702 = (var_07058 * 2.0) - vec2(1.0);
 #endif
-    highp vec4 var_39d8d = texture(s_Normal, var_879a5.xy);
+    highp vec4 var_39d8d = texture(s_Normal, var_4961c.xy);
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-    highp vec2 var_9279d = var_879a5.xy;
+    highp vec2 var_9279d = var_4961c.xy;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
     highp vec2 var_9b1e9 = var_39d8d.xy;
-    highp vec2 var_9279d = var_879a5.xy;
+    highp vec2 var_9279d = var_4961c.xy;
 #endif
-    highp vec4 var_e1c59 = texture(s_SceneDepth, var_879a5.xy);
+    highp vec4 var_e1c59 = texture(s_SceneDepth, var_4961c.xy);
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
     highp float var_21ef4 = (var_e1c59.x * 2.0) - 1.0;
     highp vec4 var_19bd5 = vec4(var_8c702, var_21ef4, 1.0);

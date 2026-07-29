@@ -5,7 +5,8 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
@@ -68,7 +69,7 @@ in highp vec4 v_fog;
 in highp vec2 v_lightmapUV;
 centroid in highp vec2 v_texcoord0;
 flat in highp vec2 v_textureShift;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
     highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_803cb.TextureShiftBufferData[arg_651a0].noiseSpread);
     if (var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
@@ -103,19 +104,19 @@ void main() {
         var_7dfb9 = var_da3c1.w;
     }
     highp vec2 var_7bd33 = v_ditheringAndMaskTinting;
-    highp vec4 var_65905 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
+    highp vec4 var_6cc3c = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
     if (var_7bd33.y > 0.5)
     {
-        highp vec3 var_5e4d7 = mix(var_65905.xyz, var_65905.xyz * v_color0.xyz, vec3(var_65905.w)).xyz * var_29486.w;
-        var_65905 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_65905.w);
-        var_65905.w = 1.0;
+        highp vec3 var_5e4d7 = mix(var_6cc3c.xyz, var_6cc3c.xyz * v_color0.xyz, vec3(var_6cc3c.w)).xyz * var_29486.w;
+        var_6cc3c = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_6cc3c.w);
+        var_6cc3c.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_65905.xyz * v_color0.xyz;
-        var_65905 = vec4(var_55928.x, var_55928.y, var_55928.z, var_65905.w);
-        var_65905.w = var_29486.w;
+        highp vec3 var_55928 = var_6cc3c.xyz * v_color0.xyz;
+        var_6cc3c = vec4(var_55928.x, var_55928.y, var_55928.z, var_6cc3c.w);
+        var_6cc3c.w = var_29486.w;
     }
-    highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_65905.xyz, var_65905.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_65905.w);
+    highp vec4 var_713a6 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_6cc3c.xyz, var_6cc3c.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_6cc3c.w);
 }

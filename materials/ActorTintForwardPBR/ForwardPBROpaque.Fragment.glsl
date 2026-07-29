@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -296,6 +296,7 @@ in highp vec3 v_normal;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -1678,4 +1679,5 @@ void main() {
         var_d523d = var_beb07;
     }
     bgfx_FragData0 = vec4(var_d523d, var_6eb7c.w);
+    bgfx_FragData1 = vec4(0.0);
 }

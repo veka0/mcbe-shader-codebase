@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -180,7 +180,6 @@ void main() {
     var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
     vec4 var_e2d09 = var_e43a8 * vec4(a_position, 1.0);
 #endif
-    vec4 var_4938b = a_tangent;
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
@@ -188,6 +187,7 @@ void main() {
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_e2d09.xyz, 1.0));
+    vec4 var_4938b = a_tangent;
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
@@ -197,7 +197,7 @@ void main() {
     v_color0 = a_color0;
     v_frontFacing = 0;
     v_mers = a_texcoord8;
-    v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
+    v_normal = (u_model[0] * vec4(a_normal.xyz, 1.0)).xyz;
     v_pbrTextureId = int(a_texcoord4);
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;

@@ -18,7 +18,7 @@
 *
 * NoOcclusion:
 * - NO_OCCLUSION__OFF
-* - NO_OCCLUSION__ON (not used)
+* - NO_OCCLUSION__ON
 *
 * NoVariety:
 * - NO_VARIETY__OFF (not used)
@@ -152,55 +152,64 @@ in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_b7c4a = texture(s_WeatherTexture, v_texcoord0);
-    if (var_b7c4a.w < 0.5)
-    {
-        discard;
-    }
+    highp vec4 var_457e3 = texture(s_WeatherTexture, v_texcoord0);
 #ifdef NO_OCCLUSION__OFF
     highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
-    uvec4 var_6037a = uvec4(round(var_e5cb6 * 255.0));
-    bool var_47b39 = v_occlusionUV.x >= 0.0;
-    bool var_77737;
-    if (var_47b39)
+    uvec4 var_c0758 = uvec4(round(var_e5cb6 * 255.0));
+#endif
+    bool var_e5bd9 = var_457e3.w < 0.5;
+    bool var_d73ad;
+    if (!var_e5bd9)
     {
-        var_77737 = v_occlusionUV.x <= 1.0;
-    }
-    else
-    {
-        var_77737 = var_47b39;
-    }
-    bool var_8f253;
-    if (var_77737)
-    {
-        var_8f253 = v_occlusionUV.y >= 0.0;
-    }
-    else
-    {
-        var_8f253 = var_77737;
-    }
-    bool var_3ff3f;
-    if (var_8f253)
-    {
-        var_3ff3f = v_occlusionUV.y <= 1.0;
-    }
-    else
-    {
-        var_3ff3f = var_8f253;
-    }
+#ifdef NO_OCCLUSION__OFF
+        bool var_b6661 = v_occlusionUV.x >= 0.0;
+        bool var_fe74d;
+        if (var_b6661)
+        {
+            var_fe74d = v_occlusionUV.x <= 1.0;
+        }
+        else
+        {
+            var_fe74d = var_b6661;
+        }
+        bool var_d2d09;
+        if (var_fe74d)
+        {
+            var_d2d09 = v_occlusionUV.y >= 0.0;
+        }
+        else
+        {
+            var_d2d09 = var_fe74d;
+        }
+        bool var_f9e4a;
+        if (var_d2d09)
+        {
+            var_f9e4a = v_occlusionUV.y <= 1.0;
+        }
+        else
+        {
+            var_f9e4a = var_d2d09;
+        }
 #endif
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
-    if (var_3ff3f && (v_occlusionHeight < ((float((var_6037a.x | (var_6037a.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125)))
+        var_d73ad = var_f9e4a && (v_occlusionHeight < ((float((var_c0758.x | (var_c0758.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125));
+#endif
+#ifdef NO_OCCLUSION__ON
+        var_d73ad = false;
 #endif
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
-    if (var_3ff3f && (v_occlusionHeight > ((float((var_6037a.x | (var_6037a.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125)))
+        var_d73ad = var_f9e4a && (v_occlusionHeight > ((float((var_c0758.x | (var_c0758.y << 8u)) & 1023u) + OcclusionHeightOffset.x) * 0.0039215688593685626983642578125));
 #endif
-#ifdef NO_OCCLUSION__OFF
+    }
+    else
+    {
+        var_d73ad = var_e5bd9;
+    }
+    if (var_d73ad)
     {
         discard;
     }
-#endif
-    highp vec4 var_6343e;
+    highp vec4 var_fabc1;
     if (distance(v_worldPos, v_prevWorldPos - u_prevWorldPosOffset.xyz) > 27.0)
     {
         highp vec4 var_7293e = u_viewProj * vec4(v_worldPos, 1.0);
@@ -213,8 +222,8 @@ void main() {
         highp float var_a08f7 = var_9f128.w;
         highp vec4 var_b3184 = ((var_40af8 / vec4(var_a08f7)) * 0.5) + vec4(0.5);
         var_9f128 = var_b3184;
-        highp vec2 var_95189 = var_b74ea.xy - var_b3184.xy;
-        var_6343e = vec4(vec4(1.0).x, vec4(1.0).y, var_95189.x, var_95189.y);
+        highp vec2 var_76993 = var_b74ea.xy - var_b3184.xy;
+        var_fabc1 = vec4(vec4(0.0).x, vec4(0.0).y, var_76993.x, var_76993.y);
     }
     else
     {
@@ -228,8 +237,8 @@ void main() {
         highp float var_5148a = var_42184.w;
         highp vec4 var_ff2a0 = ((var_3d686 / vec4(var_5148a)) * 0.5) + vec4(0.5);
         var_42184 = var_ff2a0;
-        highp vec2 var_26dea = var_58273.xy - var_ff2a0.xy;
-        var_6343e = vec4(vec4(1.0).x, vec4(1.0).y, var_26dea.x, var_26dea.y);
+        highp vec2 var_28f6b = var_58273.xy - var_ff2a0.xy;
+        var_fabc1 = vec4(vec4(0.0).x, vec4(0.0).y, var_28f6b.x, var_28f6b.y);
     }
-    bgfx_FragData0 = var_6343e;
+    bgfx_FragData0 = var_fabc1;
 }

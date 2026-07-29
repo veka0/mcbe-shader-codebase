@@ -226,12 +226,16 @@ uniform highp vec4 ClusterDimensions;
 uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 #endif
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
-#if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-#endif
-#ifdef POINT_LIGHT_SHADING__ON
+#if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__ON)
 uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 #endif
+#ifdef GPU_BLOCK_LIGHTING__ON
+uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+#endif
+#if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
+uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+#endif
+uniform highp vec4 DownsampleResolutionAndRecipResolution;
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
 uniform highp vec4 GpuEntryBufferCapacity;
 #endif
@@ -247,7 +251,6 @@ uniform highp vec4 QuantizationParameters;
 uniform highp vec4 QuantizationPrecisionRoundingParameters;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 uniform highp vec4 GpuEntryBufferCapacity;
 #endif
 uniform highp vec4 SceneResolutionAndRecipResolution;
@@ -259,7 +262,6 @@ uniform highp vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloff
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
 uniform highp vec4 WorldOrigin;
 #endif
-in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
@@ -732,52 +734,61 @@ void func_593c8(inout highp vec3 arg_ca7c6, inout highp vec3 arg_951a8, inout ui
 }
 #endif
 void main() {
-    highp vec2 var_1b7e9 = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
+    highp vec2 var_f7d5f = max(vec2(1.0), SceneResolutionAndRecipResolution.xy * DownsampleResolutionAndRecipResolution.zw);
+    highp vec2 var_3972c = floor(v_texcoord0.xy * DownsampleResolutionAndRecipResolution.xy);
+    highp vec2 var_448ac = (((var_3972c * var_f7d5f) + (mod(var_3972c, vec2(2.0)) * max(var_f7d5f - vec2(1.0), vec2(0.0)))) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
+    highp vec2 var_1fa6b = var_448ac.xy;
+    var_1fa6b = vec2(var_1fa6b.x, 1.0 - var_1fa6b.y);
+    highp float var_c2b62 = var_1fa6b.x;
+    highp float var_ace1a = var_1fa6b.y;
+    highp vec2 var_ae6f1 = vec2(var_c2b62, 1.0 - var_ace1a);
+    var_1fa6b = var_ae6f1;
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
-    highp vec4 var_af032 = texture(s_Normal, var_1b7e9.xy);
+    highp vec2 var_371bd = (var_ae6f1 * 2.0) - vec2(1.0);
+    highp vec4 var_af032 = texture(s_Normal, var_448ac.xy);
 #endif
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-    highp vec2 var_9279d = var_1b7e9.xy;
+    highp vec2 var_9279d = var_448ac.xy;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) || defined(POINT_LIGHT_SHADING__ON)
     highp vec2 var_0d5fa = var_af032.xy;
-    highp vec2 var_9279d = var_1b7e9.xy;
-    highp vec4 var_4435a = texture(s_SceneDepth, var_1b7e9.xy);
-    highp float var_6abed = (var_4435a.x * 2.0) - 1.0;
-    highp vec4 var_df846 = vec4(v_projPosition.xy, var_6abed, 1.0);
+    highp vec2 var_9279d = var_448ac.xy;
+    highp vec4 var_4435a = texture(s_SceneDepth, var_448ac.xy);
+    highp float var_65b49 = (var_4435a.x * 2.0) - 1.0;
+    highp vec4 var_19bd5 = vec4(var_371bd, var_65b49, 1.0);
     highp mat4 var_4fa47 = u_invProj;
     highp mat4 var_498b7 = u_invProj;
     highp mat4 var_4882d = u_invProj;
     highp mat4 var_78c1b = u_invProj;
     highp mat4 var_40575 = u_invProj;
-    highp float var_eb413 = var_df846.x;
-    highp float var_ac116 = var_df846.y;
-    highp float var_f2b7c = var_df846.w;
-    highp float var_0357c = var_df846.z;
-    highp float var_2c821 = var_df846.w;
+    highp float var_eb413 = var_19bd5.x;
+    highp float var_ac116 = var_19bd5.y;
+    highp float var_f2b7c = var_19bd5.w;
+    highp float var_0357c = var_19bd5.z;
+    highp float var_2c821 = var_19bd5.w;
     highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
-    var_df846 = var_9666f;
-    highp float var_d799e = var_df846.w;
+    var_19bd5 = var_9666f;
+    highp float var_d799e = var_19bd5.w;
     highp vec4 var_be58f = var_9666f / vec4(var_d799e);
-    var_df846 = var_be58f;
+    var_19bd5 = var_be58f;
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-    highp vec4 var_1c342 = vec4(v_projPosition.xy + vec2(SubPixelOffset.x, -SubPixelOffset.y), var_6abed, 1.0);
+    highp vec4 var_2bcb3 = vec4(var_371bd.xy + vec2(SubPixelOffset.x, -SubPixelOffset.y), var_65b49, 1.0);
     highp mat4 var_2949d = u_invProj;
     highp mat4 var_e6914 = u_invProj;
     highp mat4 var_164c7 = u_invProj;
     highp mat4 var_b5866 = u_invProj;
     highp mat4 var_bb46a = u_invProj;
-    highp float var_a6256 = var_1c342.x;
-    highp float var_05401 = var_1c342.y;
-    highp float var_b8669 = var_1c342.w;
-    highp float var_259fc = var_1c342.z;
-    highp float var_f8db3 = var_1c342.w;
+    highp float var_a6256 = var_2bcb3.x;
+    highp float var_05401 = var_2bcb3.y;
+    highp float var_b8669 = var_2bcb3.w;
+    highp float var_259fc = var_2bcb3.z;
+    highp float var_f8db3 = var_2bcb3.w;
     highp vec4 var_fa2eb = vec4(var_a6256 * var_2949d[0].x, var_05401 * var_e6914[1].y, var_b8669 * var_164c7[3].z, (var_259fc * var_b5866[2].w) + (var_f8db3 * var_bb46a[3].w));
-    var_1c342 = var_fa2eb;
-    highp float var_f7138 = var_1c342.w;
+    var_2bcb3 = var_fa2eb;
+    highp float var_f7138 = var_2bcb3.w;
     highp vec4 var_3ee7d = var_fa2eb / vec4(var_f7138);
-    var_1c342 = var_3ee7d;
+    var_2bcb3 = var_3ee7d;
     highp vec3 var_4a328 = (u_invView * vec4(var_3ee7d.xyz, 1.0)).xyz - WorldOrigin.xyz;
     highp vec3 var_c6246 = var_3ee7d.xyz;
     highp vec3 var_a2653 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
@@ -823,7 +834,7 @@ void main() {
 #ifdef POINT_LIGHT_SHADING__ON
     highp vec3 var_7c188 = (u_invView * vec4(var_be58f.xyz, 1.0)).xyz;
     highp vec3 var_16398 = var_be58f.xyz;
-    highp vec3 var_4211e = vec3(v_projPosition.xy, var_6abed);
+    highp vec3 var_d4bc5 = vec3(var_371bd, var_65b49);
     highp vec3 var_9e11a = var_09efa.xyz;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
@@ -833,7 +844,7 @@ void main() {
     highp vec3 var_b2786;
     func_9b87e(var_b2786, var_9e11a);
     highp vec3 var_05442 = vec3(0.039999999105930328369140625 * (1.0 - var_ea27c)) + (var_b2786 * var_ea27c);
-    highp vec3 var_5bd0a = var_4211e;
+    highp vec3 var_5bd0a = var_d4bc5;
     highp vec3 var_19bb2 = -(var_16398 / vec3(length(var_16398) + 9.9999997473787516355514526367188e-05));
     highp float var_3ef11 = clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_4ac0e.w), 0.0, 1.0) * SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale.x;
     highp vec4 var_2f055;
@@ -1176,18 +1187,18 @@ void main() {
     highp vec4 var_af3dd = SkyAmbientLightColorIntensity;
     highp float var_5fe15 = var_6111e * var_6111e;
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-    highp vec3 var_14151 = vec3(v_projPosition.xy, (texture(s_SceneDepth, var_1b7e9.xy).x * 2.0) - 1.0);
+    highp vec3 var_497d3 = vec3((var_ae6f1 * 2.0) - vec2(1.0), (texture(s_SceneDepth, var_448ac.xy).x * 2.0) - 1.0);
 #endif
 #ifdef POINT_LIGHT_SHADING__ON
-    highp vec3 var_14151 = var_4211e;
+    highp vec3 var_497d3 = var_d4bc5;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
-    highp vec3 var_14151 = vec3(v_projPosition.xy, var_6abed);
+    highp vec3 var_497d3 = vec3(var_371bd, var_65b49);
 #endif
-    highp float var_c0c38 = ((var_14151.z * 0.5) + 0.5) * 65535.0;
+    highp float var_c0c38 = ((var_497d3.z * 0.5) + 0.5) * 65535.0;
     highp float var_fd346 = floor(var_c0c38);
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-    bgfx_FragData0 = vec4((texture(s_Normal, var_1b7e9.xy).xy * 0.5) + vec2(0.5), var_fd346 * 1.525902189314365386962890625e-05, var_c0c38 - var_fd346);
+    bgfx_FragData0 = vec4((texture(s_Normal, var_448ac.xy).xy * 0.5) + vec2(0.5), var_fd346 * 1.525902189314365386962890625e-05, var_c0c38 - var_fd346);
     bgfx_FragData1 = vec4(((vec3(1.0) * (1.0 - clamp(2.007874011993408203125 * (var_09efa.w - 0.501960813999176025390625), 0.0, 1.0))) * max((((var_798f4.xyz * var_3a38c.w) * 6.0) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_5fe15 * var_5fe15) * var_6111e, (var_6111e * var_6111e) * var_6111e, CameraLightIntensity.y)) * var_af3dd.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w, 1.0);
     bgfx_FragData2 = vec4(0.0, 0.0, 0.0, 1.0);
 #endif

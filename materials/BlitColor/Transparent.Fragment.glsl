@@ -21,7 +21,7 @@ precision highp int;
 uniform highp sampler2D s_BlitTexture;
 uniform highp vec4 TintColor;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragColor = texture(s_BlitTexture, v_texcoord0) * TintColor;
+    bgfx_FragData0 = texture(s_BlitTexture, v_texcoord0) * TintColor;
 }

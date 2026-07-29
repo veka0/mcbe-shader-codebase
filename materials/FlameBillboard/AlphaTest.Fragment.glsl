@@ -24,7 +24,7 @@ uniform highp sampler2D s_FlameAtlas;
 uniform highp vec4 UVOffset;
 in highp vec4 v_fog;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_6ca24 = v_fog;
     highp vec4 var_5536a = texture(s_FlameAtlas, v_texcoord0 + UVOffset.xy);
@@ -32,8 +32,8 @@ void main() {
     {
         discard;
     }
-    highp vec4 var_72e43 = var_5536a;
-    highp vec3 var_76a37 = mix(var_72e43.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    var_5536a = vec4(var_76a37.x, var_76a37.y, var_76a37.z, var_72e43.w);
-    bgfx_FragColor = vec4(var_76a37, var_72e43.w);
+    highp vec4 var_f1fd0 = var_5536a;
+    highp vec3 var_e88fd = mix(var_f1fd0.xyz, v_fog.xyz, vec3(var_6ca24.w));
+    var_5536a = vec4(var_e88fd.x, var_e88fd.y, var_e88fd.z, var_f1fd0.w);
+    bgfx_FragData0 = vec4(var_e88fd, var_f1fd0.w);
 }

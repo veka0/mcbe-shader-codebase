@@ -80,7 +80,7 @@ in highp vec4 v_light;
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) || defined(SOURCE_INPUT_TYPE1__SAMPLED)
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef SOURCE_INPUT_TYPE1__SAMPLED
     highp vec4 var_943c3 = texture(s_MatTexture1, v_texcoord0);
@@ -112,7 +112,7 @@ void main() {
 #endif
     highp vec4 var_b626b = vec4(var_6ba0e.x, var_6ba0e.y, var_6ba0e.z, var_e9203.w);
     var_46c40 = var_b626b;
-    highp vec4 var_ae254 = var_b626b;
+    highp vec4 var_3dfb7 = var_b626b;
 #ifdef SOURCE_INPUT_TYPE1__CONSTANT
     highp vec4 var_a42dd = MatColor1;
 #endif
@@ -122,10 +122,10 @@ void main() {
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0)
     highp vec4 var_a42dd = MatColor0;
 #endif
-    var_ae254.w *= var_a42dd.w;
+    var_3dfb7.w *= var_a42dd.w;
     highp vec4 var_21b35 = OverlayColor;
     highp vec4 var_d77d6 = v_fog;
-    highp vec3 var_d96f7 = mix((mix(var_ae254.xyz, OverlayColor.xyz, vec3(var_21b35.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d77d6.w));
-    var_e9203 = vec4(var_d96f7.x, var_d96f7.y, var_d96f7.z, var_ae254.w);
-    bgfx_FragColor = vec4(var_d96f7, var_ae254.w);
+    highp vec3 var_76654 = mix((mix(var_3dfb7.xyz, OverlayColor.xyz, vec3(var_21b35.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d77d6.w));
+    var_e9203 = vec4(var_76654.x, var_76654.y, var_76654.z, var_3dfb7.w);
+    bgfx_FragData0 = vec4(var_76654, var_3dfb7.w);
 }

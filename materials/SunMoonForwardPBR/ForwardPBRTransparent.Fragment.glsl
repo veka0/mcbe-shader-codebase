@@ -91,7 +91,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_ndcPosition;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -192,18 +192,18 @@ void main() {
     {
         var_04a81 = var_75d4a;
     }
-    highp float var_28c44;
+    highp float var_e05fb;
     highp vec3 var_29df1;
     if (!var_0db97)
     {
         var_29df1 = vec3(0.0);
-        var_28c44 = 0.0;
+        var_e05fb = 0.0;
     }
     else
     {
         var_29df1 = var_04a81;
-        var_28c44 = 1.0;
+        var_e05fb = 1.0;
     }
-    highp vec4 var_0d860 = vec4(var_29df1, var_28c44);
-    bgfx_FragColor = vec4(var_0d860.xyz + (var_0d860.xyz * SunMoonEmissiveMultiplier.x), var_28c44);
+    highp vec4 var_2860c = vec4(var_29df1, var_e05fb);
+    bgfx_FragData0 = vec4(var_2860c.xyz + (var_2860c.xyz * SunMoonEmissiveMultiplier.x), var_e05fb);
 }

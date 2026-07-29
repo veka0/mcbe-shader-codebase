@@ -273,7 +273,7 @@ uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_3785d(inout highp float arg_63999, inout highp vec2 arg_df074) {
     if (SkySamplesConfig.x > 0.5)
     {
@@ -1626,15 +1626,15 @@ void main() {
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
     highp vec4 var_854fc = vec4(var_04f04.xyz + (mix((((((var_d2001 * (1.0 - var_59c6b)) * max((var_c2442 * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_91828 * var_91828) * var_5c567, (var_5c567 * var_5c567) * var_5c567, CameraLightIntensity.y)) * var_5ea11.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_c94d6) + var_0f8ba) + (((mix(var_d2001, vec3(dot(var_d2001, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_13fe1.y)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_40720.xyz, vec3(var_1f264.w)) * var_aaab3.w), 1.0);
 #endif
-    highp vec4 var_38beb;
+    highp vec4 var_d912f;
     if (PreExposureEnabled.x > 0.0)
     {
         highp vec3 var_02f69 = var_854fc.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
-        var_38beb = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_854fc.w);
+        var_d912f = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_854fc.w);
     }
     else
     {
-        var_38beb = var_854fc;
+        var_d912f = var_854fc;
     }
-    bgfx_FragColor = var_38beb;
+    bgfx_FragData0 = var_d912f;
 }

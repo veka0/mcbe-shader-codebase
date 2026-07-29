@@ -5,7 +5,8 @@
 *
 * Passes:
 * - CUSTOM_PASS_BASED_ON_OPAQUE_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 *
 * Instancing:
@@ -31,7 +32,7 @@ uniform highp sampler2D s_MatTexture;
 uniform highp vec4 LightWorldSpaceDirection;
 in highp vec2 v_texcoord0;
 in highp vec3 v_viewSpaceNormal;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragColor = vec4(vec3(0.20000000298023223876953125) + ((vec3(0.800000011920928955078125) * clamp(dot(v_viewSpaceNormal, -(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz), 0.0, 1.0)) * texture(s_MatTexture, v_texcoord0).xyz), 1.0);
+    bgfx_FragData0 = vec4(vec3(0.20000000298023223876953125) + ((vec3(0.800000011920928955078125) * clamp(dot(v_viewSpaceNormal, -(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz), 0.0, 1.0)) * texture(s_MatTexture, v_texcoord0).xyz), 1.0);
 }

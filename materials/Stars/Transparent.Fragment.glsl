@@ -22,8 +22,8 @@ precision mediump float;
 precision highp int;
 uniform highp vec4 StarsColor;
 in highp vec4 v_color0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_f803a = v_color0;
-    bgfx_FragColor = vec4(v_color0.xyz * (StarsColor.xyz * var_f803a.w), var_f803a.w);
+    highp vec4 var_21f21 = v_color0;
+    bgfx_FragData0 = vec4(v_color0.xyz * (StarsColor.xyz * var_21f21.w), var_21f21.w);
 }

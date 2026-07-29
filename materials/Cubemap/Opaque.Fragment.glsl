@@ -20,9 +20,9 @@ precision mediump float;
 precision highp int;
 uniform highp samplerCube s_MatTexture;
 in highp vec3 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec3 var_afcc1 = normalize(v_texcoord0);
-    var_afcc1.x *= (-1.0);
-    bgfx_FragColor = texture(s_MatTexture, var_afcc1);
+    highp vec3 var_ef241 = normalize(v_texcoord0);
+    var_ef241.x *= (-1.0);
+    bgfx_FragData0 = texture(s_MatTexture, var_ef241);
 }

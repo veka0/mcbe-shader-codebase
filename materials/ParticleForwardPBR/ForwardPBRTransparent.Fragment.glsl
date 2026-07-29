@@ -211,7 +211,7 @@ in highp vec3 v_normal;
 in highp vec2 v_texcoord0;
 in highp vec2 v_vanillaLighting;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -618,7 +618,7 @@ void main() {
     highp vec4 var_fe347 = texture(s_ParticleTexture, v_texcoord0);
     highp vec4 var_c11b4 = var_fe347 * vec4(v_color0.xyz, var_462d1.w);
     highp vec3 var_0414b = mix(var_c11b4.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    highp vec4 var_da325 = vec4(var_0414b.x, var_0414b.y, var_0414b.z, var_c11b4.w);
+    highp vec4 var_6eb7c = vec4(var_0414b.x, var_0414b.y, var_0414b.z, var_c11b4.w);
     highp vec3 var_9e11a = var_0414b.xyz;
     highp vec3 var_45238;
     func_9b87e(var_45238, var_9e11a);
@@ -1228,14 +1228,14 @@ void main() {
         var_42291 = vec3(0.0);
     }
     highp vec3 var_325c2 = vec4(var_20e87.xyz + (mix((((((var_45238 * (1.0 - var_805ca)) * max((var_43183 * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_f33ed * var_f33ed) * var_48e43.y, (var_48e43.y * var_48e43.y) * var_48e43.y, CameraLightIntensity.y)) * var_ca3e1.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_35cc5) + var_fffc2) + (((mix(var_45238, vec3(dot(var_45238, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_956c5)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_0dc8b.xyz, vec3(var_39a5b.w)) * var_cfe48.w), 1.0).xyz + var_42291;
-    highp vec3 var_3dd84;
+    highp vec3 var_d523d;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_3dd84 = var_325c2 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_d523d = var_325c2 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_3dd84 = var_325c2;
+        var_d523d = var_325c2;
     }
-    bgfx_FragColor = vec4(var_3dd84, var_da325.w);
+    bgfx_FragData0 = vec4(var_d523d, var_6eb7c.w);
 }

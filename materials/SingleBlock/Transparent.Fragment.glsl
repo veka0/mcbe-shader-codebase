@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
@@ -74,10 +74,10 @@ centroid in highp vec2 v_texCoords;
 #ifndef ALPHA_TEST__OFF
 in highp vec3 v_worldPos;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_4e612 = v_color;
-    highp vec4 var_4898e = texture(s_MatTexture, v_texCoords);
+    highp vec4 var_75b96 = texture(s_MatTexture, v_texCoords);
 #ifndef ALPHA_TEST__OFF
     highp vec2 var_ab580 = DitherParams2[1].xy;
     bool var_40e52;
@@ -99,10 +99,10 @@ void main() {
     {
 #endif
 #ifdef ALPHA_TEST__ON_DISCARD_VALUE_BASED
-        if ((var_4898e.w < DiscardValue.x) || var_40e52)
+        if ((var_75b96.w < DiscardValue.x) || var_40e52)
 #endif
 #ifdef ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED
-        if ((var_4898e.w <= 0.0) || var_40e52)
+        if ((var_75b96.w <= 0.0) || var_40e52)
 #endif
 #ifndef ALPHA_TEST__OFF
         {
@@ -110,24 +110,24 @@ void main() {
         }
     }
 #endif
-    highp vec3 var_e9539 = mix(var_4898e.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec3 var_e9539 = mix(var_75b96.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
 #ifdef LIT__OFF
-    var_4898e = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_4898e.w);
+    var_75b96 = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_75b96.w);
 #endif
 #ifdef LIT__ON
-    var_4898e = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_4898e.w) * v_light;
+    var_75b96 = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_75b96.w) * v_light;
 #endif
     if (AlphaMaskedTint.x != 0.0)
     {
-        highp vec3 var_a1ec2 = (CurrentColor.xyz * mix(var_4898e.xyz, var_4898e.xyz * v_color.xyz, vec3(var_4898e.w))).xyz * var_4e612.w;
-        var_4898e = vec4(var_a1ec2.x, var_a1ec2.y, var_a1ec2.z, var_4898e.w);
-        var_4898e.w = 1.0;
+        highp vec3 var_a1ec2 = (CurrentColor.xyz * mix(var_75b96.xyz, var_75b96.xyz * v_color.xyz, vec3(var_75b96.w))).xyz * var_4e612.w;
+        var_75b96 = vec4(var_a1ec2.x, var_a1ec2.y, var_a1ec2.z, var_75b96.w);
+        var_75b96.w = 1.0;
     }
     else
     {
-        var_4898e = (CurrentColor * v_color) * var_4898e;
+        var_75b96 = (CurrentColor * v_color) * var_75b96;
     }
-    var_4898e.w *= HudOpacity.x;
-    highp vec4 var_88028 = v_fog;
-    bgfx_FragColor = vec4(mix(var_4898e.xyz, v_fog.xyz, vec3(var_88028.w)), var_4898e.w);
+    var_75b96.w *= HudOpacity.x;
+    highp vec4 var_24474 = v_fog;
+    bgfx_FragData0 = vec4(mix(var_75b96.xyz, v_fog.xyz, vec3(var_24474.w)), var_75b96.w);
 }

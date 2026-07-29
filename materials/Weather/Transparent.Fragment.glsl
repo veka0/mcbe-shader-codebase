@@ -56,7 +56,7 @@ in highp vec4 v_fog;
 in highp float v_occlusionHeight;
 in highp vec2 v_occlusionUV;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 #if defined(FLIP_OCCLUSION__OFF) && defined(NO_OCCLUSION__OFF)
 void func_5336b(inout uvec4 arg_a0805, inout highp vec2 arg_31df6) {
     highp float loc_519df = float(arg_a0805.z & 15u) * 0.066666670143604278564453125;
@@ -172,9 +172,9 @@ void main() {
 #endif
     highp vec2 var_cbd4c = var_17770;
     highp vec4 var_66861 = var_59f74;
-    highp vec3 var_97ad4 = var_66861.xyz * texture(s_LightingTexture, var_17770).xyz;
-    var_59f74 = vec4(var_97ad4.x, var_97ad4.y, var_97ad4.z, var_66861.w);
-    highp float var_f4bd6 = var_59f74.w * var_cbd4c.y;
-    highp vec4 var_16b44 = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_97ad4, var_f4bd6).xyz, v_fog.xyz, vec3(var_16b44.w)), var_f4bd6);
+    highp vec3 var_76a3f = var_66861.xyz * texture(s_LightingTexture, var_17770).xyz;
+    var_59f74 = vec4(var_76a3f.x, var_76a3f.y, var_76a3f.z, var_66861.w);
+    highp float var_eb925 = var_59f74.w * var_cbd4c.y;
+    highp vec4 var_c0e46 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_76a3f, var_eb925).xyz, v_fog.xyz, vec3(var_c0e46.w)), var_eb925);
 }

@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -49,12 +49,7 @@
 
 precision mediump float;
 precision highp int;
-uniform highp sampler2D s_LightMapTexture;
-uniform highp vec4 FogColor;
-in highp vec4 v_fog;
-in highp vec2 v_lightmapUV;
 layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec4 var_89572 = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz, 1.0).xyz, FogColor.xyz, vec3(var_89572.w)), 1.0);
+    bgfx_FragColor = vec4(0.0);
 }

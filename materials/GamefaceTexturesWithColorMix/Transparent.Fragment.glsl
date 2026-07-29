@@ -28,7 +28,7 @@ uniform highp vec4 UVTransform[5];
 in highp vec4 v_Additional;
 in highp vec4 v_NoPerspParam;
 flat in highp vec4 v_VaryingData;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_2ea28 = v_Additional;
     highp vec4 var_057c0 = v_NoPerspParam;
@@ -42,81 +42,81 @@ void main() {
     highp float var_ace1a = var_e012b.y;
     highp vec2 var_b49e8 = vec2(var_c2b62, 1.0 - var_ace1a);
     var_e012b = var_b49e8;
-    highp vec4 var_3f503 = texture(s_txBuffer1, vec2(((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).y));
-    highp vec4 var_a5547 = var_3f503;
+    highp vec4 var_aaba4 = texture(s_txBuffer1, vec2(((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).y));
+    highp vec4 var_53b39 = var_aaba4;
     highp vec2 var_c52a9 = vec2(var_2ea28.x, 1.0 - var_2ea28.y);
     highp float var_efb1e = var_c52a9.x;
     highp float var_ad18e = var_c52a9.y;
     highp vec2 var_13da3 = vec2(var_efb1e, 1.0 - var_ad18e);
     var_c52a9 = var_13da3;
     highp vec4 var_54245 = texture(s_txBuffer, vec2(((var_13da3 * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((var_13da3 * UVTransform[0].zw) + UVTransform[0].xy).y));
-    highp vec4 var_51ac8 = var_54245 * var_937d7.w;
-    highp vec4 var_9b012 = var_51ac8;
-    highp vec3 var_3c560 = var_3f503.xyz / vec3(max(var_a5547.w, 9.9999997473787516355514526367188e-05));
-    highp vec3 var_55a07 = var_51ac8.xyz / vec3(max(var_9b012.w, 9.9999997473787516355514526367188e-05));
-    highp vec3 var_ec6b7;
+    highp vec4 var_2fba1 = var_54245 * var_937d7.w;
+    highp vec4 var_ab3ef = var_2fba1;
+    highp vec3 var_3c560 = var_aaba4.xyz / vec3(max(var_53b39.w, 9.9999997473787516355514526367188e-05));
+    highp vec3 var_55a07 = var_2fba1.xyz / vec3(max(var_ab3ef.w, 9.9999997473787516355514526367188e-05));
+    highp vec3 var_54e22;
     switch (int(var_341fb.x))
     {
         case 0:
         {
-            var_ec6b7 = var_55a07;
+            var_54e22 = var_55a07;
             break;
         }
         case 1:
         {
-            var_ec6b7 = var_3c560 * var_55a07;
+            var_54e22 = var_3c560 * var_55a07;
             break;
         }
         case 2:
         {
-            var_ec6b7 = (var_3c560 + var_55a07) - (var_3c560 * var_55a07);
+            var_54e22 = (var_3c560 + var_55a07) - (var_3c560 * var_55a07);
             break;
         }
         case 3:
         {
             highp vec3 var_fa7c2 = (var_3c560 * 2.0) - vec3(1.0);
-            var_ec6b7 = mix((var_55a07 + var_fa7c2) - (var_55a07 * var_fa7c2), var_55a07 * (var_3c560 * 2.0), step(var_3c560, vec3(0.5)));
+            var_54e22 = mix((var_55a07 + var_fa7c2) - (var_55a07 * var_fa7c2), var_55a07 * (var_3c560 * 2.0), step(var_3c560, vec3(0.5)));
             break;
         }
         case 4:
         {
-            var_ec6b7 = min(var_55a07, var_3c560);
+            var_54e22 = min(var_55a07, var_3c560);
             break;
         }
         case 5:
         {
-            var_ec6b7 = max(var_55a07, var_3c560);
+            var_54e22 = max(var_55a07, var_3c560);
             break;
         }
         case 6:
         {
-            var_ec6b7 = min(var_3c560 / max(vec3(1.0) - var_55a07, vec3(9.9999997473787516355514526367188e-05)), vec3(1.0));
+            var_54e22 = min(var_3c560 / max(vec3(1.0) - var_55a07, vec3(9.9999997473787516355514526367188e-05)), vec3(1.0));
             break;
         }
         case 7:
         {
-            var_ec6b7 = vec3(1.0) - min((vec3(1.0) - var_3c560) / max(var_55a07, vec3(9.9999997473787516355514526367188e-05)), vec3(1.0));
+            var_54e22 = vec3(1.0) - min((vec3(1.0) - var_3c560) / max(var_55a07, vec3(9.9999997473787516355514526367188e-05)), vec3(1.0));
             break;
         }
         case 8:
         {
             highp vec3 var_97a7c = (var_55a07 * 2.0) - vec3(1.0);
-            var_ec6b7 = mix((var_3c560 + var_97a7c) - (var_3c560 * var_97a7c), var_3c560 * (var_55a07 * 2.0), step(var_55a07, vec3(0.5)));
+            var_54e22 = mix((var_3c560 + var_97a7c) - (var_3c560 * var_97a7c), var_3c560 * (var_55a07 * 2.0), step(var_55a07, vec3(0.5)));
             break;
         }
         case 9:
         {
-            var_ec6b7 = mix(var_3c560 + (((var_55a07 * 2.0) - vec3(1.0)) * (mix(sqrt(var_3c560), ((((var_3c560 * 16.0) - vec3(12.0)) * var_3c560) + vec3(4.0)) * var_3c560, step(var_3c560, vec3(0.25))) - var_3c560)), var_3c560 - (((vec3(1.0) - (var_55a07 * 2.0)) * var_3c560) * (vec3(1.0) - var_3c560)), step(var_55a07, vec3(0.5)));
+            var_54e22 = mix(var_3c560 + (((var_55a07 * 2.0) - vec3(1.0)) * (mix(sqrt(var_3c560), ((((var_3c560 * 16.0) - vec3(12.0)) * var_3c560) + vec3(4.0)) * var_3c560, step(var_3c560, vec3(0.25))) - var_3c560)), var_3c560 - (((vec3(1.0) - (var_55a07 * 2.0)) * var_3c560) * (vec3(1.0) - var_3c560)), step(var_55a07, vec3(0.5)));
             break;
         }
         case 10:
         {
-            var_ec6b7 = abs(var_3c560 - var_55a07);
+            var_54e22 = abs(var_3c560 - var_55a07);
             break;
         }
         case 11:
         {
-            var_ec6b7 = (var_3c560 + var_55a07) - ((var_3c560 * 2.0) * var_55a07);
+            var_54e22 = (var_3c560 + var_55a07) - ((var_3c560 * 2.0) * var_55a07);
             break;
         }
         case 12:
@@ -244,7 +244,7 @@ void main() {
             {
                 var_61c3f = vec3(var_6ecec) + (((var_61c3f - vec3(var_6ecec)) * (1.0 - var_6ecec)) / vec3(max(var_eb7cb - var_6ecec, 9.9999997473787516355514526367188e-05)));
             }
-            var_ec6b7 = var_61c3f;
+            var_54e22 = var_61c3f;
             break;
         }
         case 13:
@@ -372,7 +372,7 @@ void main() {
             {
                 var_6e1a6 = vec3(var_3273f) + (((var_6e1a6 - vec3(var_3273f)) * (1.0 - var_3273f)) / vec3(max(var_fc8e2 - var_3273f, 9.9999997473787516355514526367188e-05)));
             }
-            var_ec6b7 = var_6e1a6;
+            var_54e22 = var_6e1a6;
             break;
         }
         case 14:
@@ -396,7 +396,7 @@ void main() {
             {
                 var_6bcf9 = vec3(var_ec696) + (((var_6bcf9 - vec3(var_ec696)) * (1.0 - var_ec696)) / vec3(max(var_26c05 - var_ec696, 9.9999997473787516355514526367188e-05)));
             }
-            var_ec6b7 = var_6bcf9;
+            var_54e22 = var_6bcf9;
             break;
         }
         case 15:
@@ -420,19 +420,19 @@ void main() {
             {
                 var_b66b4 = vec3(var_e0967) + (((var_b66b4 - vec3(var_e0967)) * (1.0 - var_e0967)) / vec3(max(var_5b07c - var_e0967, 9.9999997473787516355514526367188e-05)));
             }
-            var_ec6b7 = var_b66b4;
+            var_54e22 = var_b66b4;
             break;
         }
         case 16:
         {
-            var_ec6b7 = min(var_55a07 + var_3c560, vec3(1.0));
+            var_54e22 = min(var_55a07 + var_3c560, vec3(1.0));
             break;
         }
         default:
         {
-            var_ec6b7 = vec3(0.0);
+            var_54e22 = vec3(0.0);
             break;
         }
     }
-    bgfx_FragColor = ((var_51ac8 * (1.0 - var_a5547.w)) + (vec4(clamp(var_ec6b7, vec3(0.0), vec3(1.0)), 1.0) * (var_9b012.w * var_a5547.w))) + (var_3f503 * (1.0 - var_9b012.w));
+    bgfx_FragData0 = ((var_2fba1 * (1.0 - var_53b39.w)) + (vec4(clamp(var_54e22, vec3(0.0), vec3(1.0)), 1.0) * (var_ab3ef.w * var_53b39.w))) + (var_aaba4 * (1.0 - var_ab3ef.w));
 }

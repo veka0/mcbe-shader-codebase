@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -135,12 +135,7 @@
 
 precision mediump float;
 precision highp int;
-uniform highp sampler2D s_LightMapTexture;
-in highp vec3 v_lightColor;
-in highp vec2 v_lightmapUV;
-layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    highp vec2 var_4eb4e = v_lightmapUV;
-    highp vec3 var_9cb55 = texture(s_LightMapTexture, vec2(0.0, var_4eb4e.y)).xyz;
-    bgfx_FragData0 = vec4(clamp(sqrt(v_lightColor + (var_9cb55 * var_9cb55)), vec3(0.0), vec3(1.0)), 1.0);
+    bgfx_FragColor = vec4(0.0);
 }

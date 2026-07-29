@@ -88,7 +88,7 @@ uniform highp vec4 GpuEntryBufferCapacity;
 uniform highp vec4 VolumeLayer;
 uniform highp vec4 WorldOrigin;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_33953(inout uint arg_a601e, inout highp vec3 arg_aa7d7) {
     if (var_62e53.VoxelBuffer[arg_a601e].data == 0u)
     {
@@ -214,7 +214,7 @@ void main() {
             break;
         }
     }
-    highp vec3 var_753b6;
+    highp vec3 var_54f91;
     if (var_c4f05)
     {
         var_d1c0a.y += 0.5;
@@ -222,11 +222,11 @@ void main() {
         uint var_5a78b = (var_ae215 >> 2u) + ((var_ffb7a.y + (var_ffb7a.z * 16u)) + (var_ffb7a.x * 256u));
         highp vec3 var_bf963;
         func_33953(var_5a78b, var_bf963);
-        var_753b6 = var_bf963;
+        var_54f91 = var_bf963;
     }
     else
     {
-        var_753b6 = vec3(0.0);
+        var_54f91 = vec3(0.0);
     }
-    bgfx_FragColor = vec4(pow(var_753b6, vec3(0.4545454680919647216796875)), 1.0);
+    bgfx_FragData0 = vec4(pow(var_54f91, vec3(0.4545454680919647216796875)), 1.0);
 }

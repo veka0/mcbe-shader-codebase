@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -161,7 +161,7 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    bgfx_FragData0 = vec4(1.0);
+    bgfx_FragColor = vec4(0.0);
 }

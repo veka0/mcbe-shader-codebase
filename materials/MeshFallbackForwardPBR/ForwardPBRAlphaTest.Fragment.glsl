@@ -276,7 +276,6 @@ in highp vec3 v_viewSpaceNormal;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
-layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -1721,5 +1720,4 @@ void main() {
     }
     bgfx_FragData0 = vec4(var_80dc5, var_63d20.w * var_645ac.w);
     bgfx_FragData1 = vec4(0.0);
-    bgfx_FragData2 = vec4(0.0);
 }

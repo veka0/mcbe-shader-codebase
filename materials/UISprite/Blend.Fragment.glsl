@@ -33,19 +33,19 @@ uniform highp vec4 HudOpacity;
 uniform highp vec4 TintColor;
 in highp vec4 v_color0;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_586c3 = texture(s_MatTexture, v_texcoord0);
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_55cab = var_586c3;
-    highp vec3 var_2a8c3 = mix(var_586c3.xyz, var_586c3.xyz * v_color0.xyz, vec3(var_55cab.w));
-    var_55cab = vec4(var_2a8c3.x, var_2a8c3.y, var_2a8c3.z, var_586c3.w) * TintColor;
+    highp vec4 var_e6774 = var_586c3;
+    highp vec3 var_2a8c3 = mix(var_586c3.xyz, var_586c3.xyz * v_color0.xyz, vec3(var_e6774.w));
+    var_e6774 = vec4(var_2a8c3.x, var_2a8c3.y, var_2a8c3.z, var_586c3.w) * TintColor;
 #endif
 #ifdef MULTI_COLOR_TINT__ON
     highp vec2 var_f9d9d = var_586c3.xy;
     highp vec3 var_50f30 = mix((var_586c3.xxx * v_color0.xyz).xyz, var_586c3.yyy * ChangeColor.xyz, vec3(ceil(var_f9d9d.y)));
-    highp vec4 var_55cab = vec4(var_50f30.x, var_50f30.y, var_50f30.z, var_586c3.w) * TintColor;
+    highp vec4 var_e6774 = vec4(var_50f30.x, var_50f30.y, var_50f30.z, var_586c3.w) * TintColor;
 #endif
-    var_55cab.w *= HudOpacity.x;
-    bgfx_FragColor = var_55cab;
+    var_e6774.w *= HudOpacity.x;
+    bgfx_FragData0 = var_e6774;
 }

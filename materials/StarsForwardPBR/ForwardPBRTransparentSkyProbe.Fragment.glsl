@@ -85,7 +85,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec4 v_color0;
 in highp vec3 v_ndcPosition;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_2be34(inout highp vec3 arg_9f7bb, inout bool arg_13a99) {
     if (SkySamplesConfig.x > 0.5)
     {
@@ -138,17 +138,17 @@ void main() {
         highp vec3 var_701a1 = var_9ff0e.xyz * 0.0033142860047519207000732421875;
         var_9ff0e = vec4(var_701a1.x, var_701a1.y, var_701a1.z, var_9ff0e.w);
     }
-    highp float var_39bcb;
-    highp vec3 var_50b90;
+    highp float var_2737a;
+    highp vec3 var_6ae7d;
     if (!var_0db97)
     {
-        var_50b90 = vec3(0.0);
-        var_39bcb = 0.0;
+        var_6ae7d = vec3(0.0);
+        var_2737a = 0.0;
     }
     else
     {
-        var_50b90 = var_9ff0e.xyz;
-        var_39bcb = var_9ff0e.w;
+        var_6ae7d = var_9ff0e.xyz;
+        var_2737a = var_9ff0e.w;
     }
-    bgfx_FragColor = vec4(var_50b90, var_39bcb);
+    bgfx_FragData0 = vec4(var_6ae7d, var_2737a);
 }

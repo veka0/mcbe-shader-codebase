@@ -49,32 +49,32 @@ in highp vec4 v_color;
 #ifdef USE_TEXTURES__ON
 centroid in highp vec2 v_texCoords;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #if defined(ALPHA_TEST__OFF) && defined(USE_TEXTURES__OFF)
-    highp vec4 var_e651c = CurrentColor * v_color;
+    highp vec4 var_cfe58 = CurrentColor * v_color;
 #endif
 #if defined(ALPHA_TEST__OFF) && defined(USE_TEXTURES__ON)
-    highp vec4 var_e651c = (CurrentColor * v_color) * texture(s_MatTexture, v_texCoords);
+    highp vec4 var_cfe58 = (CurrentColor * v_color) * texture(s_MatTexture, v_texCoords);
 #endif
 #if defined(USE_TEXTURES__OFF) && !defined(ALPHA_TEST__OFF)
-    highp vec4 var_e651c = vec4(1.0);
+    highp vec4 var_cfe58 = vec4(1.0);
 #endif
 #if defined(USE_TEXTURES__ON) && !defined(ALPHA_TEST__OFF)
-    highp vec4 var_e651c = texture(s_MatTexture, v_texCoords);
+    highp vec4 var_cfe58 = texture(s_MatTexture, v_texCoords);
 #endif
 #ifdef ALPHA_TEST__ON_DISCARD_VALUE_BASED
-    if (var_e651c.w < DiscardValue.x)
+    if (var_cfe58.w < DiscardValue.x)
 #endif
 #ifdef ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED
-    if (var_e651c.w <= 0.0)
+    if (var_cfe58.w <= 0.0)
 #endif
 #ifndef ALPHA_TEST__OFF
     {
         discard;
     }
-    var_e651c = (CurrentColor * v_color) * var_e651c;
+    var_cfe58 = (CurrentColor * v_color) * var_cfe58;
 #endif
-    var_e651c.w *= HudOpacity.x;
-    bgfx_FragColor = var_e651c;
+    var_cfe58.w *= HudOpacity.x;
+    bgfx_FragData0 = var_cfe58;
 }

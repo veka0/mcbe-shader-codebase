@@ -84,7 +84,7 @@ in highp vec4 v_light;
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) || defined(SOURCE_INPUT_TYPE1__SAMPLED)
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef SOURCE_INPUT_TYPE1__SAMPLED
     highp vec4 var_943c3 = texture(s_MatTexture1, v_texcoord0);
@@ -131,7 +131,7 @@ void main() {
     highp vec4 var_27484 = v_fog;
     highp vec4 var_e6442 = ((texture(s_MatTexture2, fract(v_layerUv.xy)).xyzx * GlintColor) + (texture(s_MatTexture2, fract(v_layerUv.zw)).xyzx * GlintColor)) * TileLightColor;
     highp vec4 var_40943 = var_e6442;
-    highp vec4 var_4d133 = vec4(var_e6442.xyz * var_e6442.xyz, abs(var_40943.w)) + vec4(mix((mix(var_8dd6c.xyz, OverlayColor.xyz, vec3(var_67487.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_27484.w)), 0.0);
-    var_92827 = var_4d133;
-    bgfx_FragColor = var_4d133;
+    highp vec4 var_da12a = vec4(var_e6442.xyz * var_e6442.xyz, abs(var_40943.w)) + vec4(mix((mix(var_8dd6c.xyz, OverlayColor.xyz, vec3(var_67487.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_27484.w)), 0.0);
+    var_92827 = var_da12a;
+    bgfx_FragData0 = var_da12a;
 }

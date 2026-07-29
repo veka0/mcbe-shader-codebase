@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -177,6 +177,7 @@ precision highp int;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
 uniform highp vec4 PreExposureEnabled;
 layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void main() {
     highp vec3 var_602cc;
     if (PreExposureEnabled.x > 0.0)
@@ -188,4 +189,5 @@ void main() {
         var_602cc = vec3(1.0);
     }
     bgfx_FragData0 = vec4(var_602cc, 1.0);
+    bgfx_FragData1 = vec4(0.0);
 }

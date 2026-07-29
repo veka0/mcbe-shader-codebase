@@ -31,9 +31,9 @@ uniform highp sampler2D s_BeaconTexture;
 uniform highp vec4 OverlayColor;
 in highp vec4 v_color;
 in highp vec2 v_texCoords;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_a26ca = texture(s_BeaconTexture, v_texCoords);
-    highp vec4 var_900ce = mix(var_a26ca, OverlayColor, vec4(OverlayColor.w));
-    bgfx_FragColor = vec4(var_900ce.x, var_900ce.y, var_900ce.z, var_a26ca.w) * v_color;
+    highp vec4 var_0bbb5 = texture(s_BeaconTexture, v_texCoords);
+    highp vec4 var_34873 = mix(var_0bbb5, OverlayColor, vec4(OverlayColor.w));
+    bgfx_FragData0 = vec4(var_34873.x, var_34873.y, var_34873.z, var_0bbb5.w) * v_color;
 }

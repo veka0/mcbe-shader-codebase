@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -320,6 +320,7 @@ in highp vec3 v_tangent;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
+layout(location = 1) out highp vec4 bgfx_FragData1;
 void func_d29d7(inout highp vec3 arg_214af) {
     highp vec4 loc_df982 = textureLod(s_NormalTexture, v_texcoord0, 0.0);
     highp vec3 loc_c0132 = vec3(0.0, 0.0, 1.0);
@@ -1931,4 +1932,5 @@ void main() {
         var_d523d = var_54609;
     }
     bgfx_FragData0 = vec4(var_d523d, var_6eb7c.w);
+    bgfx_FragData1 = vec4(0.0);
 }

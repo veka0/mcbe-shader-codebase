@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - FORWARD_PBR_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_OPAQUE_PASS (not used)
@@ -188,10 +188,8 @@ uniform highp mat4 PointLightProj;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp mat4 u_model[4];
-uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_proj;
 uniform highp mat4 u_view;
-uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_BrdfLUT;
 uniform highp sampler2D s_GlintTexture;
 #ifdef POINT_LIGHT_SHADING__ON
@@ -281,10 +279,8 @@ in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 in highp vec4 v_glintUV;
 in highp vec3 v_normal;
-in highp vec3 v_prevWorldPos;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
-layout(location = 1) out highp vec4 bgfx_FragData1;
 void func_66b9c(inout highp vec3 arg_5a7d1, inout highp vec4 arg_37ddf) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -1669,16 +1665,5 @@ void main() {
     {
         var_ff289 = var_beb07;
     }
-    highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
-    highp vec4 var_46c40 = var_5dd1c;
-    highp float var_bc97b = var_46c40.w;
-    highp vec4 var_93f7a = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_93f7a;
-    highp vec4 var_c6f70 = u_prevViewProj * vec4(v_prevWorldPos, 1.0);
-    highp vec4 var_96bda = var_c6f70;
-    highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_cd007 = ((var_c6f70 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_cd007;
     bgfx_FragData0 = vec4(var_ff289, var_2737a);
-    bgfx_FragData1 = vec4(0.0, 0.0, var_93f7a.xy - var_cd007.xy);
 }

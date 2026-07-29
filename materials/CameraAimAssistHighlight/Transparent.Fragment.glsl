@@ -25,12 +25,12 @@ uniform highp sampler2D s_MatTexture;
 uniform highp vec4 TextureOpacity;
 uniform highp vec4 TintColor;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_d657b = texture(s_MatTexture, v_texcoord0);
     var_d657b.w *= TextureOpacity.x;
     highp vec4 var_6a5ab = var_d657b;
-    highp vec4 var_df670 = var_6a5ab * TintColor;
-    var_d657b = var_df670;
-    bgfx_FragColor = var_df670;
+    highp vec4 var_1019f = var_6a5ab * TintColor;
+    var_d657b = var_1019f;
+    bgfx_FragData0 = var_1019f;
 }

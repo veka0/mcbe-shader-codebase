@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 * - MOTION_ONLY_PASS (not used)
@@ -105,17 +105,17 @@ uniform highp mat4 u_viewProj;
 uniform highp vec4 u_prevWorldPosOffset;
 in highp vec3 v_prevWorldPos;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_ae1cb = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_ae1cb;
+    highp vec4 var_181cf = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_181cf;
     highp vec4 var_21b68 = u_prevViewProj * vec4(v_prevWorldPos - u_prevWorldPosOffset.xyz, 1.0);
     highp vec4 var_96bda = var_21b68;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_95bc6 = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_95bc6;
-    bgfx_FragColor = vec4(1.0, 1.0, var_ae1cb.xy - var_95bc6.xy);
+    highp vec4 var_53ded = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_53ded;
+    bgfx_FragData0 = vec4(0.0, 0.0, var_181cf.xy - var_53ded.xy);
 }

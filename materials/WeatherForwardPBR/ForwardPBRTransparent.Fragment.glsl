@@ -173,7 +173,7 @@ in highp float v_occlusionHeight;
 in highp vec2 v_occlusionUV;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -325,7 +325,7 @@ void main() {
 #ifdef NO_OCCLUSION__ON
     highp vec4 var_8261b;
 #endif
-    highp vec4 var_8808e = vec4(var_a32a9, var_ab9d7.w);
+    highp vec4 var_ac162 = vec4(var_a32a9, var_ab9d7.w);
     highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
     uvec4 var_14d49 = uvec4(round(var_e5cb6 * 255.0));
 #ifdef NO_OCCLUSION__OFF
@@ -342,8 +342,8 @@ void main() {
 #endif
     highp vec4 var_a7999 = var_8261b;
     highp vec2 var_acc98 = vec2(0.0, var_a7999.w);
-    highp vec2 var_a7ea5 = var_acc98;
-    highp vec4 var_1fa73 = var_8808e;
+    highp vec2 var_5e6ce = var_acc98;
+    highp vec4 var_1fa73 = var_ac162;
     highp vec4 var_5d617 = DirectionalLightSourceDiffuseColorAndIlluminance;
     highp vec2 var_1f2e5 = var_acc98;
     highp vec3 var_55c6a = var_8261b.xyz;
@@ -361,7 +361,7 @@ void main() {
     highp vec4 var_e92c0 = SkyAmbientLightColorIntensity;
     highp float var_4ed2c = var_1f2e5.y * var_1f2e5.y;
     highp vec3 var_9a9e1 = (((((var_1fa73.xyz * vec3(0.3183098733425140380859375)) * DiffuseSpecularEmissiveAmbientTermToggles.x) * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_5d617.w) * 1.0)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.x) * var_1fa73.xyz) + (max((var_cbec0 * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_4ed2c * var_4ed2c) * var_1f2e5.y, (var_1f2e5.y * var_1f2e5.y) * var_1f2e5.y, CameraLightIntensity.y)) * var_e92c0.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_1fa73.xyz);
-    var_8808e = vec4(var_9a9e1.x, var_9a9e1.y, var_9a9e1.z, var_8808e.w);
+    var_ac162 = vec4(var_9a9e1.x, var_9a9e1.y, var_9a9e1.z, var_ac162.w);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
     if (var_9b186)
@@ -467,14 +467,14 @@ void main() {
     }
     highp vec4 var_eb669 = var_806d9;
     highp vec3 var_6e838 = var_806d9.xyz + (mix(var_9a9e1.xyz, var_81ddf.xyz, vec3(var_ba616.w)) * var_eb669.w);
-    highp vec3 var_3013f;
+    highp vec3 var_f325b;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_3013f = var_6e838 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_f325b = var_6e838 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_3013f = var_6e838;
+        var_f325b = var_6e838;
     }
-    bgfx_FragColor = vec4(var_3013f, var_8808e.w * var_a7ea5.y);
+    bgfx_FragData0 = vec4(var_f325b, var_ac162.w * var_5e6ce.y);
 }

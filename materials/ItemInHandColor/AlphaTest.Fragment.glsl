@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -61,7 +61,7 @@ in highp vec4 v_color0;
 in highp vec4 v_fog;
 in highp vec4 v_light;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_fef14 = v_color0;
@@ -70,13 +70,13 @@ void main() {
 #ifdef MULTI_COLOR_TINT__ON
     highp vec3 var_d683b = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
     highp vec2 var_533c7 = var_d683b.xy;
-    highp vec3 var_8271c = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_3d8a5 = vec4(var_8271c.x, var_8271c.y, var_8271c.z, vec4(1.0).w);
+    highp vec3 var_df371 = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_1eced = vec4(var_df371.x, var_df371.y, var_df371.z, vec4(1.0).w);
 #endif
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_90a94 = vec4(var_05ab4.x, var_05ab4.y, var_05ab4.z, vec4(1.0).w);
-    highp vec3 var_8271c = mix(mix(var_90a94, var_90a94 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_3d8a5 = vec4(var_8271c.x, var_8271c.y, var_8271c.z, vec4(1.0).w);
+    highp vec3 var_df371 = mix(mix(var_90a94, var_90a94 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_1eced = vec4(var_df371.x, var_df371.y, var_df371.z, vec4(1.0).w);
 #endif
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
     bool var_ab7ce;
@@ -94,10 +94,10 @@ void main() {
     {
         var_ab7ce = false;
     }
-    if (var_ab7ce || (var_3d8a5.w < 0.5))
+    if (var_ab7ce || (var_1eced.w < 0.5))
     {
         discard;
     }
-    highp vec4 var_dc02c = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_8271c, var_3d8a5.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_3d8a5.w);
+    highp vec4 var_eb888 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_df371, var_1eced.w).xyz, v_fog.xyz, vec3(var_eb888.w)), var_1eced.w);
 }

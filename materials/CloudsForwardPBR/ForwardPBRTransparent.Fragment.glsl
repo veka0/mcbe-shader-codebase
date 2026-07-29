@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 * - MOTION_ONLY_PASS (not used)
@@ -145,7 +145,7 @@ in highp vec4 v_color0;
 in highp vec3 v_normal;
 in highp vec2 v_tilePosition;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_1e7c4(inout highp vec3 arg_ee209, inout highp vec4 arg_78b9f) {
     if (dot(arg_ee209, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)) >= 0.0)
     {
@@ -848,26 +848,26 @@ void main() {
     highp vec3 var_a871a = var_c28fe;
     bool var_0db97;
     func_2be34(var_a871a, var_0db97);
-    highp float var_39bcb;
+    highp float var_2737a;
     highp vec3 var_8d985;
     if (!var_0db97)
     {
         var_8d985 = vec3(0.0);
-        var_39bcb = 0.0;
+        var_2737a = 0.0;
     }
     else
     {
         var_8d985 = var_2c946;
-        var_39bcb = var_78a79.w;
+        var_2737a = var_78a79.w;
     }
-    highp vec3 var_ac41d;
+    highp vec3 var_ff289;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_ac41d = var_8d985 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_ff289 = var_8d985 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_ac41d = var_8d985;
+        var_ff289 = var_8d985;
     }
-    bgfx_FragColor = vec4(var_ac41d, var_39bcb);
+    bgfx_FragData0 = vec4(var_ff289, var_2737a);
 }

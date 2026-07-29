@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 * - MOTION_ONLY_PASS (not used)
