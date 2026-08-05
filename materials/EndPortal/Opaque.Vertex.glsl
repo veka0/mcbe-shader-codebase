@@ -67,13 +67,13 @@ void main() {
     float var_8749b = cos(var_5d371.w * 2.24399471282958984375);
     vec2 var_9b4db = (mat2(vec2(var_8749b, var_4cd05), vec2(-var_4cd05, var_8749b)) * ((((var_331fa.yz * var_1606b.x) + (var_331fa.xz * var_1606b.y)) + (var_331fa.xy * var_1606b.z)) * vec2(0.0625))) + (vec2(var_8749b, var_4cd05) * var_5d371.w);
     var_9b4db.y += (ViewPositionAndTime.w * 0.00390625);
-    vec2 var_b7e05 = var_9b4db;
-    vec2 var_8806d = vec2(64.0);
-    vec2 var_a0408 = vec2(var_b7e05.x - (var_8806d.x * float(int(var_b7e05.x / var_8806d.x))), var_b7e05.y - (var_8806d.y * float(int(var_b7e05.y / var_8806d.y))));
-    var_9b4db = var_a0408;
+    vec2 var_4d0bf = var_9b4db;
+    vec2 var_c711b = vec2(64.0);
+    vec2 var_32549 = vec2(var_4d0bf.x - (var_c711b.x * trunc(var_4d0bf.x / var_c711b.x)), var_4d0bf.y - (var_c711b.y * trunc(var_4d0bf.y / var_c711b.y)));
+    var_9b4db = var_32549;
     v_colorUV = a_texcoord0;
     v_encodedPlane = var_716e5.w;
     v_fog = vec4(FogColor.xyz, clamp(((length(var_888aa) / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
-    v_parallaxUV = var_a0408;
+    v_parallaxUV = var_32549;
     gl_Position = u_viewProj * vec4(var_dc0f7.xyz, 1.0);
 }

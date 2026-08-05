@@ -12,13 +12,15 @@
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
+* - layout(binding = 9, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
+* - layout(binding = 10, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
 * - uniform lowp sampler2D s_WaterDepth;
-* - layout(binding = 9, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 11, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -46,13 +48,14 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
@@ -60,9 +63,7 @@
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
-* - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform mat4 PointLightProj;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
@@ -99,7 +100,7 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 9, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_3cc78;
+layout(binding = 11, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_83cd7;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -121,26 +122,30 @@ void func_8ab59(inout bool arg_5e3ed) {
     }
     arg_5e3ed = false;
 }
-void func_a4cbd(inout highp vec3 arg_c6525, inout highp vec4 arg_a01ef) {
+void func_14887(inout highp vec3 arg_c6525, inout highp vec4 arg_a01ef) {
     int loc_738fb = int(BiomeBlendingParameters.z * 0.5);
     highp float loc_6b94b = (arg_c6525.x - BiomeBlendingLastUpdatePosition.x) / BiomeBlendingLastUpdatePosition.w;
     highp float loc_c8c2e = (arg_c6525.z - BiomeBlendingLastUpdatePosition.z) / BiomeBlendingLastUpdatePosition.w;
     ivec2 loc_f487d = ivec2(loc_738fb + int(floor(loc_6b94b)), loc_738fb + int(floor(loc_c8c2e)));
     loc_f487d.x = clamp(loc_f487d.x, 0, int(BiomeBlendingParameters.z) - 1);
     loc_f487d.y = clamp(loc_f487d.y, 0, int(BiomeBlendingParameters.z) - 1);
-    int loc_35590 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
-    int loc_d7d5b = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
-    int loc_80f2f = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
-    int loc_86c64 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
-    if (((loc_35590 == loc_d7d5b) && (loc_d7d5b == loc_80f2f)) && (loc_80f2f == loc_86c64))
+    int loc_d3165 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
+    int loc_823ba = (loc_d3165 >= int(BiomeBlendingParameters.w)) ? 0 : loc_d3165;
+    int loc_f9483 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
+    int loc_5ce59 = (loc_f9483 >= int(BiomeBlendingParameters.w)) ? 0 : loc_f9483;
+    int loc_41712 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
+    int loc_6713f = (loc_41712 >= int(BiomeBlendingParameters.w)) ? 0 : loc_41712;
+    int loc_0e979 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
+    int loc_0eb6b = (loc_0e979 >= int(BiomeBlendingParameters.w)) ? 0 : loc_0e979;
+    if (((loc_823ba == loc_5ce59) && (loc_5ce59 == loc_6713f)) && (loc_6713f == loc_0eb6b))
     {
-        arg_a01ef = var_3cc78.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients;
+        arg_a01ef = var_83cd7.zBiomeInfoBuffer[loc_823ba].waterExtinctionCoefficients;
         return;
     }
     highp float loc_77c49 = fract(loc_6b94b);
     highp float loc_33836 = fract(loc_c8c2e);
     highp vec4 loc_47197 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
-    arg_a01ef = (((var_3cc78.zBiomeInfoBuffer[loc_35590].waterExtinctionCoefficients * loc_47197.x) + (var_3cc78.zBiomeInfoBuffer[loc_d7d5b].waterExtinctionCoefficients * loc_47197.y)) + (var_3cc78.zBiomeInfoBuffer[loc_80f2f].waterExtinctionCoefficients * loc_47197.z)) + (var_3cc78.zBiomeInfoBuffer[loc_86c64].waterExtinctionCoefficients * loc_47197.w);
+    arg_a01ef = (((var_83cd7.zBiomeInfoBuffer[loc_823ba].waterExtinctionCoefficients * loc_47197.x) + (var_83cd7.zBiomeInfoBuffer[loc_5ce59].waterExtinctionCoefficients * loc_47197.y)) + (var_83cd7.zBiomeInfoBuffer[loc_6713f].waterExtinctionCoefficients * loc_47197.z)) + (var_83cd7.zBiomeInfoBuffer[loc_0eb6b].waterExtinctionCoefficients * loc_47197.w);
 }
 void func_40f6a(inout highp vec4 arg_8331b, inout highp vec4 arg_a6615) {
     bool loc_a9f27;
@@ -149,7 +154,7 @@ void func_40f6a(inout highp vec4 arg_8331b, inout highp vec4 arg_a6615) {
     {
         highp vec3 loc_e7b22 = (u_invView * vec4(arg_8331b.xyz, 1.0)).xyz;
         highp vec4 loc_baef6;
-        func_a4cbd(loc_e7b22, loc_baef6);
+        func_14887(loc_e7b22, loc_baef6);
         arg_a6615 = loc_baef6;
         return;
     }

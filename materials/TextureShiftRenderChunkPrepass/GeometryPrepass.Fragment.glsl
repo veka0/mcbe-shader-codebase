@@ -37,7 +37,6 @@
 * - uniform vec4 GlobalRoughness;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 ViewPositionAndTime;
 */
@@ -71,10 +70,11 @@ struct TextureShiftBuffer {
     int packedPBRId;
     highp float globalAlpha;
     highp float localShiftLength;
+    highp float noiseSpread;
 };
 
 layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_6f249;
-layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_8ebd4;
+layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_90f76;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
@@ -92,6 +92,19 @@ in highp vec3 v_worldPos;
 layout(location = 0) out uvec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
 layout(location = 2) out highp vec4 bgfx_FragData2;
+void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
+    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_90f76.TextureShiftBufferData[arg_651a0].noiseSpread);
+    if (var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
+    {
+        arg_0da03 = step(loc_47c38, var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha);
+        return;
+    }
+    else
+    {
+        arg_0da03 = 1.0 - clamp((loc_47c38 - var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha) / var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        return;
+    }
+}
 void func_b5a96(inout int arg_7561c, inout highp float arg_6a625, inout highp float arg_9eee0, inout highp float arg_a50e1, inout highp float arg_d2a5b, inout highp vec3 arg_51e76, inout highp vec2 arg_9466e) {
     if (arg_7561c == 65535)
     {
@@ -321,37 +334,49 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
 void main() {
     highp vec4 var_3f821 = v_color0;
     highp vec2 var_49a9d = v_ditheringAndMaskTinting;
-    highp vec2 var_19cca = v_textureShift;
-    int var_218bc = int(var_19cca.y * 65535.0);
-    highp float var_4ad7a = clamp((var_8ebd4.TextureShiftBufferData[var_218bc].globalAlpha - ((1.0 - var_8ebd4.TextureShiftBufferData[var_218bc].localShiftLength) * var_19cca.x)) / var_8ebd4.TextureShiftBufferData[var_218bc].localShiftLength, 0.0, 1.0);
+    highp vec2 var_1614a = v_textureShift;
+    int var_34ad7 = int(var_1614a.y * 65535.0);
+    highp float var_29631;
+    func_f1932(var_1614a, var_34ad7, var_29631);
     highp vec2 var_f486c = v_texcoord0;
-    highp vec4 var_45704 = texture(s_MatTexture, vec2(var_f486c.x + var_8ebd4.TextureShiftBufferData[var_218bc].preUV0, var_f486c.y + var_8ebd4.TextureShiftBufferData[var_218bc].preUV1));
-    highp vec4 var_457f9 = texture(s_MatTexture, vec2(var_f486c.x + var_8ebd4.TextureShiftBufferData[var_218bc].postUV0, var_f486c.y + var_8ebd4.TextureShiftBufferData[var_218bc].postUV1));
+    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1));
+    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1));
+    highp vec4 var_da3c1 = var_4b671;
+    highp vec4 var_e65e5 = var_2e873;
+    highp float var_7dfb9;
+    if (var_29631 > 0.5)
+    {
+        var_7dfb9 = var_e65e5.w;
+    }
+    else
+    {
+        var_7dfb9 = var_da3c1.w;
+    }
     highp vec2 var_2f8a8 = v_texcoord0;
     int var_39955;
-    if (var_4ad7a < 0.5)
+    if (var_29631 < 0.5)
     {
-        var_2f8a8 = vec2(var_2f8a8.x + var_8ebd4.TextureShiftBufferData[var_218bc].preUV0, var_2f8a8.y + var_8ebd4.TextureShiftBufferData[var_218bc].preUV1);
-        var_39955 = (var_8ebd4.TextureShiftBufferData[var_218bc].packedPBRId >> 16) & 65535;
+        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1);
+        var_39955 = (var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId >> 16) & 65535;
     }
     else
     {
-        var_2f8a8 = vec2(var_2f8a8.x + var_8ebd4.TextureShiftBufferData[var_218bc].postUV0, var_2f8a8.y + var_8ebd4.TextureShiftBufferData[var_218bc].postUV1);
-        var_39955 = var_8ebd4.TextureShiftBufferData[var_218bc].packedPBRId & 65535;
+        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1);
+        var_39955 = var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId & 65535;
     }
     var_49a9d = v_ditheringAndMaskTinting;
-    highp vec4 var_815fb = mix(var_45704, var_457f9, vec4(var_4ad7a));
+    highp vec4 var_c2c1a = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_29631)), var_7dfb9);
     if (var_49a9d.y != 0.0)
     {
-        highp vec3 var_5e4d7 = mix(var_815fb.xyz, var_815fb.xyz * v_color0.xyz, vec3(var_815fb.w)).xyz * var_3f821.w;
-        var_815fb = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_815fb.w);
-        var_815fb.w = 1.0;
+        highp vec3 var_5e4d7 = mix(var_c2c1a.xyz, var_c2c1a.xyz * v_color0.xyz, vec3(var_c2c1a.w)).xyz * var_3f821.w;
+        var_c2c1a = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_c2c1a.w);
+        var_c2c1a.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_815fb.xyz * v_color0.xyz;
-        var_815fb = vec4(var_55928.x, var_55928.y, var_55928.z, var_815fb.w);
-        var_815fb.w *= var_3f821.w;
+        highp vec3 var_55928 = var_c2c1a.xyz * v_color0.xyz;
+        var_c2c1a = vec4(var_55928.x, var_55928.y, var_55928.z, var_c2c1a.w);
+        var_c2c1a.w *= var_3f821.w;
     }
     highp vec3 var_b9e8b;
     highp float var_d1699;
@@ -359,7 +384,7 @@ void main() {
     highp float var_5e90d;
     highp float var_fcacf;
     func_b5a96(var_39955, var_fcacf, var_5e90d, var_fa861, var_d1699, var_b9e8b, var_2f8a8);
-    highp vec4 var_08b04 = vec4(var_815fb.xyz, var_815fb.w);
+    highp vec4 var_08b04 = vec4(var_c2c1a.xyz, var_c2c1a.w);
     highp vec2 var_58222 = v_lightmapUV;
     highp vec4 var_6bfdc = vec4(var_08b04.x, var_08b04.y, var_08b04.z, var_08b04.w);
     highp float var_7aa46;

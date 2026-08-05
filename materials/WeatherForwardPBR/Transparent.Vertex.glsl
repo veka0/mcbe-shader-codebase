@@ -33,16 +33,18 @@
 * Buffers:
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
+* - layout(binding = 10, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_LightingTexture;
 * - uniform lowp sampler2D s_OcclusionTexture;
-* - uniform lowp samplerCubeArray s_PointLightShadowTextureArray;
+* - uniform lowp sampler2D s_PointLightShadowTextureAtlas;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
+* - layout(binding = 11, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
 * - uniform lowp sampler2D s_WeatherTexture;
-* - layout(binding = 10, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 11, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 12, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 13, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -72,20 +74,20 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
@@ -97,6 +99,7 @@
 * - uniform vec4 PointLightNdLFloor;
 * - uniform vec4 PointLightPreCalcValues;
 * - uniform mat4 PointLightProj;
+* - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PositionBaseOffset;
 * - uniform vec4 PositionForwardOffset;
@@ -157,17 +160,17 @@ void main() {
     vec2 var_181bc = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
     var_181bc.x += ((var_6c969.x * 255.0) * UVOffsetAndScale.z);
 #endif
-    vec3 var_60145 = a_position + PositionBaseOffset.xyz;
-    vec3 var_ba3f6 = vec3(30.0);
-    vec3 var_f27d2 = (vec3(var_60145.x - (var_ba3f6.x * float(int(var_60145.x / var_ba3f6.x))), var_60145.y - (var_ba3f6.y * float(int(var_60145.y / var_ba3f6.y))), var_60145.z - (var_ba3f6.z * float(int(var_60145.z / var_ba3f6.z)))) - vec3(15.0)) + PositionForwardOffset.xyz;
-    vec3 var_91624 = var_f27d2;
+    vec3 var_5bfc0 = a_position + PositionBaseOffset.xyz;
+    vec3 var_4108f = vec3(30.0);
+    vec3 var_61547 = (vec3(var_5bfc0.x - (var_4108f.x * trunc(var_5bfc0.x / var_4108f.x)), var_5bfc0.y - (var_4108f.y * trunc(var_5bfc0.y / var_4108f.y)), var_5bfc0.z - (var_4108f.z * trunc(var_5bfc0.z / var_4108f.z))) - vec3(15.0)) + PositionForwardOffset.xyz;
+    vec3 var_91624 = var_61547;
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
     var_67767.y -= SubPixelOffset.y;
     mat4 var_a3f1d = u_proj;
     var_a3f1d[2] = var_67767;
-    vec4 var_1e5d3 = var_a3f1d * (u_view * vec4(var_f27d2, 1.0));
+    vec4 var_1e5d3 = var_a3f1d * (u_view * vec4(var_61547, 1.0));
     vec4 var_8dd4e = var_1e5d3;
     mat4 var_1d0ff = u_proj;
     vec4 var_f0fcc = var_1d0ff[2];
@@ -175,7 +178,7 @@ void main() {
     var_f0fcc.y -= SubPixelOffset.y;
     mat4 var_3a7e1 = u_proj;
     var_3a7e1[2] = var_f0fcc;
-    vec4 var_ac686 = var_3a7e1 * (u_view * vec4(var_f27d2 + (Velocity.xyz * Dimensions.y), 1.0));
+    vec4 var_ac686 = var_3a7e1 * (u_view * vec4(var_61547 + (Velocity.xyz * Dimensions.y), 1.0));
     vec4 var_fe173 = var_ac686;
     vec2 var_67f44 = (var_ac686.xy / vec2(var_fe173.w)) - (var_1e5d3.xy / vec2(var_8dd4e.w));
     vec4 var_defd3 = mix(var_ac686, var_1e5d3, vec4(var_49187.y));
@@ -184,13 +187,13 @@ void main() {
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_36755.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_occlusionHeight = (var_91624.y + (ViewPosition.y - 0.5)) * 0.0039215688593685626983642578125;
-    v_occlusionUV = ((var_f27d2.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);
+    v_occlusionUV = ((var_61547.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);
 #ifdef NO_VARIETY__OFF
     v_texcoord0 = var_181bc;
 #endif
 #ifdef NO_VARIETY__ON
     v_texcoord0 = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
 #endif
-    v_worldPos = var_f27d2;
+    v_worldPos = var_61547;
     gl_Position = vec4(var_4cdd6.x, var_4cdd6.y, var_defd3.z, var_defd3.w);
 }

@@ -26,16 +26,18 @@
 * - uniform lowp sampler2D s_BiomeBlendingMap;
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CausticsTexture;
+* - layout(binding = 11, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_LightMapTexture;
 * - uniform lowp sampler2D s_MatTexture;
-* - layout(binding = 11, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
+* - layout(binding = 12, std430) buffer s_PBRDataBuffer { PBRTextureData s_PBRData[]; };
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform lowp sampler2D s_SceneDepth;
 * - uniform lowp sampler2D s_SeasonsTexture;
 * - uniform highp sampler2DArray s_ShadowCascades;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 12, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 13, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -62,7 +64,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLight;
+* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -70,19 +72,17 @@
 * - uniform vec4 FogColor;
 * - uniform vec4 FogSkyBlend;
 * - uniform vec4 GlobalRoughness;
+* - uniform vec4 GpuEntryBufferCapacity;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MoonColor;
 * - uniform vec4 MoonDir;
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
-* - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform mat4 PointLightProj;
 * - uniform vec4 PreExposureEnabled;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
@@ -140,8 +140,8 @@ struct BiomeInfo {
     highp vec4 waterSurfaceOctaveParameters;
 };
 
-layout(binding = 11, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_f786f;
-layout(binding = 12, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_b174e;
+layout(binding = 12, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_a253d;
+layout(binding = 14, std430) buffer s_zBiomeInfoBuffer { BiomeInfo zBiomeInfoBuffer[]; } var_7a87e;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_BiomeBlendingMap;
@@ -176,10 +176,10 @@ void func_cc8eb(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         arg_51e76 = vec3(0.0, 1.0, 0.0);
         return;
     }
-    highp vec2 loc_cdc8d = vec2(var_f786f.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_f786f.PBRData[v_pbrTextureId].colourToNormalUvScale1);
-    highp vec2 loc_684d1 = vec2(var_f786f.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_f786f.PBRData[v_pbrTextureId].colourToNormalUvBias1);
+    highp vec2 loc_cdc8d = vec2(var_a253d.PBRData[v_pbrTextureId].colourToNormalUvScale0, var_a253d.PBRData[v_pbrTextureId].colourToNormalUvScale1);
+    highp vec2 loc_684d1 = vec2(var_a253d.PBRData[v_pbrTextureId].colourToNormalUvBias0, var_a253d.PBRData[v_pbrTextureId].colourToNormalUvBias1);
     highp vec3 loc_c8345;
-    if ((var_f786f.PBRData[v_pbrTextureId].flags & 4) == 4)
+    if ((var_a253d.PBRData[v_pbrTextureId].flags & 4) == 4)
     {
         highp vec2 loc_01aa0 = (v_texcoord0 * loc_cdc8d) + loc_684d1;
         highp vec3 loc_f7401 = vec3(0.0, 0.0, 1.0);
@@ -198,11 +198,11 @@ void func_cc8eb(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     else
     {
         highp vec3 loc_a4d0b;
-        if ((var_f786f.PBRData[v_pbrTextureId].flags & 8) == 8)
+        if ((var_a253d.PBRData[v_pbrTextureId].flags & 8) == 8)
         {
             highp vec2 loc_218fe = (v_texcoord0 * loc_cdc8d) + loc_684d1;
             highp vec3 loc_2ae5f = vec3(0.0, 0.0, 1.0);
-            highp float loc_b88fd = clamp((min(var_f786f.PBRData[v_pbrTextureId].maxMipNormal - var_f786f.PBRData[v_pbrTextureId].maxMipColour, var_f786f.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
+            highp float loc_b88fd = clamp((min(var_a253d.PBRData[v_pbrTextureId].maxMipNormal - var_a253d.PBRData[v_pbrTextureId].maxMipColour, var_a253d.PBRData[v_pbrTextureId].maxMipNormal) * (-1.0)) + 2.0, 0.0, 1.0);
             if (loc_b88fd > 0.0)
             {
                 highp vec2 loc_f388f = loc_218fe;
@@ -252,10 +252,10 @@ void func_cc8eb(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
         else
         {
             highp vec3 loc_8d6b3;
-            if ((var_f786f.PBRData[v_pbrTextureId].flags & 16) == 16)
+            if ((var_a253d.PBRData[v_pbrTextureId].flags & 16) == 16)
             {
                 highp vec2 loc_268f9 = (v_texcoord0 * loc_cdc8d) + loc_684d1;
-                highp float loc_d849b = min(var_f786f.PBRData[v_pbrTextureId].maxMipNormal - var_f786f.PBRData[v_pbrTextureId].maxMipColour, var_f786f.PBRData[v_pbrTextureId].maxMipNormal);
+                highp float loc_d849b = min(var_a253d.PBRData[v_pbrTextureId].maxMipNormal - var_a253d.PBRData[v_pbrTextureId].maxMipColour, var_a253d.PBRData[v_pbrTextureId].maxMipNormal);
                 highp vec4 loc_946d4 = textureLod(s_MatTexture, loc_268f9, 0.0);
                 highp vec4 loc_97cb6 = loc_946d4;
                 bool loc_b06a0 = loc_97cb6.x == loc_97cb6.y;
@@ -353,17 +353,17 @@ void func_cc8eb(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     highp float loc_73c14;
     highp float loc_00c14;
     highp float loc_d7d8a;
-    if ((var_f786f.PBRData[v_pbrTextureId].flags & 1) == 1)
+    if ((var_a253d.PBRData[v_pbrTextureId].flags & 1) == 1)
     {
-        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_f786f.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_f786f.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_f786f.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_f786f.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
+        highp vec4 loc_300fb = texture(s_MatTexture, (v_texcoord0 * vec2(var_a253d.PBRData[v_pbrTextureId].colourToMaterialUvScale0, var_a253d.PBRData[v_pbrTextureId].colourToMaterialUvScale1)) + vec2(var_a253d.PBRData[v_pbrTextureId].colourToMaterialUvBias0, var_a253d.PBRData[v_pbrTextureId].colourToMaterialUvBias1));
         highp float loc_c4db1;
-        if ((var_f786f.PBRData[v_pbrTextureId].flags & 2) == 2)
+        if ((var_a253d.PBRData[v_pbrTextureId].flags & 2) == 2)
         {
             loc_c4db1 = loc_300fb.w;
         }
         else
         {
-            loc_c4db1 = var_f786f.PBRData[v_pbrTextureId].uniformSubsurface;
+            loc_c4db1 = var_a253d.PBRData[v_pbrTextureId].uniformSubsurface;
         }
         loc_d7d8a = loc_c4db1;
         loc_00c14 = loc_300fb.y;
@@ -372,10 +372,10 @@ void func_cc8eb(inout highp float arg_6a625, inout highp float arg_9eee0, inout 
     }
     else
     {
-        loc_d7d8a = var_f786f.PBRData[v_pbrTextureId].uniformSubsurface;
-        loc_00c14 = var_f786f.PBRData[v_pbrTextureId].uniformEmissive;
-        loc_73c14 = var_f786f.PBRData[v_pbrTextureId].uniformMetalness;
-        loc_659d6 = var_f786f.PBRData[v_pbrTextureId].uniformRoughness;
+        loc_d7d8a = var_a253d.PBRData[v_pbrTextureId].uniformSubsurface;
+        loc_00c14 = var_a253d.PBRData[v_pbrTextureId].uniformEmissive;
+        loc_73c14 = var_a253d.PBRData[v_pbrTextureId].uniformMetalness;
+        loc_659d6 = var_a253d.PBRData[v_pbrTextureId].uniformRoughness;
     }
     highp vec3 loc_93b23;
     if (int(gl_FrontFacing) != 0)
@@ -400,33 +400,37 @@ void func_8ab59(inout bool arg_5e3ed) {
     }
     arg_5e3ed = false;
 }
-void func_15a8f(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout highp vec4 arg_2f7bf, inout highp vec4 arg_451b0) {
+void func_acf7a(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout highp vec4 arg_2f7bf, inout highp vec4 arg_451b0) {
     int loc_738fb = int(BiomeBlendingParameters.z * 0.5);
     highp float loc_6b94b = (arg_c6525.x - BiomeBlendingLastUpdatePosition.x) / BiomeBlendingLastUpdatePosition.w;
     highp float loc_c8c2e = (arg_c6525.z - BiomeBlendingLastUpdatePosition.z) / BiomeBlendingLastUpdatePosition.w;
     ivec2 loc_f487d = ivec2(loc_738fb + int(floor(loc_6b94b)), loc_738fb + int(floor(loc_c8c2e)));
     loc_f487d.x = clamp(loc_f487d.x, 0, int(BiomeBlendingParameters.z) - 1);
     loc_f487d.y = clamp(loc_f487d.y, 0, int(BiomeBlendingParameters.z) - 1);
-    int loc_05a8c = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
-    int loc_7c209 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
-    int loc_16b81 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
-    int loc_970b0 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
-    if (((loc_05a8c == loc_7c209) && (loc_7c209 == loc_16b81)) && (loc_16b81 == loc_970b0))
+    int loc_d3165 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d, 0).x * 255.0));
+    int loc_f144e = (loc_d3165 >= int(BiomeBlendingParameters.w)) ? 0 : loc_d3165;
+    int loc_f9483 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1, 0), 0).x * 255.0));
+    int loc_8d586 = (loc_f9483 >= int(BiomeBlendingParameters.w)) ? 0 : loc_f9483;
+    int loc_41712 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(0, 1), 0).x * 255.0));
+    int loc_5bbd9 = (loc_41712 >= int(BiomeBlendingParameters.w)) ? 0 : loc_41712;
+    int loc_0e979 = int(round(texelFetch(s_BiomeBlendingMap, loc_f487d + ivec2(1), 0).x * 255.0));
+    int loc_dd295 = (loc_0e979 >= int(BiomeBlendingParameters.w)) ? 0 : loc_0e979;
+    if (((loc_f144e == loc_8d586) && (loc_8d586 == loc_5bbd9)) && (loc_5bbd9 == loc_dd295))
     {
-        arg_3fac7 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
-        arg_2f7bf = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
-        arg_451b0 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
+        arg_3fac7 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceParameters;
+        arg_2f7bf = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceWaveParameters;
+        arg_451b0 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceOctaveParameters;
         return;
     }
     highp float loc_77c49 = fract(loc_6b94b);
     highp float loc_33836 = fract(loc_c8c2e);
     highp vec4 loc_2f2a8 = vec4((1.0 - loc_77c49) * (1.0 - loc_33836), loc_77c49 * (1.0 - loc_33836), (1.0 - loc_77c49) * loc_33836, loc_77c49 * loc_33836);
-    highp vec4 loc_329f6 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
-    highp vec4 loc_085ea = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
-    highp vec4 loc_889f2 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
-    highp vec4 loc_a8d02 = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters;
-    highp vec4 loc_853ce = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters;
-    highp vec4 loc_bc30c = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters;
+    highp vec4 loc_329f6 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceParameters;
+    highp vec4 loc_085ea = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceWaveParameters;
+    highp vec4 loc_889f2 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceOctaveParameters;
+    highp vec4 loc_a8d02 = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceParameters;
+    highp vec4 loc_853ce = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceWaveParameters;
+    highp vec4 loc_bc30c = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceOctaveParameters;
     bool loc_733bf = loc_329f6.x == loc_a8d02.x;
     bool loc_3293c;
     if (loc_733bf)
@@ -503,12 +507,12 @@ void func_15a8f(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout hi
     bool loc_56442;
     if (loc_3002e)
     {
-        highp vec4 loc_ce828 = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters;
-        highp vec4 loc_a645a = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters;
-        highp vec4 loc_d0726 = var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters;
-        highp vec4 loc_af7f0 = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters;
-        highp vec4 loc_4e4b3 = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters;
-        highp vec4 loc_e43d7 = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters;
+        highp vec4 loc_ce828 = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceParameters;
+        highp vec4 loc_a645a = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceWaveParameters;
+        highp vec4 loc_d0726 = var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceOctaveParameters;
+        highp vec4 loc_af7f0 = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceParameters;
+        highp vec4 loc_4e4b3 = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceWaveParameters;
+        highp vec4 loc_e43d7 = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceOctaveParameters;
         bool loc_5bdec = loc_ce828.x == loc_af7f0.x;
         bool loc_a63e8;
         if (loc_5bdec)
@@ -591,12 +595,12 @@ void func_15a8f(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout hi
     bool loc_7df86;
     if (loc_56442)
     {
-        highp vec4 loc_ce025 = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters;
-        highp vec4 loc_0ec9a = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters;
-        highp vec4 loc_5db96 = var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters;
-        highp vec4 loc_0847f = var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceParameters;
-        highp vec4 loc_09e9a = var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceWaveParameters;
-        highp vec4 loc_fba83 = var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceOctaveParameters;
+        highp vec4 loc_ce025 = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceParameters;
+        highp vec4 loc_0ec9a = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceWaveParameters;
+        highp vec4 loc_5db96 = var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceOctaveParameters;
+        highp vec4 loc_0847f = var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceParameters;
+        highp vec4 loc_09e9a = var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceWaveParameters;
+        highp vec4 loc_fba83 = var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceOctaveParameters;
         bool loc_0a03f = loc_ce025.x == loc_0847f.x;
         bool loc_b5adf;
         if (loc_0a03f)
@@ -681,18 +685,18 @@ void func_15a8f(inout highp vec3 arg_c6525, inout highp vec4 arg_3fac7, inout hi
     highp vec4 loc_2ffee;
     if (loc_7df86)
     {
-        loc_2ffee = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters;
-        loc_5e290 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters;
-        loc_855f6 = var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters;
+        loc_2ffee = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceParameters;
+        loc_5e290 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceWaveParameters;
+        loc_855f6 = var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceOctaveParameters;
     }
     else
     {
         highp vec4 loc_1ebe3 = loc_2f2a8;
         highp vec4 loc_e512d = loc_2f2a8;
         highp vec4 loc_f426e = loc_2f2a8;
-        loc_2ffee = (((var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceParameters * loc_1ebe3.x) + (var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceParameters * loc_1ebe3.y)) + (var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceParameters * loc_1ebe3.z)) + (var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceParameters * loc_1ebe3.w);
-        loc_5e290 = (((var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceWaveParameters * loc_e512d.x) + (var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceWaveParameters * loc_e512d.y)) + (var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceWaveParameters * loc_e512d.z)) + (var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceWaveParameters * loc_e512d.w);
-        loc_855f6 = (((var_b174e.zBiomeInfoBuffer[loc_05a8c].waterSurfaceOctaveParameters * loc_f426e.x) + (var_b174e.zBiomeInfoBuffer[loc_7c209].waterSurfaceOctaveParameters * loc_f426e.y)) + (var_b174e.zBiomeInfoBuffer[loc_16b81].waterSurfaceOctaveParameters * loc_f426e.z)) + (var_b174e.zBiomeInfoBuffer[loc_970b0].waterSurfaceOctaveParameters * loc_f426e.w);
+        loc_2ffee = (((var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceParameters * loc_1ebe3.x) + (var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceParameters * loc_1ebe3.y)) + (var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceParameters * loc_1ebe3.z)) + (var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceParameters * loc_1ebe3.w);
+        loc_5e290 = (((var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceWaveParameters * loc_e512d.x) + (var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceWaveParameters * loc_e512d.y)) + (var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceWaveParameters * loc_e512d.z)) + (var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceWaveParameters * loc_e512d.w);
+        loc_855f6 = (((var_7a87e.zBiomeInfoBuffer[loc_f144e].waterSurfaceOctaveParameters * loc_f426e.x) + (var_7a87e.zBiomeInfoBuffer[loc_8d586].waterSurfaceOctaveParameters * loc_f426e.y)) + (var_7a87e.zBiomeInfoBuffer[loc_5bbd9].waterSurfaceOctaveParameters * loc_f426e.z)) + (var_7a87e.zBiomeInfoBuffer[loc_dd295].waterSurfaceOctaveParameters * loc_f426e.w);
     }
     arg_3fac7 = loc_2ffee;
     arg_2f7bf = loc_5e290;
@@ -707,7 +711,7 @@ void func_94180(inout highp float arg_27e9a, inout highp float arg_a66d0, inout 
         highp vec4 loc_24013;
         highp vec4 loc_71f1d;
         highp vec4 loc_b5465;
-        func_15a8f(loc_418df, loc_b5465, loc_71f1d, loc_24013);
+        func_acf7a(loc_418df, loc_b5465, loc_71f1d, loc_24013);
         highp vec4 loc_b96be = loc_b5465;
         highp vec4 loc_2949f = loc_71f1d;
         highp vec4 loc_be428 = loc_24013;

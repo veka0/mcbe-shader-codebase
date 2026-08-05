@@ -22,7 +22,6 @@
 * - uniform vec4 LightAmbientColorAndIntensity;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 */
 
 uniform mat4 u_modelView;

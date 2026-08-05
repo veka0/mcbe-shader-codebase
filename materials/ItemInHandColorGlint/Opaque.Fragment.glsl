@@ -39,7 +39,6 @@
 * - uniform vec4 GlintColor;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 MultiplicativeTintColor;
 * - uniform vec4 OverlayColor;
 * - uniform vec4 SubPixelOffset;

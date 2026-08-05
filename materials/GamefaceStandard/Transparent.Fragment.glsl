@@ -87,23 +87,23 @@ void func_011ac(inout highp float arg_6b2b2, inout highp float arg_ca2fb) {
     }
     arg_ca2fb = (1.05499994754791259765625 * pow(arg_6b2b2, 0.4166666567325592041015625)) - 0.054999999701976776123046875;
 }
-void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout highp float arg_59019) {
+void func_4a7ec(inout highp vec4 arg_ad1a5, inout highp vec4 arg_534f4, inout highp float arg_59019) {
     uvec4 loc_36dcc = uvec4(v_VaryingData);
     int loc_4ef2a = int((loc_36dcc.z << 4u) | ((loc_36dcc.y & 240u) >> 4u));
     int loc_1d698 = int(loc_36dcc.w);
     highp vec4 loc_d549b = Data_PS[loc_4ef2a];
-    int loc_86ecd = loc_4ef2a + 1;
-    highp vec4 loc_827d2 = Data_PS[loc_86ecd];
+    int loc_b8d33 = loc_4ef2a + 1;
+    highp vec4 loc_f9d71 = Data_PS[loc_b8d33];
     int loc_2051e = int(loc_d549b.x);
     int loc_6aa44 = max(0, (loc_2051e + (-1)));
     int loc_026da = int(Data_PS[loc_6aa44].y);
     int loc_256e2 = int(Data_PS[loc_6aa44].z);
-    arg_cdc63 = Data_PS[loc_86ecd];
+    arg_ad1a5 = Data_PS[loc_b8d33];
     highp float loc_d1818;
-    highp float loc_ded6f;
+    highp float loc_39dd0;
     if (0 == loc_1d698)
     {
-        loc_ded6f = min(1.0, arg_534f4.z * arg_534f4.w);
+        loc_39dd0 = min(1.0, arg_534f4.z * arg_534f4.w);
         loc_d1818 = 1.0;
     }
     else
@@ -112,7 +112,7 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
         highp float loc_1387f;
         if (3 == loc_1d698)
         {
-            highp vec2 loc_55f16 = v_Additional.xy;
+            highp vec2 loc_2ab1e = v_Additional.xy;
             highp vec4 loc_52c3c = Data_PS[loc_2051e];
             bool loc_3afc1 = loc_52c3c.z != (-1.0);
             bool loc_30475;
@@ -126,13 +126,18 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
             }
             if (loc_30475)
             {
-                loc_55f16.x = clamp(arg_534f4.x, loc_52c3c.x, loc_52c3c.x + loc_52c3c.z);
-                loc_55f16.y = clamp(arg_534f4.y, loc_52c3c.y, loc_52c3c.y + loc_52c3c.w);
+                loc_2ab1e.x = clamp(arg_534f4.x, loc_52c3c.x, loc_52c3c.x + loc_52c3c.z);
+                loc_2ab1e.y = clamp(arg_534f4.y, loc_52c3c.y, loc_52c3c.y + loc_52c3c.w);
             }
-            arg_cdc63 = texture(s_txBuffer, (vec2(loc_55f16.x, 1.0 - loc_55f16.y) * UVTransform[0].zw) + UVTransform[0].xy);
+            highp vec2 loc_3ebfa = vec2(loc_2ab1e.x, 1.0 - loc_2ab1e.y);
+            highp float loc_74cec = loc_3ebfa.x;
+            highp float loc_83bc9 = loc_3ebfa.y;
+            highp vec2 loc_e145a = vec2(loc_74cec, 1.0 - loc_83bc9);
+            loc_3ebfa = loc_e145a;
+            arg_ad1a5 = texture(s_txBuffer, vec2(((loc_e145a * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((loc_e145a * UVTransform[0].zw) + UVTransform[0].xy).y));
             if ((loc_026da & 2) != 0)
             {
-                highp vec3 loc_4f09f = arg_cdc63.xyz;
+                highp vec3 loc_4f09f = arg_ad1a5.xyz;
                 highp float loc_75c31;
                 func_b96d4(loc_4f09f, loc_75c31);
                 highp float loc_1c9d4;
@@ -140,13 +145,13 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                 highp float loc_1ac3e;
                 func_98fd5(loc_4f09f, loc_1ac3e);
                 highp vec3 loc_4de2d = vec3(loc_75c31, loc_1c9d4, loc_1ac3e);
-                arg_cdc63 = vec4(loc_4de2d.x, loc_4de2d.y, loc_4de2d.z, arg_cdc63.w);
+                arg_ad1a5 = vec4(loc_4de2d.x, loc_4de2d.y, loc_4de2d.z, arg_ad1a5.w);
             }
             else
             {
                 if ((loc_026da & 16) != 0)
                 {
-                    highp vec3 loc_1231c = arg_cdc63.xyz;
+                    highp vec3 loc_1231c = arg_ad1a5.xyz;
                     highp float loc_a2c18;
                     func_438fb(loc_1231c, loc_a2c18);
                     highp float loc_d3225;
@@ -154,14 +159,14 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                     highp float loc_c6192;
                     func_8e34f(loc_1231c, loc_c6192);
                     highp vec3 loc_001c6 = vec3(loc_a2c18, loc_d3225, loc_c6192);
-                    arg_cdc63 = vec4(loc_001c6.x, loc_001c6.y, loc_001c6.z, arg_cdc63.w);
+                    arg_ad1a5 = vec4(loc_001c6.x, loc_001c6.y, loc_001c6.z, arg_ad1a5.w);
                 }
             }
-            arg_cdc63.w = mix(1.0 - arg_cdc63.w, arg_cdc63.w, loc_827d2.x);
-            highp vec3 loc_92be8 = arg_cdc63.xyz;
-            arg_cdc63.w = mix(((0.2125999927520751953125 * loc_92be8.x) + (0.715200006961822509765625 * loc_92be8.y)) + (0.072200000286102294921875 * loc_92be8.z), arg_cdc63.w, loc_827d2.z);
-            loc_1387f = loc_827d2.w * clamp(arg_534f4.z, 0.0, 1.0);
-            loc_df533 = loc_827d2.z;
+            arg_ad1a5.w = mix(1.0 - arg_ad1a5.w, arg_ad1a5.w, loc_f9d71.x);
+            highp vec3 loc_92be8 = arg_ad1a5.xyz;
+            arg_ad1a5.w = mix(((0.2125999927520751953125 * loc_92be8.x) + (0.715200006961822509765625 * loc_92be8.y)) + (0.072200000286102294921875 * loc_92be8.z), arg_ad1a5.w, loc_f9d71.z);
+            loc_1387f = loc_f9d71.w * clamp(arg_534f4.z, 0.0, 1.0);
+            loc_df533 = loc_f9d71.z;
         }
         else
         {
@@ -171,40 +176,48 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
             {
                 if ((loc_026da & 8) != 0)
                 {
-                    arg_cdc63 = texture(s_txBuffer1, (v_Additional.xy * UVTransform[1].zw) + UVTransform[1].xy);
-                    highp float loc_1b9bd;
+                    highp vec2 loc_b985e = v_Additional.xy;
+                    highp float loc_1ce3f = loc_b985e.x;
+                    highp float loc_eb157 = loc_b985e.y;
+                    highp vec2 loc_cc917 = vec2(loc_1ce3f, 1.0 - loc_eb157);
+                    loc_b985e = loc_cc917;
+                    arg_ad1a5 = texture(s_txBuffer1, vec2(((loc_cc917 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((loc_cc917 * UVTransform[1].zw) + UVTransform[1].xy).y));
+                    highp float loc_561f9;
                     if (loc_256e2 != (-1))
                     {
-                        highp float loc_5601f = arg_cdc63.w;
-                        highp float loc_a3b43 = max(loc_5601f, 9.9999997473787516355514526367188e-06);
-                        highp vec4 loc_9f36b = arg_cdc63;
-                        highp vec4 loc_2076d = vec4(loc_9f36b.xyz / vec3(loc_a3b43), loc_a3b43);
-                        arg_cdc63 = loc_2076d;
-                        highp vec4 loc_f535c = loc_2076d;
+                        highp vec4 loc_70976 = arg_ad1a5;
                         highp vec4 loc_c5359 = vec4(0.0);
-                        loc_f535c.w *= loc_827d2.w;
-                        loc_c5359.x = dot(loc_f535c, Data_PS[loc_256e2]);
-                        loc_c5359.y = dot(loc_f535c, Data_PS[loc_256e2 + 1]);
-                        loc_c5359.z = dot(loc_f535c, Data_PS[loc_256e2 + 2]);
-                        loc_c5359.w = dot(loc_f535c, Data_PS[loc_256e2 + 3]);
+                        highp float loc_5601f = loc_70976.w;
+                        highp float loc_a3b43 = max(loc_5601f, 9.9999997473787516355514526367188e-06);
+                        highp vec4 loc_72edd = vec4(arg_ad1a5.xyz / vec3(loc_a3b43), loc_a3b43);
+                        loc_70976 = loc_72edd;
+                        loc_c5359.x = dot(loc_72edd, Data_PS[loc_256e2]);
+                        loc_c5359.y = dot(loc_72edd, Data_PS[loc_256e2 + 1]);
+                        loc_c5359.z = dot(loc_72edd, Data_PS[loc_256e2 + 2]);
+                        loc_c5359.w = dot(loc_72edd, Data_PS[loc_256e2 + 3]);
                         loc_c5359 += Data_PS[loc_256e2 + 4];
                         loc_c5359.w = loc_c5359.w;
-                        highp float loc_e4877 = loc_c5359.w;
+                        highp float loc_220d1 = loc_c5359.w;
                         loc_c5359.w = 1.0;
-                        arg_cdc63 = loc_c5359;
-                        loc_1b9bd = loc_e4877;
+                        arg_ad1a5 = loc_c5359;
+                        loc_561f9 = loc_f9d71.w * loc_220d1;
                     }
                     else
                     {
-                        loc_1b9bd = loc_827d2.w;
+                        loc_561f9 = loc_f9d71.w;
                     }
-                    arg_59019 = loc_1b9bd;
+                    arg_59019 = loc_561f9;
                     return;
                 }
                 else
                 {
-                    highp vec4 loc_6b6c3 = texture(s_txBuffer1, (v_Additional.xy * UVTransform[1].zw) + UVTransform[1].xy);
-                    highp vec3 loc_e6d23 = Data_PS[loc_86ecd].xyz;
+                    highp vec2 loc_3860d = v_Additional.xy;
+                    highp float loc_ca5f3 = loc_3860d.x;
+                    highp float loc_aff75 = loc_3860d.y;
+                    highp vec2 loc_da2fb = vec2(loc_ca5f3, 1.0 - loc_aff75);
+                    loc_3860d = loc_da2fb;
+                    highp vec4 loc_8137b = texture(s_txBuffer1, vec2(((loc_da2fb * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((loc_da2fb * UVTransform[1].zw) + UVTransform[1].xy).y));
+                    highp vec3 loc_e6d23 = Data_PS[loc_b8d33].xyz;
                     highp float loc_b9e21 = ((0.2125999927520751953125 * loc_e6d23.x) + (0.715200006961822509765625 * loc_e6d23.y)) + (0.072200000286102294921875 * loc_e6d23.z);
                     highp float loc_acca2;
                     if ((loc_026da & 1) != 0)
@@ -217,7 +230,7 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                     {
                         loc_acca2 = loc_b9e21;
                     }
-                    arg_cdc63 = Data_PS[loc_86ecd] * pow(abs(loc_6b6c3.x), max(abs(1.4500000476837158203125 - loc_acca2), 9.9999997473787516355514526367188e-05));
+                    arg_ad1a5 = Data_PS[loc_b8d33] * pow(abs(loc_8137b.x), max(abs(1.4500000476837158203125 - loc_acca2), 9.9999997473787516355514526367188e-05));
                 }
                 loc_1b304 = 1.0;
                 loc_b5f11 = 1.0;
@@ -228,8 +241,13 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                 highp float loc_e4a1b;
                 if (18 == loc_1d698)
                 {
-                    highp vec4 loc_c0ddc = texture(s_txBuffer2, (v_Additional.xy * UVTransform[2].zw) + UVTransform[2].xy);
-                    highp vec3 loc_74724 = Data_PS[loc_86ecd].xyz;
+                    highp vec2 loc_20fff = v_Additional.xy;
+                    highp float loc_65729 = loc_20fff.x;
+                    highp float loc_6a9b9 = loc_20fff.y;
+                    highp vec2 loc_83fdd = vec2(loc_65729, 1.0 - loc_6a9b9);
+                    loc_20fff = loc_83fdd;
+                    highp vec4 loc_0e4a1 = texture(s_txBuffer2, vec2(((loc_83fdd * UVTransform[2].zw) + UVTransform[2].xy).x, 1.0 - ((loc_83fdd * UVTransform[2].zw) + UVTransform[2].xy).y));
+                    highp vec3 loc_74724 = Data_PS[loc_b8d33].xyz;
                     highp float loc_2dc04 = ((0.2125999927520751953125 * loc_74724.x) + (0.715200006961822509765625 * loc_74724.y)) + (0.072200000286102294921875 * loc_74724.z);
                     highp float loc_6fa9f;
                     if ((loc_026da & 1) != 0)
@@ -242,7 +260,7 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                     {
                         loc_6fa9f = loc_2dc04;
                     }
-                    arg_cdc63 = Data_PS[loc_86ecd] * pow(abs(smoothstep((-0.501960813999176025390625) / arg_534f4.z, 0.501960813999176025390625 / arg_534f4.z, (loc_c0ddc.x * 7.96875) - 3.984375)), max(abs(1.4500000476837158203125 - loc_6fa9f), 9.9999997473787516355514526367188e-05));
+                    arg_ad1a5 = Data_PS[loc_b8d33] * pow(abs(smoothstep((-0.501960813999176025390625) / arg_534f4.z, 0.501960813999176025390625 / arg_534f4.z, (loc_0e4a1.x * 7.96875) - 3.984375)), max(abs(1.4500000476837158203125 - loc_6fa9f), 9.9999997473787516355514526367188e-05));
                     loc_e4a1b = 1.0;
                     loc_78c7e = 1.0;
                 }
@@ -252,8 +270,13 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                     highp float loc_a06ec;
                     if (22 == loc_1d698)
                     {
-                        highp vec4 loc_8e7fa = texture(s_txBuffer2, (v_Additional.xy * UVTransform[2].zw) + UVTransform[2].xy);
-                        highp vec3 loc_f1b10 = Data_PS[loc_86ecd].xyz;
+                        highp vec2 loc_d32a2 = v_Additional.xy;
+                        highp float loc_0587e = loc_d32a2.x;
+                        highp float loc_347fa = loc_d32a2.y;
+                        highp vec2 loc_f807e = vec2(loc_0587e, 1.0 - loc_347fa);
+                        loc_d32a2 = loc_f807e;
+                        highp vec4 loc_b664d = texture(s_txBuffer2, vec2(((loc_f807e * UVTransform[2].zw) + UVTransform[2].xy).x, 1.0 - ((loc_f807e * UVTransform[2].zw) + UVTransform[2].xy).y));
+                        highp vec3 loc_f1b10 = Data_PS[loc_b8d33].xyz;
                         highp float loc_36ed2 = ((0.2125999927520751953125 * loc_f1b10.x) + (0.715200006961822509765625 * loc_f1b10.y)) + (0.072200000286102294921875 * loc_f1b10.z);
                         highp float loc_fcac9;
                         if ((loc_026da & 1) != 0)
@@ -266,17 +289,22 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                         {
                             loc_fcac9 = loc_36ed2;
                         }
-                        arg_cdc63 = Data_PS[loc_86ecd] * pow(abs(smoothstep(0.5 - arg_534f4.z, 0.5 + arg_534f4.z, loc_8e7fa.x)), max(abs(1.4500000476837158203125 - loc_fcac9), 9.9999997473787516355514526367188e-05));
+                        arg_ad1a5 = Data_PS[loc_b8d33] * pow(abs(smoothstep(0.5 - arg_534f4.z, 0.5 + arg_534f4.z, loc_b664d.x)), max(abs(1.4500000476837158203125 - loc_fcac9), 9.9999997473787516355514526367188e-05));
                         loc_a06ec = 1.0;
                         loc_aef2c = 1.0;
                     }
                     else
                     {
                         highp float loc_4aa8a;
-                        highp float loc_b79c6;
+                        highp float loc_c36b4;
                         if (30 == loc_1d698)
                         {
-                            loc_b79c6 = texture(s_txBuffer, (v_Additional.xy * UVTransform[0].zw) + UVTransform[0].xy).x;
+                            highp vec2 loc_d7024 = v_Additional.xy;
+                            highp float loc_7c2cb = loc_d7024.x;
+                            highp float loc_76ed8 = loc_d7024.y;
+                            highp vec2 loc_66ab2 = vec2(loc_7c2cb, 1.0 - loc_76ed8);
+                            loc_d7024 = loc_66ab2;
+                            loc_c36b4 = texture(s_txBuffer, vec2(((loc_66ab2 * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((loc_66ab2 * UVTransform[0].zw) + UVTransform[0].xy).y)).x;
                             loc_4aa8a = 1.0;
                         }
                         else
@@ -285,10 +313,15 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                             highp float loc_5b470;
                             if (34 == loc_1d698)
                             {
-                                arg_cdc63 = texture(s_txBuffer, (((Data_PS[loc_86ecd].zw * vec2(fract(v_Additional.xy).x, 1.0 - fract(v_Additional.xy).y)) + Data_PS[loc_86ecd].xy) * UVTransform[0].zw) + UVTransform[0].xy);
+                                highp vec2 loc_00f4e = (Data_PS[loc_b8d33].zw * vec2(fract(v_Additional.xy).x, 1.0 - fract(v_Additional.xy).y)) + Data_PS[loc_b8d33].xy;
+                                highp float loc_7bb88 = loc_00f4e.x;
+                                highp float loc_02a1a = loc_00f4e.y;
+                                highp vec2 loc_47f6e = vec2(loc_7bb88, 1.0 - loc_02a1a);
+                                loc_00f4e = loc_47f6e;
+                                arg_ad1a5 = texture(s_txBuffer, vec2(((loc_47f6e * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((loc_47f6e * UVTransform[0].zw) + UVTransform[0].xy).y));
                                 if ((loc_026da & 2) != 0)
                                 {
-                                    highp vec3 loc_b0d06 = arg_cdc63.xyz;
+                                    highp vec3 loc_b0d06 = arg_ad1a5.xyz;
                                     highp float loc_66b11;
                                     func_b96d4(loc_b0d06, loc_66b11);
                                     highp float loc_383e0;
@@ -296,13 +329,13 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                                     highp float loc_aade2;
                                     func_98fd5(loc_b0d06, loc_aade2);
                                     highp vec3 loc_72c9d = vec3(loc_66b11, loc_383e0, loc_aade2);
-                                    arg_cdc63 = vec4(loc_72c9d.x, loc_72c9d.y, loc_72c9d.z, arg_cdc63.w);
+                                    arg_ad1a5 = vec4(loc_72c9d.x, loc_72c9d.y, loc_72c9d.z, arg_ad1a5.w);
                                 }
                                 else
                                 {
                                     if ((loc_026da & 16) != 0)
                                     {
-                                        highp vec3 loc_b55ea = arg_cdc63.xyz;
+                                        highp vec3 loc_b55ea = arg_ad1a5.xyz;
                                         highp float loc_1f68c;
                                         func_438fb(loc_b55ea, loc_1f68c);
                                         highp float loc_5ed73;
@@ -310,30 +343,30 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                                         highp float loc_1c5b0;
                                         func_8e34f(loc_b55ea, loc_1c5b0);
                                         highp vec3 loc_29eec = vec3(loc_1f68c, loc_5ed73, loc_1c5b0);
-                                        arg_cdc63 = vec4(loc_29eec.x, loc_29eec.y, loc_29eec.z, arg_cdc63.w);
+                                        arg_ad1a5 = vec4(loc_29eec.x, loc_29eec.y, loc_29eec.z, arg_ad1a5.w);
                                     }
                                 }
                                 highp float loc_a6166;
                                 if ((int(loc_d549b.y) & 1) != 0)
                                 {
-                                    loc_a6166 = 1.0 - arg_cdc63.w;
+                                    loc_a6166 = 1.0 - arg_ad1a5.w;
                                 }
                                 else
                                 {
-                                    loc_a6166 = arg_cdc63.w;
+                                    loc_a6166 = arg_ad1a5.w;
                                 }
-                                arg_cdc63.w = loc_a6166;
+                                arg_ad1a5.w = loc_a6166;
                                 highp float loc_d5391;
                                 if ((int(loc_d549b.y) & 4) != 0)
                                 {
-                                    highp vec3 loc_cb1ef = arg_cdc63.xyz;
+                                    highp vec3 loc_cb1ef = arg_ad1a5.xyz;
                                     loc_d5391 = clamp(((0.2125999927520751953125 * loc_cb1ef.x) + (0.715200006961822509765625 * loc_cb1ef.y)) + (0.072200000286102294921875 * loc_cb1ef.z), 0.0, 1.0);
                                 }
                                 else
                                 {
-                                    loc_d5391 = arg_cdc63.w;
+                                    loc_d5391 = arg_ad1a5.w;
                                 }
-                                arg_cdc63.w = loc_d5391;
+                                arg_ad1a5.w = loc_d5391;
                                 highp float loc_a8c62;
                                 if ((int(loc_d549b.y) & 2) != 0)
                                 {
@@ -341,9 +374,9 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                                 }
                                 else
                                 {
-                                    loc_a8c62 = arg_cdc63.w;
+                                    loc_a8c62 = arg_ad1a5.w;
                                 }
-                                arg_cdc63.w = loc_a8c62;
+                                arg_ad1a5.w = loc_a8c62;
                                 loc_5b470 = arg_534f4.w * clamp(arg_534f4.z, 0.0, 1.0);
                                 loc_54d5f = ((int(loc_d549b.y) & 4) != 0) ? 0.0 : 1.0;
                             }
@@ -352,10 +385,10 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
                                 loc_5b470 = 1.0;
                                 loc_54d5f = 1.0;
                             }
-                            loc_b79c6 = loc_5b470;
+                            loc_c36b4 = loc_5b470;
                             loc_4aa8a = loc_54d5f;
                         }
-                        loc_a06ec = loc_b79c6;
+                        loc_a06ec = loc_c36b4;
                         loc_aef2c = loc_4aa8a;
                     }
                     loc_e4a1b = loc_a06ec;
@@ -367,44 +400,47 @@ void func_3352a(inout highp vec4 arg_cdc63, inout highp vec4 arg_534f4, inout hi
             loc_1387f = loc_1b304;
             loc_df533 = loc_b5f11;
         }
-        loc_ded6f = loc_1387f;
+        loc_39dd0 = loc_1387f;
         loc_d1818 = loc_df533;
     }
     if ((loc_026da & 64) != 0)
     {
-        highp vec3 loc_6d9b9 = arg_cdc63.xyz * arg_cdc63.w;
-        arg_cdc63 = vec4(loc_6d9b9.x, loc_6d9b9.y, loc_6d9b9.z, arg_cdc63.w);
+        highp vec3 loc_6d9b9 = arg_ad1a5.xyz * arg_ad1a5.w;
+        arg_ad1a5 = vec4(loc_6d9b9.x, loc_6d9b9.y, loc_6d9b9.z, arg_ad1a5.w);
     }
-    highp float loc_6ef4a;
+    highp float loc_96834;
     if (loc_256e2 != (-1))
     {
-        highp vec4 loc_e0d71 = arg_cdc63;
+        highp vec4 loc_c092d = arg_ad1a5;
         highp vec4 loc_71579 = vec4(0.0);
-        loc_e0d71.w *= loc_ded6f;
-        loc_71579.x = dot(loc_e0d71, Data_PS[loc_256e2]);
-        loc_71579.y = dot(loc_e0d71, Data_PS[loc_256e2 + 1]);
-        loc_71579.z = dot(loc_e0d71, Data_PS[loc_256e2 + 2]);
-        loc_71579.w = dot(loc_e0d71, Data_PS[loc_256e2 + 3]);
+        highp float loc_855af = loc_c092d.w;
+        highp float loc_13d7c = max(loc_855af, 9.9999997473787516355514526367188e-06);
+        highp vec4 loc_4647f = vec4(arg_ad1a5.xyz / vec3(loc_13d7c), loc_13d7c);
+        loc_c092d = loc_4647f;
+        loc_71579.x = dot(loc_4647f, Data_PS[loc_256e2]);
+        loc_71579.y = dot(loc_4647f, Data_PS[loc_256e2 + 1]);
+        loc_71579.z = dot(loc_4647f, Data_PS[loc_256e2 + 2]);
+        loc_71579.w = dot(loc_4647f, Data_PS[loc_256e2 + 3]);
         highp vec4 loc_80f8e = loc_71579;
         highp vec4 loc_1d7c0 = loc_80f8e + Data_PS[loc_256e2 + 4];
         loc_71579 = loc_1d7c0;
         highp vec3 loc_ff254 = loc_1d7c0.xyz;
         loc_71579.w = mix(clamp(((0.2125999927520751953125 * loc_ff254.x) + (0.715200006961822509765625 * loc_ff254.y)) + (0.072200000286102294921875 * loc_ff254.z), 0.0, 1.0), loc_71579.w, loc_d1818);
-        highp float loc_dec07 = loc_71579.w;
+        highp float loc_c7af3 = loc_71579.w;
         loc_71579.w = 1.0;
-        arg_cdc63 = loc_71579;
-        loc_6ef4a = loc_dec07;
+        arg_ad1a5 = loc_71579;
+        loc_96834 = loc_39dd0 * loc_c7af3;
     }
     else
     {
-        loc_6ef4a = loc_ded6f;
+        loc_96834 = loc_39dd0;
     }
-    arg_59019 = loc_6ef4a;
+    arg_59019 = loc_96834;
 }
 void main() {
     highp vec4 var_844c6 = v_Additional;
     highp vec4 var_b0b67 = vec4(0.0);
     highp float var_beb41;
-    func_3352a(var_b0b67, var_844c6, var_beb41);
+    func_4a7ec(var_b0b67, var_844c6, var_beb41);
     bgfx_FragColor = var_b0b67 * var_beb41;
 }

@@ -18,7 +18,6 @@
 * Uniforms:
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 SkyColor;
 * - uniform mat4 UV0Transform;
 */

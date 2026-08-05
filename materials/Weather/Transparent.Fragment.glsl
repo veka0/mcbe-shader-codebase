@@ -35,7 +35,6 @@
 * - uniform vec4 FogColor;
 * - uniform vec4 LightDiffuseColorAndIlluminance;
 * - uniform vec4 LightWorldSpaceDirection;
-* - uniform vec4 MaterialID;
 * - uniform vec4 OcclusionHeightOffset;
 * - uniform vec4 PositionBaseOffset;
 * - uniform vec4 PositionForwardOffset;
