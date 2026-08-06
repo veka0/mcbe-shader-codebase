@@ -187,6 +187,7 @@ void main() {
     highp vec3 var_f710c = mix((var_9d0de.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
     highp vec4 var_89833 = vec4(var_f710c.x, var_f710c.y, var_f710c.z, var_db6c1.w);
     highp vec4 var_39c01 = vec4(var_f710c, var_89833.w);
+    highp vec4 var_893a8 = BlockLightColor;
     highp vec4 var_6bfdc = vec4(var_39c01.x, var_39c01.y, var_39c01.z, var_39c01.w);
     highp float var_1d2b2;
     func_9b13f(var_1d2b2);
@@ -234,9 +235,19 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_92e39 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uvec2 var_ac5a2 = uvec2(127u, 0u);
-    bgfx_FragData0 = uvec4((var_ac5a2.x << 8u) | var_ac5a2.y, var_92e39.x, var_92e39.y, uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0));
+    uvec2 var_ef8ed = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    uint var_f94da = uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0);
+    uint var_d3959;
+    if (var_893a8.w != 0.0)
+    {
+        var_d3959 = var_f94da | 256u;
+    }
+    else
+    {
+        var_d3959 = var_f94da;
+    }
+    uvec2 var_375fd = uvec2(127u, 0u);
+    bgfx_FragData0 = uvec4((var_375fd.x << 8u) | var_375fd.y, var_ef8ed.x, var_ef8ed.y, var_d3959);
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }

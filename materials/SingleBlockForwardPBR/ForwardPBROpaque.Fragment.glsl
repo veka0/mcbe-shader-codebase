@@ -854,9 +854,9 @@ void func_593c8(inout highp vec3 arg_ca7c6, inout highp vec3 arg_951a8, inout ui
     func_33953(loc_58bb3, loc_5d636);
     arg_e5233 = loc_5d636;
 }
-void func_f1037(inout highp vec3 arg_1c74c, inout highp float arg_19032, inout highp vec3 arg_ec4b7, inout highp vec4 arg_85834) {
-    highp vec3 loc_31e57 = (arg_1c74c * BlockBaseAmbientLightColorIntensity.w) * BlockLightIndirectSpecularIntensity.x;
-    highp vec3 loc_cfa08 = mix(AmbientLightParams.xyz * AmbientLightParams.w, loc_31e57, vec3(clamp(dot(loc_31e57, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)), 0.0, 1.0))) * arg_19032;
+void func_d903a(inout highp vec4 arg_d4081, inout highp float arg_19032, inout highp vec3 arg_ec4b7, inout highp vec4 arg_85834) {
+    highp vec3 loc_94d26 = (arg_d4081.xyz * BlockBaseAmbientLightColorIntensity.w) * BlockLightIndirectSpecularIntensity.x;
+    highp vec3 loc_cfa08 = mix(AmbientLightParams.xyz * AmbientLightParams.w, loc_94d26, vec3(clamp(dot(loc_94d26, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)), 0.0, 1.0))) * arg_19032;
     if (dot(arg_ec4b7, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)) >= dot(loc_cfa08, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875)))
     {
         arg_85834 = vec4(0.0);
@@ -920,17 +920,18 @@ void main() {
     highp vec3 var_ba420 = var_e14aa.xyz;
     highp vec3 var_a4bd4 = (u_view * var_e14aa).xyz;
     highp vec3 var_f88c4 = BlockLightColor.xyz;
-    highp vec3 var_1a27a;
+    highp vec3 var_bc571;
     if ((((var_f88c4.x + var_f88c4.y) + var_f88c4.z) < 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x > 9.9999997473787516355514526367188e-05))
     {
         highp vec4 var_0bc6f = vec4(0.0);
         highp float var_88ce0 = TileLightIntensity.x * TileLightIntensity.x;
-        var_1a27a = clamp(vec3(var_88ce0 + (var_0bc6f.x * var_0bc6f.w), (var_88ce0 * ((((var_88ce0 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_88ce0 * (((var_88ce0 * var_88ce0) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        var_bc571 = clamp(vec3(var_88ce0 + (var_0bc6f.x * var_0bc6f.w), (var_88ce0 * ((((var_88ce0 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_88ce0 * (((var_88ce0 * var_88ce0) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_1a27a = BlockLightColor.xyz;
+        var_bc571 = BlockLightColor.xyz;
     }
+    highp vec4 var_a622c = vec4(var_bc571, 0.0);
     highp vec3 var_dd12c = vec3(0.039999999105930328369140625 * (1.0 - var_8bffd)) + (var_2fed5 * var_8bffd);
     bool var_ff669 = CausticsParameters.x != 0.0;
     bool var_94c07;
@@ -981,8 +982,19 @@ void main() {
         var_54ed7 = vec3(0.0);
         var_628e2 = vec3(0.0);
     }
-    highp vec3 var_806c3;
-    if (DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0)
+    highp vec4 var_a7452 = var_a622c;
+    bool var_8b530 = DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0;
+    bool var_c1fe5;
+    if (var_8b530)
+    {
+        var_c1fe5 = !(var_a7452.w != 0.0);
+    }
+    else
+    {
+        var_c1fe5 = var_8b530;
+    }
+    highp vec3 var_91ddb;
+    if (var_c1fe5)
     {
         highp vec3 var_6db9a = ((v_worldPos - WorldOrigin.xyz) - vec3(0.5)) + (var_ba420 * 0.20000000298023223876953125);
         ivec3 var_42d37 = ivec3(floor(var_6db9a));
@@ -1244,11 +1256,11 @@ void main() {
         {
             var_138a7 = vec3(0.0);
         }
-        var_806c3 = var_138a7;
+        var_91ddb = var_138a7;
     }
     else
     {
-        var_806c3 = var_1a27a;
+        var_91ddb = var_a622c.xyz;
     }
     highp vec4 var_b2502 = SkyAmbientLightColorIntensity;
     highp float var_39cc3 = TileLightIntensity.y * TileLightIntensity.y;
@@ -1401,7 +1413,7 @@ void main() {
         if (DiffuseSpecularEmissiveAmbientTermToggles.w != 0.0)
         {
             highp vec4 var_26642;
-            func_f1037(var_1a27a, var_8bffd, var_713f8, var_26642);
+            func_d903a(var_a622c, var_8bffd, var_713f8, var_26642);
             highp vec4 var_fb83f = var_26642;
             highp vec3 var_5279b;
             if (var_fb83f.w == 1.0)
@@ -1455,7 +1467,7 @@ void main() {
     {
         var_5c002 = vec3(0.0);
     }
-    highp vec3 var_b50b0 = vec4(var_7256d.xyz + (mix((((((var_2fed5 * (1.0 - var_8bffd)) * max((var_806c3 * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_39cc3 * var_39cc3) * TileLightIntensity.y, (TileLightIntensity.y * TileLightIntensity.y) * TileLightIntensity.y, CameraLightIntensity.y)) * var_b2502.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_54ed7) + var_628e2) + (((mix(var_2fed5, vec3(dot(var_2fed5, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_7be16)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_4e237.xyz, vec3(var_a10db.w)) * var_7dd8d.w), 1.0).xyz + var_5c002;
+    highp vec3 var_b50b0 = vec4(var_7256d.xyz + (mix((((((var_2fed5 * (1.0 - var_8bffd)) * max((var_91ddb * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_39cc3 * var_39cc3) * TileLightIntensity.y, (TileLightIntensity.y * TileLightIntensity.y) * TileLightIntensity.y, CameraLightIntensity.y)) * var_b2502.w), AmbientLightParams.xyz * AmbientLightParams.w)) * DiffuseSpecularEmissiveAmbientTermToggles.w) + var_54ed7) + var_628e2) + (((mix(var_2fed5, vec3(dot(var_2fed5, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.y)) * DiffuseSpecularEmissiveAmbientTermToggles.z) * vec3(var_7be16)) * EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution.x), var_4e237.xyz, vec3(var_a10db.w)) * var_7dd8d.w), 1.0).xyz + var_5c002;
     highp vec3 var_d523d;
     if (PreExposureEnabled.x > 0.0)
     {
