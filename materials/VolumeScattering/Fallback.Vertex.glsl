@@ -10,8 +10,8 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2DArray s_LightingBuffer;
-* - uniform lowp sampler2DArray s_ScatteringBuffer;
+* - uniform lowp sampler2DArray s_ScatteringBufferIn;
+* - uniform lowp sampler2DArray s_ScatteringBufferOut;
 *
 * Uniforms:
 * - uniform vec4 VolumeDimensions;

@@ -27,19 +27,18 @@
 * - uniform lowp sampler2D s_BrdfLUT;
 * - uniform lowp sampler2DArray s_CascadedShadowBuffer;
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - uniform lowp sampler2DArray s_CurrentLightingBuffer;
-* - layout(binding = 12, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - layout(binding = 11, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
 * - uniform lowp sampler2D s_PointLightShadowTextureAtlas;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
-* - uniform highp sampler2DArray s_PreviousLightingBuffer;
+* - uniform lowp sampler2DArray s_ScatteringBufferOut;
 * - uniform lowp sampler2D s_ScreenSpaceWaterBackFaceDepthAndNormal;
 * - uniform lowp sampler2D s_ScreenSpaceWaterFrontFaceDepthAndNormal;
 * - uniform lowp sampler3D s_SkyAmbientSamples;
 * - uniform highp samplerCubeArray s_SpecularIBLRecords;
-* - layout(binding = 13, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
-* - layout(binding = 14, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
-* - layout(binding = 15, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
-* - layout(binding = 16, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
+* - layout(binding = 12, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 13, std430) buffer s_zBiomeInfoBufferBuffer { BiomeInfo s_zBiomeInfoBuffer[]; };
+* - layout(binding = 14, std430) buffer s_zLightLookupArrayBuffer { LightData s_zLightLookupArray[]; };
+* - layout(binding = 15, std430) buffer s_zLightsBuffer { Light s_zLights[]; };
 *
 * Uniforms:
 * - uniform vec4 AirAlbedoExtinction;
@@ -80,7 +79,6 @@
 * - uniform vec4 HenyeyGreensteinG;
 * - uniform vec4 IBLParameters;
 * - uniform vec4 IBLSkyFadeParameters;
-* - uniform vec4 JitterOffset;
 * - uniform vec4 LastSpecularIBLIdx;
 * - uniform vec4 ManhattanDistAttenuationEnabled;
 * - uniform vec4 MinAmbientValue;
@@ -97,7 +95,6 @@
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
 * - uniform vec4 PreExposureEnabled;
-* - uniform mat4 PrevInvProj;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 RenderChunkFogAlpha;
@@ -109,14 +106,12 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
-* - uniform vec4 TemporalSettings;
 * - uniform vec4 Time;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
-* - uniform vec4 VolumeShadowSettings;
 * - uniform vec4 WaterAlbedoExtinction;
 * - uniform vec4 WaterExtinctionCoefficients;
 * - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;

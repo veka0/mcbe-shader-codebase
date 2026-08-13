@@ -16,6 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2DArray s_CascadedShadowBufferOut;
+* - uniform highp sampler2DArray s_PreviousCascadedShadowBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 *
 * Uniforms:
@@ -38,9 +39,11 @@
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightNdLFloor;
+* - uniform mat4 PrevInvProj;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
+* - uniform vec4 TemporalSettings;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
@@ -56,12 +59,15 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 4) in;
 #ifdef THREAD_LIMIT__NATIVE
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #endif
-layout(location = 0, binding = 1, r32f) uniform writeonly highp image2DArray s_CascadedShadowBufferOut;
+layout(location = 0, binding = 2, r32f) uniform writeonly highp image2DArray s_CascadedShadowBufferOut;
+uniform highp sampler2DArray s_PreviousCascadedShadowBuffer;
 uniform highp sampler2DArray s_ShadowCascades;
 uniform mat4 CascadesShadowProj[8];
 uniform mat4 CloudShadowProj;
 uniform mat4 PlayerShadowProj;
+uniform mat4 PrevInvProj;
 uniform mat4 u_invViewProj;
+uniform mat4 u_prevViewProj;
 uniform mat4 u_proj;
 uniform vec4 CascadesParameters[8];
 uniform vec4 CascadesPerSet;
@@ -72,9 +78,11 @@ uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextur
 uniform vec4 JitterOffset;
 uniform vec4 QuantizationParameters;
 uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
+uniform vec4 TemporalSettings;
 uniform vec4 VolumeDimensions;
 uniform vec4 VolumeNearFar;
 uniform vec4 VolumeShadowSettings;
+uniform vec4 u_prevWorldPosOffset;
 void func_a0b5c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     vec4 loc_12ebe = PlayerShadowProj * vec4(arg_9b0e1, 1.0);
     loc_12ebe.z -= CascadesParameters[0].y;
@@ -154,15 +162,15 @@ void func_a0b5c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     }
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
-void func_2b6bc() {
-    int loc_60377 = int(GlobalInvocationID.x);
-    int loc_25319 = int(GlobalInvocationID.y);
-    int loc_b2505 = int(GlobalInvocationID.z);
-    if (((loc_60377 >= int(VolumeDimensions.x)) || (loc_25319 >= int(VolumeDimensions.y))) || (loc_b2505 >= int(VolumeDimensions.z)))
+void func_61e30() {
+    int loc_a77cc = int(GlobalInvocationID.x);
+    int loc_7b57e = int(GlobalInvocationID.y);
+    int loc_3a001 = int(GlobalInvocationID.z);
+    if (((loc_a77cc >= int(VolumeDimensions.x)) || (loc_7b57e >= int(VolumeDimensions.y))) || (loc_3a001 >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_cfbf6 = ((vec3(float(loc_60377), float(loc_25319), float(loc_b2505)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_cfbf6 = ((vec3(float(loc_a77cc), float(loc_7b57e), float(loc_3a001)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
     vec3 loc_777c2 = loc_cfbf6;
     vec2 loc_b796d = VolumeNearFar.xy;
     float loc_fcce6 = (exp(4.0 * loc_777c2.z) - 1.0) * 0.0186573602259159088134765625;
@@ -170,7 +178,7 @@ void func_2b6bc() {
     vec4 loc_e8a8c = u_invViewProj * vec4((loc_cfbf6.xy * 2.0) - vec2(1.0), loc_fbb16.z / loc_fbb16.w, 1.0);
     vec4 loc_dc33a = loc_e8a8c;
     vec3 loc_65cad = loc_e8a8c.xyz / vec3(loc_dc33a.w);
-    float loc_0eb9b;
+    float loc_459f6;
     if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x) == 1)
     {
         int loc_40b65 = int(dot(clamp(CascadesPerSet, vec4(0.0), vec4(1.0)), vec4(1.0)));
@@ -338,15 +346,42 @@ void func_2b6bc() {
         {
             loc_43108 = 1.0;
         }
-        loc_0eb9b = mix(min(loc_edd0a, min(loc_13448, loc_43108)), 1.0, smoothstep(max(0.0, ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y - min(ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y * 0.100000001490116119384765625, 8.0)), ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y, -0.0));
+        loc_459f6 = mix(min(loc_edd0a, min(loc_13448, loc_43108)), 1.0, smoothstep(max(0.0, ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y - min(ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y * 0.100000001490116119384765625, 8.0)), ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.y, -0.0));
     }
     else
     {
-        loc_0eb9b = 1.0;
+        loc_459f6 = 1.0;
     }
-    imageStore(s_CascadedShadowBufferOut, ivec3(loc_60377, loc_25319, loc_b2505), vec4(loc_0eb9b, 0.0, 0.0, 0.0));
+    if (TemporalSettings.x != 0.0)
+    {
+        vec3 loc_dfafd = (vec3(float(loc_a77cc), float(loc_7b57e), float(loc_3a001)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_e9300 = loc_dfafd;
+        vec2 loc_9d396 = VolumeNearFar.xy;
+        float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
+        vec4 loc_62495 = u_proj * vec4(0.0, 0.0, -(((1.0 - loc_fcd55) * loc_9d396.x) + (loc_fcd55 * loc_9d396.y)), 1.0);
+        vec4 loc_d7f13 = u_invViewProj * vec4((loc_dfafd.xy * 2.0) - vec2(1.0), loc_62495.z / loc_62495.w, 1.0);
+        vec4 loc_d1c9b = loc_d7f13;
+        vec4 loc_bf151 = u_prevViewProj * vec4((loc_d7f13.xyz / vec3(loc_d1c9b.w)) - u_prevWorldPosOffset.xyz, 1.0);
+        vec4 loc_d9ce7 = loc_bf151;
+        vec3 loc_ec028 = loc_bf151.xyz / vec3(loc_d9ce7.w);
+        vec2 loc_1fa2a = VolumeNearFar.xy;
+        vec2 loc_eb216 = (loc_ec028.xy + vec2(1.0)) * 0.5;
+        vec4 loc_3fd1f = PrevInvProj * vec4(loc_ec028, 1.0);
+        float loc_77774 = loc_eb216.x;
+        vec3 loc_4a1a9 = vec3(loc_77774, loc_eb216.y, log((53.598148345947265625 * ((((-loc_3fd1f.z) / loc_3fd1f.w) - loc_1fa2a.x) / (loc_1fa2a.y - loc_1fa2a.x))) + 1.0) * 0.25);
+        vec3 loc_3ffa7 = VolumeDimensions.xyz * loc_4a1a9;
+        ivec3 loc_b3099 = ivec3(VolumeDimensions.xyz);
+        vec3 loc_96ba4 = loc_4a1a9;
+        float loc_68f82 = (loc_96ba4.z * float(loc_b3099.z)) - 0.5;
+        int loc_3e42f = clamp(int(loc_68f82), 0, loc_b3099.z - 2);
+        imageStore(s_CascadedShadowBufferOut, ivec3(loc_a77cc, loc_7b57e, loc_3a001), vec4(mix(loc_459f6, mix(textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f)), 0.0), textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f + 1)), 0.0), vec4(clamp(loc_68f82 - float(loc_3e42f), 0.0, 1.0))).x, mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_3ffa7, vec3(0.0), VolumeDimensions.xyz) - loc_3ffa7) * TemporalSettings.y, 0.0, 1.0))), 0.0, 0.0, 0.0));
+    }
+    else
+    {
+        imageStore(s_CascadedShadowBufferOut, ivec3(loc_a77cc, loc_7b57e, loc_3a001), vec4(loc_459f6, 0.0, 0.0, 0.0));
+    }
 }
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_2b6bc();
+    func_61e30();
 }

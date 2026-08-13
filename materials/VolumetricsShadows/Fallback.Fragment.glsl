@@ -16,6 +16,7 @@
 *
 * Buffers:
 * - uniform lowp sampler2DArray s_CascadedShadowBufferOut;
+* - uniform highp sampler2DArray s_PreviousCascadedShadowBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
 *
 * Uniforms:
@@ -38,9 +39,11 @@
 * - uniform vec4 NdLFloor;
 * - uniform mat4 PlayerShadowProj;
 * - uniform vec4 PointLightNdLFloor;
+* - uniform mat4 PrevInvProj;
 * - uniform vec4 QuantizationParameters;
 * - uniform vec4 QuantizationPrecisionRoundingParameters;
 * - uniform vec4 ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength;
+* - uniform vec4 TemporalSettings;
 * - uniform vec4 VolumeDimensions;
 * - uniform vec4 VolumeNearFar;
 * - uniform vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
