@@ -150,10 +150,7 @@ in vec4 i_data3;
 out vec3 v_bitangent;
 out vec4 v_clipPosition;
 out vec4 v_color0;
-out vec2 v_ditheringAndMaskTinting;
 flat out int v_frontFacing;
-out vec3 v_lightColor;
-out vec2 v_lightmapUV;
 out vec3 v_normal;
 flat out int v_pbrTextureId;
 out vec3 v_tangent;
@@ -203,10 +200,7 @@ void main() {
 #ifdef RENDER_AS_BILLBOARDS__ON
     v_color0 = vec4(1.0);
 #endif
-    v_ditheringAndMaskTinting = vec2(0.0);
     v_frontFacing = 0;
-    v_lightColor = vec3(0.0);
-    v_lightmapUV = vec2(0.0);
     v_normal = vec3(0.0);
     v_pbrTextureId = 0;
     v_tangent = vec3(0.0);

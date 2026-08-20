@@ -4,14 +4,13 @@
 * Available Macros:
 *
 * Passes:
-* - DO_INDIRECT_SPECULAR_SHADING_DUAL_TARGET_PASS (not used)
-* - DO_INDIRECT_SPECULAR_SHADING_SINGLE_TARGET_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
 * - DO_INDIRECT_SPECULAR_UPSCALE_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
 * Mode:
-* - MODE__DEFAULT (not used)
-* - MODE__MIXED_RES (not used)
+* - MODE__DEFAULT
+* - MODE__MIXED_RES
 *
 * Upscaling:
 * - UPSCALING__OFF (not used)
@@ -135,7 +134,9 @@ uniform highp vec4 QuantizationParameters;
 uniform highp vec4 QuantizationPrecisionRoundingParameters;
 uniform highp vec4 RenderChunkFogAlpha;
 uniform highp vec4 SSRParameters;
+#ifdef MODE__MIXED_RES
 uniform highp vec4 SceneResolutionAndRecipResolution;
+#endif
 uniform highp vec4 SubPixelOffset;
 uniform highp vec4 ViewportScale;
 uniform highp vec4 VolumeDimensions;
@@ -145,7 +146,6 @@ uniform highp vec4 WorldOrigin;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
-layout(location = 1) out highp vec4 bgfx_FragData1;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -212,12 +212,17 @@ void func_769bb(inout highp vec4 arg_d4081, inout highp float arg_19032, inout h
     arg_85834 = vec4(loc_4c5f3, 1.0);
 }
 void main() {
+#ifdef MODE__DEFAULT
+    highp vec4 var_b7ade = texture(s_Normal, v_texcoord0.xy);
+    highp vec4 var_fe231 = texture(s_SceneDepth, v_texcoord0.xy);
+#endif
+#ifdef MODE__MIXED_RES
     highp vec2 var_c8bfb = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
-    highp vec4 var_af032 = texture(s_Normal, var_c8bfb.xy);
-    highp vec2 var_a5f1f = var_af032.xy;
+    highp vec4 var_b7ade = texture(s_Normal, var_c8bfb.xy);
     highp vec2 var_0d4a8 = var_c8bfb.xy;
-    highp vec4 var_4435a = texture(s_SceneDepth, var_c8bfb.xy);
-    highp float var_48a47 = (var_4435a.x * 2.0) - 1.0;
+    highp vec4 var_fe231 = texture(s_SceneDepth, var_c8bfb.xy);
+#endif
+    highp float var_48a47 = (var_fe231.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_48a47, 1.0);
     highp mat4 var_4fa47 = u_invProj;
     highp mat4 var_498b7 = u_invProj;
@@ -255,8 +260,8 @@ void main() {
     highp vec3 var_76063 = normalize(round(normalize((u_invView * vec4(normalize(cross(normalize(dFdx(var_c6246)), normalize(dFdy(var_c6246)))), 0.0)).xyz) / vec3(QuantizationPrecisionRoundingParameters.x)) * QuantizationPrecisionRoundingParameters.x);
     highp vec3 var_fddd0 = vec3(QuantizationParameters.z * 0.5) - mod(var_38d64, vec3(QuantizationParameters.z));
     highp vec3 var_ec4b0 = (var_38d64 + (var_fddd0 - (var_76063 * dot(var_fddd0, var_76063)))) + WorldOrigin.xyz;
-    highp vec2 var_3ccf7 = var_a5f1f;
-    highp vec3 var_b0cb0 = vec3(var_af032.xy, (1.0 - abs(var_3ccf7.x)) - abs(var_3ccf7.y));
+    highp vec2 var_745cb = var_b7ade.xy;
+    highp vec3 var_b0cb0 = vec3(var_b7ade.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
     highp vec2 var_c65e0;
     if (var_b0cb0.z < 0.0)
     {
@@ -270,17 +275,27 @@ void main() {
     var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
     highp vec3 var_b623b = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
     highp vec3 var_1f28f = normalize((u_view * vec4(var_b623b, 0.0)).xyz);
-    highp vec4 var_a5cb7 = texture(s_ColorMetalnessSubsurface, var_0d4a8);
-    highp vec4 var_ee5ba = var_a5cb7;
+#ifdef MODE__DEFAULT
+    highp vec4 var_5d63f = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
+#endif
+#ifdef MODE__MIXED_RES
+    highp vec4 var_5d63f = texture(s_ColorMetalnessSubsurface, var_0d4a8);
+#endif
+    highp vec4 var_ee5ba = var_5d63f;
     highp float var_b4a2f = clamp(2.007874011993408203125 * (var_ee5ba.w - 0.501960813999176025390625), 0.0, 1.0);
-    uvec4 var_d9262 = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * var_0d4a8), 0);
-    uvec4 var_a0fc9 = var_d9262;
+#ifdef MODE__DEFAULT
+    uvec4 var_cae5a = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
+#endif
+#ifdef MODE__MIXED_RES
+    uvec4 var_cae5a = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * var_0d4a8), 0);
+#endif
+    uvec4 var_a0fc9 = var_cae5a;
     uint var_4b676 = var_a0fc9.x & 65535u;
     uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_0afea = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
-    uvec4 var_6c332 = var_d9262;
+    uvec4 var_6c332 = var_cae5a;
     highp vec2 var_d21aa = vec2(float(var_6c332.w & 255u) * 0.0039215688593685626983642578125, float((var_6c332.w & 256u) != 0u));
-    uvec2 var_c02ad = var_d9262.yz;
+    uvec2 var_c02ad = var_cae5a.yz;
     uint var_39af7 = var_c02ad.x & 65535u;
     uint var_32bfc = var_c02ad.y & 65535u;
     highp vec4 var_94bd8 = vec4(uvec4(var_39af7 >> 8u, var_39af7 & 255u, var_32bfc >> 8u, var_32bfc & 255u)) * vec4(0.0039215688593685626983642578125);
@@ -288,8 +303,8 @@ void main() {
     highp vec4 var_dc10f = vec4((var_94bd8.xyz * var_5cd41.w) * 6.0, var_57fcc);
     highp vec3 var_21abf = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_f529b = var_20845.xyz;
-    highp vec3 var_e3992 = vec3(v_projPosition.xy, var_48a47);
-    highp vec3 var_9e11a = var_a5cb7.xyz;
+    highp vec3 var_599e1 = vec3(v_projPosition.xy, var_48a47);
+    highp vec3 var_9e11a = var_5d63f.xyz;
     highp vec3 var_b2786;
     func_9b87e(var_b2786, var_9e11a);
     highp vec3 var_f6b87 = vec3(0.039999999105930328369140625 * (1.0 - var_b4a2f)) + (var_b2786 * var_b4a2f);
@@ -319,7 +334,7 @@ void main() {
     if (var_b9d95)
     {
         bool var_46a60 = PreExposureEnabled.x > 0.0;
-        highp vec2 var_bcb12 = (var_e3992.xy + vec2(1.0)) * 0.5;
+        highp vec2 var_bcb12 = (var_599e1.xy + vec2(1.0)) * 0.5;
         var_bcb12.y = 1.0 - var_bcb12.y;
         var_bcb12 = vec2(var_bcb12.x, 1.0 - var_bcb12.y);
         highp vec3 var_7c2f6;
@@ -513,7 +528,7 @@ void main() {
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
-        highp vec2 var_7d045 = (var_e3992.xy + vec2(1.0)) * 0.5;
+        highp vec2 var_7d045 = (var_599e1.xy + vec2(1.0)) * 0.5;
         highp vec4 var_cf4b5 = u_invProj * vec4(v_projPosition.xy, var_48a47, 1.0);
         highp float var_b4ccc = var_7d045.x;
         ivec3 var_dbde4 = ivec3(VolumeDimensions.xyz);
@@ -536,9 +551,5 @@ void main() {
     {
         var_0ffa6 = var_f2e5a;
     }
-    highp vec3 var_0c789 = var_e3992;
-    highp float var_3df38 = ((var_0c789.z * 0.5) + 0.5) * 65535.0;
-    highp float var_543e2 = floor(var_3df38);
     bgfx_FragData0 = vec4(var_0ffa6, 1.0);
-    bgfx_FragData1 = vec4((var_a5f1f * 0.5) + vec2(0.5), var_543e2 * 1.525902189314365386962890625e-05, var_3df38 - var_543e2);
 }

@@ -55,9 +55,6 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
-out vec2 v_ditheringAndMaskTinting;
-out vec3 v_lightColor;
-out vec2 v_lightmapUV;
 out vec3 v_normal;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
@@ -84,9 +81,6 @@ void main() {
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
     v_bitangent = vec3(0.0);
     v_color0 = vec4(0.0);
-    v_ditheringAndMaskTinting = vec2(0.0);
-    v_lightColor = vec3(0.0);
-    v_lightmapUV = vec2(0.0);
     v_normal = vec3(0.0);
     v_tangent = vec3(0.0);
     v_texcoord0 = var_45935;
