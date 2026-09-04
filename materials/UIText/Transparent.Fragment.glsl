@@ -23,6 +23,7 @@
 *
 * Uniforms:
 * - uniform vec4 GlyphCutoff;
+* - uniform vec4 GlyphHeight;
 * - uniform vec4 GlyphSmoothRadius;
 * - uniform vec4 HalfTexelOffset;
 * - uniform vec4 HudOpacity;

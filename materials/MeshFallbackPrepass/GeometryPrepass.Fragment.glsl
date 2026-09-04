@@ -98,7 +98,7 @@ void main() {
     var_895bf = var_9d69b;
     highp vec4 var_f7609 = vec4(var_9d69b.xyz * v_color0.xyz, var_895bf.w * var_7f649.w);
     highp vec4 var_7cd00 = vec4(BlockLightColor.xyz, 0.0);
-    highp vec4 var_cbce5 = var_7cd00;
+    highp vec4 var_224c9 = var_7cd00;
     highp vec4 var_6bfdc = vec4(var_f7609.x, var_f7609.y, var_f7609.z, var_f7609.w);
     highp float var_1d2b2;
     func_70ecf(var_1d2b2);
@@ -147,19 +147,10 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_ef8ed = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_f94da = uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0);
-    uint var_d3959;
-    if (var_cbce5.w != 0.0)
-    {
-        var_d3959 = var_f94da | 256u;
-    }
-    else
-    {
-        var_d3959 = var_f94da;
-    }
-    uvec2 var_7da45 = uvec2(uint(clamp(MERSUniforms.z, 0.0, 1.0) * 255.0) & 255u, uint(clamp(MERSUniforms.y, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_7da45.x << 8u) | var_7da45.y, var_ef8ed.x, var_ef8ed.y, var_d3959);
+    uvec2 var_34fa8 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    uint var_4c32f = uint(floor(var_224c9.w * 255.0));
+    uvec2 var_bc2e5 = uvec2(uint(clamp(MERSUniforms.z, 0.0, 1.0) * 255.0) & 255u, uint(clamp(MERSUniforms.y, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_bc2e5.x << 8u) | var_bc2e5.y, var_34fa8.x, var_34fa8.y, (uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0) | uint(((var_4c32f & 1u) != 0u) ? 256 : 0)) | uint(((var_4c32f & 2u) != 0u) ? 512 : 0));
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }

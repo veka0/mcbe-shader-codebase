@@ -32,7 +32,7 @@
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 JitterOffset;
@@ -72,7 +72,7 @@ uniform mat4 u_proj;
 uniform vec4 CascadesParameters[8];
 uniform vec4 CascadesPerSet;
 uniform vec4 CloudShadowsVisible;
-uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform vec4 JitterOffset;
@@ -162,7 +162,7 @@ void func_a0b5c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     }
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
-void func_61e30() {
+void func_5574e() {
     int loc_a77cc = int(GlobalInvocationID.x);
     int loc_7b57e = int(GlobalInvocationID.y);
     int loc_3a001 = int(GlobalInvocationID.z);
@@ -179,7 +179,7 @@ void func_61e30() {
     vec4 loc_dc33a = loc_e8a8c;
     vec3 loc_65cad = loc_e8a8c.xyz / vec3(loc_dc33a.w);
     float loc_459f6;
-    if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x) == 1)
+    if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.x) == 1)
     {
         int loc_40b65 = int(dot(clamp(CascadesPerSet, vec4(0.0), vec4(1.0)), vec4(1.0)));
         float loc_edd0a;
@@ -278,17 +278,17 @@ void func_61e30() {
             loc_13448 = 1.0;
         }
         bool loc_77735 = int(CloudShadowsVisible.x) > 0;
-        bool loc_b7d63;
+        bool loc_34091;
         if (loc_77735)
         {
-            loc_b7d63 = int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.y) > 0;
+            loc_34091 = int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.y) > 0;
         }
         else
         {
-            loc_b7d63 = loc_77735;
+            loc_34091 = loc_77735;
         }
         float loc_43108;
-        if (loc_b7d63)
+        if (loc_34091)
         {
             vec4 loc_2190e = CloudShadowProj * vec4(loc_65cad, 1.0);
             vec4 loc_c5771 = loc_2190e;
@@ -383,5 +383,5 @@ void func_61e30() {
 }
 void main() {
     uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_61e30();
+    func_5574e();
 }

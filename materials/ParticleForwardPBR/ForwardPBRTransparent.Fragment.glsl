@@ -63,7 +63,7 @@
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -173,7 +173,7 @@ uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 uniform highp vec4 DirectionalLightSourceShadowDirection;
 uniform highp vec4 DirectionalLightSourceWorldSpaceDirection;
 uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+uniform highp vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 uniform highp vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 uniform highp vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 uniform highp vec4 FogAndDistanceControl;
@@ -328,7 +328,7 @@ void func_0b88d(inout highp vec3 arg_3a8bb, inout highp float arg_13db0, inout h
     }
     arg_7a26d = loc_9af5f / float(loc_ec55d * loc_ec55d);
 }
-void func_409ba(inout highp vec2 arg_ea738, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_ae81a, inout highp float arg_fb1ed, inout highp vec3 arg_c7286, inout highp float arg_e0484, inout highp vec3 arg_08b90, inout highp vec3 arg_bcfb6, inout highp float arg_b14d8, inout highp float arg_67b92) {
+void func_5797c(inout highp vec2 arg_ea738, inout highp vec3 arg_87514, inout highp vec3 arg_c03dc, inout highp vec3 arg_58fab, inout highp vec3 arg_adf73, inout highp vec3 arg_c100b, inout highp vec3 arg_ae81a, inout highp float arg_fb1ed, inout highp vec3 arg_c7286, inout highp float arg_e0484, inout highp vec3 arg_08b90, inout highp vec3 arg_bcfb6, inout highp float arg_b14d8, inout highp float arg_67b92) {
     bool loc_10906 = DirectionalLightSkyLightHeuristicToggles.x != 0.0;
     bool loc_f429e;
     if (loc_10906)
@@ -347,7 +347,7 @@ void func_409ba(inout highp vec2 arg_ea738, inout highp vec3 arg_87514, inout hi
     }
     highp float loc_0f714;
     highp float loc_f89fe;
-    if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.x) == 1)
+    if (int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.x) == 1)
     {
         highp float loc_05e4d = max(dot(arg_58fab, normalize((u_view * DirectionalLightSourceShadowDirection).xyz)), 0.0);
         highp vec3 loc_28854 = arg_adf73 + ((arg_c100b * ShadowFilterOffsetAndRangeFarAndMapSizeAndNormalOffsetStrength.w) * clamp(1.0 - loc_05e4d, 0.0, 1.0));
@@ -469,17 +469,17 @@ void func_409ba(inout highp vec2 arg_ea738, inout highp vec3 arg_87514, inout hi
             loc_55d77 = 1.0;
         }
         bool loc_77735 = int(CloudShadowsVisible.x) > 0;
-        bool loc_b7d63;
+        bool loc_34091;
         if (loc_77735)
         {
-            loc_b7d63 = int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle.y) > 0;
+            loc_34091 = int(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.y) > 0;
         }
         else
         {
-            loc_b7d63 = loc_77735;
+            loc_34091 = loc_77735;
         }
         highp float loc_80289;
-        if (loc_b7d63)
+        if (loc_34091)
         {
             highp vec4 loc_c8015 = NdLFloor;
             highp vec4 loc_8ad63 = CloudShadowProj * vec4(loc_28854, 1.0);
@@ -666,7 +666,7 @@ void main() {
     highp vec3 var_12830 = var_e87e0.xyz / vec3(var_b8928.w);
     highp vec3 var_b4b34 = normalize(var_256a8);
     highp vec4 var_e14aa = vec4(var_b4b34, 0.0);
-    highp vec3 var_ca133 = var_e14aa.xyz;
+    highp vec3 var_f5321 = var_e14aa.xyz;
     highp vec3 var_b6566 = (u_view * var_e14aa).xyz;
     highp vec3 var_5c650 = var_930c5.xyz;
     bool var_71d55 = QuantizationParameters.y > 0.0;
@@ -745,7 +745,7 @@ void main() {
         }
         highp vec3 var_0edfc;
         highp vec3 var_5ea35;
-        func_409ba(var_48e43, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_ca133, var_8bbda, var_c90aa, var_380bf, var_3d3f0, var_8b2f4, var_45238, var_805ca, var_48500);
+        func_5797c(var_48e43, var_5ea35, var_0edfc, var_b6566, var_a3c91, var_f5321, var_8bbda, var_c90aa, var_380bf, var_3d3f0, var_8b2f4, var_45238, var_805ca, var_48500);
         var_35cc5 = var_5ea35;
         var_fffc2 = var_0edfc;
     }
@@ -754,29 +754,19 @@ void main() {
         var_35cc5 = vec3(0.0);
         var_fffc2 = vec3(0.0);
     }
-    highp vec4 var_a7452 = var_a622c;
-    bool var_8b530 = DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0;
-    bool var_c1fe5;
-    if (var_8b530)
-    {
-        var_c1fe5 = !(var_a7452.w != 0.0);
-    }
-    else
-    {
-        var_c1fe5 = var_8b530;
-    }
+    highp vec4 var_224c9 = var_a622c;
+    uint var_9c6ab = uint(floor(var_224c9.w * 255.0));
     highp vec3 var_fd69b;
-    if (var_c1fe5)
+    if ((DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0) && (!((var_9c6ab & 1u) != 0u)))
     {
-        highp vec3 var_6db9a = ((v_worldPos - WorldOrigin.xyz) - vec3(0.5)) + (var_ca133 * 0.20000000298023223876953125);
-        ivec3 var_42d37 = ivec3(floor(var_6db9a));
-        highp vec3 var_a4eaf = floor(var_6db9a * 0.0625) * 16.0;
-        highp vec3 var_482e8 = var_6db9a - var_a4eaf;
-        ivec4 var_984ab = ivec4((var_42d37 - (ivec3(15) & (var_42d37 >> ivec3(31)))) / ivec3(16), 0);
-        ivec4 var_cff55 = var_984ab;
+        highp vec3 var_b75dd = ((v_worldPos - WorldOrigin.xyz) - vec3(0.5)) + (var_f5321 * 0.20000000298023223876953125);
+        highp vec3 var_a4eaf = floor(var_b75dd * 0.0625) * 16.0;
+        highp vec3 var_482e8 = var_b75dd - var_a4eaf;
+        ivec4 var_5d362 = ivec4(ivec3(floor(vec3(ivec3(floor(var_b75dd))) * vec3(0.0625))), 0);
+        ivec4 var_cff55 = var_5d362;
         int var_ab334 = (var_cff55.x & 65535) | (var_cff55.y << 16);
         int var_76717 = (var_cff55.z & 65535) | (var_cff55.w << 16);
-        ivec4 var_4e614 = var_984ab;
+        ivec4 var_4e614 = var_5d362;
         uint var_8af53 = uint(var_4e614.x) * 1540483477u;
         uint var_330d0 = uint(var_4e614.y) * 1540483477u;
         uint var_3870b = uint(var_4e614.z) * 1540483477u;
@@ -865,11 +855,21 @@ void main() {
         highp vec3 var_138a7;
         if (var_a0c0a)
         {
-            highp vec3 var_2712f;
-            if (any(greaterThanEqual(abs(var_ca133), vec3(1.0))))
+            bool var_f2a9a = !((var_9c6ab & 2u) != 0u);
+            bool var_47daf;
+            if (var_f2a9a)
             {
-                highp vec3 var_c2195 = var_ca133;
-                highp vec3 var_3e9f3 = abs(var_ca133);
+                var_47daf = any(greaterThanEqual(abs(var_f5321), vec3(1.0)));
+            }
+            else
+            {
+                var_47daf = var_f2a9a;
+            }
+            highp vec3 var_2712f;
+            if (var_47daf)
+            {
+                highp vec3 var_c2195 = var_f5321;
+                highp vec3 var_3e9f3 = abs(var_f5321);
                 highp vec3 var_6de19 = var_3e9f3.zxy;
                 highp vec3 var_7f629 = var_3e9f3.yzx;
                 highp float var_c5cae = dot(var_482e8, var_3e9f3);
@@ -1155,7 +1155,7 @@ void main() {
             var_dd3fd = var_5c650;
             var_a8715 = v_worldPos;
         }
-        highp vec3 var_a56d9 = reflect(normalize(var_a8715 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_ca133);
+        highp vec3 var_a56d9 = reflect(normalize(var_a8715 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_f5321);
         highp float var_0f441;
         if (int(ConvolutionType.x) == 1)
         {

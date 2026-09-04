@@ -56,7 +56,7 @@
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -256,19 +256,18 @@ void main() {
     uint var_4b676 = var_a0fc9.x & 65535u;
     uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_c1cfe = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
-    uvec4 var_6c332 = var_35377;
-    highp vec2 var_b45a8 = vec2(float(var_6c332.w & 255u) * 0.0039215688593685626983642578125, float((var_6c332.w & 256u) != 0u));
-    highp float var_3b84e;
+    uvec4 var_067d4 = var_35377;
+    highp float var_184e7;
     if (var_3533f == 1.0)
     {
         highp vec2 var_5ba1d = v_texcoord0.xy;
         highp float var_ef4d6;
         func_3785d(var_ef4d6, var_5ba1d);
-        var_3b84e = var_ef4d6;
+        var_184e7 = var_ef4d6;
     }
     else
     {
-        var_3b84e = var_b45a8.x;
+        var_184e7 = float(var_067d4.w & 255u) * 0.0039215688593685626983642578125;
     }
     highp vec3 var_b1215 = vec3(v_projPosition.xy, var_3533f);
     highp vec3 var_9e11a = var_bde9b.xyz;
@@ -401,7 +400,7 @@ void main() {
                 highp vec3 var_9d0d4;
                 if (AtmosphericScatteringToggles.w != 0.0)
                 {
-                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_3b84e)));
+                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_184e7)));
                 }
                 else
                 {

@@ -54,7 +54,7 @@
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -293,8 +293,7 @@ void main() {
     uint var_4b676 = var_a0fc9.x & 65535u;
     uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_0afea = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
-    uvec4 var_6c332 = var_cae5a;
-    highp vec2 var_d21aa = vec2(float(var_6c332.w & 255u) * 0.0039215688593685626983642578125, float((var_6c332.w & 256u) != 0u));
+    uvec4 var_42b4e = var_cae5a;
     uvec2 var_c02ad = var_cae5a.yz;
     uint var_39af7 = var_c02ad.x & 65535u;
     uint var_32bfc = var_c02ad.y & 65535u;
@@ -317,8 +316,8 @@ void main() {
     {
         var_fb10a = 0.0;
     }
-    highp float var_94901 = clamp(((var_d21aa.x * 16.0) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
-    highp float var_0c7d8 = ((var_94901 * var_94901) * var_94901) * IBLParameters.x;
+    highp float var_fea54 = clamp(((float(var_42b4e.w & 255u) * 0.062745101749897003173828125) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
+    highp float var_0c7d8 = ((var_fea54 * var_fea54) * var_fea54) * IBLParameters.x;
     highp float var_e6705 = length(var_f529b);
     bool var_404a8 = SSRParameters.x != 0.0;
     bool var_b9d95;

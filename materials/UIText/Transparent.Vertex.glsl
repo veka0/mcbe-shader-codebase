@@ -23,6 +23,7 @@
 *
 * Uniforms:
 * - uniform vec4 GlyphCutoff;
+* - uniform vec4 GlyphHeight;
 * - uniform vec4 GlyphSmoothRadius;
 * - uniform vec4 HalfTexelOffset;
 * - uniform vec4 HudOpacity;
@@ -35,6 +36,9 @@
 */
 
 uniform mat4 u_modelViewProj;
+#ifndef FONT_TYPE__TRUE_TYPE
+uniform vec4 GlyphHeight;
+#endif
 #ifdef FONT_TYPE__MSDF
 uniform vec4 GlyphSmoothRadius;
 #endif
@@ -50,37 +54,41 @@ out vec2 v_texcoord0;
 void main() {
 #ifndef FONT_TYPE__TRUE_TYPE
     vec3 var_eede8 = a_position;
-    vec2 var_b1f80 = a_texcoord0;
-    int var_39b97 = int(var_eede8.z);
-    var_b1f80.x += (((var_39b97 == 1) || (var_39b97 == 2)) ? 0.0625 : 0.0);
-    var_b1f80.y += (((var_39b97 == 0) || (var_39b97 == 1)) ? 0.0625 : 0.0);
-#endif
-#if defined(FONT_TYPE__BITMAP) || defined(FONT_TYPE__BITMAP_SMOOTH)
-    vec2 var_53a93 = a_texcoord0 + vec2(HalfTexelOffset.x);
-    vec2 var_9e22a = (a_texcoord0 + vec2(0.0625)) - vec2(HalfTexelOffset.x);
-#endif
-#ifdef FONT_TYPE__MSDF
-    vec4 var_3c82b;
-    if (GlyphSmoothRadius.x > 0.00095000001601874828338623046875)
+    vec2 var_36674 = a_texcoord0;
+    vec2 var_6d827 = a_texcoord0;
+    int var_05516 = int(var_eede8.z);
+    var_6d827.x += (((var_05516 == 1) || (var_05516 == 2)) ? 0.0625 : 0.0);
+    float var_c517f;
+    if ((var_05516 == 0) || (var_05516 == 1))
     {
-        vec2 var_fad76 = a_texcoord0 + vec2(HalfTexelOffset.x);
-        vec2 var_a5ea7 = (a_texcoord0 + vec2(0.0625)) - vec2(HalfTexelOffset.x);
-        var_3c82b = vec4(var_fad76.x, var_fad76.y, var_a5ea7.x, var_a5ea7.y);
+        var_c517f = GlyphHeight.x;
     }
     else
     {
-        var_3c82b = vec4(0.0, 0.0, 1.0, 1.0);
+        var_c517f = 0.0;
+    }
+    var_6d827.y += var_c517f;
+    vec4 var_ac299 = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+#if defined(FONT_TYPE__BITMAP) || defined(FONT_TYPE__BITMAP_SMOOTH)
+    vec2 var_71f06 = a_texcoord0 + vec2(HalfTexelOffset.x);
+    var_ac299 = vec4(var_71f06.x, var_71f06.y, var_ac299.z, var_ac299.w);
+    var_ac299.z = (var_36674.x + 0.0625) - HalfTexelOffset.x;
+    var_ac299.w = (var_36674.y + GlyphHeight.x) - HalfTexelOffset.x;
+#endif
+#ifdef FONT_TYPE__MSDF
+    if (GlyphSmoothRadius.x > 0.00095000001601874828338623046875)
+    {
+        vec2 var_a0fda = a_texcoord0 + vec2(HalfTexelOffset.x);
+        var_ac299 = vec4(var_a0fda.x, var_a0fda.y, var_ac299.z, var_ac299.w);
+        var_ac299.z = (var_36674.x + 0.0625) - HalfTexelOffset.x;
+        var_ac299.w = (var_36674.y + GlyphHeight.x) - HalfTexelOffset.x;
     }
 #endif
     v_color0 = a_color0;
-#if defined(FONT_TYPE__BITMAP) || defined(FONT_TYPE__BITMAP_SMOOTH)
-    v_linearClampBounds = vec4(var_53a93.x, var_53a93.y, var_9e22a.x, var_9e22a.y);
-#endif
-#ifdef FONT_TYPE__MSDF
-    v_linearClampBounds = var_3c82b;
-#endif
 #ifndef FONT_TYPE__TRUE_TYPE
-    v_texcoord0 = var_b1f80;
+    v_linearClampBounds = var_ac299;
+    v_texcoord0 = var_6d827;
 #endif
 #ifdef FONT_TYPE__TRUE_TYPE
     v_linearClampBounds = vec4(0.0, 0.0, 1.0, 1.0);
