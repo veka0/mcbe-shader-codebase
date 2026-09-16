@@ -39,7 +39,7 @@ uniform highp vec4 ResolutionRatiosAndFPEpsilon;
 uniform highp vec4 SubPixelJitterAndValidHistory;
 uniform highp vec4 TAAUpscalingParameters;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_c0f1b = DisplayResolution.xy * v_texcoord0;
     uint var_0c083 = uint(var_c0f1b.x);
@@ -47,12 +47,12 @@ void main() {
     highp vec2 var_9d8ec = ((vec2(float(var_0c083) + 0.5, float(var_52540) + 0.5) * ResolutionRatiosAndFPEpsilon.x) - vec2(SubPixelJitterAndValidHistory.x, -SubPixelJitterAndValidHistory.y)) - vec2(0.5);
     highp vec2 var_56e6a = var_9d8ec;
     ivec2 var_2c3be = ivec2(int(round(var_56e6a.x)), int(round(var_56e6a.y)));
-    highp vec4 var_119b3 = texelFetch(s_InputFinalColor, var_2c3be, 0);
+    highp vec4 var_d6123 = texelFetch(s_InputFinalColor, var_2c3be, 0);
     highp vec2 var_eab04;
     highp vec3 var_01fa5;
     highp vec3 var_24173;
-    var_24173 = var_119b3.xyz * var_119b3.xyz;
-    var_01fa5 = var_119b3.xyz;
+    var_24173 = var_d6123.xyz * var_d6123.xyz;
+    var_01fa5 = var_d6123.xyz;
     var_eab04 = texelFetch(s_InputBufferMotionVectors, var_2c3be, 0).zw;
     highp vec3 var_c3970;
     highp vec3 var_268f2;
@@ -103,8 +103,8 @@ void main() {
     highp vec2 var_6a6cb = var_eab04 * RenderResolution.xy;
     highp vec3 var_9ea21 = var_01fa5 * vec3(0.111111111938953399658203125);
     highp vec3 var_15974 = sqrt(max(vec3(0.0), (var_24173 * vec3(0.111111111938953399658203125)) - (var_9ea21 * var_9ea21)));
-    highp float var_55075 = smoothstep(0.0, 1.0, sqrt(dot(var_6a6cb, var_6a6cb)));
-    highp float var_80b18 = mix(TAAUpscalingParameters.y, TAAUpscalingParameters.x, var_55075);
+    highp float var_5ea54 = smoothstep(0.0, 1.0, sqrt(dot(var_6a6cb, var_6a6cb)));
+    highp float var_80b18 = mix(TAAUpscalingParameters.y, TAAUpscalingParameters.x, var_5ea54);
     highp vec3 var_5ae17 = var_9ea21 - (var_15974 * var_80b18);
     highp vec3 var_ad110 = var_9ea21 + (var_15974 * var_80b18);
     highp vec2 var_589d9 = clamp(vec2(float(var_0c083) + 0.5, float(var_52540) + 0.5) - (var_6a6cb * ResolutionRatiosAndFPEpsilon.y), vec2(0.0), DisplayResolution.xy - vec2(1.0));
@@ -126,7 +126,7 @@ void main() {
     highp vec2 var_cd521 = (var_fc97f + vec2(2.5)) * RecipDisplayResolution.xy;
     highp vec3 var_b4acb = (((((textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_c3361.y), 0.0).xyz * (var_c67d5.x * var_c67d5.y)) + (textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_cb2ce.y), 0.0).xyz * (var_c67d5.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_c3361.x, var_cd521.y), 0.0).xyz * (var_c67d5.x * var_b0290.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_c3361.y), 0.0).xyz * (var_440e4.x * var_c67d5.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_cb2ce.y), 0.0).xyz * (var_440e4.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_cb2ce.x, var_cd521.y), 0.0).xyz * (var_440e4.x * var_b0290.y));
     highp vec3 var_34a79 = max(vec3(0.0), ((var_b4acb + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_c3361.y), 0.0).xyz * (var_b0290.x * var_c67d5.y))) + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_cb2ce.y), 0.0).xyz * (var_b0290.x * var_440e4.y))) + (textureLod(s_InputTAAHistory, vec2(var_cd521.x, var_cd521.y), 0.0).xyz * (var_b0290.x * var_b0290.y)));
-    highp vec3 var_fe83b;
+    highp vec3 var_7d55d;
     if (TAAUpscalingParameters.z != 0.0)
     {
         bool var_5b456 = any(greaterThan(var_34a79, var_ad110));
@@ -145,7 +145,7 @@ void main() {
             highp vec3 var_bc1a4 = var_5ae17;
             highp vec3 var_263c9 = var_ad110;
             highp vec3 var_16c6d = var_34a79;
-            highp vec3 var_2b95b = var_119b3.xyz - var_34a79;
+            highp vec3 var_2b95b = var_d6123.xyz - var_34a79;
             highp vec3 var_699c1 = var_2b95b;
             highp float var_7747b = length(var_2b95b);
             if (var_7747b > 0.0)
@@ -269,12 +269,12 @@ void main() {
         {
             var_a4d0b = var_34a79;
         }
-        var_fe83b = var_a4d0b;
+        var_7d55d = var_a4d0b;
     }
     else
     {
-        var_fe83b = min(var_ad110, max(var_5ae17, var_34a79));
+        var_7d55d = min(var_ad110, max(var_5ae17, var_34a79));
     }
-    highp vec2 var_d7d42 = var_9d8ec - vec2(var_2c3be);
-    bgfx_FragColor = vec4(mix(var_fe83b, var_119b3.xyz, vec3((SubPixelJitterAndValidHistory.z != 0.0) ? (max(var_55075, clamp(1.0 - (ResolutionRatiosAndFPEpsilon.y * dot(var_d7d42, var_d7d42)), 0.0500000007450580596923828125, 1.0)) * 0.100000001490116119384765625) : 1.0)), 0.0);
+    highp vec2 var_9c1a8 = var_9d8ec - vec2(var_2c3be);
+    bgfx_FragData0 = vec4(mix(var_7d55d, var_d6123.xyz, vec3((SubPixelJitterAndValidHistory.z != 0.0) ? (max(var_5ea54, clamp(1.0 - (ResolutionRatiosAndFPEpsilon.y * dot(var_9c1a8, var_9c1a8)), 0.0500000007450580596923828125, 1.0)) * 0.100000001490116119384765625) : 1.0)), 0.0);
 }

@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - RASTERIZED_ALPHA_TEST_PASS (not used)
 * - RASTERIZED_OPAQUE_PASS (not used)

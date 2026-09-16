@@ -269,21 +269,24 @@ void main() {
     highp vec3 var_6807c = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
 #endif
     highp vec4 var_bde9b = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
-    uvec4 var_e9495 = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
-    uint var_4b676 = var_e9495.x & 65535u;
+    uvec4 var_35377 = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
+    uvec4 var_a0fc9 = var_35377;
+    uint var_4b676 = var_a0fc9.x & 65535u;
     uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_c1cfe = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
-    highp float var_f8f82;
+    uvec4 var_6c332 = var_35377;
+    highp vec2 var_b45a8 = vec2(float(var_6c332.w & 255u) * 0.0039215688593685626983642578125, float((var_6c332.w & 256u) != 0u));
+    highp float var_3b84e;
     if (var_3533f == 1.0)
     {
         highp vec2 var_5ba1d = v_texcoord0.xy;
         highp float var_ef4d6;
         func_3785d(var_ef4d6, var_5ba1d);
-        var_f8f82 = var_ef4d6;
+        var_3b84e = var_ef4d6;
     }
     else
     {
-        var_f8f82 = float(var_e9495.w) * 0.0039215688593685626983642578125;
+        var_3b84e = var_b45a8.x;
     }
     highp vec3 var_b1215 = vec3(v_projPosition.xy, var_3533f);
     highp vec3 var_9e11a = var_bde9b.xyz;
@@ -416,7 +419,7 @@ void main() {
                 highp vec3 var_9d0d4;
                 if (AtmosphericScatteringToggles.w != 0.0)
                 {
-                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_f8f82)));
+                    var_9d0d4 = mix(UndergroundFogColor.xyz, var_5ec80, vec3(max(CameraAmbientContribution.y, var_3b84e)));
                 }
                 else
                 {

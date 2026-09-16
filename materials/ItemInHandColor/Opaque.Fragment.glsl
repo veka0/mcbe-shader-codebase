@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -53,27 +53,27 @@ uniform highp vec4 OverlayColor;
 in highp vec4 v_color0;
 in highp vec4 v_fog;
 in highp vec4 v_light;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef MULTI_COLOR_TINT__OFF
     highp vec4 var_fef14 = v_color0;
-    highp vec3 var_bd583 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec3 var_f90fa = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
     highp vec3 var_d683b = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
     highp vec2 var_533c7 = var_d683b.xy;
-    highp vec3 var_bd583 = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec3 var_f90fa = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
 #endif
-    highp vec4 var_4045a = vec4(var_bd583.x, var_bd583.y, var_bd583.z, vec4(1.0).w);
+    highp vec4 var_1aaf3 = vec4(var_f90fa.x, var_f90fa.y, var_f90fa.z, vec4(1.0).w);
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_43a44 = mix(mix(var_4045a, var_4045a * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_55bfc = vec4(var_43a44.x, var_43a44.y, var_43a44.z, vec4(1.0).w);
+    highp vec3 var_570ea = mix(mix(var_1aaf3, var_1aaf3 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_3849e = vec4(var_570ea.x, var_570ea.y, var_570ea.z, vec4(1.0).w);
 #endif
-    highp vec4 var_f5291 = v_fog;
+    highp vec4 var_10e64 = v_fog;
 #ifdef MULTI_COLOR_TINT__OFF
-    bgfx_FragColor = vec4(mix(vec4(var_43a44, var_55bfc.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_55bfc.w);
+    bgfx_FragData0 = vec4(mix(vec4(var_570ea, var_3849e.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_3849e.w);
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    bgfx_FragColor = vec4(mix(vec4(var_bd583, var_4045a.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_4045a.w);
+    bgfx_FragData0 = vec4(mix(vec4(var_f90fa, var_1aaf3.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_1aaf3.w);
 #endif
 }

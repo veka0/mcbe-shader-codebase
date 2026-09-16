@@ -24,7 +24,7 @@ uniform highp vec4 ClipPlanes;
 uniform highp vec4 DebugMode;
 uniform highp vec4 MipLevel;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_caea7 = textureLod(s_RasterColor, v_texcoord0, MipLevel.x);
     highp vec4 var_72a58 = var_caea7;
@@ -188,14 +188,14 @@ void main() {
             break;
         }
     }
-    highp vec3 var_913bc;
+    highp vec3 var_d1c50;
     if (var_fedba)
     {
-        var_913bc = pow(var_846e5, vec3(0.4545454680919647216796875));
+        var_d1c50 = pow(var_846e5, vec3(0.4545454680919647216796875));
     }
     else
     {
-        var_913bc = var_846e5;
+        var_d1c50 = var_846e5;
     }
-    bgfx_FragColor = vec4(var_913bc, 1.0);
+    bgfx_FragData0 = vec4(var_d1c50, 1.0);
 }

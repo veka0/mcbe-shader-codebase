@@ -22,7 +22,7 @@ precision mediump float;
 precision highp int;
 in highp vec4 v_ExtraParams;
 flat in highp vec4 v_VaryingData;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_55ddb = v_ExtraParams;
     uvec4 var_41943 = uvec4(v_VaryingData);
@@ -53,5 +53,5 @@ void main() {
             }
         }
     }
-    bgfx_FragColor = vec4(0.0);
+    bgfx_FragData0 = vec4(0.0);
 }

@@ -49,7 +49,7 @@ uniform highp vec4 OutlineWidth;
 uniform highp vec4 PreExposureEnabled;
 uniform highp vec4 ScreenSize;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_81d64 = texture(s_SceneTextureDepth, v_texcoord0);
     highp vec4 var_cc9c7 = texture(s_HighlightTextureDepth, v_texcoord0);
@@ -115,15 +115,15 @@ void main() {
     {
         var_e7a67 = var_150d6;
     }
-    highp vec4 var_38beb;
+    highp vec4 var_d912f;
     if (PreExposureEnabled.x != 0.0)
     {
         highp vec3 var_1d4b5 = var_e7a67.xyz * ((0.180000007152557373046875 / var_df5e5) + 9.9999997473787516355514526367188e-05);
-        var_38beb = vec4(var_1d4b5.x, var_1d4b5.y, var_1d4b5.z, var_e7a67.w);
+        var_d912f = vec4(var_1d4b5.x, var_1d4b5.y, var_1d4b5.z, var_e7a67.w);
     }
     else
     {
-        var_38beb = var_e7a67;
+        var_d912f = var_e7a67;
     }
-    bgfx_FragColor = var_38beb;
+    bgfx_FragData0 = var_d912f;
 }

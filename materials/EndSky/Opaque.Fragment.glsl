@@ -27,9 +27,9 @@ precision highp int;
 uniform highp sampler2D s_SkyTexture;
 uniform highp vec4 SkyColor;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_3cd15 = SkyColor * texture(s_SkyTexture, v_texcoord0);
-    highp vec4 var_a3d19 = var_3cd15;
-    bgfx_FragColor = vec4(var_3cd15.xyz, var_a3d19.w);
+    highp vec4 var_bec18 = SkyColor * texture(s_SkyTexture, v_texcoord0);
+    highp vec4 var_171b1 = var_bec18;
+    bgfx_FragData0 = vec4(var_bec18.xyz, var_171b1.w);
 }

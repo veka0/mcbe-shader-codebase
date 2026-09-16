@@ -28,7 +28,7 @@ uniform highp sampler2D s_PreviousMip;
 uniform highp vec4 MipLevel;
 uniform highp vec4 PreviousMipResolutionAndRecipResolution;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_785d2 = vec4(0.0);
     highp vec4 var_ae6d9 = vec4(0.0);
@@ -44,7 +44,7 @@ void main() {
     var_55f48 = textureLod(s_PreviousMip, v_texcoord0.xy + (vec2(0.5) * PreviousMipResolutionAndRecipResolution.zw), MipLevel.x).xy;
     var_785d2.w = 1.0 - var_55f48.x;
     var_ae6d9.w = 1.0 - var_55f48.y;
-    highp vec2 var_52932 = min(var_785d2.xy, var_785d2.zw);
-    highp vec2 var_56b93 = max(var_ae6d9.xy, var_ae6d9.zw);
-    bgfx_FragColor = vec4(1.0 - min(var_52932.x, var_52932.y), 1.0 - max(var_56b93.x, var_56b93.y), 0.0, 0.0);
+    highp vec2 var_04b25 = min(var_785d2.xy, var_785d2.zw);
+    highp vec2 var_74a18 = max(var_ae6d9.xy, var_ae6d9.zw);
+    bgfx_FragData0 = vec4(1.0 - min(var_04b25.x, var_04b25.y), 1.0 - max(var_74a18.x, var_74a18.y), 0.0, 0.0);
 }

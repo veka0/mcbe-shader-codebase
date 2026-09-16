@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -95,7 +95,7 @@ in highp vec4 v_fog;
 in highp vec4 v_light;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef EMISSIVE__EMISSIVE
     highp vec4 var_a25d1 = texture(s_MatTexture, v_texcoord0);
@@ -181,24 +181,24 @@ void main() {
     var_776bd.w = max(UseAlphaRewrite.x, var_776bd.w);
     var_c81f0 = var_776bd;
 #ifndef EMISSIVE__OFF
-    highp vec3 var_f5435 = mix((var_776bd.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    highp vec3 var_10fed = mix((var_776bd.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w));
 #endif
 #ifdef EMISSIVE__OFF
-    highp vec3 var_f5435 = mix((var_776bd.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec3 var_10fed = mix((var_776bd.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
 #endif
-    highp vec4 var_2673a = vec4(var_f5435.x, var_f5435.y, var_f5435.z, var_776bd.w);
+    highp vec4 var_cd387 = vec4(var_10fed.x, var_10fed.y, var_10fed.z, var_776bd.w);
 #ifndef EMISSIVE__OFF
-    highp float var_4c6fb = var_2673a.w;
-    highp vec3 var_4a75a = var_f5435.xyz * mix(vec4(1.0), v_light, vec4(var_4c6fb)).xyz;
-    highp vec4 var_b626b = vec4(var_4a75a.x, var_4a75a.y, var_4a75a.z, var_776bd.w);
-    var_2673a = var_b626b;
-    highp vec4 var_b86af = var_b626b;
+    highp float var_4c6fb = var_cd387.w;
+    highp vec3 var_cf2dd = var_10fed.xyz * mix(vec4(1.0), v_light, vec4(var_4c6fb)).xyz;
+    highp vec4 var_b626b = vec4(var_cf2dd.x, var_cf2dd.y, var_cf2dd.z, var_776bd.w);
+    var_cd387 = var_b626b;
+    highp vec4 var_95ebc = var_b626b;
 #endif
-    highp vec4 var_f5291 = v_fog;
+    highp vec4 var_10e64 = v_fog;
 #ifndef EMISSIVE__OFF
-    bgfx_FragColor = vec4(mix(vec4(var_4a75a, var_b86af.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_b86af.w);
+    bgfx_FragData0 = vec4(mix(vec4(var_cf2dd, var_95ebc.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_95ebc.w);
 #endif
 #ifdef EMISSIVE__OFF
-    bgfx_FragColor = vec4(mix(vec4(var_f5435, var_2673a.w).xyz, v_fog.xyz, vec3(var_f5291.w)), var_2673a.w);
+    bgfx_FragData0 = vec4(mix(vec4(var_10fed, var_cd387.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_cd387.w);
 #endif
 }

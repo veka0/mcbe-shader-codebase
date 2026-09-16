@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -84,7 +84,7 @@ in highp vec4 v_fog;
 in highp vec4 v_layerUv;
 in highp vec4 v_light;
 centroid in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -121,10 +121,10 @@ void main() {
 #endif
     var_a3804.w = max(0.0, var_a3804.w);
     highp vec4 var_61669 = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
-    highp vec4 var_902d3 = vec4(var_61669.xyz * var_61669.xyz, abs(var_61669.w)) + vec4(mix((var_a3804.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
-    var_902d3.w = var_a3804.w;
-    highp vec4 var_47c70 = var_902d3;
-    highp float var_3a28f = var_47c70.w * HudOpacity.x;
-    highp vec4 var_24d33 = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_902d3.xyz, var_3a28f).xyz, v_fog.xyz, vec3(var_24d33.w)), var_3a28f);
+    highp vec4 var_c784a = vec4(var_61669.xyz * var_61669.xyz, abs(var_61669.w)) + vec4(mix((var_a3804.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz, 0.0);
+    var_c784a.w = var_a3804.w;
+    highp vec4 var_47c70 = var_c784a;
+    highp float var_2b6a3 = var_47c70.w * HudOpacity.x;
+    highp vec4 var_60149 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_c784a.xyz, var_2b6a3).xyz, v_fog.xyz, vec3(var_60149.w)), var_2b6a3);
 }

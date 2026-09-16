@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -103,9 +103,9 @@ in highp vec4 v_light;
 #endif
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_c8bdb = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_8f4c7 = texture(s_MatTexture, v_texcoord0);
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
     bool var_410b5;
     if (DitheringEnabledToggle.x != 0.0)
@@ -124,10 +124,10 @@ void main() {
     }
     if (var_410b5)
     {
-        var_c8bdb.w = 0.0;
+        var_8f4c7.w = 0.0;
     }
 #if defined(TINTING__ENABLED) || defined(UI_ENTITY__DISABLED)
-    highp vec4 var_48ffd = var_c8bdb;
+    highp vec4 var_48ffd = var_8f4c7;
 #endif
 #ifdef TINTING__ENABLED
     for (int var_f2336 = 0; var_f2336 < int(PatternCount.x); var_f2336++)
@@ -140,12 +140,12 @@ void main() {
 #endif
 #ifdef UI_ENTITY__DISABLED
     highp vec3 var_90012 = var_48ffd.xyz * v_light.xyz;
-    var_c8bdb = vec4(var_90012.x, var_90012.y, var_90012.z, var_48ffd.w);
+    var_8f4c7 = vec4(var_90012.x, var_90012.y, var_90012.z, var_48ffd.w);
 #endif
 #if defined(TINTING__ENABLED) && defined(UI_ENTITY__ENABLED)
-    var_c8bdb = var_48ffd;
+    var_8f4c7 = var_48ffd;
 #endif
-    highp float var_d8f56 = var_c8bdb.w;
+    highp float var_d8f56 = var_8f4c7.w;
     highp vec4 var_6d4aa = (GlintColor * (texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx + texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx)) * TileLightColor;
 #ifdef UI_ENTITY__DISABLED
     highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_90012, 0.0);
@@ -154,19 +154,19 @@ void main() {
     highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_48ffd.xyz, 0.0);
 #endif
 #if defined(TINTING__DISABLED) && defined(UI_ENTITY__ENABLED)
-    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_c8bdb.xyz, 0.0);
+    highp vec4 var_98c44 = vec4(var_6d4aa.xyz * var_6d4aa.xyz, abs(var_6d4aa.w)) + vec4(var_8f4c7.xyz, 0.0);
 #endif
 #if defined(TINTING__ENABLED) || defined(UI_ENTITY__DISABLED)
     var_98c44.w = var_48ffd.w;
 #endif
 #if defined(TINTING__DISABLED) && defined(UI_ENTITY__ENABLED)
-    var_98c44.w = var_c8bdb.w;
+    var_98c44.w = var_8f4c7.w;
 #endif
-    var_c8bdb = var_98c44;
-    var_c8bdb.w = var_d8f56;
-    highp vec4 var_ea6de = var_c8bdb;
-    var_ea6de.w *= HudOpacity.x;
-    var_c8bdb = var_ea6de;
-    highp vec4 var_8544b = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_ea6de.xyz, var_c8bdb.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_c8bdb.w);
+    var_8f4c7 = var_98c44;
+    var_8f4c7.w = var_d8f56;
+    highp vec4 var_7c1e7 = var_8f4c7;
+    var_7c1e7.w *= HudOpacity.x;
+    var_8f4c7 = var_7c1e7;
+    highp vec4 var_f6e07 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_7c1e7.xyz, var_8f4c7.w).xyz, v_fog.xyz, vec3(var_f6e07.w)), var_8f4c7.w);
 }

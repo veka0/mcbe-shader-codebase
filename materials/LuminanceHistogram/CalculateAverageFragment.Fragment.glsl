@@ -46,7 +46,7 @@ uniform highp vec4 AdaptiveParameters;
 uniform highp vec4 LogLuminanceRange;
 uniform highp vec4 MinLogLuminance;
 uniform highp vec4 QuantileBounds;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp float var_f0692;
     var_f0692 = 0.0;
@@ -76,7 +76,7 @@ void main() {
         var_335c2 = var_f9f72 + var_a0cf6;
     }
     highp float var_d6eff = (((var_54186 / max(var_fd30c, 1.0)) - 1.0) * (LogLuminanceRange.x * 0.00393700785934925079345703125)) + MinLogLuminance.x;
-    highp float var_a7e97;
+    highp float var_e6c33;
     if (Adaptation.x > 0.5)
     {
         highp float var_37379 = clamp(log2(max(textureLod(s_PreviousFrameAverageLuminance, vec2(0.5), 0.0).x, 0.00095000001601874828338623046875)), MinLogLuminance.x, MinLogLuminance.x + LogLuminanceRange.x);
@@ -89,11 +89,11 @@ void main() {
         {
             var_b0364 = AdaptiveParameters.z;
         }
-        var_a7e97 = var_37379 + ((var_d6eff - var_37379) * (1.0 - exp(((-Adaptation.y) * AdaptiveParameters.x) * var_b0364)));
+        var_e6c33 = var_37379 + ((var_d6eff - var_37379) * (1.0 - exp(((-Adaptation.y) * AdaptiveParameters.x) * var_b0364)));
     }
     else
     {
-        var_a7e97 = var_d6eff;
+        var_e6c33 = var_d6eff;
     }
-    bgfx_FragColor = vec4(exp2(var_a7e97));
+    bgfx_FragData0 = vec4(exp2(var_e6c33));
 }

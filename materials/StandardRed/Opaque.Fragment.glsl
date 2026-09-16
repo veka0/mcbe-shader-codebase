@@ -5,7 +5,8 @@
 *
 * Passes:
 * - CUSTOM_PASS_BASED_ON_OPAQUE_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 *
 * Instancing:
@@ -34,10 +35,10 @@ uniform highp vec4 LightWorldSpaceDirection;
 in highp vec2 v_texcoord0;
 in highp vec3 v_viewSpaceNormal;
 in highp vec4 v_viewSpacePosition;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec3 var_15e80 = LightDiffuseColorAndIlluminance.xyz * LightDiffuseColorAndIlluminance.w;
-    highp vec3 var_50265 = normalize(v_viewSpaceNormal);
-    highp vec3 var_587f9 = normalize(-(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz);
-    bgfx_FragColor = vec4(texture(s_MatTexture, v_texcoord0).xyz * (((LightAmbientColorAndIntensity.xyz * LightAmbientColorAndIntensity.w) + (var_15e80 * clamp(dot(var_50265, var_587f9), 0.0, 1.0))) + (var_15e80 * clamp(0.17050254344940185546875 * pow(clamp(dot(var_50265, normalize(var_587f9 + normalize(-v_viewSpacePosition.xyz))), 0.0, 1.0), 0.4554755687713623046875), 0.0, 1.0))), 1.0);
+    highp vec3 var_ecfa2 = LightDiffuseColorAndIlluminance.xyz * LightDiffuseColorAndIlluminance.w;
+    highp vec3 var_2981a = normalize(v_viewSpaceNormal);
+    highp vec3 var_12d4c = normalize(-(u_view * vec4(LightWorldSpaceDirection.xyz, 0.0)).xyz);
+    bgfx_FragData0 = vec4(texture(s_MatTexture, v_texcoord0).xyz * (((LightAmbientColorAndIntensity.xyz * LightAmbientColorAndIntensity.w) + (var_ecfa2 * clamp(dot(var_2981a, var_12d4c), 0.0, 1.0))) + (var_ecfa2 * clamp(0.17050254344940185546875 * pow(clamp(dot(var_2981a, normalize(var_12d4c + normalize(-v_viewSpacePosition.xyz))), 0.0, 1.0), 0.4554755687713623046875), 0.0, 1.0))), 1.0);
 }

@@ -23,7 +23,7 @@ precision mediump float;
 precision highp int;
 uniform highp vec4 ConvolutionParameters;
 in highp vec2 v_texCoord;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_66eed = v_texCoord;
     highp vec3 var_eb3d3;
@@ -75,6 +75,6 @@ void main() {
             var_49334 = var_a4178;
         }
     }
-    highp vec2 var_67543 = vec2(var_a4178 / ConvolutionParameters.x, var_54144 / ConvolutionParameters.x);
-    bgfx_FragColor = vec4(var_67543.x, var_67543.y, 0.0, 1.0);
+    highp vec2 var_c165c = vec2(var_a4178 / ConvolutionParameters.x, var_54144 / ConvolutionParameters.x);
+    bgfx_FragData0 = vec4(var_c165c.x, var_c165c.y, 0.0, 1.0);
 }

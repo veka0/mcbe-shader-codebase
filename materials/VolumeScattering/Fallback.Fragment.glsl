@@ -10,8 +10,8 @@
 * Available Resources:
 *
 * Buffers:
-* - uniform lowp sampler2DArray s_LightingBuffer;
-* - uniform lowp sampler2DArray s_ScatteringBuffer;
+* - uniform lowp sampler2DArray s_ScatteringBufferIn;
+* - uniform lowp sampler2DArray s_ScatteringBufferOut;
 *
 * Uniforms:
 * - uniform vec4 VolumeDimensions;
@@ -20,7 +20,7 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragColor = vec4(0.0);
+    bgfx_FragData0 = vec4(0.0);
 }

@@ -30,16 +30,16 @@ in highp vec4 v_Additional;
 in highp vec3 v_ScreenNormalPosition;
 flat in highp vec4 v_VaryingData;
 in highp vec4 v_VaryingParam0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_c4329 = v_Additional;
+    highp vec4 var_c446e = v_Additional;
     highp vec4 var_55b3f = v_VaryingParam0;
     uvec4 var_05e85 = uvec4(v_VaryingData);
     int var_9e7e1 = int((var_05e85.z << 4u) | ((var_05e85.y & 240u) >> 4u));
     int var_4251f = var_9e7e1 + 1;
-    highp vec4 var_05977 = Data_PS[var_9e7e1];
-    int var_447d9 = int(var_05977.y);
-    int var_654e4 = int(var_05977.x);
+    highp vec4 var_6a02a = Data_PS[var_9e7e1];
+    int var_447d9 = int(var_6a02a.y);
+    int var_654e4 = int(var_6a02a.x);
     highp float var_ac5a3;
     if ((var_447d9 & 2) != 0)
     {
@@ -126,7 +126,7 @@ void main() {
                 highp vec4 var_d8137;
                 if ((var_447d9 & 1) != 0)
                 {
-                    highp vec2 var_75960 = vec2(var_c4329.x, 1.0 - var_c4329.y);
+                    highp vec2 var_75960 = vec2(var_c446e.x, 1.0 - var_c446e.y);
                     highp float var_1ce3f = var_75960.x;
                     highp float var_eb157 = var_75960.y;
                     highp vec2 var_b9345 = vec2(var_1ce3f, 1.0 - var_eb157);
@@ -143,7 +143,7 @@ void main() {
         }
         var_2e011 = var_3ed45;
     }
-    highp vec4 var_8048d;
+    highp vec4 var_39841;
     if ((var_447d9 & 128) != 0)
     {
         highp vec2 var_8d7d1 = (v_ScreenNormalPosition.xy * Data_PS[var_4251f].xy) + Data_PS[var_4251f].zw;
@@ -151,11 +151,11 @@ void main() {
         highp float var_44bd7 = var_8d7d1.y;
         highp vec2 var_76c64 = vec2(var_236dd, 1.0 - var_44bd7);
         var_8d7d1 = var_76c64;
-        var_8048d = var_2e011 * texture(s_txBuffer1, vec2(((var_76c64 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((var_76c64 * UVTransform[1].zw) + UVTransform[1].xy).y)).w;
+        var_39841 = var_2e011 * texture(s_txBuffer1, vec2(((var_76c64 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((var_76c64 * UVTransform[1].zw) + UVTransform[1].xy).y)).w;
     }
     else
     {
-        var_8048d = var_2e011;
+        var_39841 = var_2e011;
     }
-    bgfx_FragColor = (var_8048d * var_05977.w) * clamp(var_c4329.z, 0.0, 1.0);
+    bgfx_FragData0 = (var_39841 * var_6a02a.w) * clamp(var_c446e.z, 0.0, 1.0);
 }

@@ -23,7 +23,7 @@ precision highp int;
 uniform highp sampler2D s_ColorTexture;
 uniform highp vec4 ColorGrading_Misc;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_8e2a0(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_Misc.y != 0.0)
     {
@@ -119,7 +119,7 @@ void main() {
     highp vec3 var_9e11a = var_be1e6.xyz;
     highp vec3 var_c60a3;
     func_8e2a0(var_c60a3, var_9e11a);
-    highp vec3 var_fbc9d;
-    func_f3623(var_fbc9d, var_c60a3);
-    bgfx_FragColor = vec4(clamp(var_fbc9d, vec3(0.0), vec3(1.0)), 1.0);
+    highp vec3 var_56a25;
+    func_f3623(var_56a25, var_c60a3);
+    bgfx_FragData0 = vec4(clamp(var_56a25, vec3(0.0), vec3(1.0)), 1.0);
 }

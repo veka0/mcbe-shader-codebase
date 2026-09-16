@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -89,7 +89,7 @@ in highp vec4 v_fog;
 in highp vec4 v_light;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -125,8 +125,8 @@ void main() {
     var_295e5.w *= var_8a135.w;
 #endif
     var_295e5.w = max(0.0, var_295e5.w);
-    highp vec3 var_52162 = mix((var_295e5.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_3b6f4 = vec4(var_52162.x, var_52162.y, var_52162.z, var_295e5.w);
+    highp vec3 var_d8325 = mix((var_295e5.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_3b6f4 = vec4(var_d8325.x, var_d8325.y, var_d8325.z, var_295e5.w);
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
     bool var_218e3;
     if (DitheringEnabledToggle.x != 0.0)
@@ -143,7 +143,7 @@ void main() {
     {
         var_218e3 = false;
     }
-    highp float var_3d470 = (var_3b6f4.w * HudOpacity.x) * (var_218e3 ? 0.0 : 1.0);
-    highp vec4 var_16b44 = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_52162, var_3d470).xyz, v_fog.xyz, vec3(var_16b44.w)), var_3d470);
+    highp float var_6c35d = (var_3b6f4.w * HudOpacity.x) * (var_218e3 ? 0.0 : 1.0);
+    highp vec4 var_c0e46 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_d8325, var_6c35d).xyz, v_fog.xyz, vec3(var_c0e46.w)), var_6c35d);
 }

@@ -4,8 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DO_INDIRECT_SPECULAR_SHADING_DUAL_TARGET_PASS (not used)
-* - DO_INDIRECT_SPECULAR_SHADING_SINGLE_TARGET_PASS (not used)
+* - DO_INDIRECT_SPECULAR_SHADING_PASS (not used)
 * - DO_INDIRECT_SPECULAR_UPSCALE_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
@@ -104,7 +103,7 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragColor = vec4(0.0);
+    bgfx_FragData0 = vec4(0.0);
 }

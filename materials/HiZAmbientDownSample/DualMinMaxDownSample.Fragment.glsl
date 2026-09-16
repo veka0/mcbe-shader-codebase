@@ -33,7 +33,7 @@ uniform highp sampler2D s_PreviousMip;
 uniform highp vec4 MipResolutionAndRecipResolution;
 uniform highp vec4 PreviousMipResolutionAndRecipResolution;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_fe63b = floor(v_texcoord0.xy * MipResolutionAndRecipResolution.xy) * MipResolutionAndRecipResolution.zw;
     highp vec4 var_daf29 = texture(s_PreviousMip, var_fe63b);
@@ -83,18 +83,18 @@ void main() {
 #endif
 #ifdef MODE__MIP
     var_54906.w = var_daf29.w;
-    highp vec2 var_534b2 = min(var_a5a02.xy, var_a5a02.zw);
+    highp vec2 var_0a277 = min(var_a5a02.xy, var_a5a02.zw);
 #endif
 #ifdef MODE__INITIALIZE
-    highp vec2 var_534b2 = min(var_5e74d.xy, var_5e74d.zw);
+    highp vec2 var_0a277 = min(var_5e74d.xy, var_5e74d.zw);
 #endif
-    highp vec2 var_3f475 = max(var_5e74d.xy, var_5e74d.zw);
+    highp vec2 var_562a1 = max(var_5e74d.xy, var_5e74d.zw);
 #ifdef MODE__INITIALIZE
-    highp vec2 var_c2a39 = min(var_54906.xy, var_54906.zw);
+    highp vec2 var_82eec = min(var_54906.xy, var_54906.zw);
 #endif
 #ifdef MODE__MIP
-    highp vec2 var_c2a39 = min(var_749fe.xy, var_749fe.zw);
+    highp vec2 var_82eec = min(var_749fe.xy, var_749fe.zw);
 #endif
-    highp vec2 var_5dd98 = max(var_54906.xy, var_54906.zw);
-    bgfx_FragColor = vec4(min(var_534b2.x, var_534b2.y), max(var_3f475.x, var_3f475.y), min(var_c2a39.x, var_c2a39.y), max(var_5dd98.x, var_5dd98.y));
+    highp vec2 var_d85a4 = max(var_54906.xy, var_54906.zw);
+    bgfx_FragData0 = vec4(min(var_0a277.x, var_0a277.y), max(var_562a1.x, var_562a1.y), min(var_82eec.x, var_82eec.y), max(var_d85a4.x, var_d85a4.y));
 }

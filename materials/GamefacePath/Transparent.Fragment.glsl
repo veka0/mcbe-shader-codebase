@@ -23,7 +23,7 @@ precision highp int;
 uniform highp vec4 Data_PS[128];
 in highp vec4 v_ExtraParams;
 flat in highp vec4 v_VaryingData;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_4debe = v_ExtraParams;
     uvec4 var_45880 = floatBitsToUint(v_VaryingData);
@@ -32,7 +32,7 @@ void main() {
     int var_c4c19 = var_9e7e1 + 1;
     highp vec4 var_5f983 = Data_PS[var_9e7e1];
     int var_8fc81 = int(var_5f983.x);
-    highp vec4 var_bc541;
+    highp vec4 var_2a631;
     if (14 == var_244eb)
     {
         highp vec2 var_b71ef = dFdx(v_ExtraParams.xy);
@@ -40,7 +40,7 @@ void main() {
         highp float var_7084f = ((2.0 * var_4debe.x) * var_b71ef.x) - var_b71ef.y;
         highp float var_f5098 = ((2.0 * var_4debe.x) * var_45c5c.x) - var_45c5c.y;
         highp float var_a056d = (var_4debe.x * var_4debe.x) - var_4debe.y;
-        var_bc541 = (Data_PS[var_c4c19] * Data_PS[var_8fc81].x) * clamp(1.0 - sqrt((var_a056d * var_a056d) / ((var_7084f * var_7084f) + (var_f5098 * var_f5098))), 0.0, 1.0);
+        var_2a631 = (Data_PS[var_c4c19] * Data_PS[var_8fc81].x) * clamp(1.0 - sqrt((var_a056d * var_a056d) / ((var_7084f * var_7084f) + (var_f5098 * var_f5098))), 0.0, 1.0);
     }
     else
     {
@@ -53,7 +53,7 @@ void main() {
         {
             var_ff285 = Data_PS[var_c4c19] * var_4debe.y;
         }
-        var_bc541 = var_ff285;
+        var_2a631 = var_ff285;
     }
-    bgfx_FragColor = var_bc541;
+    bgfx_FragData0 = var_2a631;
 }

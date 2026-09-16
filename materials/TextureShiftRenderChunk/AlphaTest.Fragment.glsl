@@ -5,7 +5,8 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
@@ -87,7 +88,7 @@ flat in highp vec2 v_textureShift;
 #ifdef DITHERING__ON
 in highp vec4 v_worldPosition;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
     highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_803cb.TextureShiftBufferData[arg_651a0].noiseSpread);
     if (var_803cb.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
@@ -123,9 +124,9 @@ void main() {
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_5e5e8 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
+    highp vec4 var_208f1 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
 #ifdef DITHERING__OFF
-    if (false || (var_5e5e8.w < 0.5))
+    if (false || (var_208f1.w < 0.5))
 #endif
 #ifdef DITHERING__ON
     highp vec2 var_42b21 = DitherParams2[2].xy;
@@ -146,14 +147,14 @@ void main() {
     {
         var_2935c = false;
     }
-    if (var_2935c || (var_5e5e8.w < 0.5))
+    if (var_2935c || (var_208f1.w < 0.5))
     {
 #endif
         discard;
     }
-    highp vec4 var_15f8b = var_5e5e8;
-    highp vec3 var_877b8 = var_15f8b.xyz * v_color0.xyz;
-    var_5e5e8 = vec4(var_877b8.x, var_877b8.y, var_877b8.z, var_15f8b.w);
-    highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_877b8.xyz, var_5e5e8.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_5e5e8.w);
+    highp vec4 var_15f8b = var_208f1;
+    highp vec3 var_47b05 = var_15f8b.xyz * v_color0.xyz;
+    var_208f1 = vec4(var_47b05.x, var_47b05.y, var_47b05.z, var_15f8b.w);
+    highp vec4 var_713a6 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_47b05.xyz, var_208f1.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_208f1.w);
 }

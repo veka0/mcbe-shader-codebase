@@ -25,7 +25,7 @@ precision highp int;
 uniform highp sampler2D s_MatTexture;
 uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -73,9 +73,9 @@ void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
 }
 void main() {
     highp vec4 var_fe390 = texture(s_MatTexture, v_texcoord0);
-    highp vec4 var_14bc7 = var_fe390;
+    highp vec4 var_d5ac7 = var_fe390;
     highp vec3 var_9e11a = var_fe390.xyz;
-    highp vec3 var_03748;
-    func_9b87e(var_03748, var_9e11a);
-    bgfx_FragColor = vec4(var_03748, var_14bc7.w);
+    highp vec3 var_e7033;
+    func_9b87e(var_e7033, var_9e11a);
+    bgfx_FragData0 = vec4(var_e7033, var_d5ac7.w);
 }

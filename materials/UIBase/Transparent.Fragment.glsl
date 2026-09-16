@@ -17,9 +17,9 @@ precision mediump float;
 precision highp int;
 uniform highp vec4 HudOpacity;
 uniform highp vec4 TintColor;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_7c067 = TintColor;
-    var_7c067.w *= HudOpacity.x;
-    bgfx_FragColor = var_7c067;
+    highp vec4 var_9a522 = TintColor;
+    var_9a522.w *= HudOpacity.x;
+    bgfx_FragData0 = var_9a522;
 }

@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -85,7 +85,7 @@ in highp vec4 v_fog;
 in highp vec4 v_light;
 centroid in highp vec4 v_texcoords;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef TINTING__ENABLED
     highp vec4 var_a3564 = v_color0;
@@ -136,9 +136,9 @@ void main() {
         discard;
     }
     highp vec3 var_7ad1c = var_bf6a8.xyz * v_light.xyz;
-    highp vec4 var_a9e80 = vec4(var_7ad1c.x, var_7ad1c.y, var_7ad1c.z, var_bf6a8.w);
-    var_a9e80.w *= HudOpacity.x;
-    highp vec4 var_6ef7d = var_a9e80;
-    highp vec4 var_8544b = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_a9e80.xyz, var_6ef7d.w).xyz, v_fog.xyz, vec3(var_8544b.w)), var_6ef7d.w);
+    highp vec4 var_0bc36 = vec4(var_7ad1c.x, var_7ad1c.y, var_7ad1c.z, var_bf6a8.w);
+    var_0bc36.w *= HudOpacity.x;
+    highp vec4 var_d8f40 = var_0bc36;
+    highp vec4 var_f6e07 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_0bc36.xyz, var_d8f40.w).xyz, v_fog.xyz, vec3(var_f6e07.w)), var_d8f40.w);
 }

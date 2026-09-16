@@ -21,7 +21,7 @@ precision highp int;
 uniform highp vec4 FrameTime;
 uniform highp vec4 MatColor;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_5f6ba = v_texcoord0;
     highp float var_707a7 = var_5f6ba.x + FrameTime.x;
@@ -30,5 +30,5 @@ void main() {
     {
         discard;
     }
-    bgfx_FragColor = MatColor;
+    bgfx_FragData0 = MatColor;
 }

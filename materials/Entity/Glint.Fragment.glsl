@@ -75,16 +75,16 @@ in highp vec4 v_light;
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_c52eb = OverlayColor;
-    highp vec4 var_d30fe = v_fog;
-    highp vec4 var_a1024 = ((texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx * GlintColor) + (texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx * GlintColor)) * TileLightColor;
-    highp vec4 var_fc575 = var_a1024;
+    highp vec4 var_79468 = OverlayColor;
+    highp vec4 var_36b46 = v_fog;
+    highp vec4 var_ed9ac = ((texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx * GlintColor) + (texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx * GlintColor)) * TileLightColor;
+    highp vec4 var_e3e79 = var_ed9ac;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    bgfx_FragColor = vec4(var_a1024.xyz * var_a1024.xyz, abs(var_fc575.w)) + vec4(mix((mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_c52eb.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d30fe.w)), 0.0);
+    bgfx_FragData0 = vec4(var_ed9ac.xyz * var_ed9ac.xyz, abs(var_e3e79.w)) + vec4(mix((mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_79468.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_36b46.w)), 0.0);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    bgfx_FragColor = vec4(var_a1024.xyz * var_a1024.xyz, abs(var_fc575.w)) + vec4(mix((mix(texture(s_MatTexture0, v_texcoord0).xyz, OverlayColor.xyz, vec3(var_c52eb.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d30fe.w)), 0.0);
+    bgfx_FragData0 = vec4(var_ed9ac.xyz * var_ed9ac.xyz, abs(var_e3e79.w)) + vec4(mix((mix(texture(s_MatTexture0, v_texcoord0).xyz, OverlayColor.xyz, vec3(var_79468.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_36b46.w)), 0.0);
 #endif
 }

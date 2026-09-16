@@ -90,7 +90,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_ndcPosition;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -192,17 +192,17 @@ void main() {
     {
         var_bd900 = var_d5208;
     }
-    highp float var_185a5;
-    highp vec3 var_39d0c;
+    highp float var_13024;
+    highp vec3 var_855aa;
     if (!var_0db97)
     {
-        var_39d0c = vec3(0.0);
-        var_185a5 = 0.0;
+        var_855aa = vec3(0.0);
+        var_13024 = 0.0;
     }
     else
     {
-        var_39d0c = var_bd900;
-        var_185a5 = (clamp(var_db400.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06);
+        var_855aa = var_bd900;
+        var_13024 = (clamp(var_db400.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06);
     }
-    bgfx_FragColor = vec4(var_39d0c, var_185a5);
+    bgfx_FragData0 = vec4(var_855aa, var_13024);
 }

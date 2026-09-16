@@ -124,7 +124,7 @@ uniform highp vec4 WorldOrigin;
 in highp vec4 v_clipPosition;
 in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -279,28 +279,28 @@ void main() {
     highp vec3 var_a871a = var_e7e0a;
     bool var_0db97;
     func_2be34(var_a871a, var_0db97);
-    highp float var_1dad4;
+    highp float var_ee1f1;
     highp vec3 var_0ab19;
     if (!var_0db97)
     {
         var_0ab19 = vec3(0.0);
-        var_1dad4 = 0.0;
+        var_ee1f1 = 0.0;
     }
     else
     {
         var_0ab19 = var_2c946;
-        var_1dad4 = var_da3c1.w;
+        var_ee1f1 = var_da3c1.w;
     }
     highp vec2 var_ae031 = ((v_clipPosition.xyz / vec3(var_a3e18.w)).xy + vec2(1.0)) * vec2(0.5);
     highp vec3 var_12f16 = var_0ab19 * ((clamp(var_ae031.y, SkyProbeUVFadeParameters.y, SkyProbeUVFadeParameters.x) - SkyProbeUVFadeParameters.y) / ((SkyProbeUVFadeParameters.x - SkyProbeUVFadeParameters.y) + 9.9999997473787516355514526367188e-06));
-    highp vec3 var_10b45;
+    highp vec3 var_6ece2;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_10b45 = var_12f16 * 0.0033142860047519207000732421875;
+        var_6ece2 = var_12f16 * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_10b45 = var_12f16;
+        var_6ece2 = var_12f16;
     }
-    bgfx_FragColor = vec4(var_10b45, max(var_1dad4, SkyProbeUVFadeParameters.z));
+    bgfx_FragData0 = vec4(var_6ece2, max(var_ee1f1, SkyProbeUVFadeParameters.z));
 }

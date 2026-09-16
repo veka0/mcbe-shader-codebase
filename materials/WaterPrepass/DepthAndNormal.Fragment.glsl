@@ -5,7 +5,7 @@
 *
 * Passes:
 * - DEPTH_AND_NORMAL_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DO_WATER_SURFACE_BUFFER_PASS (not used)
 *
 * Instancing:

@@ -5,7 +5,8 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
+* - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
@@ -85,7 +86,7 @@ flat in highp vec2 v_textureShift;
 #ifdef DITHERING__ON
 in highp vec4 v_worldPosition;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
     highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_7ecf3.TextureShiftBufferData[arg_651a0].noiseSpread);
     if (var_7ecf3.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
@@ -107,18 +108,18 @@ void main() {
     func_f1932(var_1614a, var_cc681, var_7f114);
     highp vec2 var_61685 = v_texcoord0;
     highp vec2 var_97eb7 = v_ditheringAndMaskTinting;
-    highp vec4 var_c8424 = mix(texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].preUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].preUV1)), texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].postUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].postUV1)), vec4(var_7f114));
+    highp vec4 var_d7bbd = mix(texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].preUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].preUV1)), texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].postUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].postUV1)), vec4(var_7f114));
     if (var_97eb7.y > 0.5)
     {
-        highp vec3 var_5e4d7 = mix(var_c8424.xyz, var_c8424.xyz * v_color0.xyz, vec3(var_c8424.w)).xyz * var_3f821.w;
-        var_c8424 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_c8424.w);
-        var_c8424.w = 1.0;
+        highp vec3 var_5e4d7 = mix(var_d7bbd.xyz, var_d7bbd.xyz * v_color0.xyz, vec3(var_d7bbd.w)).xyz * var_3f821.w;
+        var_d7bbd = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_d7bbd.w);
+        var_d7bbd.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_c8424.xyz * v_color0.xyz;
-        var_c8424 = vec4(var_55928.x, var_55928.y, var_55928.z, var_c8424.w);
-        var_c8424.w *= var_3f821.w;
+        highp vec3 var_55928 = var_d7bbd.xyz * v_color0.xyz;
+        var_d7bbd = vec4(var_55928.x, var_55928.y, var_55928.z, var_d7bbd.w);
+        var_d7bbd.w *= var_3f821.w;
     }
 #ifdef DITHERING__ON
     highp vec2 var_8dad0 = DitherParams2[2].xy;
@@ -132,10 +133,10 @@ void main() {
         highp vec2 var_0a695 = floor(var_b2538);
         if (smoothstep(var_8dad0.x, var_8dad0.y, dot(-normalize(vec4(var_06d92[0].z, var_06d92[1].z, var_06d92[2].z, var_8909c).xyz), v_worldPosition.xyz - ViewPositionAndTime.xyz)) <= (((((((fract((var_ea24e.x * 0.5) + ((var_ea24e.y * var_ea24e.y) * 0.75)) * 0.25) + fract((var_ff607.x * 0.5) + ((var_ff607.y * var_ff607.y) * 0.75))) * 0.25) + fract((var_0a695.x * 0.5) + ((var_0a695.y * var_0a695.y) * 0.75))) * 64.0) + 0.5) * 0.015625))
         {
-            var_c8424.w = 0.0;
+            var_d7bbd.w = 0.0;
         }
     }
 #endif
-    highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_c8424.xyz, var_c8424.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_c8424.w);
+    highp vec4 var_713a6 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_d7bbd.xyz, var_d7bbd.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_d7bbd.w);
 }

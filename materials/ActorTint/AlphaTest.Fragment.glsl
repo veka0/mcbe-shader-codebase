@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -85,7 +85,7 @@ in highp vec4 v_fog;
 in highp vec4 v_light;
 centroid in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #if defined(MASKED_MULTITEXTURE__OFF) && !defined(CHANGE_COLOR__OFF)
     highp vec4 var_98b25 = MatColor * texture(s_MatTexture, v_texcoord0);
@@ -157,8 +157,8 @@ void main() {
     {
         discard;
     }
-    highp vec3 var_657e2 = mix((var_23ff5.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_74ef0 = vec4(var_657e2.x, var_657e2.y, var_657e2.z, var_db6c1.w);
-    highp vec4 var_dc02c = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(var_657e2, var_74ef0.w).xyz, v_fog.xyz, vec3(var_dc02c.w)), var_74ef0.w);
+    highp vec3 var_41ccd = mix((var_23ff5.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec4 var_1146b = vec4(var_41ccd.x, var_41ccd.y, var_41ccd.z, var_db6c1.w);
+    highp vec4 var_eb888 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(var_41ccd, var_1146b.w).xyz, v_fog.xyz, vec3(var_eb888.w)), var_1146b.w);
 }

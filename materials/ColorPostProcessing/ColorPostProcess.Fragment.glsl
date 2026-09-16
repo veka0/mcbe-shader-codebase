@@ -77,7 +77,7 @@ uniform highp vec4 LuminanceMinMaxAndWhitePointAndMinWhitePoint;
 uniform highp vec4 RasterizedColorEnabled;
 uniform highp vec4 TonemapParams0;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_8e34f(inout highp vec3 arg_c3a8d, inout highp vec3 arg_95aa6, inout highp vec3 arg_2c425) {
     if (ColorGrading_Misc2.x != 0.0)
     {
@@ -1007,16 +1007,16 @@ void main() {
         var_95052 = var_c1949;
     }
     highp vec3 var_b53eb = clamp(var_95052, vec3(0.0), vec3(1.0));
-    highp vec3 var_d9d1b;
+    highp vec3 var_cf281;
     if (RasterizedColorEnabled.x > 0.0)
     {
         highp vec4 var_3c414 = texture(s_RasterizedColor, v_texcoord0.xy);
         highp vec4 var_bfce0 = var_3c414;
-        var_d9d1b = (var_b53eb * (1.0 - var_bfce0.w)) + var_3c414.xyz;
+        var_cf281 = (var_b53eb * (1.0 - var_bfce0.w)) + var_3c414.xyz;
     }
     else
     {
-        var_d9d1b = var_b53eb;
+        var_cf281 = var_b53eb;
     }
-    bgfx_FragColor = vec4(var_d9d1b, 1.0);
+    bgfx_FragData0 = vec4(var_cf281, 1.0);
 }

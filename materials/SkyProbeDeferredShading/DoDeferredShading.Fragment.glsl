@@ -155,7 +155,7 @@ uniform highp vec4 VolumeNearFar;
 uniform highp vec4 VolumeScatteringEnabledAndPointLightVolumetricsEnabled;
 in highp vec3 v_projPosition;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     if (ColorGrading_OptimizeGammaCorrection.x != 0.0)
     {
@@ -202,7 +202,7 @@ void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     }
 }
 void main() {
-    highp vec4 var_38911 = vec4(0.0);
+    highp vec4 var_f65ac = vec4(0.0);
     highp vec4 var_11add = texture(s_SceneDepth, v_texcoord0.xy);
     highp float var_971b7 = (var_11add.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_971b7, 1.0);
@@ -378,7 +378,7 @@ void main() {
     {
         var_0ed56 = var_a3b9e;
     }
-    var_38911 = vec4(var_0ed56.x, var_0ed56.y, var_0ed56.z, var_38911.w);
-    var_38911.w = 1.0;
-    bgfx_FragColor = var_38911;
+    var_f65ac = vec4(var_0ed56.x, var_0ed56.y, var_0ed56.z, var_f65ac.w);
+    var_f65ac.w = 1.0;
+    bgfx_FragData0 = var_f65ac;
 }

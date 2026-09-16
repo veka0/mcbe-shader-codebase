@@ -5,7 +5,7 @@
 *
 * Passes:
 * - ALPHA_TEST_PASS (not used)
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - OPAQUE_PASS (not used)
 * - TRANSPARENT_PASS (not used)
@@ -72,22 +72,22 @@ centroid in highp vec2 v_texcoord0;
 #ifdef DITHERING__ON
 in highp vec4 v_worldPosition;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_3f821 = v_color0;
     highp vec2 var_97eb7 = v_ditheringAndMaskTinting;
-    highp vec4 var_2dc42 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_dd231 = texture(s_MatTexture, v_texcoord0);
     if (var_97eb7.y > 0.5)
     {
-        highp vec3 var_5e4d7 = mix(var_2dc42.xyz, var_2dc42.xyz * v_color0.xyz, vec3(var_2dc42.w)).xyz * var_3f821.w;
-        var_2dc42 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_2dc42.w);
-        var_2dc42.w = 1.0;
+        highp vec3 var_5e4d7 = mix(var_dd231.xyz, var_dd231.xyz * v_color0.xyz, vec3(var_dd231.w)).xyz * var_3f821.w;
+        var_dd231 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_dd231.w);
+        var_dd231.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_2dc42.xyz * v_color0.xyz;
-        var_2dc42 = vec4(var_55928.x, var_55928.y, var_55928.z, var_2dc42.w);
-        var_2dc42.w *= var_3f821.w;
+        highp vec3 var_55928 = var_dd231.xyz * v_color0.xyz;
+        var_dd231 = vec4(var_55928.x, var_55928.y, var_55928.z, var_dd231.w);
+        var_dd231.w *= var_3f821.w;
     }
 #ifdef DITHERING__ON
     highp vec2 var_8dad0 = DitherParams2[2].xy;
@@ -101,10 +101,10 @@ void main() {
         highp vec2 var_0a695 = floor(var_b2538);
         if (smoothstep(var_8dad0.x, var_8dad0.y, dot(-normalize(vec4(var_06d92[0].z, var_06d92[1].z, var_06d92[2].z, var_8909c).xyz), v_worldPosition.xyz - ViewPositionAndTime.xyz)) <= (((((((fract((var_ea24e.x * 0.5) + ((var_ea24e.y * var_ea24e.y) * 0.75)) * 0.25) + fract((var_ff607.x * 0.5) + ((var_ff607.y * var_ff607.y) * 0.75))) * 0.25) + fract((var_0a695.x * 0.5) + ((var_0a695.y * var_0a695.y) * 0.75))) * 64.0) + 0.5) * 0.015625))
         {
-            var_2dc42.w = 0.0;
+            var_dd231.w = 0.0;
         }
     }
 #endif
-    highp vec4 var_390de = v_fog;
-    bgfx_FragColor = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_2dc42.xyz, var_2dc42.w).xyz, FogColor.xyz, vec3(var_390de.w)), var_2dc42.w);
+    highp vec4 var_713a6 = v_fog;
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_dd231.xyz, var_dd231.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_dd231.w);
 }

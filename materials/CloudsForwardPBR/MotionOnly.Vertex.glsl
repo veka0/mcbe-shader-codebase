@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_PASS (not used)
 * - FORWARD_PBR_TRANSPARENT_SKY_PROBE_PASS (not used)
 * - MOTION_ONLY_PASS (not used)
@@ -105,9 +105,7 @@ uniform mat4 u_model[4];
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
-in vec4 a_color0;
 in vec3 a_position;
-in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 in vec4 i_data1;
 in vec4 i_data2;
@@ -143,11 +141,11 @@ void main() {
     mat4 var_8e1af = u_proj;
     var_8e1af[2] = var_67767;
     v_adjacentClouds = 0;
-    v_color0 = a_color0;
+    v_color0 = vec4(0.0);
     v_fragCoord = vec4(0.0);
     v_normal = vec3(0.0);
     v_prevWorldPos = (PrevWorld * vec4(a_position, 1.0)).xyz;
-    v_texcoord0 = a_texcoord0;
+    v_texcoord0 = vec2(0.0);
     v_tilePosition = vec2(0.0);
     v_worldPos = var_a67a8.xyz;
     gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));

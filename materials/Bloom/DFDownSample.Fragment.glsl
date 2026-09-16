@@ -28,9 +28,9 @@ precision highp int;
 uniform highp sampler2D s_BlurPyramidTexture;
 uniform highp vec4 ViewportScale;
 in highp vec4 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec2 var_0492c = (floor(ViewportScale.zw * ViewportScale.xy) - vec2(0.5)) / ViewportScale.zw;
-    highp vec2 var_6b7f4 = (ViewportScale.xy * 1.5) * (vec2(2.0) / ViewportScale.zw);
-    bgfx_FragColor = ((((texture(s_BlurPyramidTexture, min(v_texcoord0.xy, var_0492c)) * 0.5) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_6b7f4.x, var_6b7f4.y), var_0492c)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_6b7f4.x, var_6b7f4.y), var_0492c)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_6b7f4.x, -var_6b7f4.y), var_0492c)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_6b7f4.x, -var_6b7f4.y), var_0492c)) * 0.125);
+    highp vec2 var_1302f = (floor(ViewportScale.zw * ViewportScale.xy) - vec2(0.5)) / ViewportScale.zw;
+    highp vec2 var_181e6 = (ViewportScale.xy * 1.5) * (vec2(2.0) / ViewportScale.zw);
+    bgfx_FragData0 = ((((texture(s_BlurPyramidTexture, min(v_texcoord0.xy, var_1302f)) * 0.5) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_181e6.x, var_181e6.y), var_1302f)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_181e6.x, var_181e6.y), var_1302f)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(var_181e6.x, -var_181e6.y), var_1302f)) * 0.125)) + (texture(s_BlurPyramidTexture, min(v_texcoord0.xy + vec2(-var_181e6.x, -var_181e6.y), var_1302f)) * 0.125);
 }

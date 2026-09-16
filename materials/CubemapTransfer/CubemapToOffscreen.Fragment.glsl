@@ -23,48 +23,48 @@ uniform highp samplerCube s_SrcTextureCube;
 uniform highp vec4 CurrentFace;
 uniform highp vec4 CurrentMip;
 in highp vec2 v_texCoord;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec2 var_f95e1 = v_texCoord;
     var_f95e1 = (var_f95e1 * 2.0) - vec2(1.0);
-    highp vec3 var_d7526;
+    highp vec3 var_62f41;
     switch (int(CurrentFace.x))
     {
         case 0:
         {
-            var_d7526 = vec3(1.0, -var_f95e1.y, -var_f95e1.x);
+            var_62f41 = vec3(1.0, -var_f95e1.y, -var_f95e1.x);
             break;
         }
         case 1:
         {
-            var_d7526 = vec3(-1.0, -var_f95e1.y, var_f95e1.x);
+            var_62f41 = vec3(-1.0, -var_f95e1.y, var_f95e1.x);
             break;
         }
         case 2:
         {
-            var_d7526 = vec3(var_f95e1.x, 1.0, var_f95e1.y);
+            var_62f41 = vec3(var_f95e1.x, 1.0, var_f95e1.y);
             break;
         }
         case 3:
         {
-            var_d7526 = vec3(var_f95e1.x, -1.0, -var_f95e1.y);
+            var_62f41 = vec3(var_f95e1.x, -1.0, -var_f95e1.y);
             break;
         }
         case 4:
         {
-            var_d7526 = vec3(var_f95e1.x, -var_f95e1.y, 1.0);
+            var_62f41 = vec3(var_f95e1.x, -var_f95e1.y, 1.0);
             break;
         }
         case 5:
         {
-            var_d7526 = vec3(-var_f95e1.x, -var_f95e1.y, -1.0);
+            var_62f41 = vec3(-var_f95e1.x, -var_f95e1.y, -1.0);
             break;
         }
         default:
         {
-            var_d7526 = vec3(0.0);
+            var_62f41 = vec3(0.0);
             break;
         }
     }
-    bgfx_FragColor = textureLod(s_SrcTextureCube, var_d7526, CurrentMip.x - 1.0);
+    bgfx_FragData0 = textureLod(s_SrcTextureCube, var_62f41, CurrentMip.x - 1.0);
 }

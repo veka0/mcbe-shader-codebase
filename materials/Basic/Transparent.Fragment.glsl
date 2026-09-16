@@ -41,12 +41,12 @@ in highp vec4 v_color0;
 #ifdef SAMPLE_MAT_TEXTURE__ON
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef SAMPLE_MAT_TEXTURE__OFF
-    bgfx_FragColor = MatColor * v_color0;
+    bgfx_FragData0 = MatColor * v_color0;
 #endif
 #ifdef SAMPLE_MAT_TEXTURE__ON
-    bgfx_FragColor = (MatColor * texture(s_MatTexture, v_texcoord0)) * v_color0;
+    bgfx_FragData0 = (MatColor * texture(s_MatTexture, v_texcoord0)) * v_color0;
 #endif
 }

@@ -20,13 +20,13 @@ precision mediump float;
 precision highp int;
 uniform highp sampler2D s_CracksTexture;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_cd8c3 = texture(s_CracksTexture, v_texcoord0);
-    highp vec4 var_b580a = var_cd8c3;
+    highp vec4 var_0072b = texture(s_CracksTexture, v_texcoord0);
+    highp vec4 var_b580a = var_0072b;
     if (var_b580a.w < 0.5)
     {
         discard;
     }
-    bgfx_FragColor = var_cd8c3;
+    bgfx_FragData0 = var_0072b;
 }

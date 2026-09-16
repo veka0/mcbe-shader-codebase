@@ -4,7 +4,7 @@
 * Available Macros:
 *
 * Passes:
-* - DEPTH_ONLY_PASS (not used)
+* - DEPTH_ONLY_ALPHA_TEST_PASS (not used)
 * - DEPTH_ONLY_OPAQUE_PASS (not used)
 * - GEOMETRY_PREPASS_PASS (not used)
 * - GEOMETRY_PREPASS_ALPHA_TEST_PASS (not used)
@@ -76,13 +76,10 @@ uniform mat4 u_model[4];
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
-uniform vec4 UVAnimation;
 #ifdef INSTANCING__OFF
 in float a_indices;
 #endif
-in vec4 a_color0;
 in vec3 a_position;
-in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
 in vec4 i_data1;
 in vec4 i_data2;
@@ -120,11 +117,11 @@ void main() {
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_04231.xyz, 1.0));
     v_bitangent = vec3(0.0);
     v_clipPosition = var_c804c;
-    v_color0 = a_color0;
+    v_color0 = vec4(0.0);
     v_normal = vec3(0.0);
     v_prevWorldPos = vec3(0.0);
     v_tangent = vec3(0.0);
-    v_texcoord0 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
+    v_texcoord0 = vec2(0.0);
     v_worldPos = var_04231.xyz;
     gl_Position = var_c804c;
 }

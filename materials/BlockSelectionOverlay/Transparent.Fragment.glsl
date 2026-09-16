@@ -30,7 +30,7 @@ uniform highp vec4 MatColor;
 #ifdef ALPHA_TEST__ON
 in highp vec2 v_texcoord0;
 #endif
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
 #ifdef ALPHA_TEST__ON
     highp vec4 var_0b949 = texture(s_MatTexture, v_texcoord0);
@@ -39,5 +39,5 @@ void main() {
         discard;
     }
 #endif
-    bgfx_FragColor = MatColor;
+    bgfx_FragData0 = MatColor;
 }

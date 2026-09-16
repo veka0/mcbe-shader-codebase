@@ -26,9 +26,9 @@ precision highp int;
 uniform highp sampler2D s_SunMoonTexture;
 uniform highp vec4 SunMoonColor;
 in highp vec2 v_texcoord0;
-layout(location = 0) out highp vec4 bgfx_FragColor;
+layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_c1f25 = SunMoonColor * texture(s_SunMoonTexture, v_texcoord0);
-    highp vec4 var_a3d19 = var_c1f25;
-    bgfx_FragColor = vec4(var_c1f25.xyz, var_a3d19.w);
+    highp vec4 var_277a1 = SunMoonColor * texture(s_SunMoonTexture, v_texcoord0);
+    highp vec4 var_171b1 = var_277a1;
+    bgfx_FragData0 = vec4(var_277a1.xyz, var_171b1.w);
 }
