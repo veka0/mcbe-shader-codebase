@@ -74,7 +74,7 @@ struct TextureShiftBuffer {
 };
 
 layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_6f249;
-layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_90f76;
+layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_77e65;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
@@ -93,15 +93,15 @@ layout(location = 0) out uvec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
 layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
-    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_90f76.TextureShiftBufferData[arg_651a0].noiseSpread);
-    if (var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
+    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_77e65.TextureShiftBufferData[arg_651a0].noiseSpread);
+    if (var_77e65.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
     {
-        arg_0da03 = step(loc_47c38, var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha);
+        arg_0da03 = step(loc_47c38, var_77e65.TextureShiftBufferData[arg_651a0].globalAlpha);
         return;
     }
     else
     {
-        arg_0da03 = 1.0 - clamp((loc_47c38 - var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha) / var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        arg_0da03 = 1.0 - clamp((loc_47c38 - var_77e65.TextureShiftBufferData[arg_651a0].globalAlpha) / var_77e65.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
         return;
     }
 }
@@ -335,16 +335,29 @@ void main() {
     highp vec4 var_3f821 = v_color0;
     highp vec2 var_49a9d = v_ditheringAndMaskTinting;
     highp vec2 var_1614a = v_textureShift;
-    int var_34ad7 = int(var_1614a.y * 65535.0);
-    highp float var_29631;
-    func_f1932(var_1614a, var_34ad7, var_29631);
+    int var_1af3d = int(var_1614a.y * 65535.0);
+    highp float var_c5183;
+    func_f1932(var_1614a, var_1af3d, var_c5183);
+    highp vec2 var_2f8a8 = v_texcoord0;
+    int var_39955;
+    if (var_c5183 < 0.5)
+    {
+        var_2f8a8 = vec2(var_2f8a8.x + var_77e65.TextureShiftBufferData[var_1af3d].preUV0, var_2f8a8.y + var_77e65.TextureShiftBufferData[var_1af3d].preUV1);
+        var_39955 = (var_77e65.TextureShiftBufferData[var_1af3d].packedPBRId >> 16) & 65535;
+    }
+    else
+    {
+        var_2f8a8 = vec2(var_2f8a8.x + var_77e65.TextureShiftBufferData[var_1af3d].postUV0, var_2f8a8.y + var_77e65.TextureShiftBufferData[var_1af3d].postUV1);
+        var_39955 = var_77e65.TextureShiftBufferData[var_1af3d].packedPBRId & 65535;
+    }
+    var_49a9d = v_ditheringAndMaskTinting;
     highp vec2 var_f486c = v_texcoord0;
-    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1));
-    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1));
+    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_77e65.TextureShiftBufferData[var_1af3d].preUV0, var_f486c.y + var_77e65.TextureShiftBufferData[var_1af3d].preUV1));
+    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_77e65.TextureShiftBufferData[var_1af3d].postUV0, var_f486c.y + var_77e65.TextureShiftBufferData[var_1af3d].postUV1));
     highp vec4 var_da3c1 = var_4b671;
     highp vec4 var_e65e5 = var_2e873;
     highp float var_7dfb9;
-    if (var_29631 > 0.5)
+    if (var_c5183 > 0.5)
     {
         var_7dfb9 = var_e65e5.w;
     }
@@ -352,20 +365,7 @@ void main() {
     {
         var_7dfb9 = var_da3c1.w;
     }
-    highp vec2 var_2f8a8 = v_texcoord0;
-    int var_39955;
-    if (var_29631 < 0.5)
-    {
-        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1);
-        var_39955 = (var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId >> 16) & 65535;
-    }
-    else
-    {
-        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1);
-        var_39955 = var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId & 65535;
-    }
-    var_49a9d = v_ditheringAndMaskTinting;
-    highp vec4 var_c2c1a = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_29631)), var_7dfb9);
+    highp vec4 var_c2c1a = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_c5183)), var_7dfb9);
     if (var_49a9d.y != 0.0)
     {
         highp vec3 var_5e4d7 = mix(var_c2c1a.xyz, var_c2c1a.xyz * v_color0.xyz, vec3(var_c2c1a.w)).xyz * var_3f821.w;

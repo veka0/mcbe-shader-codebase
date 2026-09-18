@@ -7,14 +7,6 @@
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
-* GPUBlockLighting:
-* - GPU_BLOCK_LIGHTING__OFF (not used)
-* - GPU_BLOCK_LIGHTING__ON (not used)
-*
-* PointLightShading:
-* - POINT_LIGHT_SHADING__OFF (not used)
-* - POINT_LIGHT_SHADING__ON (not used)
-*
 * Available Resources:
 *
 * Buffers:
