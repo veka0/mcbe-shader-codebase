@@ -12,12 +12,13 @@
 *
 * Buffers:
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - layout(binding = 5, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - layout(binding = 6, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_RasterColor;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
-* - layout(binding = 6, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 7, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;

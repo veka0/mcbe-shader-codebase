@@ -12,12 +12,13 @@
 *
 * Buffers:
 * - uniform lowp sampler2DArray s_CausticsTexture;
-* - layout(binding = 5, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - layout(binding = 6, std430) buffer s_GpuEntryBufferBuffer { GpuVolumeEntry s_GpuEntryBuffer[]; };
+* - uniform lowp sampler2D s_Normal;
 * - uniform lowp sampler2D s_PreviousFrameAverageLuminance;
 * - uniform lowp sampler2D s_RasterColor;
 * - uniform highp sampler2DArray s_ScatteringBuffer;
 * - uniform highp sampler2DArray s_ShadowCascades;
-* - layout(binding = 6, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
+* - layout(binding = 7, std430) buffer s_VoxelBufferBuffer { VoxelNode s_VoxelBuffer[]; };
 *
 * Uniforms:
 * - uniform vec4 AmbientLightParams;
@@ -68,6 +69,10 @@
 
 precision mediump float;
 precision highp int;
+struct VoxelNode {
+    uint data;
+};
+
 struct GpuVolumeEntry {
     int packed_xy;
     int packed_zw;
@@ -75,14 +80,11 @@ struct GpuVolumeEntry {
     int user_data;
 };
 
-struct VoxelNode {
-    uint data;
-};
-
-layout(binding = 5, std430) buffer s_GpuEntryBuffer { GpuVolumeEntry GpuEntryBuffer[]; } var_01082;
-layout(binding = 6, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_62e53;
+layout(binding = 7, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_77fa1;
+layout(binding = 6, std430) buffer s_GpuEntryBuffer { GpuVolumeEntry GpuEntryBuffer[]; } var_70434;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
+uniform highp sampler2D s_Normal;
 uniform highp sampler2D s_RasterColor;
 uniform highp vec4 GpuEntryBufferCapacity;
 uniform highp vec4 VolumeLayer;
@@ -90,12 +92,12 @@ uniform highp vec4 WorldOrigin;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void func_33953(inout uint arg_a601e, inout highp vec3 arg_aa7d7) {
-    if (var_62e53.VoxelBuffer[arg_a601e].data == 0u)
+    if (var_77fa1.VoxelBuffer[arg_a601e].data == 0u)
     {
         arg_aa7d7 = vec3(0.0);
         return;
     }
-    highp vec4 loc_11fc1 = vec4(uvec4(var_62e53.VoxelBuffer[arg_a601e].data, var_62e53.VoxelBuffer[arg_a601e].data >> 8u, var_62e53.VoxelBuffer[arg_a601e].data >> 16u, var_62e53.VoxelBuffer[arg_a601e].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+    highp vec4 loc_11fc1 = vec4(uvec4(var_77fa1.VoxelBuffer[arg_a601e].data, var_77fa1.VoxelBuffer[arg_a601e].data >> 8u, var_77fa1.VoxelBuffer[arg_a601e].data >> 16u, var_77fa1.VoxelBuffer[arg_a601e].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
     highp vec4 loc_3ff2a = loc_11fc1;
     arg_aa7d7 = (loc_11fc1.xyz * loc_3ff2a.w) * 6.0;
 }
@@ -120,15 +122,28 @@ void main() {
     highp vec4 var_9666f = vec4(var_eb413 * var_4fa47[0].x, var_ac116 * var_498b7[1].y, var_f2b7c * var_4882d[3].z, (var_0357c * var_78c1b[2].w) + (var_2c821 * var_40575[3].w));
     var_e8719 = var_9666f;
     highp float var_d799e = var_e8719.w;
-    highp vec4 var_dcfeb = var_9666f / vec4(var_d799e);
-    var_e8719 = var_dcfeb;
-    highp vec3 var_ffb36 = (u_invView * vec4(var_dcfeb.xyz, 1.0)).xyz - WorldOrigin.xyz;
-    highp vec3 var_d1c0a = var_ffb36;
-    ivec4 var_1bf08 = ivec4(ivec3(floor(vec3(ivec3(floor(var_ffb36))) * vec3(0.0625))), clamp(int(VolumeLayer.x), 0, 1));
-    ivec4 var_ed134 = var_1bf08;
+    highp vec4 var_ded0e = var_9666f / vec4(var_d799e);
+    var_e8719 = var_ded0e;
+    highp vec4 var_158bd = texture(s_Normal, v_texcoord0);
+    highp vec2 var_745cb = var_158bd.xy;
+    highp vec3 var_b0cb0 = vec3(var_158bd.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
+    highp vec2 var_04d49;
+    if (var_b0cb0.z < 0.0)
+    {
+        var_04d49 = (vec2(1.0) - abs(var_b0cb0.yx)) * ((step(vec2(0.0), var_b0cb0.xy) * 2.0) - vec2(1.0));
+    }
+    else
+    {
+        var_04d49 = var_b0cb0.xy;
+    }
+    highp vec3 var_9a51f = var_b0cb0;
+    var_b0cb0 = vec3(var_04d49.x, var_04d49.y, var_9a51f.z);
+    highp vec3 var_a7b8b = ((u_invView * vec4(var_ded0e.xyz, 1.0)).xyz - WorldOrigin.xyz) + (normalize(vec3(var_04d49.x, var_04d49.y, var_9a51f.z)) * 0.20000000298023223876953125);
+    ivec4 var_57533 = ivec4(ivec3(floor(vec3(ivec3(floor(var_a7b8b))) * vec3(0.0625))), int(VolumeLayer.x));
+    ivec4 var_ed134 = var_57533;
     int var_b6453 = (var_ed134.x & 65535) | (var_ed134.y << 16);
     int var_3146c = (var_ed134.z & 65535) | (var_ed134.w << 16);
-    ivec4 var_22622 = var_1bf08;
+    ivec4 var_22622 = var_57533;
     uint var_1a3f6 = uint(var_22622.x) * 1540483477u;
     uint var_ae8c8 = uint(var_22622.y) * 1540483477u;
     uint var_08aa3 = uint(var_22622.z) * 1540483477u;
@@ -137,17 +152,18 @@ void main() {
     uint var_7eea2 = (var_fc500 ^ (var_fc500 >> uint(13))) * 1540483477u;
     uint var_63731 = var_7eea2 ^ (var_7eea2 >> uint(15));
     uint var_8322c = (var_63731 ^ (var_63731 >> uint(16))) & 65535u;
-    uint var_3fdab = var_8322c | uint(var_8322c == 0u);
+    uint var_28df8 = var_8322c | uint(var_8322c == 0u);
+    uint var_6cfcb = uint(GpuEntryBufferCapacity.x);
     int var_51ba1;
-    uint var_1e5d0;
+    uint var_38f07;
     bool var_064aa;
     uint var_23e5d;
     var_23e5d = 0u;
     var_064aa = false;
-    var_1e5d0 = var_3fdab & uint(GpuEntryBufferCapacity.x - 1.0);
+    var_38f07 = var_28df8 & (var_6cfcb - 1u);
     var_51ba1 = 0;
     bool var_06f21;
-    uint var_6a813;
+    uint var_8736f;
     uint var_5f390;
     uint var_ae215;
     bool var_c4f05;
@@ -155,12 +171,12 @@ void main() {
     {
         if (var_51ba1 < 8)
         {
-            uint var_93adf = uint(var_01082.GpuEntryBuffer[var_1e5d0].hash) & 65535u;
-            bool var_1ceed = var_93adf == var_3fdab;
+            uint var_93adf = uint(var_70434.GpuEntryBuffer[var_38f07].hash) & 65535u;
+            bool var_1ceed = var_93adf == var_28df8;
             bool var_bd56d;
             if (var_1ceed)
             {
-                var_bd56d = var_01082.GpuEntryBuffer[var_1e5d0].packed_xy == var_b6453;
+                var_bd56d = var_70434.GpuEntryBuffer[var_38f07].packed_xy == var_b6453;
             }
             else
             {
@@ -169,7 +185,7 @@ void main() {
             bool var_e2d67;
             if (var_bd56d)
             {
-                var_e2d67 = var_01082.GpuEntryBuffer[var_1e5d0].packed_zw == var_3146c;
+                var_e2d67 = var_70434.GpuEntryBuffer[var_38f07].packed_zw == var_3146c;
             }
             else
             {
@@ -184,7 +200,7 @@ void main() {
                 uint var_4f4ff;
                 if (var_e2d67)
                 {
-                    var_4f4ff = uint(var_01082.GpuEntryBuffer[var_1e5d0].user_data);
+                    var_4f4ff = uint(var_70434.GpuEntryBuffer[var_38f07].user_data);
                 }
                 else
                 {
@@ -193,7 +209,7 @@ void main() {
                 var_5f390 = var_4f4ff;
             }
             var_06f21 = var_064aa || var_e2d67;
-            var_6a813 = (var_1e5d0 + 1u) & uint(GpuEntryBufferCapacity.x - 1.0);
+            var_8736f = (var_38f07 + 1u) & (var_6cfcb - 1u);
             if (var_06f21 || (var_93adf == 0u))
             {
                 var_c4f05 = var_06f21;
@@ -202,7 +218,7 @@ void main() {
             }
             var_23e5d = var_5f390;
             var_064aa = var_06f21;
-            var_1e5d0 = var_6a813;
+            var_38f07 = var_8736f;
             var_51ba1++;
             continue;
         }
@@ -216,8 +232,7 @@ void main() {
     highp vec3 var_54f91;
     if (var_c4f05)
     {
-        var_d1c0a.y += 0.5;
-        uvec3 var_ffb7a = uvec3(floor(var_d1c0a - (floor(var_ffb36 * 0.0625) * 16.0))) & uvec3(15u);
+        uvec3 var_ffb7a = uvec3(floor(var_a7b8b - (floor(var_a7b8b * 0.0625) * 16.0))) & uvec3(15u);
         uint var_5a78b = (var_ae215 >> 2u) + ((var_ffb7a.y + (var_ffb7a.z * 16u)) + (var_ffb7a.x * 256u));
         highp vec3 var_bf963;
         func_33953(var_5a78b, var_bf963);

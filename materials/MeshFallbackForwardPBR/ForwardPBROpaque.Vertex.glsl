@@ -119,6 +119,7 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
+* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;

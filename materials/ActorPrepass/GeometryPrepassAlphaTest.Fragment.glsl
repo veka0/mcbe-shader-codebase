@@ -389,18 +389,17 @@ void main() {
     highp vec4 var_d0ebc = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_d0ebc;
     highp vec3 var_f88c4 = BlockLightColor.xyz;
-    highp vec3 var_fbfa9;
+    highp vec3 var_e61b8;
     if ((((var_f88c4.x + var_f88c4.y) + var_f88c4.z) < 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x > 9.9999997473787516355514526367188e-05))
     {
-        highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_88ce0 = TileLightIntensity.x * TileLightIntensity.x;
-        var_fbfa9 = clamp(vec3(var_88ce0 + (var_0bc6f.x * var_0bc6f.w), (var_88ce0 * ((((var_88ce0 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_88ce0 * (((var_88ce0 * var_88ce0) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        highp float var_c1e8f = TileLightIntensity.x * TileLightIntensity.x;
+        var_e61b8 = clamp(vec3(var_c1e8f, var_c1e8f * ((((var_c1e8f * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_c1e8f * (((var_c1e8f * var_c1e8f) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_fbfa9 = BlockLightColor.xyz;
+        var_e61b8 = BlockLightColor.xyz;
     }
-    highp vec3 var_8f0e5 = var_fbfa9 * vec3(0.16666667163372039794921875);
+    highp vec3 var_8f0e5 = var_e61b8 * vec3(0.16666667163372039794921875);
     highp vec4 var_f46ce = vec4(var_8f0e5, 0.0039215688593685626983642578125);
     highp vec2 var_8a7dd = max(var_f46ce.xy, var_f46ce.zw);
     highp float var_a7109 = ceil(clamp(max(var_8a7dd.x, var_8a7dd.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;

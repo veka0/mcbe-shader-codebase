@@ -101,6 +101,7 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
+* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -211,6 +212,9 @@ uniform highp vec4 SkyZenithColor;
 uniform highp vec4 SubPixelOffset;
 uniform highp vec4 SunColor;
 uniform highp vec4 SunDir;
+#ifdef POINT_LIGHT_SHADING__ON
+uniform highp vec4 TransitioningAmbientScalar;
+#endif
 uniform highp vec4 UndergroundFogColor;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
@@ -815,10 +819,10 @@ void func_1cb59(inout highp vec3 arg_33c3b, inout highp vec3 arg_534d1, inout hi
     }
     arg_534d1 = loc_95dc0;
 }
-void func_7b48e(inout highp vec3 arg_326b5, inout highp vec3 arg_179c6, inout highp vec3 arg_b40e7, inout highp vec3 arg_4225e, inout highp vec3 arg_4f097, inout highp vec3 arg_9ffae, inout highp vec3 arg_93b0c, inout highp vec2 arg_8115d, inout highp vec3 arg_407d2) {
+void func_2f223(inout highp vec3 arg_6cd76, inout highp vec3 arg_3aadd, inout highp vec3 arg_b40e7, inout highp vec3 arg_4225e, inout highp vec3 arg_4f097, inout highp vec3 arg_9ffae, inout highp vec3 arg_93b0c, inout highp vec2 arg_8115d, inout highp vec3 arg_407d2) {
     if (!(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.z != 0.0))
     {
-        arg_326b5 = arg_179c6;
+        arg_6cd76 = arg_3aadd;
         return;
     }
     highp vec3 loc_2eb4f;
@@ -830,9 +834,9 @@ void func_7b48e(inout highp vec3 arg_326b5, inout highp vec3 arg_179c6, inout hi
     {
         loc_2eb4f = arg_4225e;
     }
-    highp vec3 loc_2a9f6;
-    func_1cb59(arg_4f097, loc_2a9f6, arg_9ffae, arg_93b0c, arg_8115d, arg_4225e, loc_2eb4f, arg_407d2);
-    arg_326b5 = arg_179c6 + loc_2a9f6;
+    highp vec3 loc_1c263;
+    func_1cb59(arg_4f097, loc_1c263, arg_9ffae, arg_93b0c, arg_8115d, arg_4225e, loc_2eb4f, arg_407d2);
+    arg_6cd76 = arg_3aadd + (loc_1c263 * (1.0 - TransitioningAmbientScalar.x));
 }
 #endif
 void func_4efb5(inout highp float arg_592e1, inout highp float arg_38961) {
@@ -960,7 +964,7 @@ void main() {
     func_51314(var_d0fd1, var_1f739, var_d9513, var_cfdac, var_0e7a8, var_cbd15, var_614bf, var_abaf1);
 #ifdef POINT_LIGHT_SHADING__ON
     highp vec3 var_a27b3;
-    func_7b48e(var_a27b3, var_1f739, var_85d40, var_cf6e2, var_67861, var_d9513, var_614bf, var_abaf1, var_0e7a8);
+    func_2f223(var_a27b3, var_1f739, var_85d40, var_cf6e2, var_67861, var_d9513, var_614bf, var_abaf1, var_0e7a8);
 #endif
     highp float var_e9ce3 = clamp(((var_84584 * 0.062745101749897003173828125) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
     highp float var_09edc = clamp(1.0 - max(dot(var_614bf, var_d9513), 0.0), 0.0, 1.0);
@@ -987,16 +991,15 @@ void main() {
     {
         var_68aa1 = var_2b2d2;
     }
-    highp vec3 var_936b4;
+    highp vec3 var_9e815;
     if (var_68aa1)
     {
-        highp vec4 var_1a32d = vec4(1.0);
-        highp vec4 var_ee7a5 = SkyAmbientLightColorIntensity;
-        var_936b4 = max(((vec3(1.0) + (vec3(1.0) * var_1a32d.w)) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_ee7a5.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
+        highp vec4 var_38d79 = SkyAmbientLightColorIntensity;
+        var_9e815 = max((vec3(1.0) * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix(1.0, 1.0, CameraLightIntensity.y)) * var_38d79.w), AmbientLightParams.xyz * AmbientLightParams.w) * AtmosphericScatteringToggles.z;
     }
     else
     {
-        var_936b4 = vec3(0.0);
+        var_9e815 = vec3(0.0);
     }
     highp vec3 var_1bb57;
     highp float var_bdb1d;
@@ -1009,7 +1012,7 @@ void main() {
             highp vec3 var_44083;
             if (AtmosphericScatteringToggles.y != 0.0)
             {
-                var_44083 = FogColor.xyz * max(var_936b4, vec3(1.0));
+                var_44083 = FogColor.xyz * max(var_9e815, vec3(1.0));
             }
             else
             {

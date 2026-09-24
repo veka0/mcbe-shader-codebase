@@ -386,18 +386,17 @@ void main() {
     var_96bda = var_d0ebc;
     highp vec3 var_d13a4 = var_41868.xyz;
     highp vec3 var_05dbb = var_d13a4;
-    highp vec3 var_774df;
+    highp vec3 var_eb137;
     if ((((var_05dbb.x + var_05dbb.y) + var_05dbb.z) < 9.9999997473787516355514526367188e-05) && (var_4686c.x > 9.9999997473787516355514526367188e-05))
     {
-        highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_9a19a = var_4686c.x * var_4686c.x;
-        var_774df = clamp(vec3(var_9a19a + (var_0bc6f.x * var_0bc6f.w), (var_9a19a * ((((var_9a19a * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_9a19a * (((var_9a19a * var_9a19a) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        highp float var_bc033 = var_4686c.x * var_4686c.x;
+        var_eb137 = clamp(vec3(var_bc033, var_bc033 * ((((var_bc033 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_bc033 * (((var_bc033 * var_bc033) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_774df = var_d13a4;
+        var_eb137 = var_d13a4;
     }
-    highp vec3 var_8f0e5 = var_774df * vec3(0.16666667163372039794921875);
+    highp vec3 var_8f0e5 = var_eb137 * vec3(0.16666667163372039794921875);
     highp vec4 var_f46ce = vec4(var_8f0e5, 0.0039215688593685626983642578125);
     highp vec2 var_8a7dd = max(var_f46ce.xy, var_f46ce.zw);
     highp float var_a7109 = ceil(clamp(max(var_8a7dd.x, var_8a7dd.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;

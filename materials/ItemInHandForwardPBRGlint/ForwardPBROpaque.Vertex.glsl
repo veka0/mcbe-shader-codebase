@@ -121,6 +121,7 @@
 * - uniform vec4 TileLightColor;
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
+* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UVAnimation;
 * - uniform vec4 UVScale;
 * - uniform vec4 UndergroundFogColor;
