@@ -80,28 +80,24 @@ void main() {
     vec4 var_a77b2 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_a77b2 = var_e43a8 * vec4(a_position, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_a77b2 = var_53a7d * vec4(a_position, 1.0);
 #endif
     vec3 var_7848e = var_a77b2.xyz;
-    vec4 var_9d5b1 = a_color0;
 #ifdef RENDER_AS_BILLBOARDS__ON
     vec3 var_eb4e0 = var_7848e + vec3(0.5);
     vec3 var_f280f = normalize(var_eb4e0 - ViewPositionAndTime.xyz);
     vec3 var_d3ea2 = normalize(cross(vec3(0.0, 1.0, 0.0), var_f280f));
     vec3 var_c39b1 = a_color0.xyz;
     vec3 var_d4226 = var_eb4e0 - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
-    float var_e3e0a = length(ViewPositionAndTime.xyz - var_d4226);
+    float var_cce29 = length(ViewPositionAndTime.xyz - var_d4226);
 #endif
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    float var_e3e0a = length(ViewPositionAndTime.xyz - var_7848e);
+    float var_cce29 = length(ViewPositionAndTime.xyz - var_7848e);
 #endif
     vec4 var_ade36 = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
     mat4 var_83c3f = u_proj;
@@ -121,22 +117,22 @@ void main() {
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
 #ifdef RENDER_AS_BILLBOARDS__OFF
-    vec4 var_ca76d = a_color0;
+    vec4 var_33c4a = a_color0;
 #endif
 #ifdef RENDER_AS_BILLBOARDS__ON
-    vec4 var_ca76d = vec4(1.0);
+    vec4 var_33c4a = vec4(1.0);
 #endif
-    if (var_9d5b1.w < 0.949999988079071044921875)
+    if (a_color0.w < 0.949999988079071044921875)
     {
-        vec4 var_cb46d = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
-        var_ca76d.w = mix(var_9d5b1.w, 1.0, clamp(var_e3e0a / var_cb46d.w, 0.0, 1.0));
+        vec4 var_ebd63 = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
+        var_33c4a.w = mix(a_color0.w, 1.0, clamp(var_cce29 / var_ebd63.w, 0.0, 1.0));
     }
     uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
     uvec2 var_5e4ed = var_6d79f;
     v_clipPosition = var_d80ab;
-    v_color0 = var_ca76d;
+    v_color0 = var_33c4a;
     v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
-    v_fog = vec4(FogColor.xyz, clamp((((var_e3e0a / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
+    v_fog = vec4(FogColor.xyz, clamp((((var_cce29 / var_ade36.z) + RenderChunkFogAlpha.x) - var_ade36.x) / (var_ade36.y - var_ade36.x), 0.0, 1.0));
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_texcoord0 = var_45935;
     v_worldPos = var_7848e;

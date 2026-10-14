@@ -118,23 +118,19 @@ void func_fb7ab(inout highp float arg_0840d, inout highp float arg_f7959, inout 
     }
 }
 void main() {
-#ifdef TINTING__ENABLED
-    highp vec4 var_a3564 = v_color0;
-    highp vec4 var_13038 = vec4(v_color0.xyz, var_a3564.w);
-    highp vec4 var_1b1d9 = var_13038;
-#endif
 #ifdef TINTING__DISABLED
     highp vec4 var_2a22e = texture(s_MatTexture, v_texcoords.zw);
 #endif
 #ifdef TINTING__ENABLED
-    highp vec4 var_45919 = texture(s_MatTexture, v_texcoords.zw);
-    highp vec4 var_0ad11 = texture(s_MatTexture, v_texcoords.xy);
-    var_45919.w = mix(var_0ad11.x * var_0ad11.w, var_0ad11.w, var_1b1d9.w);
-    highp vec4 var_5fdbc = var_45919;
-    highp vec3 var_f30a7 = var_5fdbc.xyz * var_13038.xyz;
-    highp vec4 var_b626b = vec4(var_f30a7.x, var_f30a7.y, var_f30a7.z, var_5fdbc.w);
-    var_45919 = var_b626b;
-    highp vec4 var_2a22e = var_b626b;
+    highp vec4 var_cc5d0 = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_e035a = texture(s_MatTexture, v_texcoords.xy);
+    var_cc5d0.w = mix(var_e035a.x * var_e035a.w, var_e035a.w, v_color0.w);
+    highp vec4 var_e3828 = var_cc5d0;
+    highp vec3 var_4a912 = var_e3828.xyz * vec4(v_color0.xyz, v_color0.w).xyz;
+    var_cc5d0.x = var_4a912.x;
+    var_cc5d0.y = var_4a912.y;
+    var_cc5d0.z = var_4a912.z;
+    highp vec4 var_2a22e = var_cc5d0;
 #endif
     bool var_711f5 = var_2a22e.w < ActorFPEpsilon.x;
     bool var_7df86;
@@ -145,11 +141,10 @@ void main() {
         if (DitheringEnabledToggle.x != 0.0)
         {
             highp mat4 var_24edd = u_view;
-            highp vec4 var_3267d = v_clipPosition;
-            highp vec2 var_f4f10 = floor(((((v_clipPosition.xyz / vec3(var_3267d.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
-            highp vec2 var_c55b8 = floor(var_f4f10 * 0.25);
-            highp vec2 var_63b62 = floor(var_f4f10 * 0.5);
-            highp vec2 var_5fe78 = floor(var_f4f10);
+            highp vec2 var_52d56 = floor(((((v_clipPosition.xyz / vec3(v_clipPosition.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+            highp vec2 var_c55b8 = floor(var_52d56 * 0.25);
+            highp vec2 var_63b62 = floor(var_52d56 * 0.5);
+            highp vec2 var_5fe78 = floor(var_52d56);
             var_63892 = smoothstep(var_4be3d.x, var_4be3d.y, dot(-normalize(vec4(var_24edd[0].z, var_24edd[1].z, var_24edd[2].z, var_238cd).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c55b8.x * 0.5) + ((var_c55b8.y * var_c55b8.y) * 0.75)) * 0.25) + fract((var_63b62.x * 0.5) + ((var_63b62.y * var_63b62.y) * 0.75))) * 0.25) + fract((var_5fe78.x * 0.5) + ((var_5fe78.y * var_5fe78.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
         }
         else
@@ -166,9 +161,9 @@ void main() {
     {
         discard;
     }
-    highp vec4 var_414c0 = var_2a22e;
-    var_414c0.w *= HudOpacity.x;
-    highp vec4 var_1d587 = var_414c0;
+    highp vec4 var_5565b = var_2a22e;
+    var_5565b.w *= HudOpacity.x;
+    highp vec4 var_1d587 = var_5565b;
     int var_16e32 = int(BannerBasePBRTextureData[2].x);
     highp vec2 var_7e242 = vec2(BannerBasePBRTextureData[1].x, BannerBasePBRTextureData[1].y);
     highp vec2 var_969fb = vec2(BannerBasePBRTextureData[1].z, BannerBasePBRTextureData[1].w);
@@ -183,7 +178,7 @@ void main() {
         if ((var_16e32 & 8) == 8)
         {
             highp vec2 var_9491c = (v_texcoords.zw * var_7e242) + var_969fb;
-            highp vec3 var_2ae5f = vec3(0.0, 0.0, 1.0);
+            highp vec3 var_646d4 = vec3(0.0, 0.0, 1.0);
             highp float var_92e4d = clamp((min(BannerBasePBRTextureData[3].w - BannerBasePBRTextureData[3].y, BannerBasePBRTextureData[3].w) * (-1.0)) + 2.0, 0.0, 1.0);
             if (var_92e4d > 0.0)
             {
@@ -211,7 +206,7 @@ void main() {
                 }
                 highp vec2 var_8b660 = var_ed03c;
                 ivec2 var_5da0a = ivec2(clamp(vec2(var_64604.x - 0.083333335816860198974609375, var_64604.x + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-                var_2ae5f.x = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
+                var_646d4.x = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
                 highp vec2 var_a6d82;
                 if (var_64604.x > 0.5)
                 {
@@ -223,13 +218,16 @@ void main() {
                 }
                 var_8b660 = var_a6d82;
                 var_5da0a = ivec2(clamp(vec2(var_64604.y - 0.083333335816860198974609375, var_64604.y + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-                var_2ae5f.y = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
-                var_2ae5f.z = 0.25;
-                highp vec3 var_1cc05 = normalize(var_2ae5f);
-                highp vec2 var_cb68a = var_1cc05.xy * var_92e4d;
-                var_2ae5f = vec3(var_cb68a.x, var_cb68a.y, var_1cc05.z);
+                var_646d4.y = var_8b660[var_5da0a.x] - var_8b660[var_5da0a.y];
+                var_646d4.z = 0.25;
+                highp vec3 var_3f9e3 = var_646d4;
+                highp vec3 var_d29bb = normalize(var_3f9e3);
+                var_646d4 = var_d29bb;
+                highp vec2 var_0d55c = var_d29bb.xy * var_92e4d;
+                var_646d4.x = var_0d55c.x;
+                var_646d4.y = var_0d55c.y;
             }
-            var_a4d0b = var_2ae5f;
+            var_a4d0b = var_646d4;
         }
         else
         {
@@ -254,7 +252,7 @@ void main() {
                 if (var_5d1d0)
                 {
                     highp vec2 var_eaa59 = var_5fac9;
-                    highp vec3 var_8029f = vec3(0.0, 0.0, 1.0);
+                    highp vec3 var_b875d = vec3(0.0, 0.0, 1.0);
                     highp float var_0725d = clamp((var_14a36 * (-1.0)) + 2.0, 0.0, 1.0);
                     if (var_0725d > 0.0)
                     {
@@ -282,7 +280,7 @@ void main() {
                         }
                         highp vec2 var_ef69e = var_9413e;
                         ivec2 var_abbdc = ivec2(clamp(vec2(var_30342.x - 0.083333335816860198974609375, var_30342.x + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-                        var_8029f.x = var_ef69e[var_abbdc.x] - var_ef69e[var_abbdc.y];
+                        var_b875d.x = var_ef69e[var_abbdc.x] - var_ef69e[var_abbdc.y];
                         highp vec2 var_11531;
                         if (var_30342.x > 0.5)
                         {
@@ -294,32 +292,38 @@ void main() {
                         }
                         var_ef69e = var_11531;
                         var_abbdc = ivec2(clamp(vec2(var_30342.y - 0.083333335816860198974609375, var_30342.y + 0.083333335816860198974609375) * 2.0, vec2(0.0), vec2(1.0)));
-                        var_8029f.y = var_ef69e[var_abbdc.x] - var_ef69e[var_abbdc.y];
-                        var_8029f.z = 0.25;
-                        highp vec3 var_37fe4 = normalize(var_8029f);
-                        highp vec2 var_156d1 = var_37fe4.xy * var_0725d;
-                        var_8029f = vec3(var_156d1.x, var_156d1.y, var_37fe4.z);
+                        var_b875d.y = var_ef69e[var_abbdc.x] - var_ef69e[var_abbdc.y];
+                        var_b875d.z = 0.25;
+                        highp vec3 var_b2631 = var_b875d;
+                        highp vec3 var_8a8c2 = normalize(var_b2631);
+                        var_b875d = var_8a8c2;
+                        highp vec2 var_3f5e9 = var_8a8c2.xy * var_0725d;
+                        var_b875d.x = var_3f5e9.x;
+                        var_b875d.y = var_3f5e9.y;
                     }
-                    var_049a7 = var_8029f;
+                    var_049a7 = var_b875d;
                 }
                 else
                 {
                     highp vec4 var_e396a = var_946d4;
-                    highp vec3 var_43f82 = vec3(0.0, 0.0, 1.0);
+                    highp vec3 var_ecc6b = vec3(0.0, 0.0, 1.0);
                     highp float var_3e159 = clamp((var_14a36 * (-1.0)) + 2.0, 0.0, 1.0);
                     if (var_3e159 > 0.0)
                     {
                         highp vec2 var_f7b8a = fract(var_5fac9 * vec2(textureSize(s_MatTexture, 0)));
-                        var_43f82.x = (step(0.916666686534881591796875, var_f7b8a.x) * ((var_e396a.y * 2.0) - 1.0)) + (step(var_f7b8a.x, 0.083333335816860198974609375) * (1.0 - (var_e396a.w * 2.0)));
-                        var_43f82.y = (step(0.916666686534881591796875, var_f7b8a.y) * ((var_e396a.z * 2.0) - 1.0)) + (step(var_f7b8a.y, 0.083333335816860198974609375) * (1.0 - (var_e396a.x * 2.0)));
-                        var_43f82.x = step(0.004999999888241291046142578125, abs(var_43f82.x)) * var_43f82.x;
-                        var_43f82.y = step(0.004999999888241291046142578125, abs(var_43f82.y)) * var_43f82.y;
-                        var_43f82.z = 0.25;
-                        highp vec3 var_8c503 = normalize(var_43f82);
-                        highp vec2 var_4a93c = var_8c503.xy * var_3e159;
-                        var_43f82 = vec3(var_4a93c.x, var_4a93c.y, var_8c503.z);
+                        var_ecc6b.x = (step(0.916666686534881591796875, var_f7b8a.x) * ((var_e396a.y * 2.0) - 1.0)) + (step(var_f7b8a.x, 0.083333335816860198974609375) * (1.0 - (var_e396a.w * 2.0)));
+                        var_ecc6b.y = (step(0.916666686534881591796875, var_f7b8a.y) * ((var_e396a.z * 2.0) - 1.0)) + (step(var_f7b8a.y, 0.083333335816860198974609375) * (1.0 - (var_e396a.x * 2.0)));
+                        var_ecc6b.x = step(0.004999999888241291046142578125, abs(var_ecc6b.x)) * var_ecc6b.x;
+                        var_ecc6b.y = step(0.004999999888241291046142578125, abs(var_ecc6b.y)) * var_ecc6b.y;
+                        var_ecc6b.z = 0.25;
+                        highp vec3 var_b8a95 = var_ecc6b;
+                        highp vec3 var_ee313 = normalize(var_b8a95);
+                        var_ecc6b = var_ee313;
+                        highp vec2 var_dc230 = var_ee313.xy * var_3e159;
+                        var_ecc6b.x = var_dc230.x;
+                        var_ecc6b.y = var_dc230.y;
                     }
-                    var_049a7 = var_43f82;
+                    var_049a7 = var_ecc6b;
                 }
                 var_8d6b3 = var_049a7;
             }
@@ -368,34 +372,42 @@ void main() {
     {
         var_276aa = v_normal;
     }
-    highp vec4 var_08b04 = vec4(var_414c0.xyz, var_1d587.w);
     highp vec4 var_d34a5 = BlockLightColor;
-    highp vec4 var_6bfdc = vec4(var_08b04.x, var_08b04.y, var_08b04.z, var_08b04.w);
+    highp vec4 var_d93e5 = vec4(var_5565b.xyz, var_1d587.w);
+    highp vec4 var_33385 = vec4(0.0);
+    var_d93e5.x = var_5565b.x;
+    var_d93e5.y = var_5565b.y;
+    var_d93e5.z = var_5565b.z;
     highp float var_7aa46;
     func_fb7ab(var_e87f4, var_e9ad4, var_7aa46);
-    var_6bfdc.w = var_7aa46;
+    var_d93e5.w = var_7aa46;
     highp vec3 var_9c9d2 = normalize(transpose(transpose(mat3(normalize(v_tangent), normalize(v_bitangent), normalize(var_276aa)))) * var_7291d);
     highp vec3 var_cd914 = var_9c9d2;
     highp vec2 var_645ff = var_9c9d2.xy * (1.0 / ((abs(var_cd914.x) + abs(var_cd914.y)) + abs(var_cd914.z)));
-    highp vec2 var_532c2;
+    highp vec2 var_8860a;
     if (var_cd914.z < 0.0)
     {
-        var_532c2 = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
+        var_8860a = (vec2(1.0) - abs(var_645ff.yx)) * ((step(vec2(0.0), var_645ff) * 2.0) - vec2(1.0));
     }
     else
     {
-        var_532c2 = var_645ff;
+        var_8860a = var_645ff;
     }
+    var_33385.x = var_8860a.x;
+    var_33385.y = var_8860a.y;
     highp vec4 var_5dd1c = u_viewProj * vec4(v_worldPos, 1.0);
     highp vec4 var_46c40 = var_5dd1c;
     highp float var_bc97b = var_46c40.w;
-    highp vec4 var_603d8 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
-    var_46c40 = var_603d8;
+    highp vec4 var_7ed87 = ((var_5dd1c / vec4(var_bc97b)) * 0.5) + vec4(0.5);
+    var_46c40 = var_7ed87;
     highp vec4 var_21b68 = u_prevViewProj * vec4(v_prevWorldPos - u_prevWorldPosOffset.xyz, 1.0);
     highp vec4 var_96bda = var_21b68;
     highp float var_9ef48 = var_96bda.w;
-    highp vec4 var_d0ebc = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
-    var_96bda = var_d0ebc;
+    highp vec4 var_82203 = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
+    var_96bda = var_82203;
+    highp vec2 var_fd2cd = var_7ed87.xy - var_82203.xy;
+    var_33385.z = var_fd2cd.x;
+    var_33385.w = var_fd2cd.y;
     highp vec3 var_f88c4 = BlockLightColor.xyz;
     highp vec3 var_e61b8;
     if ((((var_f88c4.x + var_f88c4.y) + var_f88c4.z) < 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x > 9.9999997473787516355514526367188e-05))
@@ -420,6 +432,6 @@ void main() {
     uint var_4c32f = uint(floor(var_d34a5.w * 255.0));
     uvec2 var_180e3 = uvec2(uint(clamp(var_be4a2, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_755f6, 0.0, 1.0) * 255.0) & 255u);
     bgfx_FragData0 = uvec4((var_180e3.x << 8u) | var_180e3.y, var_34fa8.x, var_34fa8.y, (uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0) | uint(((var_4c32f & 1u) != 0u) ? 256 : 0)) | uint(((var_4c32f & 2u) != 0u) ? 512 : 0));
-    bgfx_FragData1 = var_6bfdc;
-    bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
+    bgfx_FragData1 = var_d93e5;
+    bgfx_FragData2 = var_33385;
 }

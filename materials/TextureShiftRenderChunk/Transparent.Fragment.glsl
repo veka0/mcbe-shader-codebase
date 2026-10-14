@@ -62,7 +62,7 @@ struct TextureShiftBuffer {
 #ifdef DITHERING__ON
 float var_8909c;
 #endif
-layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_7ecf3;
+layout(binding = 3, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_af954;
 #ifdef DITHERING__ON
 uniform highp mat4 u_view;
 #endif
@@ -87,56 +87,68 @@ flat in highp vec2 v_textureShift;
 in highp vec4 v_worldPosition;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragData0;
-void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
-    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_7ecf3.TextureShiftBufferData[arg_651a0].noiseSpread);
-    if (var_7ecf3.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
+void func_5f93d(inout int arg_a60ad, inout highp float arg_0da03) {
+    highp float loc_61f81 = 1.0 - (v_textureShift.x * var_af954.TextureShiftBufferData[arg_a60ad].noiseSpread);
+    if (var_af954.TextureShiftBufferData[arg_a60ad].localShiftLength == 0.0)
     {
-        arg_0da03 = step(loc_47c38, var_7ecf3.TextureShiftBufferData[arg_651a0].globalAlpha);
+        arg_0da03 = step(loc_61f81, var_af954.TextureShiftBufferData[arg_a60ad].globalAlpha);
         return;
     }
     else
     {
-        arg_0da03 = 1.0 - clamp((loc_47c38 - var_7ecf3.TextureShiftBufferData[arg_651a0].globalAlpha) / var_7ecf3.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        arg_0da03 = 1.0 - clamp((loc_61f81 - var_af954.TextureShiftBufferData[arg_a60ad].globalAlpha) / var_af954.TextureShiftBufferData[arg_a60ad].localShiftLength, 0.0, 1.0);
         return;
     }
 }
 void main() {
-    highp vec4 var_3f821 = v_color0;
-    highp vec2 var_1614a = v_textureShift;
-    int var_cc681 = int(var_1614a.y * 65535.0);
-    highp float var_7f114;
-    func_f1932(var_1614a, var_cc681, var_7f114);
-    highp vec2 var_61685 = v_texcoord0;
-    highp vec2 var_97eb7 = v_ditheringAndMaskTinting;
-    highp vec4 var_d7bbd = mix(texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].preUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].preUV1)), texture(s_MatTexture, vec2(var_61685.x + var_7ecf3.TextureShiftBufferData[var_cc681].postUV0, var_61685.y + var_7ecf3.TextureShiftBufferData[var_cc681].postUV1)), vec4(var_7f114));
-    if (var_97eb7.y > 0.5)
+    int var_67d3b = int(v_textureShift.y * 65535.0);
+    highp float var_d284e;
+    func_5f93d(var_67d3b, var_d284e);
+    highp vec4 var_dcc82 = mix(texture(s_MatTexture, vec2(v_texcoord0.x + var_af954.TextureShiftBufferData[var_67d3b].preUV0, v_texcoord0.y + var_af954.TextureShiftBufferData[var_67d3b].preUV1)), texture(s_MatTexture, vec2(v_texcoord0.x + var_af954.TextureShiftBufferData[var_67d3b].postUV0, v_texcoord0.y + var_af954.TextureShiftBufferData[var_67d3b].postUV1)), vec4(var_d284e));
+    if (v_ditheringAndMaskTinting.y > 0.5)
     {
-        highp vec3 var_5e4d7 = mix(var_d7bbd.xyz, var_d7bbd.xyz * v_color0.xyz, vec3(var_d7bbd.w)).xyz * var_3f821.w;
-        var_d7bbd = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_d7bbd.w);
-        var_d7bbd.w = 1.0;
+        highp vec4 var_ec353 = var_dcc82;
+        highp float var_7a181 = var_dcc82.w;
+        highp vec3 var_d8fa6 = mix(var_ec353.xyz, var_ec353.xyz * v_color0.xyz, vec3(var_7a181));
+        var_dcc82.x = var_d8fa6.x;
+        var_dcc82.y = var_d8fa6.y;
+        var_dcc82.z = var_d8fa6.z;
+        highp vec4 var_8e56a = var_dcc82;
+        highp vec3 var_a3d7a = var_8e56a.xyz * v_color0.w;
+        var_dcc82.x = var_a3d7a.x;
+        var_dcc82.y = var_a3d7a.y;
+        var_dcc82.z = var_a3d7a.z;
+        var_dcc82.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_d7bbd.xyz * v_color0.xyz;
-        var_d7bbd = vec4(var_55928.x, var_55928.y, var_55928.z, var_d7bbd.w);
-        var_d7bbd.w *= var_3f821.w;
+        highp vec4 var_bc465 = var_dcc82;
+        highp vec3 var_30e20 = var_bc465.xyz * v_color0.xyz;
+        var_dcc82.x = var_30e20.x;
+        var_dcc82.y = var_30e20.y;
+        var_dcc82.z = var_30e20.z;
+        var_dcc82.w *= v_color0.w;
     }
 #ifdef DITHERING__ON
     highp vec2 var_8dad0 = DitherParams2[2].xy;
-    if (var_97eb7.x > 0.5)
+    if (v_ditheringAndMaskTinting.x > 0.5)
     {
         highp mat4 var_06d92 = u_view;
-        highp vec4 var_bb748 = v_clipPosition;
-        highp vec2 var_b2538 = floor(((((v_clipPosition.xyz / vec3(var_bb748.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
-        highp vec2 var_ea24e = floor(var_b2538 * 0.25);
-        highp vec2 var_ff607 = floor(var_b2538 * 0.5);
-        highp vec2 var_0a695 = floor(var_b2538);
+        highp vec2 var_9b116 = floor(((((v_clipPosition.xyz / vec3(v_clipPosition.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[2].z)) * DitherParams2[2].z;
+        highp vec2 var_ea24e = floor(var_9b116 * 0.25);
+        highp vec2 var_ff607 = floor(var_9b116 * 0.5);
+        highp vec2 var_0a695 = floor(var_9b116);
         if (smoothstep(var_8dad0.x, var_8dad0.y, dot(-normalize(vec4(var_06d92[0].z, var_06d92[1].z, var_06d92[2].z, var_8909c).xyz), v_worldPosition.xyz - ViewPositionAndTime.xyz)) <= (((((((fract((var_ea24e.x * 0.5) + ((var_ea24e.y * var_ea24e.y) * 0.75)) * 0.25) + fract((var_ff607.x * 0.5) + ((var_ff607.y * var_ff607.y) * 0.75))) * 0.25) + fract((var_0a695.x * 0.5) + ((var_0a695.y * var_0a695.y) * 0.75))) * 64.0) + 0.5) * 0.015625))
         {
-            var_d7bbd.w = 0.0;
+            var_dcc82.w = 0.0;
         }
     }
 #endif
-    highp vec4 var_713a6 = v_fog;
-    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_d7bbd.xyz, var_d7bbd.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_d7bbd.w);
+    highp vec4 var_49453 = vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_dcc82.xyz, var_dcc82.w);
+    highp vec4 var_72c1b = var_49453;
+    highp vec3 var_8a63e = mix(var_49453.xyz, FogColor.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_8a63e.x;
+    var_72c1b.y = var_8a63e.y;
+    var_72c1b.z = var_8a63e.z;
+    bgfx_FragData0 = var_72c1b;
 }

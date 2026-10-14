@@ -73,15 +73,32 @@ in highp vec2 v_texcoord0;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-#ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_65e98 = texture(s_MatTexture0, v_texcoord0);
-#endif
-    highp vec4 var_4725c = OverlayColor;
-    highp vec4 var_88654 = v_fog;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    bgfx_FragData0 = vec4(mix((mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_4725c.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_88654.w)), MatColor0.w);
+    highp vec4 var_5cd3c = MatColor0;
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    bgfx_FragData0 = vec4(mix((mix(var_65e98.xyz, OverlayColor.xyz, vec3(var_4725c.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_88654.w)), var_65e98.w);
+    highp vec4 var_a4eac = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_5cd3c = var_a4eac;
 #endif
+    highp vec4 var_5b8d6 = OverlayColor;
+#ifdef SOURCE_INPUT_TYPE0__CONSTANT
+    highp vec3 var_517d1 = mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
+#endif
+#ifdef SOURCE_INPUT_TYPE0__SAMPLED
+    highp vec3 var_517d1 = mix(var_a4eac.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
+#endif
+    var_5cd3c.x = var_517d1.x;
+    var_5cd3c.y = var_517d1.y;
+    var_5cd3c.z = var_517d1.z;
+    highp vec4 var_5be75 = var_5cd3c;
+    highp vec3 var_279b1 = var_5cd3c.xyz * v_light.xyz;
+    var_5be75.x = var_279b1.x;
+    var_5be75.y = var_279b1.y;
+    var_5be75.z = var_279b1.z;
+    highp vec4 var_72c1b = var_5be75;
+    highp vec3 var_c6e56 = mix(var_5be75.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

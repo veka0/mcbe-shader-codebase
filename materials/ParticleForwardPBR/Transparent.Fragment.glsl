@@ -62,7 +62,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -125,11 +125,17 @@ in highp vec4 v_fog;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_e966b = v_color0;
-    highp vec4 var_6ca24 = v_fog;
-    highp vec4 var_de643 = texture(s_ParticleTexture, v_texcoord0) * vec4(v_color0.xyz, var_e966b.w);
-    highp vec3 var_97f02 = mix(var_de643.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    highp vec4 var_1146b = vec4(var_97f02.x, var_97f02.y, var_97f02.z, var_de643.w);
-    highp vec4 var_eb888 = v_fog;
-    bgfx_FragData0 = vec4(mix(vec4(var_97f02, var_1146b.w).xyz, v_fog.xyz, vec3(var_eb888.w)), var_1146b.w);
+    highp vec4 var_eba1c = texture(s_ParticleTexture, v_texcoord0) * vec4(v_color0.xyz, v_color0.w);
+    highp vec4 var_4388e = var_eba1c;
+    highp vec3 var_c6e56 = mix(var_eba1c.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_4388e.x = var_c6e56.x;
+    var_4388e.y = var_c6e56.y;
+    var_4388e.z = var_c6e56.z;
+    highp vec4 var_4b012 = vec4(var_4388e.xyz, var_4388e.w);
+    highp vec4 var_72c1b = var_4b012;
+    highp vec3 var_8d1a2 = mix(var_4b012.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_8d1a2.x;
+    var_72c1b.y = var_8d1a2.y;
+    var_72c1b.z = var_8d1a2.z;
+    bgfx_FragData0 = var_72c1b;
 }

@@ -76,7 +76,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 DitherParams;
 * - uniform vec4 DitherParams2[3];
@@ -169,20 +169,17 @@ void main() {
     vec3 var_08866 = a_color0.xyz;
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_cc6b6;
-    var_cc6b6[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_cc6b6[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_cc6b6[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_cc6b6[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    mat4 var_05ce3;
+    var_05ce3[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_05ce3[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_05ce3[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_05ce3[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_9b079 = var_cc6b6 * vec4(a_position, 1.0);
+    vec4 var_9b079 = var_05ce3 * vec4(a_position, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (var_cc6b6 * vec4(a_position, 1.0)).xyz;
+    vec3 var_91aa3 = (var_05ce3 * vec4(a_position, 1.0)).xyz;
     vec3 var_0405a = var_91aa3 + vec3(0.5);
     vec3 var_28a72 = normalize(var_0405a - ViewPositionAndTime.xyz);
     vec3 var_e8e55 = normalize(cross(vec3(0.0, 1.0, 0.0), var_28a72));

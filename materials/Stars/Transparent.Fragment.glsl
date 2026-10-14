@@ -24,6 +24,5 @@ uniform highp vec4 StarsColor;
 in highp vec4 v_color0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_21f21 = v_color0;
-    bgfx_FragData0 = vec4(v_color0.xyz * (StarsColor.xyz * var_21f21.w), var_21f21.w);
+    bgfx_FragData0 = vec4(v_color0.xyz * (StarsColor.xyz * v_color0.w), v_color0.w);
 }

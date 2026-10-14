@@ -47,24 +47,24 @@ struct LightData {
     float lookup;
 };
 
-layout(binding = 0, std430) buffer s_Extends { LightExtends Extends[]; } var_0c600;
+layout(binding = 0, std430) buffer s_Extends { LightExtends Extends[]; } var_76d49;
 layout(binding = 1, std430) buffer s_zLightLookupArray { LightData zLightLookupArray[]; } var_0bc25;
 uniform vec4 ClusterDepthBounds;
 uniform vec4 ClusterDimensions;
 uniform vec4 LightsPerCluster;
 uniform vec4 PointLightPreCalcValues;
 #ifdef ANGULAR_REFINEMENT__OFF
-void func_b5ad2() {
-    float loc_532a9 = float(GlobalInvocationID.x);
-    float loc_d0a4e = float(GlobalInvocationID.y);
-    float loc_286a7 = float(GlobalInvocationID.z);
+void func_197f2() {
+    float loc_3fa0e = float(gl_GlobalInvocationID.x);
+    float loc_d5eee = float(gl_GlobalInvocationID.y);
+    float loc_febda = float(gl_GlobalInvocationID.z);
     int loc_6f4b5 = int(ClusterDimensions.w);
     int loc_a217b = int(LightsPerCluster.x);
-    bool loc_2313e = loc_532a9 >= ClusterDimensions.x;
+    bool loc_2313e = loc_3fa0e >= ClusterDimensions.x;
     bool loc_069b0;
     if (!loc_2313e)
     {
-        loc_069b0 = loc_d0a4e >= ClusterDimensions.y;
+        loc_069b0 = loc_d5eee >= ClusterDimensions.y;
     }
     else
     {
@@ -73,7 +73,7 @@ void func_b5ad2() {
     bool loc_84f5f;
     if (!loc_069b0)
     {
-        loc_84f5f = loc_286a7 >= ClusterDimensions.z;
+        loc_84f5f = loc_febda >= ClusterDimensions.z;
     }
     else
     {
@@ -83,8 +83,8 @@ void func_b5ad2() {
     {
         return;
     }
-    int loc_026da = int((loc_532a9 + (loc_d0a4e * ClusterDimensions.x)) + ((loc_286a7 * ClusterDimensions.x) * ClusterDimensions.y));
-    vec3 loc_a9abc = vec3(loc_532a9 + 0.5, loc_d0a4e + 0.5, loc_286a7 + 0.5);
+    int loc_026da = int((loc_3fa0e + (loc_d5eee * ClusterDimensions.x)) + ((loc_febda * ClusterDimensions.x) * ClusterDimensions.y));
+    vec3 loc_a9abc = vec3(loc_3fa0e + 0.5, loc_d5eee + 0.5, loc_febda + 0.5);
     vec3 loc_e3bd0 = ClusterDimensions.xyz;
     vec2 loc_dbe64 = ClusterDepthBounds.xy;
     vec4 loc_4ac24 = PointLightPreCalcValues;
@@ -115,15 +115,15 @@ void func_b5ad2() {
     int loc_e8108;
     for (int loc_0c57c = 0; loc_0c57c < loc_6f4b5; loc_25246 = loc_e8108, loc_0c57c++)
     {
-        vec4 loc_e9fdb = var_0c600.Extends[loc_0c57c].pos;
-        int loc_51439 = var_0c600.Extends[loc_0c57c].index;
-        vec4 loc_30d7f = var_0c600.Extends[loc_0c57c]._min;
-        vec4 loc_035a0 = var_0c600.Extends[loc_0c57c]._max;
-        bool loc_25a54 = loc_286a7 < loc_30d7f.z;
+        vec4 loc_e9fdb = var_76d49.Extends[loc_0c57c].pos;
+        int loc_51439 = var_76d49.Extends[loc_0c57c].index;
+        vec4 loc_30d7f = var_76d49.Extends[loc_0c57c]._min;
+        vec4 loc_035a0 = var_76d49.Extends[loc_0c57c]._max;
+        bool loc_25a54 = loc_febda < loc_30d7f.z;
         bool loc_a8060;
         if (!loc_25a54)
         {
-            loc_a8060 = loc_286a7 > loc_035a0.z;
+            loc_a8060 = loc_febda > loc_035a0.z;
         }
         else
         {
@@ -134,11 +134,11 @@ void func_b5ad2() {
             loc_e8108 = loc_25246;
             continue;
         }
-        bool loc_9f6d7 = loc_d0a4e < loc_30d7f.y;
+        bool loc_9f6d7 = loc_d5eee < loc_30d7f.y;
         bool loc_c8987;
         if (!loc_9f6d7)
         {
-            loc_c8987 = loc_d0a4e > loc_035a0.y;
+            loc_c8987 = loc_d5eee > loc_035a0.y;
         }
         else
         {
@@ -149,11 +149,11 @@ void func_b5ad2() {
             loc_e8108 = loc_25246;
             continue;
         }
-        bool loc_35843 = loc_532a9 < loc_30d7f.x;
+        bool loc_35843 = loc_3fa0e < loc_30d7f.x;
         bool loc_85c37;
         if (!loc_35843)
         {
-            loc_85c37 = loc_532a9 > loc_035a0.x;
+            loc_85c37 = loc_3fa0e > loc_035a0.x;
         }
         else
         {
@@ -234,36 +234,35 @@ void func_b5ad2() {
 }
 #endif
 #ifdef ANGULAR_REFINEMENT__ON
-void func_7ed5d(inout uvec3 arg_de290, inout vec2 arg_fd918, inout vec3 arg_d6a5b) {
-    if (arg_de290.z == 0u)
+void func_4e171(inout vec2 arg_fbe77, inout vec3 arg_8ec6d) {
+    if (gl_GlobalInvocationID.z == 0u)
     {
-        arg_fd918 = vec2(0.0, ClusterDepthBounds.x);
+        arg_fbe77 = vec2(0.0, ClusterDepthBounds.x);
         return;
     }
-    if (arg_de290.z == 1u)
+    if (gl_GlobalInvocationID.z == 1u)
     {
-        arg_fd918 = ClusterDepthBounds.xy;
+        arg_fbe77 = ClusterDepthBounds.xy;
         return;
     }
-    arg_fd918 = vec2(exp2(mix(PointLightPreCalcValues.z, PointLightPreCalcValues.y, float(arg_de290.z - 2u) / (arg_d6a5b.z - 2.0))), exp2(mix(PointLightPreCalcValues.z, PointLightPreCalcValues.y, float(arg_de290.z - 1u) / (arg_d6a5b.z - 2.0))));
+    arg_fbe77 = vec2(exp2(mix(PointLightPreCalcValues.z, PointLightPreCalcValues.y, float(gl_GlobalInvocationID.z - 2u) / (arg_8ec6d.z - 2.0))), exp2(mix(PointLightPreCalcValues.z, PointLightPreCalcValues.y, float(gl_GlobalInvocationID.z - 1u) / (arg_8ec6d.z - 2.0))));
 }
-void func_00520(inout int arg_21bb6, inout vec4 arg_d7cb8, inout bool arg_35b97, inout vec3 arg_f87e7, inout vec3 arg_d89af, inout uvec3 arg_0f8de) {
-    float loc_2939b = var_0c600.Extends[arg_21bb6].radius * var_0c600.Extends[arg_21bb6].radius;
+void func_fdcb4(inout int arg_21bb6, inout vec4 arg_d7cb8, inout bool arg_35b97, inout vec3 arg_f87e7, inout vec3 arg_4b5f1) {
+    float loc_2939b = var_76d49.Extends[arg_21bb6].radius * var_76d49.Extends[arg_21bb6].radius;
     if (dot(arg_d7cb8.xyz, arg_d7cb8.xyz) <= loc_2939b)
     {
         arg_35b97 = true;
         return;
     }
     float loc_5e0d8 = -arg_f87e7.z;
-    uvec3 loc_bc13f = gl_GlobalInvocationID;
-    vec2 loc_5faa6;
-    func_7ed5d(loc_bc13f, loc_5faa6, arg_d89af);
-    vec2 loc_84456 = loc_5faa6;
-    bool loc_d878d = (loc_5e0d8 + var_0c600.Extends[arg_21bb6].radius) < loc_84456.x;
+    vec2 loc_137b8;
+    func_4e171(loc_137b8, arg_4b5f1);
+    vec2 loc_84456 = loc_137b8;
+    bool loc_d878d = (loc_5e0d8 + var_76d49.Extends[arg_21bb6].radius) < loc_84456.x;
     bool loc_edb78;
     if (!loc_d878d)
     {
-        loc_edb78 = (loc_5e0d8 - var_0c600.Extends[arg_21bb6].radius) > loc_84456.y;
+        loc_edb78 = (loc_5e0d8 - var_76d49.Extends[arg_21bb6].radius) > loc_84456.y;
     }
     else
     {
@@ -278,31 +277,31 @@ void func_00520(inout int arg_21bb6, inout vec4 arg_d7cb8, inout bool arg_35b97,
     float loc_698b9 = loc_ae481 - loc_5e0d8;
     float loc_94698 = sqrt(max(loc_2939b - (loc_698b9 * loc_698b9), 0.0));
     float loc_7aa1a = max(loc_ae481, 9.9999997473787516355514526367188e-05);
-    float loc_5c420 = ClusterDepthBounds.w * ClusterDepthBounds.z;
-    float loc_83989 = (2.0 * loc_5c420) / arg_d89af.x;
-    float loc_dbd04 = (2.0 * ClusterDepthBounds.z) / arg_d89af.y;
-    float loc_33b01 = (-loc_5c420) + (float(arg_0f8de.x) * loc_83989);
-    float loc_6f6c7 = (-ClusterDepthBounds.z) + (float(arg_0f8de.y) * loc_dbd04);
+    float loc_f0752 = ClusterDepthBounds.w * ClusterDepthBounds.z;
+    float loc_af297 = (2.0 * loc_f0752) / arg_4b5f1.x;
+    float loc_9adcc = (2.0 * ClusterDepthBounds.z) / arg_4b5f1.y;
+    float loc_6a995 = (-loc_f0752) + (float(gl_GlobalInvocationID.x) * loc_af297);
+    float loc_12bf4 = (-ClusterDepthBounds.z) + (float(gl_GlobalInvocationID.y) * loc_9adcc);
     float loc_6d48f = 1.0 / loc_7aa1a;
     float loc_37812 = atan(loc_94698 / sqrt(max((((arg_f87e7.x * arg_f87e7.x) + (arg_f87e7.y * arg_f87e7.y)) + (loc_7aa1a * loc_7aa1a)) - (loc_94698 * loc_94698), 9.9999999392252902907785028219223e-09)));
-    float loc_86064 = clamp(arg_f87e7.x * loc_6d48f, loc_33b01, loc_33b01 + loc_83989);
-    float loc_e025b = clamp(arg_f87e7.y * loc_6d48f, loc_6f6c7, loc_6f6c7 + loc_dbd04);
+    float loc_86064 = clamp(arg_f87e7.x * loc_6d48f, loc_6a995, loc_6a995 + loc_af297);
+    float loc_e025b = clamp(arg_f87e7.y * loc_6d48f, loc_12bf4, loc_12bf4 + loc_9adcc);
     float loc_fb7af = -loc_7aa1a;
     float loc_7666e = abs(atan(arg_f87e7.x + (loc_fb7af * loc_86064), loc_7aa1a + (arg_f87e7.x * loc_86064)));
     float loc_0fe96 = abs(atan(arg_f87e7.y + (loc_fb7af * loc_e025b), loc_7aa1a + (arg_f87e7.y * loc_e025b)));
     arg_35b97 = ((loc_7666e * loc_7666e) + (loc_0fe96 * loc_0fe96)) <= (loc_37812 * loc_37812);
 }
-void func_06e9d() {
-    float loc_532a9 = float(GlobalInvocationID.x);
-    float loc_d0a4e = float(GlobalInvocationID.y);
-    float loc_286a7 = float(GlobalInvocationID.z);
+void func_6a92b() {
+    float loc_3fa0e = float(gl_GlobalInvocationID.x);
+    float loc_d5eee = float(gl_GlobalInvocationID.y);
+    float loc_febda = float(gl_GlobalInvocationID.z);
     int loc_6f4b5 = int(ClusterDimensions.w);
     int loc_a217b = int(LightsPerCluster.x);
-    bool loc_2313e = loc_532a9 >= ClusterDimensions.x;
+    bool loc_2313e = loc_3fa0e >= ClusterDimensions.x;
     bool loc_069b0;
     if (!loc_2313e)
     {
-        loc_069b0 = loc_d0a4e >= ClusterDimensions.y;
+        loc_069b0 = loc_d5eee >= ClusterDimensions.y;
     }
     else
     {
@@ -311,7 +310,7 @@ void func_06e9d() {
     bool loc_84f5f;
     if (!loc_069b0)
     {
-        loc_84f5f = loc_286a7 >= ClusterDimensions.z;
+        loc_84f5f = loc_febda >= ClusterDimensions.z;
     }
     else
     {
@@ -321,8 +320,8 @@ void func_06e9d() {
     {
         return;
     }
-    int loc_026da = int((loc_532a9 + (loc_d0a4e * ClusterDimensions.x)) + ((loc_286a7 * ClusterDimensions.x) * ClusterDimensions.y));
-    vec3 loc_a9abc = vec3(loc_532a9 + 0.5, loc_d0a4e + 0.5, loc_286a7 + 0.5);
+    int loc_026da = int((loc_3fa0e + (loc_d5eee * ClusterDimensions.x)) + ((loc_febda * ClusterDimensions.x) * ClusterDimensions.y));
+    vec3 loc_a9abc = vec3(loc_3fa0e + 0.5, loc_d5eee + 0.5, loc_febda + 0.5);
     vec3 loc_e3bd0 = ClusterDimensions.xyz;
     vec2 loc_dbe64 = ClusterDepthBounds.xy;
     vec4 loc_4ac24 = PointLightPreCalcValues;
@@ -351,17 +350,17 @@ void func_06e9d() {
     loc_e762b = 0;
     LightContribution loc_73e0b[64];
     int loc_7e4e3;
-    for (int loc_54c44 = 0; loc_54c44 < loc_6f4b5; loc_e762b = loc_7e4e3, loc_54c44++)
+    for (int loc_b166e = 0; loc_b166e < loc_6f4b5; loc_e762b = loc_7e4e3, loc_b166e++)
     {
-        vec4 loc_540b2 = var_0c600.Extends[loc_54c44].pos;
-        int loc_51439 = var_0c600.Extends[loc_54c44].index;
-        vec4 loc_30d7f = var_0c600.Extends[loc_54c44]._min;
-        vec4 loc_035a0 = var_0c600.Extends[loc_54c44]._max;
-        bool loc_25a54 = loc_286a7 < loc_30d7f.z;
+        vec4 loc_ece8f = var_76d49.Extends[loc_b166e].pos;
+        int loc_51439 = var_76d49.Extends[loc_b166e].index;
+        vec4 loc_30d7f = var_76d49.Extends[loc_b166e]._min;
+        vec4 loc_035a0 = var_76d49.Extends[loc_b166e]._max;
+        bool loc_25a54 = loc_febda < loc_30d7f.z;
         bool loc_a8060;
         if (!loc_25a54)
         {
-            loc_a8060 = loc_286a7 > loc_035a0.z;
+            loc_a8060 = loc_febda > loc_035a0.z;
         }
         else
         {
@@ -372,11 +371,11 @@ void func_06e9d() {
             loc_7e4e3 = loc_e762b;
             continue;
         }
-        bool loc_9f6d7 = loc_d0a4e < loc_30d7f.y;
+        bool loc_9f6d7 = loc_d5eee < loc_30d7f.y;
         bool loc_c8987;
         if (!loc_9f6d7)
         {
-            loc_c8987 = loc_d0a4e > loc_035a0.y;
+            loc_c8987 = loc_d5eee > loc_035a0.y;
         }
         else
         {
@@ -387,11 +386,11 @@ void func_06e9d() {
             loc_7e4e3 = loc_e762b;
             continue;
         }
-        bool loc_35843 = loc_532a9 < loc_30d7f.x;
+        bool loc_35843 = loc_3fa0e < loc_30d7f.x;
         bool loc_85c37;
         if (!loc_35843)
         {
-            loc_85c37 = loc_532a9 > loc_035a0.x;
+            loc_85c37 = loc_3fa0e > loc_035a0.x;
         }
         else
         {
@@ -402,17 +401,16 @@ void func_06e9d() {
             loc_7e4e3 = loc_e762b;
             continue;
         }
-        vec3 loc_ab2a6 = loc_540b2.xyz;
-        vec3 loc_839b8 = ClusterDimensions.xyz;
-        uvec3 loc_d419c = gl_GlobalInvocationID;
-        bool loc_0b02d;
-        func_00520(loc_54c44, loc_540b2, loc_0b02d, loc_ab2a6, loc_839b8, loc_d419c);
-        if (!loc_0b02d)
+        vec3 loc_1b918 = loc_ece8f.xyz;
+        vec3 loc_f06d8 = ClusterDimensions.xyz;
+        bool loc_598e5;
+        func_fdcb4(loc_b166e, loc_ece8f, loc_598e5, loc_1b918, loc_f06d8);
+        if (!loc_598e5)
         {
             loc_7e4e3 = loc_e762b;
             continue;
         }
-        float loc_d9ac7 = length(loc_540b2.xyz - loc_450b0);
+        float loc_d9ac7 = length(loc_ece8f.xyz - loc_450b0);
         bool loc_c1fd8 = loc_e762b >= loc_a217b;
         bool loc_0799d;
         if (loc_c1fd8)
@@ -482,11 +480,10 @@ void func_06e9d() {
 }
 #endif
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
 #ifdef ANGULAR_REFINEMENT__OFF
-    func_b5ad2();
+    func_197f2();
 #endif
 #ifdef ANGULAR_REFINEMENT__ON
-    func_06e9d();
+    func_6a92b();
 #endif
 }

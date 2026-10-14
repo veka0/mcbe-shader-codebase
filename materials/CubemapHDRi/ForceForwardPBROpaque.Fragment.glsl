@@ -30,16 +30,14 @@ layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec3 var_d251a = normalize(v_texcoord0);
     var_d251a.x *= (-1.0);
-    highp vec4 var_c58bf = texture(s_MatTexture, var_d251a);
-    highp vec4 var_d912f;
+    highp vec4 var_d33c8 = texture(s_MatTexture, var_d251a);
     if (PreExposureEnabled.x > 0.0)
     {
-        highp vec3 var_02f69 = var_c58bf.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
-        var_d912f = vec4(var_02f69.x, var_02f69.y, var_02f69.z, var_c58bf.w);
+        highp vec4 var_7c5bd = var_d33c8;
+        highp vec3 var_ba7ff = var_7c5bd.xyz * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_d33c8.x = var_ba7ff.x;
+        var_d33c8.y = var_ba7ff.y;
+        var_d33c8.z = var_ba7ff.z;
     }
-    else
-    {
-        var_d912f = var_c58bf;
-    }
-    bgfx_FragData0 = var_d912f;
+    bgfx_FragData0 = var_d33c8;
 }

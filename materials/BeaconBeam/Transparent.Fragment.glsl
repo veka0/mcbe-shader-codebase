@@ -33,7 +33,14 @@ in highp vec4 v_color;
 in highp vec2 v_texCoords;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_0bbb5 = texture(s_BeaconTexture, v_texCoords);
-    highp vec4 var_34873 = mix(var_0bbb5, OverlayColor, vec4(OverlayColor.w));
-    bgfx_FragData0 = vec4(var_34873.x, var_34873.y, var_34873.z, var_0bbb5.w) * v_color;
+    highp vec4 var_b3bc0 = texture(s_BeaconTexture, v_texCoords);
+    highp vec4 var_547af = var_b3bc0;
+    highp vec4 var_e9eee = mix(var_b3bc0, OverlayColor, vec4(OverlayColor.w));
+    var_547af.x = var_e9eee.x;
+    var_547af.y = var_e9eee.y;
+    var_547af.z = var_e9eee.z;
+    highp vec4 var_0d7a8 = var_547af;
+    highp vec4 var_f5aab = var_0d7a8 * v_color;
+    var_547af = var_f5aab;
+    bgfx_FragData0 = var_f5aab;
 }

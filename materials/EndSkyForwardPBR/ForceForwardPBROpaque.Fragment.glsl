@@ -43,7 +43,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -84,7 +84,7 @@
 
 precision mediump float;
 precision highp int;
-float var_a27a0;
+float var_28587;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
 uniform highp sampler2D s_PreviousFrameAverageLuminance;
@@ -165,13 +165,12 @@ void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     }
 }
 void main() {
-    highp vec3 var_05b34 = v_clipPosition;
     highp vec4 var_eeb9a = texture(s_SkyTexture, v_texcoord0);
     highp vec3 var_9e11a = var_eeb9a.xyz;
-    highp vec3 var_268b9;
-    func_9b87e(var_268b9, var_9e11a);
-    highp vec3 var_246fc = v_clipPosition / vec3(var_05b34.z);
-    highp vec4 var_d530e = vec4(var_246fc, 1.0);
+    highp vec3 var_afacc;
+    func_9b87e(var_afacc, var_9e11a);
+    highp vec3 var_2db02 = v_clipPosition / vec3(v_clipPosition.z);
+    highp vec4 var_d530e = vec4(var_2db02, 1.0);
     highp mat4 var_4fa47 = u_invProj;
     highp mat4 var_498b7 = u_invProj;
     highp mat4 var_4882d = u_invProj;
@@ -270,17 +269,25 @@ void main() {
         var_bdb1d = 0.0;
         var_1bb57 = vec3(0.0);
     }
-    highp vec4 var_33c2f = vec4(var_1bb57, var_bdb1d);
+    highp vec4 var_6531b = vec4(var_1bb57, var_bdb1d);
+    highp vec4 var_e0e09 = var_6531b;
     highp vec3 var_3da54 = var_58f25;
-    highp float var_13962 = 1.0 - smoothstep(FogSkyBlend.x - FogSkyBlend.w, FogSkyBlend.y, var_3da54.y);
-    highp vec3 var_91f93 = max(mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_13962 * var_13962) * var_13962)) * MinimumSkyLuminance.x, var_33c2f.xyz).xyz * vec4(var_268b9, var_a27a0).xyz;
-    highp vec4 var_d371e = vec4(var_91f93.x, var_91f93.y, var_91f93.z, var_33c2f.w);
+    highp float var_a3a58 = 1.0 - smoothstep(FogSkyBlend.x - FogSkyBlend.w, FogSkyBlend.y, var_3da54.y);
+    highp vec3 var_48a18 = max(mix(SkyZenithColor.xyz, SkyHorizonColor.xyz, vec3((var_a3a58 * var_a3a58) * var_a3a58)) * MinimumSkyLuminance.x, var_6531b.xyz);
+    var_e0e09.x = var_48a18.x;
+    var_e0e09.y = var_48a18.y;
+    var_e0e09.z = var_48a18.z;
+    highp vec4 var_e03ff = var_e0e09;
+    highp vec3 var_5a1c3 = var_e03ff.xyz * vec4(var_afacc, var_28587).xyz;
+    var_e0e09.x = var_5a1c3.x;
+    var_e0e09.y = var_5a1c3.y;
+    var_e0e09.z = var_5a1c3.z;
     highp vec4 var_1d469;
     if (VolumeScatteringEnabledAndPointLightVolumetricsEnabled.x != 0.0)
     {
         highp vec2 var_65315 = VolumeNearFar.xy;
-        highp vec2 var_115ba = (var_246fc.xy + vec2(1.0)) * 0.5;
-        highp vec4 var_92c8f = u_invProj * vec4(var_246fc, 1.0);
+        highp vec2 var_115ba = (var_2db02.xy + vec2(1.0)) * 0.5;
+        highp vec4 var_92c8f = u_invProj * vec4(var_2db02, 1.0);
         highp float var_8cf8f = var_115ba.x;
         ivec3 var_dbde4 = ivec3(VolumeDimensions.xyz);
         highp vec3 var_9bf69 = vec3(var_8cf8f, var_115ba.y, log((53.598148345947265625 * ((((-var_92c8f.z) / var_92c8f.w) - var_65315.x) / (var_65315.y - var_65315.x))) + 1.0) * 0.25);
@@ -293,7 +300,7 @@ void main() {
         var_1d469 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_9dcbd = var_1d469;
-    highp vec3 var_d9f57 = var_1d469.xyz + (mix(vec3(1.0), var_91f93.xyz, vec3(var_d371e.w)) * var_9dcbd.w);
+    highp vec3 var_d9f57 = var_1d469.xyz + (mix(vec3(1.0), var_e0e09.xyz, vec3(var_e0e09.w)) * var_9dcbd.w);
     highp vec3 var_0ff92;
     if (PreExposureEnabled.x > 0.0)
     {

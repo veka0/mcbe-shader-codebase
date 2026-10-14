@@ -15,8 +15,7 @@
 */
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-layout(binding = 0, std430) buffer s_FakeRWBufferBuffer { int s_FakeRWBuffer[]; } var_efe38;
+layout(binding = 0, std430) buffer s_FakeRWBufferBuffer { int s_FakeRWBuffer[]; } var_84590;
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    var_efe38.s_FakeRWBuffer[GlobalInvocationID.x] = 0;
+    var_84590.s_FakeRWBuffer[gl_GlobalInvocationID.x] = 0;
 }

@@ -31,7 +31,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -162,15 +162,15 @@ void func_a0b5c(inout vec3 arg_9b0e1, inout float arg_7a26d) {
     }
     arg_7a26d = loc_e55e0 / float(loc_64b28 * loc_64b28);
 }
-void func_5574e() {
-    int loc_a77cc = int(GlobalInvocationID.x);
-    int loc_7b57e = int(GlobalInvocationID.y);
-    int loc_3a001 = int(GlobalInvocationID.z);
-    if (((loc_a77cc >= int(VolumeDimensions.x)) || (loc_7b57e >= int(VolumeDimensions.y))) || (loc_3a001 >= int(VolumeDimensions.z)))
+void func_b0036() {
+    int loc_6616d = int(gl_GlobalInvocationID.x);
+    int loc_18282 = int(gl_GlobalInvocationID.y);
+    int loc_141da = int(gl_GlobalInvocationID.z);
+    if (((loc_6616d >= int(VolumeDimensions.x)) || (loc_18282 >= int(VolumeDimensions.y))) || (loc_141da >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_cfbf6 = ((vec3(float(loc_a77cc), float(loc_7b57e), float(loc_3a001)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
+    vec3 loc_cfbf6 = ((vec3(float(loc_6616d), float(loc_18282), float(loc_141da)) + vec3(0.5)) + JitterOffset.xyz) / VolumeDimensions.xyz;
     vec3 loc_777c2 = loc_cfbf6;
     vec2 loc_b796d = VolumeNearFar.xy;
     float loc_fcce6 = (exp(4.0 * loc_777c2.z) - 1.0) * 0.0186573602259159088134765625;
@@ -354,7 +354,7 @@ void func_5574e() {
     }
     if (TemporalSettings.x != 0.0)
     {
-        vec3 loc_dfafd = (vec3(float(loc_a77cc), float(loc_7b57e), float(loc_3a001)) + vec3(0.5)) / VolumeDimensions.xyz;
+        vec3 loc_dfafd = (vec3(float(loc_6616d), float(loc_18282), float(loc_141da)) + vec3(0.5)) / VolumeDimensions.xyz;
         vec3 loc_e9300 = loc_dfafd;
         vec2 loc_9d396 = VolumeNearFar.xy;
         float loc_fcd55 = (exp(4.0 * loc_e9300.z) - 1.0) * 0.0186573602259159088134765625;
@@ -374,14 +374,13 @@ void func_5574e() {
         vec3 loc_96ba4 = loc_4a1a9;
         float loc_68f82 = (loc_96ba4.z * float(loc_b3099.z)) - 0.5;
         int loc_3e42f = clamp(int(loc_68f82), 0, loc_b3099.z - 2);
-        imageStore(s_CascadedShadowBufferOut, ivec3(loc_a77cc, loc_7b57e, loc_3a001), vec4(mix(loc_459f6, mix(textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f)), 0.0), textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f + 1)), 0.0), vec4(clamp(loc_68f82 - float(loc_3e42f), 0.0, 1.0))).x, mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_3ffa7, vec3(0.0), VolumeDimensions.xyz) - loc_3ffa7) * TemporalSettings.y, 0.0, 1.0))), 0.0, 0.0, 0.0));
+        imageStore(s_CascadedShadowBufferOut, ivec3(loc_6616d, loc_18282, loc_141da), vec4(mix(loc_459f6, mix(textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f)), 0.0), textureLod(s_PreviousCascadedShadowBuffer, vec3(loc_77774, loc_eb216.y, float(loc_3e42f + 1)), 0.0), vec4(clamp(loc_68f82 - float(loc_3e42f), 0.0, 1.0))).x, mix(TemporalSettings.z, 0.0, clamp(length(clamp(loc_3ffa7, vec3(0.0), VolumeDimensions.xyz) - loc_3ffa7) * TemporalSettings.y, 0.0, 1.0))), 0.0, 0.0, 0.0));
     }
     else
     {
-        imageStore(s_CascadedShadowBufferOut, ivec3(loc_a77cc, loc_7b57e, loc_3a001), vec4(loc_459f6, 0.0, 0.0, 0.0));
+        imageStore(s_CascadedShadowBufferOut, ivec3(loc_6616d, loc_18282, loc_141da), vec4(loc_459f6, 0.0, 0.0, 0.0));
     }
 }
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_5574e();
+    func_b0036();
 }

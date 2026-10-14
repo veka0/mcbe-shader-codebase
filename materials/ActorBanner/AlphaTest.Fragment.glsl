@@ -87,25 +87,21 @@ centroid in highp vec4 v_texcoords;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-#ifdef TINTING__ENABLED
-    highp vec4 var_a3564 = v_color0;
-    highp vec4 var_13038 = vec4(v_color0.xyz, var_a3564.w);
-    highp vec4 var_1b1d9 = var_13038;
-#endif
 #ifdef TINTING__DISABLED
-    highp vec4 var_bf6a8 = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_569e6 = texture(s_MatTexture, v_texcoords.zw);
 #endif
 #ifdef TINTING__ENABLED
-    highp vec4 var_45919 = texture(s_MatTexture, v_texcoords.zw);
-    highp vec4 var_0ad11 = texture(s_MatTexture, v_texcoords.xy);
-    var_45919.w = mix(var_0ad11.x * var_0ad11.w, var_0ad11.w, var_1b1d9.w);
-    highp vec4 var_5fdbc = var_45919;
-    highp vec3 var_f30a7 = var_5fdbc.xyz * var_13038.xyz;
-    highp vec4 var_b626b = vec4(var_f30a7.x, var_f30a7.y, var_f30a7.z, var_5fdbc.w);
-    var_45919 = var_b626b;
-    highp vec4 var_bf6a8 = var_b626b;
+    highp vec4 var_cc5d0 = texture(s_MatTexture, v_texcoords.zw);
+    highp vec4 var_e035a = texture(s_MatTexture, v_texcoords.xy);
+    var_cc5d0.w = mix(var_e035a.x * var_e035a.w, var_e035a.w, v_color0.w);
+    highp vec4 var_e3828 = var_cc5d0;
+    highp vec3 var_4a912 = var_e3828.xyz * vec4(v_color0.xyz, v_color0.w).xyz;
+    var_cc5d0.x = var_4a912.x;
+    var_cc5d0.y = var_4a912.y;
+    var_cc5d0.z = var_4a912.z;
+    highp vec4 var_569e6 = var_cc5d0;
 #endif
-    bool var_711f5 = var_bf6a8.w < ActorFPEpsilon.x;
+    bool var_711f5 = var_569e6.w < ActorFPEpsilon.x;
     bool var_7df86;
     if (!var_711f5)
     {
@@ -114,11 +110,10 @@ void main() {
         if (DitheringEnabledToggle.x != 0.0)
         {
             highp mat4 var_24edd = u_view;
-            highp vec4 var_3267d = v_clipPosition;
-            highp vec2 var_f4f10 = floor(((((v_clipPosition.xyz / vec3(var_3267d.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
-            highp vec2 var_c55b8 = floor(var_f4f10 * 0.25);
-            highp vec2 var_63b62 = floor(var_f4f10 * 0.5);
-            highp vec2 var_5fe78 = floor(var_f4f10);
+            highp vec2 var_52d56 = floor(((((v_clipPosition.xyz / vec3(v_clipPosition.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+            highp vec2 var_c55b8 = floor(var_52d56 * 0.25);
+            highp vec2 var_63b62 = floor(var_52d56 * 0.5);
+            highp vec2 var_5fe78 = floor(var_52d56);
             var_63892 = smoothstep(var_4be3d.x, var_4be3d.y, dot(-normalize(vec4(var_24edd[0].z, var_24edd[1].z, var_24edd[2].z, var_238cd).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_c55b8.x * 0.5) + ((var_c55b8.y * var_c55b8.y) * 0.75)) * 0.25) + fract((var_63b62.x * 0.5) + ((var_63b62.y * var_63b62.y) * 0.75))) * 0.25) + fract((var_5fe78.x * 0.5) + ((var_5fe78.y * var_5fe78.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
         }
         else
@@ -135,10 +130,19 @@ void main() {
     {
         discard;
     }
-    highp vec3 var_7ad1c = var_bf6a8.xyz * v_light.xyz;
-    highp vec4 var_0bc36 = vec4(var_7ad1c.x, var_7ad1c.y, var_7ad1c.z, var_bf6a8.w);
-    var_0bc36.w *= HudOpacity.x;
-    highp vec4 var_d8f40 = var_0bc36;
-    highp vec4 var_f6e07 = v_fog;
-    bgfx_FragData0 = vec4(mix(vec4(var_0bc36.xyz, var_d8f40.w).xyz, v_fog.xyz, vec3(var_f6e07.w)), var_d8f40.w);
+    highp vec4 var_a244b = var_569e6;
+    highp vec3 var_279b1 = var_569e6.xyz * v_light.xyz;
+    var_a244b.x = var_279b1.x;
+    var_a244b.y = var_279b1.y;
+    var_a244b.z = var_279b1.z;
+    highp vec4 var_414c0 = var_a244b;
+    var_414c0.w *= HudOpacity.x;
+    highp vec4 var_1d587 = var_414c0;
+    highp vec4 var_4b012 = vec4(var_414c0.xyz, var_1d587.w);
+    highp vec4 var_72c1b = var_4b012;
+    highp vec3 var_c6e56 = mix(var_4b012.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

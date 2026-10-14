@@ -25,11 +25,10 @@ uniform highp vec4 ConvolutionParameters;
 in highp vec2 v_texCoord;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec2 var_66eed = v_texCoord;
-    highp vec3 var_eb3d3;
-    var_eb3d3.x = sqrt(1.0 - (var_66eed.x * var_66eed.x));
-    var_eb3d3.y = 0.0;
-    var_eb3d3.z = var_66eed.x;
+    highp vec3 var_e8c29;
+    var_e8c29.x = sqrt(1.0 - (v_texCoord.x * v_texCoord.x));
+    var_e8c29.y = 0.0;
+    var_e8c29.z = v_texCoord.x;
     highp float var_a4178;
     highp float var_54144;
     var_54144 = 0.0;
@@ -46,28 +45,28 @@ void main() {
         uint var_5e4f2 = ((var_8f8af & 252645135u) << 4u) | ((var_8f8af & 4042322160u) >> 4u);
         highp vec2 var_3de28 = vec2(float(var_ba9cd) / float(uint(ConvolutionParameters.x)), float(((var_5e4f2 & 16711935u) << 8u) | ((var_5e4f2 & 4278255360u) >> 8u)) * 2.3283064365386962890625e-10);
         highp vec3 var_247a2 = vec3(0.0, 0.0, 1.0);
-        highp float var_0b907 = var_66eed.y * var_66eed.y;
+        highp float var_545ee = v_texCoord.y * v_texCoord.y;
         highp float var_c9f6e = 6.283185482025146484375 * var_3de28.x;
-        highp float var_38116 = sqrt((1.0 - var_3de28.y) / (1.0 + (((var_0b907 * var_0b907) - 1.0) * var_3de28.y)));
+        highp float var_38116 = sqrt((1.0 - var_3de28.y) / (1.0 + (((var_545ee * var_545ee) - 1.0) * var_3de28.y)));
         highp float var_07aff = sqrt(1.0 - (var_38116 * var_38116));
         var_c05c2.x = cos(var_c9f6e) * var_07aff;
         var_c05c2.y = sin(var_c9f6e) * var_07aff;
         var_c05c2.z = var_38116;
         highp vec3 var_87b49 = normalize(cross(mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), bvec3(abs(var_247a2.z) < 0.999000012874603271484375)), vec3(0.0, 0.0, 1.0)));
         highp vec3 var_109c0 = ((var_87b49 * var_c05c2.x) + (cross(vec3(0.0, 0.0, 1.0), var_87b49) * var_c05c2.y)) + (vec3(0.0, 0.0, 1.0) * var_c05c2.z);
-        highp vec3 var_9b4ae = var_109c0;
-        highp vec3 var_7aacc = (var_109c0 * (2.0 * dot(var_eb3d3, var_109c0))) - var_eb3d3;
-        highp float var_8c821 = clamp(var_7aacc.z, 0.0, 1.0);
-        highp float var_16929 = clamp(dot(var_eb3d3, var_109c0), 0.0, 1.0);
-        if (var_8c821 > 0.0)
+        highp vec3 var_58303 = var_109c0;
+        highp vec3 var_7aacc = (var_109c0 * (2.0 * dot(var_e8c29, var_109c0))) - var_e8c29;
+        highp float var_32232 = clamp(var_7aacc.z, 0.0, 1.0);
+        highp float var_3c226 = clamp(dot(var_e8c29, var_109c0), 0.0, 1.0);
+        if (var_32232 > 0.0)
         {
-            highp float var_7c701 = (var_66eed.y * var_66eed.y) * 0.5;
-            highp float var_8a442 = (((var_66eed.x / (((var_66eed.x * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05)) * (var_8c821 / (((var_8c821 * (1.0 - var_7c701)) + var_7c701) + 9.9999997473787516355514526367188e-05))) * var_16929) / (clamp(var_9b4ae.z, 0.0, 1.0) * var_66eed.x);
-            highp float var_ac0d0 = 1.0 - var_16929;
+            highp float var_2db84 = (v_texCoord.y * v_texCoord.y) * 0.5;
+            highp float var_91f98 = (((v_texCoord.x / (((v_texCoord.x * (1.0 - var_2db84)) + var_2db84) + 9.9999997473787516355514526367188e-05)) * (var_32232 / (((var_32232 * (1.0 - var_2db84)) + var_2db84) + 9.9999997473787516355514526367188e-05))) * var_3c226) / (clamp(var_58303.z, 0.0, 1.0) * v_texCoord.x);
+            highp float var_ac0d0 = 1.0 - var_3c226;
             highp float var_a0dea = var_ac0d0 * var_ac0d0;
             highp float var_6d628 = (var_a0dea * var_a0dea) * var_ac0d0;
-            var_36767 = var_54144 + (var_6d628 * var_8a442);
-            var_49334 = var_a4178 + ((1.0 - var_6d628) * var_8a442);
+            var_36767 = var_54144 + (var_6d628 * var_91f98);
+            var_49334 = var_a4178 + ((1.0 - var_6d628) * var_91f98);
         }
         else
         {

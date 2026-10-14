@@ -72,58 +72,91 @@ in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_f5beb = v_color0;
-    highp vec4 var_1bee0 = texture(s_MatTexture, v_texcoord0);
+    highp vec4 var_216b8 = texture(s_MatTexture, v_texcoord0);
     if (AlphaMaskedTint.x != 0.0)
     {
-        highp vec3 var_5e4d7 = mix(var_1bee0.xyz, var_1bee0.xyz * v_color0.xyz, vec3(var_1bee0.w)).xyz * var_f5beb.w;
-        var_1bee0 = vec4(var_5e4d7.x, var_5e4d7.y, var_5e4d7.z, var_1bee0.w);
-        var_1bee0.w = 1.0;
+        highp vec4 var_ec353 = var_216b8;
+        highp float var_7a181 = var_216b8.w;
+        highp vec3 var_d8fa6 = mix(var_ec353.xyz, var_ec353.xyz * v_color0.xyz, vec3(var_7a181));
+        var_216b8.x = var_d8fa6.x;
+        var_216b8.y = var_d8fa6.y;
+        var_216b8.z = var_d8fa6.z;
+        highp vec4 var_8e56a = var_216b8;
+        highp vec3 var_a3d7a = var_8e56a.xyz * v_color0.w;
+        var_216b8.x = var_a3d7a.x;
+        var_216b8.y = var_a3d7a.y;
+        var_216b8.z = var_a3d7a.z;
+        var_216b8.w = 1.0;
     }
     else
     {
-        highp vec3 var_55928 = var_1bee0.xyz * v_color0.xyz;
-        var_1bee0 = vec4(var_55928.x, var_55928.y, var_55928.z, var_1bee0.w);
+        highp vec4 var_bc465 = var_216b8;
+        highp vec3 var_30e20 = var_bc465.xyz * v_color0.xyz;
+        var_216b8.x = var_30e20.x;
+        var_216b8.y = var_30e20.y;
+        var_216b8.z = var_30e20.z;
     }
-    highp vec4 var_74395 = var_1bee0;
-    highp vec4 var_0d9b4 = var_74395 * MatColor;
-    var_1bee0 = var_0d9b4;
+    highp vec4 var_74395 = var_216b8;
+    highp vec4 var_7479c = var_74395 * MatColor;
+    var_216b8 = var_7479c;
+    highp vec4 var_1d897 = var_7479c;
+    highp vec3 var_6f9dd = var_7479c.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    var_1d897.x = var_6f9dd.x;
+    var_1d897.y = var_6f9dd.y;
+    var_1d897.z = var_6f9dd.z;
+    highp vec4 var_9d23e = var_1d897;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_2ce32 = var_0d9b4.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec4 var_754d5 = mix(var_1d897, var_1d897 * ChangeColor, vec4(v_color0.w));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_61abf = var_0d9b4.xyz * mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_533c7 = var_61abf.xy;
-    highp vec3 var_66e1f = mix(mix((var_61abf.xxx * ChangeColor.xyz).xyz, var_61abf.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_6eb8b = vec4(var_66e1f.x, var_66e1f.y, var_66e1f.z, var_0d9b4.w);
+    highp vec2 var_e1236 = var_1d897.xy;
+    highp vec3 var_754d5 = var_1d897.xxx * ChangeColor.xyz;
 #endif
+    var_9d23e.x = var_754d5.x;
+    var_9d23e.y = var_754d5.y;
+    var_9d23e.z = var_754d5.z;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_8990b = vec4(var_2ce32.x, var_2ce32.y, var_2ce32.z, var_0d9b4.w);
-    highp vec3 var_96393 = mix(mix(var_8990b, var_8990b * ChangeColor, vec4(var_f5beb.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_6eb8b = vec4(var_96393.x, var_96393.y, var_96393.z, var_0d9b4.w);
+    highp vec4 var_47d41 = var_9d23e;
 #endif
+#ifdef MULTI_COLOR_TINT__ON
+    highp vec4 var_60355 = var_9d23e;
+    highp vec3 var_ef570 = mix(var_60355.xyz, var_1d897.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_e1236.y)));
+    var_9d23e.x = var_ef570.x;
+    var_9d23e.y = var_ef570.y;
+    var_9d23e.z = var_ef570.z;
+    highp vec4 var_47d41 = var_9d23e;
+#endif
+    highp vec3 var_2a9cf = mix(var_9d23e.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    var_47d41.x = var_2a9cf.x;
+    var_47d41.y = var_2a9cf.y;
+    var_47d41.z = var_2a9cf.z;
+    highp vec4 var_6e5bd = var_47d41;
+    highp vec3 var_279b1 = var_47d41.xyz * v_light.xyz;
+    var_6e5bd.x = var_279b1.x;
+    var_6e5bd.y = var_279b1.y;
+    var_6e5bd.z = var_279b1.z;
+    var_1d897 = var_6e5bd;
+    highp vec4 var_6d1d7 = var_6e5bd;
     highp vec2 var_7c9c5 = DitherParams2[0].xy;
-    bool var_c20f0;
+    bool var_f42fb;
     if (DitheringEnabledToggle.x != 0.0)
     {
         highp mat4 var_4971e = u_view;
-        highp vec4 var_d36cf = v_clipPosition;
-        highp vec2 var_886c2 = floor(((((v_clipPosition.xyz / vec3(var_d36cf.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
-        highp vec2 var_f4989 = floor(var_886c2 * 0.25);
-        highp vec2 var_85686 = floor(var_886c2 * 0.5);
-        highp vec2 var_09c49 = floor(var_886c2);
-        var_c20f0 = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
+        highp vec2 var_2c6b3 = floor(((((v_clipPosition.xyz / vec3(v_clipPosition.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[0].z)) * DitherParams2[0].z;
+        highp vec2 var_f4989 = floor(var_2c6b3 * 0.25);
+        highp vec2 var_85686 = floor(var_2c6b3 * 0.5);
+        highp vec2 var_09c49 = floor(var_2c6b3);
+        var_f42fb = smoothstep(var_7c9c5.x, var_7c9c5.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
     {
-        var_c20f0 = false;
+        var_f42fb = false;
     }
-    highp float var_17bd7 = var_6eb8b.w * (var_c20f0 ? 0.0 : 1.0);
-    highp vec4 var_9efa6 = v_fog;
-#ifdef MULTI_COLOR_TINT__OFF
-    bgfx_FragData0 = vec4(mix(vec4(var_96393, var_17bd7).xyz, v_fog.xyz, vec3(var_9efa6.w)), var_17bd7);
-#endif
-#ifdef MULTI_COLOR_TINT__ON
-    bgfx_FragData0 = vec4(mix(vec4(var_66e1f, var_17bd7).xyz, v_fog.xyz, vec3(var_9efa6.w)), var_17bd7);
-#endif
+    highp vec4 var_8cd6d = vec4(var_6e5bd.xyz, var_6d1d7.w * (var_f42fb ? 0.0 : 1.0));
+    highp vec4 var_72c1b = var_8cd6d;
+    highp vec3 var_c6e56 = mix(var_8cd6d.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

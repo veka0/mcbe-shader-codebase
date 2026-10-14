@@ -77,14 +77,34 @@ in highp vec2 v_texcoord0;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_79468 = OverlayColor;
-    highp vec4 var_36b46 = v_fog;
-    highp vec4 var_ed9ac = ((texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx * GlintColor) + (texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx * GlintColor)) * TileLightColor;
-    highp vec4 var_e3e79 = var_ed9ac;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    bgfx_FragData0 = vec4(var_ed9ac.xyz * var_ed9ac.xyz, abs(var_e3e79.w)) + vec4(mix((mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_79468.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_36b46.w)), 0.0);
+    highp vec4 var_5cd3c = MatColor0;
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    bgfx_FragData0 = vec4(var_ed9ac.xyz * var_ed9ac.xyz, abs(var_e3e79.w)) + vec4(mix((mix(texture(s_MatTexture0, v_texcoord0).xyz, OverlayColor.xyz, vec3(var_79468.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_36b46.w)), 0.0);
+    highp vec4 var_a4eac = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_5cd3c = var_a4eac;
 #endif
+    highp vec4 var_5b8d6 = OverlayColor;
+#ifdef SOURCE_INPUT_TYPE0__CONSTANT
+    highp vec3 var_517d1 = mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
+#endif
+#ifdef SOURCE_INPUT_TYPE0__SAMPLED
+    highp vec3 var_517d1 = mix(var_a4eac.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
+#endif
+    var_5cd3c.x = var_517d1.x;
+    var_5cd3c.y = var_517d1.y;
+    var_5cd3c.z = var_517d1.z;
+    highp vec4 var_5be75 = var_5cd3c;
+    highp vec3 var_279b1 = var_5cd3c.xyz * v_light.xyz;
+    var_5be75.x = var_279b1.x;
+    var_5be75.y = var_279b1.y;
+    var_5be75.z = var_279b1.z;
+    highp vec4 var_51036 = var_5be75;
+    highp vec3 var_c6e56 = mix(var_5be75.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_51036.x = var_c6e56.x;
+    var_51036.y = var_c6e56.y;
+    var_51036.z = var_c6e56.z;
+    highp vec4 var_4ceaf = ((texture(s_MatTexture1, fract(v_layerUv.xy)).xyzx * GlintColor) + (texture(s_MatTexture1, fract(v_layerUv.zw)).xyzx * GlintColor)) * TileLightColor;
+    highp vec4 var_7e1aa = var_4ceaf;
+    bgfx_FragData0 = vec4(var_4ceaf.xyz * var_4ceaf.xyz, abs(var_7e1aa.w)) + vec4(var_51036.xyz, 0.0);
 }

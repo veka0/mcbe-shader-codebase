@@ -39,28 +39,27 @@ void func_011ac(inout highp float arg_6b2b2, inout highp float arg_ca2fb) {
     arg_ca2fb = (1.05499994754791259765625 * pow(arg_6b2b2, 0.4166666567325592041015625)) - 0.054999999701976776123046875;
 }
 void main() {
-    highp vec4 var_d1b66 = v_Additional;
     uvec4 var_eb4ac = uvec4(v_VaryingData);
     int var_8e4d8 = int((var_eb4ac.z << 4u) | ((var_eb4ac.y & 240u) >> 4u));
     int var_5cdc1 = int(var_eb4ac.w);
     highp vec4 var_45e84 = Data_PS[var_8e4d8];
     highp vec4 var_c2873 = Data_PS[var_8e4d8 + 1];
     int var_fc151 = max(0, (int(var_45e84.x) + (-1)));
-    highp float var_f7889;
+    highp float var_d56c5;
     if (0 == var_5cdc1)
     {
-        var_f7889 = min(1.0, var_d1b66.z * var_d1b66.w);
+        var_d56c5 = min(1.0, v_Additional.z * v_Additional.w);
     }
     else
     {
         highp float var_a4790;
         if (3 == var_5cdc1)
         {
-            highp vec2 var_3ebfa = vec2(var_d1b66.x, 1.0 - var_d1b66.y);
-            highp float var_74cec = var_3ebfa.x;
-            highp float var_83bc9 = var_3ebfa.y;
+            highp vec2 var_b92f7 = vec2(v_Additional.x, 1.0 - v_Additional.y);
+            highp float var_74cec = var_b92f7.x;
+            highp float var_83bc9 = var_b92f7.y;
             highp vec2 var_7fea2 = vec2(var_74cec, 1.0 - var_83bc9);
-            var_3ebfa = var_7fea2;
+            var_b92f7 = var_7fea2;
             var_c2873 = texture(s_txBuffer, vec2(((var_7fea2 * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((var_7fea2 * UVTransform[0].zw) + UVTransform[0].xy).y));
             var_a4790 = var_c2873.w;
         }
@@ -156,9 +155,9 @@ void main() {
             }
             var_a4790 = var_b5f11;
         }
-        var_f7889 = var_a4790;
+        var_d56c5 = var_a4790;
     }
-    if (var_f7889 < 0.0039215688593685626983642578125)
+    if (var_d56c5 < 0.0039215688593685626983642578125)
     {
         discard;
     }

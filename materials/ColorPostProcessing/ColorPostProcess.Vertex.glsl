@@ -50,7 +50,12 @@ in vec4 a_position;
 in vec2 a_texcoord0;
 out vec4 v_texcoord0;
 void main() {
-    vec2 var_828cb = a_texcoord0 * ViewportScale.xy;
-    v_texcoord0 = vec4(var_828cb.x, var_828cb.y, a_texcoord0.x, a_texcoord0.y);
+    vec4 var_c1461 = vec4(0.0);
+    vec2 var_f32e0 = a_texcoord0 * ViewportScale.xy;
+    var_c1461.x = var_f32e0.x;
+    var_c1461.y = var_f32e0.y;
+    var_c1461.z = a_texcoord0.x;
+    var_c1461.w = a_texcoord0.y;
+    v_texcoord0 = var_c1461;
     gl_Position = vec4((a_position.xy * 2.0) - vec2(1.0), 0.0, 1.0);
 }

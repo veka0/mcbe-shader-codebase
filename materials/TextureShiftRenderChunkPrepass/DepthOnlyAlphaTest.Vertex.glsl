@@ -65,15 +65,12 @@ void main() {
     vec4 var_9b079 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_9b079 = var_e43a8 * vec4(a_position, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_9b079 = var_53a7d * vec4(a_position, 1.0);
 #endif
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);

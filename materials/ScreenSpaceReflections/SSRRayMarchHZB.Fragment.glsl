@@ -59,12 +59,12 @@ uniform highp vec4 ScreenSpaceRayOffset;
 in highp vec4 v_projPosition;
 in highp vec4 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
-void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout int arg_ebc6a, inout highp float arg_15392) {
-    highp vec4 loc_a0cea = texture(s_GbufferDepth, arg_d5b5e);
-    highp float loc_98e59 = (loc_a0cea.x * 2.0) - 1.0;
+void func_f7f95(inout highp vec4 arg_e78ee, inout highp vec4 arg_c638b, inout int arg_e18c9, inout highp float arg_838a8) {
+    highp vec4 loc_25747 = texture(s_GbufferDepth, arg_e78ee.xy);
+    highp float loc_98e59 = (loc_25747.x * 2.0) - 1.0;
     if (loc_98e59 == 1.0)
     {
-        arg_4909e = vec4(0.0, 0.0, 0.0, -1.0);
+        arg_c638b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
     highp vec3 loc_9c3f6 = vec3(v_projPosition.xy, loc_98e59);
@@ -84,28 +84,28 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
     highp float loc_d799e = loc_df846.w;
     highp vec4 loc_aa8e7 = loc_9666f / vec4(loc_d799e);
     loc_df846 = loc_aa8e7;
-    highp vec3 loc_1378b = loc_aa8e7.xyz;
-    highp vec3 loc_4cc58 = loc_1378b;
-    highp vec4 loc_cabd1 = texture(s_GbufferNormal, arg_d5b5e);
-    highp vec2 loc_d21e3 = loc_cabd1.xy;
-    highp vec3 loc_6b26b = vec3(loc_cabd1.xy, (1.0 - abs(loc_d21e3.x)) - abs(loc_d21e3.y));
-    highp vec2 loc_fd2bf;
-    if (loc_6b26b.z < 0.0)
+    highp vec3 loc_7f17e = loc_aa8e7.xyz;
+    highp vec3 loc_4cc58 = loc_7f17e;
+    highp vec4 loc_e7405 = texture(s_GbufferNormal, arg_e78ee.xy);
+    highp vec2 loc_d21e3 = loc_e7405.xy;
+    highp vec3 loc_7ee6e = vec3(loc_e7405.xy, (1.0 - abs(loc_d21e3.x)) - abs(loc_d21e3.y));
+    highp vec2 loc_46b19;
+    if (loc_7ee6e.z < 0.0)
     {
-        loc_fd2bf = (vec2(1.0) - abs(loc_6b26b.yx)) * ((step(vec2(0.0), loc_6b26b.xy) * 2.0) - vec2(1.0));
+        loc_46b19 = (vec2(1.0) - abs(loc_7ee6e.yx)) * ((step(vec2(0.0), loc_7ee6e.xy) * 2.0) - vec2(1.0));
     }
     else
     {
-        loc_fd2bf = loc_6b26b.xy;
+        loc_46b19 = loc_7ee6e.xy;
     }
-    highp vec3 loc_eea0e = loc_6b26b;
-    loc_6b26b = vec3(loc_fd2bf.x, loc_fd2bf.y, loc_eea0e.z);
-    highp vec3 loc_d8c03 = normalize(reflect(normalize(loc_1378b), normalize((transpose(u_invView) * vec4(normalize(normalize(vec3(loc_fd2bf.x, loc_fd2bf.y, loc_eea0e.z))), 0.0)).xyz)));
-    highp vec3 loc_03c67 = loc_d8c03;
-    highp vec3 loc_6c056 = loc_1378b + (loc_d8c03 * 1000.0);
+    loc_7ee6e.x = loc_46b19.x;
+    loc_7ee6e.y = loc_46b19.y;
+    highp vec3 loc_018a8 = normalize(reflect(normalize(loc_7f17e), normalize((transpose(u_invView) * vec4(normalize(normalize(loc_7ee6e)), 0.0)).xyz)));
+    highp vec3 loc_03c67 = loc_018a8;
+    highp vec3 loc_6c056 = loc_7f17e + (loc_018a8 * 1000.0);
     if (loc_6c056.z > CameraData.x)
     {
-        loc_6c056 = loc_1378b + (loc_d8c03 * ((CameraData.x - loc_4cc58.z) / loc_03c67.z));
+        loc_6c056 = loc_7f17e + (loc_018a8 * ((CameraData.x - loc_4cc58.z) / loc_03c67.z));
     }
     highp vec4 loc_646fe = u_proj * vec4(loc_6c056, 1.0);
     highp vec4 loc_b8928 = loc_646fe;
@@ -117,14 +117,14 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
     highp float loc_3da03 = ScreenSpaceRayOffset.x / length(loc_9cbe7);
     highp vec2 loc_ee24b = (loc_2fd59 * HiZViewportDimensionsAndBufferDimensions.xy) + (loc_9cbe7 * loc_3da03);
     highp vec2 loc_5fdf6 = loc_ee24b;
-    int loc_c82e4;
+    int loc_95ab6;
     ivec2 loc_4d565;
     int loc_4b637;
-    highp float loc_941d0;
-    loc_941d0 = loc_9c3f6.z + (loc_34789 * loc_3da03);
+    highp float loc_5bb06;
+    loc_5bb06 = loc_9c3f6.z + (loc_34789 * loc_3da03);
     loc_4b637 = 0;
     loc_4d565 = ivec2(floor(loc_ee24b));
-    loc_c82e4 = 0;
+    loc_95ab6 = 0;
     highp vec2 loc_4c627;
     ivec2 loc_0f04f;
     bool loc_6790c;
@@ -134,7 +134,7 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
     highp float loc_b5012;
     for (;;)
     {
-        if (loc_c82e4 < arg_ebc6a)
+        if (loc_95ab6 < arg_e18c9)
         {
             highp vec2 loc_a7fd1 = texelFetch(s_HiZBuffer, loc_4d565 >> ivec2(loc_4b637), loc_4b637).xy;
             ivec2 loc_4066a = (loc_4d565 >> ivec2(loc_4b637)) << ivec2(loc_4b637);
@@ -182,15 +182,15 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
             {
                 loc_4c627 = vec2(float(loc_14df2), loc_5fdf6.y + (loc_b956b * loc_9de07.y));
                 loc_0f04f = ivec2(loc_d7248, int(floor(loc_4c627.y)));
-                loc_616aa = loc_941d0 + (loc_b956b * loc_34789);
+                loc_616aa = loc_5bb06 + (loc_b956b * loc_34789);
             }
             else
             {
                 loc_4c627 = vec2(loc_5fdf6.x + (loc_728e8 * loc_9de07.x), float(loc_6bc48));
                 loc_0f04f = ivec2(int(floor(loc_4c627.x)), loc_4686a);
-                loc_616aa = loc_941d0 + (loc_728e8 * loc_34789);
+                loc_616aa = loc_5bb06 + (loc_728e8 * loc_34789);
             }
-            if (((loc_c82e4 > 0) && (max(loc_941d0, loc_616aa) >= (((1.0 - loc_a7fd1.x) * 2.0) - 1.0))) && (min(loc_941d0, loc_616aa) <= (((1.0 - loc_a7fd1.y) * 2.0) - 1.0)))
+            if (((loc_95ab6 > 0) && (max(loc_5bb06, loc_616aa) >= (((1.0 - loc_a7fd1.x) * 2.0) - 1.0))) && (min(loc_5bb06, loc_616aa) <= (((1.0 - loc_a7fd1.y) * 2.0) - 1.0)))
             {
                 int loc_b9404;
                 if (loc_4b637 == 0)
@@ -202,10 +202,10 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
                 {
                     loc_b9404 = loc_4b637 - 1;
                 }
-                loc_b5012 = loc_941d0;
+                loc_b5012 = loc_5bb06;
                 loc_57e41 = loc_b9404;
                 loc_f2779 = loc_4d565;
-                loc_b0736 = loc_c82e4;
+                loc_b0736 = loc_95ab6;
             }
             else
             {
@@ -255,12 +255,12 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
                 loc_b5012 = loc_616aa;
                 loc_57e41 = loc_2c583;
                 loc_f2779 = loc_0f04f;
-                loc_b0736 = loc_c82e4 + 1;
+                loc_b0736 = loc_95ab6 + 1;
             }
-            loc_941d0 = loc_b5012;
+            loc_5bb06 = loc_b5012;
             loc_4b637 = loc_57e41;
             loc_4d565 = loc_f2779;
-            loc_c82e4 = loc_b0736;
+            loc_95ab6 = loc_b0736;
             continue;
         }
         else
@@ -271,36 +271,39 @@ void func_facfb(inout highp vec2 arg_d5b5e, inout highp vec4 arg_4909e, inout in
     }
     if (loc_6790c)
     {
-        highp vec2 loc_cfd63 = (vec2(loc_4d565) + vec2(0.5)) / HiZViewportDimensionsAndBufferDimensions.xy;
-        highp vec2 loc_a3f03 = (loc_cfd63 * 2.0) - vec2(1.0);
-        loc_a3f03.x = pow(abs(loc_a3f03.x), SSRFadingParamsAndThickness.x * CameraData.z);
-        loc_a3f03.y = pow(abs(loc_a3f03.y), SSRFadingParamsAndThickness.y);
-        highp vec4 loc_5fee2 = texture(s_GbufferNormal, loc_cfd63);
+        highp vec2 loc_1ea54 = (vec2(loc_4d565) + vec2(0.5)) / HiZViewportDimensionsAndBufferDimensions.xy;
+        highp vec2 loc_a852f = (loc_1ea54 * 2.0) - vec2(1.0);
+        loc_a852f.x = pow(abs(loc_a852f.x), SSRFadingParamsAndThickness.x * CameraData.z);
+        loc_a852f.y = pow(abs(loc_a852f.y), SSRFadingParamsAndThickness.y);
+        highp vec4 loc_5fee2 = texture(s_GbufferNormal, loc_1ea54);
         highp vec2 loc_3daf3 = loc_5fee2.xy;
-        highp vec3 loc_ce69c = vec3(loc_5fee2.xy, (1.0 - abs(loc_3daf3.x)) - abs(loc_3daf3.y));
-        highp vec2 loc_699bf;
-        if (loc_ce69c.z < 0.0)
+        highp vec3 loc_18e99 = vec3(loc_5fee2.xy, (1.0 - abs(loc_3daf3.x)) - abs(loc_3daf3.y));
+        highp vec2 loc_f4966;
+        if (loc_18e99.z < 0.0)
         {
-            loc_699bf = (vec2(1.0) - abs(loc_ce69c.yx)) * ((step(vec2(0.0), loc_ce69c.xy) * 2.0) - vec2(1.0));
+            loc_f4966 = (vec2(1.0) - abs(loc_18e99.yx)) * ((step(vec2(0.0), loc_18e99.xy) * 2.0) - vec2(1.0));
         }
         else
         {
-            loc_699bf = loc_ce69c.xy;
+            loc_f4966 = loc_18e99.xy;
         }
-        highp vec3 loc_b40c3 = loc_ce69c;
-        loc_ce69c = vec3(loc_699bf.x, loc_699bf.y, loc_b40c3.z);
-        arg_4909e = vec4(loc_cfd63, loc_941d0, min(min(min((1.0 - loc_a3f03.x) * (1.0 - loc_a3f03.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, float(loc_c82e4) / float(arg_ebc6a))), clamp(1.0 - dot(normalize(normalize(vec3(loc_699bf.x, loc_699bf.y, loc_b40c3.z))), normalize((u_invView * vec4(loc_d8c03, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_15392, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
+        loc_18e99.x = loc_f4966.x;
+        loc_18e99.y = loc_f4966.y;
+        arg_c638b = vec4(loc_1ea54, loc_5bb06, min(min(min((1.0 - loc_a852f.x) * (1.0 - loc_a852f.y), 1.0 - smoothstep(SSRFadingParamsAndThickness.z, 1.0, float(loc_95ab6) / float(arg_e18c9))), clamp(1.0 - dot(normalize(normalize(loc_18e99)), normalize((u_invView * vec4(loc_018a8, 0.0)).xyz)), 0.0, 1.0)), mix(1.0, 0.0, (max(arg_838a8, SSRRoughnessCutoffParams.y) - SSRRoughnessCutoffParams.y) / (SSRRoughnessCutoffParams.x - SSRRoughnessCutoffParams.y))));
         return;
     }
     else
     {
-        arg_4909e = vec4(0.0, 0.0, 0.0, -1.0);
+        arg_c638b = vec4(0.0, 0.0, 0.0, -1.0);
         return;
     }
 }
 void main() {
-    highp vec2 var_d7236 = (floor(v_texcoord0.xy * ScreenSize.xy) + vec2(0.5)) * ScreenSize.zw;
-    uvec4 var_6dbc5 = texelFetch(s_GbufferRoughness, ivec2(vec2(textureSize(s_GbufferRoughness, 0)) * var_d7236.xy), 0);
+    highp vec4 var_fcc9a = v_texcoord0;
+    highp vec2 var_9828e = (floor(v_texcoord0.xy * ScreenSize.xy) + vec2(0.5)) * ScreenSize.zw;
+    var_fcc9a.x = var_9828e.x;
+    var_fcc9a.y = var_9828e.y;
+    uvec4 var_6dbc5 = texelFetch(s_GbufferRoughness, ivec2(vec2(textureSize(s_GbufferRoughness, 0)) * var_fcc9a.xy), 0);
     uint var_4b676 = var_6dbc5.x & 65535u;
     uvec2 var_e21cd = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_92e53 = vec2(float(var_e21cd.x), var_ab8ec) * vec2(0.0039215688593685626983642578125);
@@ -313,9 +316,8 @@ void main() {
     else
     {
         int var_17f47 = int(SSRRayMarchingParams.x);
-        highp vec2 var_0d1be = var_d7236.xy;
         highp vec4 var_1384b;
-        func_facfb(var_0d1be, var_1384b, var_17f47, var_a42ff);
+        func_f7f95(var_fcc9a, var_1384b, var_17f47, var_a42ff);
         var_2c222 = var_1384b;
     }
     bgfx_FragData0 = var_2c222;

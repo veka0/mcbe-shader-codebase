@@ -55,25 +55,49 @@ in highp vec4 v_fog;
 in highp vec4 v_light;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
+    highp vec4 var_056fc = vec4(1.0);
+    highp vec3 var_08760 = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    var_056fc.x = var_08760.x;
+    var_056fc.y = var_08760.y;
+    var_056fc.z = var_08760.z;
+    highp vec4 var_9d23e = var_056fc;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec4 var_fef14 = v_color0;
-    highp vec3 var_f90fa = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
+    highp vec4 var_754d5 = mix(var_056fc, var_056fc * ChangeColor, vec4(v_color0.w));
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    highp vec3 var_d683b = mix(vec3(1.0), v_color0.xyz, vec3(ColorBased.x));
-    highp vec2 var_533c7 = var_d683b.xy;
-    highp vec3 var_f90fa = mix(mix((var_d683b.xxx * ChangeColor.xyz).xyz, var_d683b.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_533c7.y))).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
+    highp vec2 var_e1236 = var_056fc.xy;
+    highp vec3 var_754d5 = var_056fc.xxx * ChangeColor.xyz;
 #endif
-    highp vec4 var_1aaf3 = vec4(var_f90fa.x, var_f90fa.y, var_f90fa.z, vec4(1.0).w);
+    var_9d23e.x = var_754d5.x;
+    var_9d23e.y = var_754d5.y;
+    var_9d23e.z = var_754d5.z;
 #ifdef MULTI_COLOR_TINT__OFF
-    highp vec3 var_570ea = mix(mix(var_1aaf3, var_1aaf3 * ChangeColor, vec4(var_fef14.w)).xyz, OverlayColor.xyz, vec3(OverlayColor.w)).xyz * v_light.xyz;
-    highp vec4 var_3849e = vec4(var_570ea.x, var_570ea.y, var_570ea.z, vec4(1.0).w);
-#endif
-    highp vec4 var_10e64 = v_fog;
-#ifdef MULTI_COLOR_TINT__OFF
-    bgfx_FragData0 = vec4(mix(vec4(var_570ea, var_3849e.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_3849e.w);
+    highp vec4 var_47d41 = var_9d23e;
 #endif
 #ifdef MULTI_COLOR_TINT__ON
-    bgfx_FragData0 = vec4(mix(vec4(var_f90fa, var_1aaf3.w).xyz, v_fog.xyz, vec3(var_10e64.w)), var_1aaf3.w);
+    highp vec4 var_60355 = var_9d23e;
+    highp vec3 var_ef570 = mix(var_60355.xyz, var_056fc.yyy * MultiplicativeTintColor.xyz, vec3(ceil(var_e1236.y)));
+    var_9d23e.x = var_ef570.x;
+    var_9d23e.y = var_ef570.y;
+    var_9d23e.z = var_ef570.z;
+    highp vec4 var_47d41 = var_9d23e;
 #endif
+    highp vec3 var_2a9cf = mix(var_9d23e.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    var_47d41.x = var_2a9cf.x;
+    var_47d41.y = var_2a9cf.y;
+    var_47d41.z = var_2a9cf.z;
+    highp vec4 var_dfd17 = var_47d41;
+    highp vec3 var_279b1 = var_47d41.xyz * v_light.xyz;
+    var_dfd17.x = var_279b1.x;
+    var_dfd17.y = var_279b1.y;
+    var_dfd17.z = var_279b1.z;
+    var_056fc = var_dfd17;
+    highp vec4 var_1d587 = var_dfd17;
+    highp vec4 var_4b012 = vec4(var_dfd17.xyz, var_1d587.w);
+    highp vec4 var_72c1b = var_4b012;
+    highp vec3 var_c6e56 = mix(var_4b012.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

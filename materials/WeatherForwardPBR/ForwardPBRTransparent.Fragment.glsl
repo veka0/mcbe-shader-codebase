@@ -74,7 +74,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -151,7 +151,7 @@ uniform highp vec4 CameraLightIntensity;
 uniform highp vec4 ColorGrading_OptimizeGammaCorrection;
 uniform highp vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 uniform highp vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
-uniform highp vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+uniform highp vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 uniform highp vec4 FogAndDistanceControl;
 uniform highp vec4 FogColor;
 uniform highp vec4 FogSkyBlend;
@@ -326,7 +326,7 @@ void main() {
 #ifdef NO_OCCLUSION__ON
     highp vec4 var_8261b;
 #endif
-    highp vec4 var_ac162 = vec4(var_a32a9, var_ab9d7.w);
+    highp vec4 var_a3ae2 = vec4(var_a32a9, var_ab9d7.w);
     highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
     uvec4 var_14d49 = uvec4(round(var_e5cb6 * 255.0));
 #ifdef NO_OCCLUSION__OFF
@@ -343,25 +343,28 @@ void main() {
 #endif
     highp vec4 var_a7999 = var_8261b;
     highp vec2 var_acc98 = vec2(0.0, var_a7999.w);
-    highp vec2 var_5e6ce = var_acc98;
-    highp vec4 var_1fa73 = var_ac162;
-    highp vec4 var_5d617 = DirectionalLightSourceDiffuseColorAndIlluminance;
-    highp vec2 var_1f2e5 = var_acc98;
+    highp vec2 var_8e6e3 = var_acc98;
+    highp vec4 var_142d7 = var_a3ae2;
+    highp vec4 var_51c70 = DirectionalLightSourceDiffuseColorAndIlluminance;
+    highp vec2 var_735ba = var_acc98;
     highp vec3 var_55c6a = var_8261b.xyz;
-    highp vec3 var_23f9c;
-    if ((((var_55c6a.x + var_55c6a.y) + var_55c6a.z) < 9.9999997473787516355514526367188e-05) && (var_1f2e5.x > 9.9999997473787516355514526367188e-05))
+    highp vec3 var_0b788;
+    if ((((var_55c6a.x + var_55c6a.y) + var_55c6a.z) < 9.9999997473787516355514526367188e-05) && (var_735ba.x > 9.9999997473787516355514526367188e-05))
     {
-        highp float var_bc033 = var_1f2e5.x * var_1f2e5.x;
-        var_23f9c = clamp(vec3(var_bc033, var_bc033 * ((((var_bc033 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_bc033 * (((var_bc033 * var_bc033) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
+        highp float var_bc033 = var_735ba.x * var_735ba.x;
+        var_0b788 = clamp(vec3(var_bc033, var_bc033 * ((((var_bc033 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_bc033 * (((var_bc033 * var_bc033) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_23f9c = var_8261b.xyz;
+        var_0b788 = var_8261b.xyz;
     }
-    highp vec4 var_e92c0 = SkyAmbientLightColorIntensity;
-    highp float var_4ed2c = var_1f2e5.y * var_1f2e5.y;
-    highp vec3 var_9a9e1 = (((((var_1fa73.xyz * vec3(0.3183098733425140380859375)) * DiffuseSpecularEmissiveAmbientTermToggles.x) * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_5d617.w) * 1.0)) * DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.x) * var_1fa73.xyz) + (max((var_23f9c * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_4ed2c * var_4ed2c) * var_1f2e5.y, (var_1f2e5.y * var_1f2e5.y) * var_1f2e5.y, CameraLightIntensity.y)) * var_e92c0.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_1fa73.xyz);
-    var_ac162 = vec4(var_9a9e1.x, var_9a9e1.y, var_9a9e1.z, var_ac162.w);
+    highp vec4 var_23dda = SkyAmbientLightColorIntensity;
+    highp float var_e75f3 = var_735ba.y * var_735ba.y;
+    highp vec3 var_4d600 = (((((var_142d7.xyz * vec3(0.3183098733425140380859375)) * DiffuseSpecularEmissiveAmbientTermToggles.x) * ((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * var_51c70.w) * 1.0)) * DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled.x) * var_142d7.xyz) + (max((var_0b788 * BlockBaseAmbientLightColorIntensity.w) + ((SkyAmbientLightColorIntensity.xyz * mix((var_e75f3 * var_e75f3) * var_735ba.y, (var_735ba.y * var_735ba.y) * var_735ba.y, CameraLightIntensity.y)) * var_23dda.w), AmbientLightParams.xyz * AmbientLightParams.w) * var_142d7.xyz);
+    var_a3ae2.x = var_4d600.x;
+    var_a3ae2.y = var_4d600.y;
+    var_a3ae2.z = var_4d600.z;
+    highp vec4 var_d13b8 = vec4(var_a3ae2.xyz, var_a3ae2.w * var_8e6e3.y);
     bool var_9b186 = AtmosphericScatteringToggles.y != 0.0;
     bool var_2b2d2;
     if (var_9b186)
@@ -465,15 +468,18 @@ void main() {
         var_806d9 = vec4(0.0, 0.0, 0.0, 1.0);
     }
     highp vec4 var_eb669 = var_806d9;
-    highp vec3 var_6e838 = var_806d9.xyz + (mix(var_9a9e1.xyz, var_81ddf.xyz, vec3(var_ba616.w)) * var_eb669.w);
-    highp vec3 var_f325b;
+    highp vec3 var_6e838 = var_806d9.xyz + (mix(var_a3ae2.xyz, var_81ddf.xyz, vec3(var_ba616.w)) * var_eb669.w);
+    highp vec3 var_005bf;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_f325b = var_6e838 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_005bf = var_6e838 * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_f325b = var_6e838;
+        var_005bf = var_6e838;
     }
-    bgfx_FragData0 = vec4(var_f325b, var_ac162.w * var_5e6ce.y);
+    var_d13b8.x = var_005bf.x;
+    var_d13b8.y = var_005bf.y;
+    var_d13b8.z = var_005bf.z;
+    bgfx_FragData0 = var_d13b8;
 }

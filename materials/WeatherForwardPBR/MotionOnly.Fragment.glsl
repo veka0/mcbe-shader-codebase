@@ -74,7 +74,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -153,6 +153,7 @@ in highp vec2 v_texcoord0;
 in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
+    highp vec4 var_97b21 = vec4(0.0);
     highp vec4 var_457e3 = texture(s_WeatherTexture, v_texcoord0);
 #ifdef NO_OCCLUSION__OFF
     highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
@@ -210,7 +211,6 @@ void main() {
     {
         discard;
     }
-    highp vec4 var_fabc1;
     if (distance(v_worldPos, v_prevWorldPos - u_prevWorldPosOffset.xyz) > 27.0)
     {
         highp vec4 var_7293e = u_viewProj * vec4(v_worldPos, 1.0);
@@ -223,8 +223,9 @@ void main() {
         highp float var_a08f7 = var_9f128.w;
         highp vec4 var_b3184 = ((var_40af8 / vec4(var_a08f7)) * 0.5) + vec4(0.5);
         var_9f128 = var_b3184;
-        highp vec2 var_76993 = var_b74ea.xy - var_b3184.xy;
-        var_fabc1 = vec4(vec4(0.0).x, vec4(0.0).y, var_76993.x, var_76993.y);
+        highp vec2 var_ea291 = var_b74ea.xy - var_b3184.xy;
+        var_97b21.z = var_ea291.x;
+        var_97b21.w = var_ea291.y;
     }
     else
     {
@@ -238,8 +239,9 @@ void main() {
         highp float var_5148a = var_42184.w;
         highp vec4 var_ff2a0 = ((var_3d686 / vec4(var_5148a)) * 0.5) + vec4(0.5);
         var_42184 = var_ff2a0;
-        highp vec2 var_28f6b = var_58273.xy - var_ff2a0.xy;
-        var_fabc1 = vec4(vec4(0.0).x, vec4(0.0).y, var_28f6b.x, var_28f6b.y);
+        highp vec2 var_50cb0 = var_58273.xy - var_ff2a0.xy;
+        var_97b21.z = var_50cb0.x;
+        var_97b21.w = var_50cb0.y;
     }
-    bgfx_FragData0 = var_fabc1;
+    bgfx_FragData0 = var_97b21;
 }

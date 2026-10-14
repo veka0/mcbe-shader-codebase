@@ -45,20 +45,16 @@ out float v_encodedPlane;
 out vec4 v_fog;
 centroid out vec2 v_parallaxUV;
 void main() {
-    vec4 var_716e5 = a_color0;
 #ifdef INSTANCING__OFF
     vec4 var_dc0f7 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_dc0f7 = var_e43a8 * vec4(a_position, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_dc0f7 = var_53a7d * vec4(a_position, 1.0);
 #endif
     vec3 var_888aa = var_dc0f7.xyz;
     vec4 var_12271 = (a_color0 - vec4(0.5, 0.5, 0.5, 0.0)) * vec4(2.0, 2.0, 2.0, 32.0);
@@ -75,7 +71,7 @@ void main() {
     vec2 var_32549 = vec2(var_4d0bf.x - (var_c711b.x * trunc(var_4d0bf.x / var_c711b.x)), var_4d0bf.y - (var_c711b.y * trunc(var_4d0bf.y / var_c711b.y)));
     var_9b4db = var_32549;
     v_colorUV = a_texcoord0;
-    v_encodedPlane = var_716e5.w;
+    v_encodedPlane = a_color0.w;
     v_fog = vec4(FogColor.xyz, clamp(((length(var_888aa) / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
     v_parallaxUV = var_32549;
     gl_Position = u_viewProj * vec4(var_dc0f7.xyz, 1.0);

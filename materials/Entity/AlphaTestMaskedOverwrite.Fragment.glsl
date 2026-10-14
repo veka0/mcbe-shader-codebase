@@ -87,7 +87,7 @@ void main() {
     highp vec4 var_44320 = MatColor1;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT)
-    highp vec4 var_b72dd = mix(MatColor1, MatColor0, vec4(clamp(ceil(((var_44320.x + var_44320.y) + var_44320.z) * (1.0 - var_44320.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(MatColor1, MatColor0, vec4(clamp(ceil(((var_44320.x + var_44320.y) + var_44320.z) * (1.0 - var_44320.w)), 0.0, 1.0)));
 #endif
 #ifdef SOURCE_INPUT_TYPE1__SAMPLED
     highp vec4 var_492a3 = texture(s_MatTexture1, v_texcoord0);
@@ -99,29 +99,41 @@ void main() {
     highp vec4 var_48bcc = var_492a3;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED)
-    highp vec4 var_b72dd = mix(var_492a3, MatColor0, vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(var_492a3, MatColor0, vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0)
     highp vec4 var_cb362 = MatColor0;
-    highp vec4 var_b72dd = mix(MatColor0, MatColor0, vec4(clamp(ceil(((var_cb362.x + var_cb362.y) + var_cb362.z) * (1.0 - var_cb362.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(MatColor0, MatColor0, vec4(clamp(ceil(((var_cb362.x + var_cb362.y) + var_cb362.z) * (1.0 - var_cb362.w)), 0.0, 1.0)));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__CONSTANT)
-    highp vec4 var_b72dd = mix(MatColor1, texture(s_MatTexture0, v_texcoord0), vec4(clamp(ceil(((var_44320.x + var_44320.y) + var_44320.z) * (1.0 - var_44320.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(MatColor1, texture(s_MatTexture0, v_texcoord0), vec4(clamp(ceil(((var_44320.x + var_44320.y) + var_44320.z) * (1.0 - var_44320.w)), 0.0, 1.0)));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED)
-    highp vec4 var_b72dd = mix(var_492a3, texture(s_MatTexture0, v_texcoord0), vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(var_492a3, texture(s_MatTexture0, v_texcoord0), vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SHARED0)
-    highp vec4 var_b72dd = mix(var_492a3, var_492a3, vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
+    highp vec4 var_b1a03 = mix(var_492a3, var_492a3, vec4(clamp(ceil(((var_48bcc.x + var_48bcc.y) + var_48bcc.z) * (1.0 - var_48bcc.w)), 0.0, 1.0)));
 #endif
-    if (var_b72dd.w <= DiscardValue.x)
+    if (var_b1a03.w <= DiscardValue.x)
     {
         discard;
     }
-    highp vec4 var_281a5 = var_b72dd;
-    highp vec4 var_21b35 = OverlayColor;
-    highp vec4 var_d77d6 = v_fog;
-    highp vec3 var_76654 = mix((mix(var_281a5.xyz, OverlayColor.xyz, vec3(var_21b35.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_d77d6.w));
-    var_b72dd = vec4(var_76654.x, var_76654.y, var_76654.z, var_281a5.w);
-    bgfx_FragData0 = vec4(var_76654, var_281a5.w);
+    highp vec4 var_a42ab = var_b1a03;
+    highp vec4 var_54e30 = OverlayColor;
+    highp vec3 var_e73b6 = mix(var_b1a03.xyz, OverlayColor.xyz, vec3(var_54e30.w));
+    var_a42ab.x = var_e73b6.x;
+    var_a42ab.y = var_e73b6.y;
+    var_a42ab.z = var_e73b6.z;
+    highp vec4 var_5be75 = var_a42ab;
+    highp vec3 var_279b1 = var_a42ab.xyz * v_light.xyz;
+    var_5be75.x = var_279b1.x;
+    var_5be75.y = var_279b1.y;
+    var_5be75.z = var_279b1.z;
+    highp vec4 var_fc8a6 = var_5be75;
+    highp vec3 var_c6e56 = mix(var_5be75.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_fc8a6.x = var_c6e56.x;
+    var_fc8a6.y = var_c6e56.y;
+    var_fc8a6.z = var_c6e56.z;
+    var_b1a03 = var_fc8a6;
+    bgfx_FragData0 = var_fc8a6;
 }

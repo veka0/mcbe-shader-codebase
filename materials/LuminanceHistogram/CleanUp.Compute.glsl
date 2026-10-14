@@ -43,8 +43,7 @@ struct Histogram {
     uint count;
 };
 
-layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_a2117;
+layout(binding = 3, std430) buffer s_CurFrameLuminanceHistogram { Histogram CurFrameLuminanceHistogram[]; } var_d4c91;
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    var_a2117.CurFrameLuminanceHistogram[(GlobalInvocationID.y * 16u) + GlobalInvocationID.x].count = 0u;
+    var_d4c91.CurFrameLuminanceHistogram[(gl_GlobalInvocationID.y * 16u) + gl_GlobalInvocationID.x].count = 0u;
 }

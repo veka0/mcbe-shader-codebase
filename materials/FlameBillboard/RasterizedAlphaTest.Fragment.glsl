@@ -26,14 +26,15 @@ in highp vec4 v_fog;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_6ca24 = v_fog;
-    highp vec4 var_5536a = texture(s_FlameAtlas, v_texcoord0 + UVOffset.xy);
-    if (var_5536a.w < 0.5)
+    highp vec4 var_4d251 = texture(s_FlameAtlas, v_texcoord0 + UVOffset.xy);
+    if (var_4d251.w < 0.5)
     {
         discard;
     }
-    highp vec4 var_f1fd0 = var_5536a;
-    highp vec3 var_e88fd = mix(var_f1fd0.xyz, v_fog.xyz, vec3(var_6ca24.w));
-    var_5536a = vec4(var_e88fd.x, var_e88fd.y, var_e88fd.z, var_f1fd0.w);
-    bgfx_FragData0 = vec4(var_e88fd, var_f1fd0.w);
+    highp vec4 var_906d5 = var_4d251;
+    highp vec3 var_c6e56 = mix(var_906d5.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_4d251.x = var_c6e56.x;
+    var_4d251.y = var_c6e56.y;
+    var_4d251.z = var_c6e56.z;
+    bgfx_FragData0 = var_4d251;
 }

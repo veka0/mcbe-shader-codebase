@@ -86,44 +86,40 @@ void main() {
     highp vec4 var_a9d82 = texture(s_MatTexture1, v_texcoord0);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    highp vec4 var_32f69 = MatColor0;
+    highp vec4 var_0f388 = MatColor0;
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_4dc10 = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_32465 = texture(s_MatTexture0, v_texcoord0);
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED)
     highp vec4 var_a9d82 = texture(s_MatTexture1, v_texcoord0);
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_32f69 = var_4dc10;
+    highp vec4 var_0f388 = var_32465;
 #endif
-    highp float var_238ec = var_32f69.w;
+    highp float var_238ec = var_0f388.w;
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__CONSTANT)
-    highp vec3 var_4e829 = mix(MatColor0.xyz, MatColor0.xyz * MatColor1.xyz, vec3(var_238ec));
+    highp vec3 var_d993a = mix(MatColor0.xyz, MatColor0.xyz * MatColor1.xyz, vec3(var_238ec));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SAMPLED)
-    highp vec3 var_4e829 = mix(MatColor0.xyz, MatColor0.xyz * var_a9d82.xyz, vec3(var_238ec));
+    highp vec3 var_d993a = mix(MatColor0.xyz, MatColor0.xyz * var_a9d82.xyz, vec3(var_238ec));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0)
-    highp vec3 var_4e829 = mix(MatColor0.xyz, MatColor0.xyz * MatColor0.xyz, vec3(var_238ec));
-#endif
-#ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    highp vec4 var_29045 = vec4(var_4e829.x, var_4e829.y, var_4e829.z, MatColor0.w);
+    highp vec3 var_d993a = mix(MatColor0.xyz, MatColor0.xyz * MatColor0.xyz, vec3(var_238ec));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__CONSTANT)
-    highp vec3 var_8f821 = mix(var_4dc10.xyz, var_4dc10.xyz * MatColor1.xyz, vec3(var_238ec));
+    highp vec3 var_d993a = mix(var_32465.xyz, var_32465.xyz * MatColor1.xyz, vec3(var_238ec));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SAMPLED)
-    highp vec3 var_8f821 = mix(var_4dc10.xyz, var_4dc10.xyz * var_a9d82.xyz, vec3(var_238ec));
+    highp vec3 var_d993a = mix(var_32465.xyz, var_32465.xyz * var_a9d82.xyz, vec3(var_238ec));
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SHARED0)
-    highp vec3 var_8f821 = mix(var_4dc10.xyz, var_4dc10.xyz * var_4dc10.xyz, vec3(var_238ec));
+    highp vec3 var_d993a = mix(var_32465.xyz, var_32465.xyz * var_32465.xyz, vec3(var_238ec));
 #endif
-#ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_29045 = vec4(var_8f821.x, var_8f821.y, var_8f821.z, var_4dc10.w);
-#endif
-    var_32f69 = var_29045;
-    highp vec4 var_c81ef = var_29045;
+    var_0f388.x = var_d993a.x;
+    var_0f388.y = var_d993a.y;
+    var_0f388.z = var_d993a.z;
+    highp vec4 var_aa4ef = var_0f388;
 #ifdef SOURCE_INPUT_TYPE1__CONSTANT
     highp vec4 var_7046f = MatColor1;
 #endif
@@ -131,13 +127,27 @@ void main() {
     highp vec4 var_7046f = var_a9d82;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__SAMPLED) && defined(SOURCE_INPUT_TYPE1__SHARED0)
-    highp vec4 var_7046f = var_4dc10;
+    highp vec4 var_7046f = var_32465;
 #endif
 #if defined(SOURCE_INPUT_TYPE0__CONSTANT) && defined(SOURCE_INPUT_TYPE1__SHARED0)
     highp vec4 var_7046f = MatColor0;
 #endif
-    var_c81ef.w *= var_7046f.w;
-    highp vec4 var_67e20 = OverlayColor;
-    highp vec4 var_34c7a = v_fog;
-    bgfx_FragData0 = vec4(mix((mix(var_c81ef.xyz, OverlayColor.xyz, vec3(var_67e20.w)).xyz * v_light.xyz).xyz, v_fog.xyz, vec3(var_34c7a.w)), var_c81ef.w);
+    var_aa4ef.w *= var_7046f.w;
+    highp vec4 var_a42ab = var_aa4ef;
+    highp vec4 var_54e30 = OverlayColor;
+    highp vec3 var_e73b6 = mix(var_aa4ef.xyz, OverlayColor.xyz, vec3(var_54e30.w));
+    var_a42ab.x = var_e73b6.x;
+    var_a42ab.y = var_e73b6.y;
+    var_a42ab.z = var_e73b6.z;
+    highp vec4 var_5be75 = var_a42ab;
+    highp vec3 var_279b1 = var_a42ab.xyz * v_light.xyz;
+    var_5be75.x = var_279b1.x;
+    var_5be75.y = var_279b1.y;
+    var_5be75.z = var_279b1.z;
+    highp vec4 var_72c1b = var_5be75;
+    highp vec3 var_c6e56 = mix(var_5be75.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

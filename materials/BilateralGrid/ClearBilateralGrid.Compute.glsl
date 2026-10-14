@@ -48,30 +48,29 @@ struct GridCell {
 layout(binding = 4, std430) buffer s_BilateralGrid { GridCell BilateralGrid[]; } var_f763a;
 uniform vec4 GridDimensions;
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    bool var_0c978 = GlobalInvocationID.x < uint(GridDimensions.x);
-    bool var_8269e;
-    if (var_0c978)
+    bool var_ea030 = gl_GlobalInvocationID.x < uint(GridDimensions.x);
+    bool var_b7c23;
+    if (var_ea030)
     {
-        var_8269e = GlobalInvocationID.y < uint(GridDimensions.y);
+        var_b7c23 = gl_GlobalInvocationID.y < uint(GridDimensions.y);
     }
     else
     {
-        var_8269e = var_0c978;
+        var_b7c23 = var_ea030;
     }
-    bool var_86d1f;
-    if (var_8269e)
+    bool var_a111d;
+    if (var_b7c23)
     {
-        var_86d1f = GlobalInvocationID.z < uint(GridDimensions.z);
+        var_a111d = gl_GlobalInvocationID.z < uint(GridDimensions.z);
     }
     else
     {
-        var_86d1f = var_8269e;
+        var_a111d = var_b7c23;
     }
-    if (var_86d1f)
+    if (var_a111d)
     {
-        uint var_dfcaa = (((GlobalInvocationID.y * uint(GridDimensions.x)) + GlobalInvocationID.x) * uint(GridDimensions.z)) + GlobalInvocationID.z;
-        var_f763a.BilateralGrid[var_dfcaa].weight = 0u;
-        var_f763a.BilateralGrid[var_dfcaa].value = 0u;
+        uint var_80c70 = (((gl_GlobalInvocationID.y * uint(GridDimensions.x)) + gl_GlobalInvocationID.x) * uint(GridDimensions.z)) + gl_GlobalInvocationID.z;
+        var_f763a.BilateralGrid[var_80c70].weight = 0u;
+        var_f763a.BilateralGrid[var_80c70].value = 0u;
     }
 }

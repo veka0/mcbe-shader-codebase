@@ -96,7 +96,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 DitherParams;
 * - uniform vec4 DitherParams2[3];
@@ -180,15 +180,19 @@ uniform highp vec4 PreExposureEnabled;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
 void main() {
-    highp vec3 var_602cc;
+    highp vec4 var_dd100 = vec4(1.0);
+    highp vec3 var_a5137;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_602cc = vec3(1.0) * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
+        var_a5137 = vec3(1.0) * ((0.180000007152557373046875 / texture(s_PreviousFrameAverageLuminance, vec2(0.5)).x) + 9.9999997473787516355514526367188e-05);
     }
     else
     {
-        var_602cc = vec3(1.0);
+        var_a5137 = vec3(1.0);
     }
-    bgfx_FragData0 = vec4(var_602cc, 1.0);
+    var_dd100.x = var_a5137.x;
+    var_dd100.y = var_a5137.y;
+    var_dd100.z = var_a5137.z;
+    bgfx_FragData0 = var_dd100;
     bgfx_FragData1 = vec4(0.0);
 }

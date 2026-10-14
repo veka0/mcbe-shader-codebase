@@ -105,7 +105,7 @@ centroid out vec4 v_texcoords;
 out vec3 v_worldPos;
 void main() {
 #if defined(FANCY__ON) && defined(INSTANCING__OFF)
-    mat4 var_3e234 = u_model[0] * Bones[int(a_indices)];
+    mat4 var_aeb5c = u_model[0] * Bones[int(a_indices)];
 #endif
     vec2 var_6a5c3 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
 #if defined(FANCY__OFF) && defined(INSTANCING__OFF)
@@ -116,23 +116,19 @@ void main() {
     var_dc61b.y *= TileLightColor.w;
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_3e234;
-    var_3e234[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_3e234[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_3e234[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_3e234[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    mat4 var_aeb5c;
+    var_aeb5c[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_aeb5c[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_aeb5c[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_aeb5c[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
 #endif
 #if defined(FANCY__ON) && defined(INSTANCING__OFF)
-    vec3 var_dc61b = normalize(var_3e234 * vec4(a_normal.xyz, 0.0)).xyz;
+    vec3 var_dc61b = normalize(var_aeb5c * vec4(a_normal.xyz, 0.0)).xyz;
     var_dc61b.y *= TileLightColor.w;
 #endif
 #if defined(FANCY__ON) || defined(INSTANCING__ON)
-    vec4 var_04231 = var_3e234 * vec4(a_position, 1.0);
+    vec4 var_04231 = var_aeb5c * vec4(a_position, 1.0);
 #endif
-    vec4 var_db20e = a_color0;
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
@@ -141,13 +137,18 @@ void main() {
     var_cbf5d[2] = var_67767;
     vec4 var_04ab5 = var_cbf5d * (u_view * vec4(var_04231.xyz, 1.0));
     vec4 var_27f6b = var_04ab5;
-    int var_e5df4 = int(var_db20e.w * 255.0);
-    vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_6a5c3) + BannerUVOffsetsAndScales[var_e5df4].xy;
-    vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_6a5c3) + BannerUVOffsetsAndScales[0].xy;
+    vec4 var_73701 = vec4(0.0);
+    int var_67e97 = int(a_color0.w * 255.0);
+    vec2 var_daa11 = (BannerUVOffsetsAndScales[var_67e97].zw * var_6a5c3) + BannerUVOffsetsAndScales[var_67e97].xy;
+    var_73701.x = var_daa11.x;
+    var_73701.y = var_daa11.y;
+    vec2 var_5088d = (BannerUVOffsetsAndScales[0].zw * var_6a5c3) + BannerUVOffsetsAndScales[0].xy;
+    var_73701.z = var_5088d.x;
+    var_73701.w = var_5088d.y;
 #ifdef TINTING__ENABLED
-    vec4 var_55bfd = BannerColors[var_e5df4];
+    vec4 var_55bfd = BannerColors[var_67e97];
     var_55bfd.w = 1.0;
-    if (var_e5df4 > 0)
+    if (var_67e97 > 0)
     {
         var_55bfd.w = 0.0;
     }
@@ -167,7 +168,7 @@ void main() {
     v_light = vec4(TileLightColor.xyz * ((((((1.0 + var_dc61b.y) * 0.2750000059604644775390625) + ((var_dc61b.x * var_dc61b.x) * (-0.100000001490116119384765625))) + ((var_dc61b.z * var_dc61b.z) * 0.100000001490116119384765625)) + 0.449999988079071044921875) + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
 #endif
     v_texcoord0 = vec2(0.0);
-    v_texcoords = vec4(var_838f4.x, var_838f4.y, var_ad668.x, var_ad668.y);
+    v_texcoords = var_73701;
     v_worldPos = var_04231.xyz;
     gl_Position = var_04ab5;
 }

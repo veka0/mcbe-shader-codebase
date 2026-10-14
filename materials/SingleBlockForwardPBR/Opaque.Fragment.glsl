@@ -75,7 +75,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -136,5 +136,9 @@ precision mediump float;
 precision highp int;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    bgfx_FragData0 = vec4(1.0);
+    highp vec4 var_42f2a = vec4(1.0);
+    var_42f2a.x = 1.0;
+    var_42f2a.y = 1.0;
+    var_42f2a.z = 1.0;
+    bgfx_FragData0 = var_42f2a;
 }

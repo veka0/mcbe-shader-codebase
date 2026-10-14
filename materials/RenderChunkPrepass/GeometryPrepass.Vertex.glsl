@@ -85,20 +85,17 @@ void main() {
     vec3 var_edeb8 = var_7136d - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_9010c;
-    var_9010c[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_9010c[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_9010c[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_9010c[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    mat4 var_6e698;
+    var_6e698[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_6e698[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_6e698[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_6e698[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = var_9010c * vec4(a_position, 1.0);
+    vec4 var_a67a8 = var_6e698 * vec4(a_position, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_2071d = (var_9010c * vec4(a_position, 1.0)).xyz + vec3(0.5);
+    vec3 var_2071d = (var_6e698 * vec4(a_position, 1.0)).xyz + vec3(0.5);
     vec3 var_85f78 = normalize(var_2071d - ViewPositionAndTime.xyz);
     vec3 var_e10ad = normalize(cross(vec3(0.0, 1.0, 0.0), var_85f78));
     vec3 var_0c400 = a_color0.xyz;
@@ -114,16 +111,14 @@ void main() {
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
-    vec4 var_4938b = a_tangent;
-    vec4 var_57c72 = a_normal;
     uvec2 var_b33a4 = uvec2(round(a_texcoord1 * 65535.0));
     uvec2 var_5e4ed = var_b33a4;
     uvec2 var_09f26 = (var_b33a4 >> uvec2(8u)) & uvec2(255u);
-    uvec2 var_ebbee = var_b33a4 & uvec2(255u);
-    uvec2 var_c4862 = var_09f26 & uvec2(254u);
-    vec4 var_d5790 = vec4(vec3(float(var_c4862.x), float(var_ebbee.x), float(var_c4862.y)) * vec3(0.0039215688593685626983642578125), (var_57c72.w * 0.5) + 0.5);
-    vec4 var_22492 = var_d5790;
-    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
+    uvec2 var_d188a = var_b33a4 & uvec2(255u);
+    uvec2 var_021ab = var_09f26 & uvec2(254u);
+    vec4 var_f1f3d = vec4(vec3(float(var_021ab.x), float(var_d188a.x), float(var_021ab.y)) * vec3(0.0039215688593685626983642578125), (a_normal.w * 0.5) + 0.5);
+    vec4 var_22492 = var_f1f3d;
+    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * a_tangent.w, 0.0)).xyz;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
 #endif
@@ -132,7 +127,7 @@ void main() {
 #endif
     v_ditheringAndMaskTinting = vec2(notEqual((var_09f26 & uvec2(1u)), uvec2(0u)));
     v_frontFacing = 0;
-    v_lightColor = (var_d5790.xyz * var_22492.w) * 6.0;
+    v_lightColor = (var_f1f3d.xyz * var_22492.w) * 6.0;
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_pbrTextureId = int(a_texcoord4) & 65535;

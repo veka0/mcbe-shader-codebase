@@ -15,11 +15,10 @@
 */
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-layout(binding = 0, std430) buffer s_FakeRWBufferBuffer { int s_FakeRWBuffer[]; } var_6b465;
+layout(binding = 0, std430) buffer s_FakeRWBufferBuffer { int s_FakeRWBuffer[]; } var_afb1a;
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    while (var_6b465.s_FakeRWBuffer[GlobalInvocationID.x] == 0)
+    while (var_afb1a.s_FakeRWBuffer[gl_GlobalInvocationID.x] == 0)
     {
-        var_6b465.s_FakeRWBuffer[GlobalInvocationID.x] = 0;
+        var_afb1a.s_FakeRWBuffer[gl_GlobalInvocationID.x] = 0;
     }
 }

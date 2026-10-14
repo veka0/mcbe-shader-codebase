@@ -34,12 +34,15 @@ uniform highp vec4 u_viewRect;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
+    highp vec4 var_37653 = vec4(0.0);
     highp vec2 var_ec871 = v_texcoord0 * WaterResolution.x;
     highp float var_7296a = (floor(var_ec871.x / StockhamFftSubTransformSize.x) * (StockhamFftSubTransformSize.x * 0.5)) + mod(var_ec871.x, StockhamFftSubTransformSize.x * 0.5);
-    highp vec2 var_ea76f = texture(s_SimTexture, vec2(var_7296a, var_ec871.y) / u_viewRect.zw).xy;
-    highp vec2 var_0ff1c = texture(s_SimTexture, vec2(var_7296a + (WaterResolution.x * 0.5), var_ec871.y) / u_viewRect.zw).xy;
+    highp vec2 var_64a73 = texture(s_SimTexture, vec2(var_7296a, var_ec871.y) / u_viewRect.zw).xy;
+    highp vec2 var_cd6bc = texture(s_SimTexture, vec2(var_7296a + (WaterResolution.x * 0.5), var_ec871.y) / u_viewRect.zw).xy;
     highp float var_d9bed = (-6.283185482025146484375) * (var_ec871.x / StockhamFftSubTransformSize.x);
-    highp float var_26d90 = cos(var_d9bed);
-    highp float var_c6742 = sin(var_d9bed);
-    bgfx_FragData0 = vec4(var_ea76f.x + ((var_26d90 * var_0ff1c.x) - (var_c6742 * var_0ff1c.y)), var_ea76f.y + ((var_26d90 * var_0ff1c.y) + (var_c6742 * var_0ff1c.x)), 0.0, 0.0);
+    highp float var_f41ec = cos(var_d9bed);
+    highp float var_38c2d = sin(var_d9bed);
+    var_37653.x = var_64a73.x + ((var_f41ec * var_cd6bc.x) - (var_38c2d * var_cd6bc.y));
+    var_37653.y = var_64a73.y + ((var_f41ec * var_cd6bc.y) + (var_38c2d * var_cd6bc.x));
+    bgfx_FragData0 = var_37653;
 }

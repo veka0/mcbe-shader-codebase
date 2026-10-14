@@ -79,6 +79,7 @@ out vec4 v_light;
 out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
+    vec4 var_d607e = vec4(0.0);
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_a956b = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_a956b.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
@@ -90,7 +91,9 @@ void main() {
     vec2 var_eb807 = var_ddacc;
     vec2 var_e0bbc = var_eb807 + vec2(0.5);
     var_ddacc = var_e0bbc;
-    vec2 var_45c22 = var_e0bbc * UVScale.xy;
+    vec2 var_3abf4 = var_e0bbc * UVScale.xy;
+    var_d607e.x = var_3abf4.x;
+    var_d607e.y = var_3abf4.y;
     float var_6a4a7 = sin(UVAnimation.w);
     float var_758cc = cos(UVAnimation.w);
     vec2 var_e87b6 = (var_a956b - vec2(0.5)) * mat2(vec2(var_758cc, -var_6a4a7), vec2(var_6a4a7, var_758cc));
@@ -98,7 +101,9 @@ void main() {
     vec2 var_0ef75 = var_e87b6;
     vec2 var_a930f = var_0ef75 + vec2(0.5);
     var_e87b6 = var_a930f;
-    vec2 var_dc447 = var_a930f * UVScale.xy;
+    vec2 var_e2e42 = var_a930f * UVScale.xy;
+    var_d607e.z = var_e2e42.x;
+    var_d607e.w = var_e2e42.y;
 #ifdef FANCY__ON
     vec3 var_f099e = normalize(u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     var_f099e.y *= TileLightColor.w;
@@ -107,15 +112,12 @@ void main() {
     vec4 var_e2d09 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_e2d09 = var_e43a8 * vec4(a_position, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_e2d09 = var_53a7d * vec4(a_position, 1.0);
 #endif
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
@@ -132,7 +134,7 @@ void main() {
     v_clipPosition = var_04ab5;
     v_color0 = a_color0;
     v_fog = vec4(FogColor.xyz, clamp(((var_27f6b.z / FogControl.z) - FogControl.x) / (FogControl.y - FogControl.x), 0.0, 1.0));
-    v_glintUV = vec4(var_45c22.x, var_45c22.y, var_dc447.x, var_dc447.y);
+    v_glintUV = var_d607e;
 #ifdef FANCY__OFF
     v_light = vec4(TileLightColor.xyz * (1.0 + (OverlayColor.w * 0.3499999940395355224609375)), 1.0);
 #endif

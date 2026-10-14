@@ -82,22 +82,31 @@ void func_66b9c(inout highp vec3 arg_5a7d1, inout highp vec4 arg_37ddf) {
     }
 }
 void main() {
-    highp vec4 var_1d0b7 = v_fog;
-    highp vec4 var_73e16 = texture(s_ColorTexture, v_colorUV);
-    highp vec4 var_bebe3 = texture(s_ParallaxTexture, v_parallaxUV);
-    highp vec4 var_447cc;
+    highp vec4 var_904e8 = vec4(0.0);
+    highp vec4 var_bf7cf = texture(s_ColorTexture, v_colorUV);
+    highp vec4 var_966bf = var_bf7cf;
+    highp vec3 var_1dca6 = var_bf7cf.xyz * (texture(s_ParallaxTexture, v_parallaxUV).xyz * (1.0 - v_encodedPlane));
+    var_966bf.x = var_1dca6.x;
+    var_966bf.y = var_1dca6.y;
+    var_966bf.z = var_1dca6.z;
     if ((v_encodedPlane * 32.0) > 31.0)
     {
-        var_447cc = vec4(v_fog.xyz * var_1d0b7.w, 1.0);
+        var_966bf = vec4(v_fog.xyz * v_fog.w, 1.0);
     }
     else
     {
-        var_447cc = vec4((var_73e16.xyz * (var_bebe3.xyz * (1.0 - v_encodedPlane))).xyz * (1.0 - var_1d0b7.w), 0.0);
+        var_966bf = vec4(var_966bf.xyz * (1.0 - v_fog.w), 0.0);
     }
-    highp vec4 var_9bf51 = var_447cc;
+    var_904e8 = var_966bf;
+    highp vec4 var_ab9d7 = var_966bf;
     highp vec3 var_a32a9;
-    func_66b9c(var_a32a9, var_447cc);
-    highp vec4 var_a6595 = vec4(var_a32a9, var_9bf51.w);
-    highp vec3 var_f5c34 = var_a6595.xyz;
-    bgfx_FragData0 = vec4(var_a6595.xyz + (mix(var_f5c34, vec3(dot(var_f5c34, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x), var_9bf51.w);
+    func_66b9c(var_a32a9, var_966bf);
+    highp vec4 var_e4b06 = vec4(var_a32a9, var_ab9d7.w);
+    var_904e8 = var_e4b06;
+    highp vec3 var_4b784 = var_e4b06.xyz;
+    highp vec3 var_250ad = var_e4b06.xyz + (mix(var_4b784, vec3(dot(var_4b784, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875))), vec3(EndPortalEmissiveMultiplierAndDesaturation.y)) * EndPortalEmissiveMultiplierAndDesaturation.x);
+    var_904e8.x = var_250ad.x;
+    var_904e8.y = var_250ad.y;
+    var_904e8.z = var_250ad.z;
+    bgfx_FragData0 = var_904e8;
 }

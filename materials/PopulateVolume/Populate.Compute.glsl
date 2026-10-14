@@ -67,7 +67,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -248,7 +248,7 @@ uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 #endif
 #ifdef GPU_BLOCK_LIGHTING__ON
-uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
 uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
@@ -331,15 +331,15 @@ void func_b5ebb(inout vec3 arg_9de81, inout vec4 arg_dde0d) {
     arg_dde0d = WaterAlbedoExtinction;
 }
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-void func_14053() {
-    int loc_a7ddb = int(GlobalInvocationID.x);
-    int loc_35a24 = int(GlobalInvocationID.y);
-    int loc_5f757 = int(GlobalInvocationID.z);
-    if (((loc_a7ddb >= int(VolumeDimensions.x)) || (loc_35a24 >= int(VolumeDimensions.y))) || (loc_5f757 >= int(VolumeDimensions.z)))
+void func_e9e34() {
+    int loc_79ceb = int(gl_GlobalInvocationID.x);
+    int loc_53256 = int(gl_GlobalInvocationID.y);
+    int loc_9abbf = int(gl_GlobalInvocationID.z);
+    if (((loc_79ceb >= int(VolumeDimensions.x)) || (loc_53256 >= int(VolumeDimensions.y))) || (loc_9abbf >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_a69bc = (vec3(float(loc_a7ddb), float(loc_35a24), float(loc_5f757)) + vec3(0.5)) / VolumeDimensions.xyz;
+    vec3 loc_a69bc = (vec3(float(loc_79ceb), float(loc_53256), float(loc_9abbf)) + vec3(0.5)) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_a69bc;
     vec3 loc_777c2 = loc_a69bc;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -427,13 +427,13 @@ void func_14053() {
     {
         float loc_93a3c = (1.0 + (loc_fbcc6 * loc_fbcc6)) + ((2.0 * loc_fbcc6) * dot(-(loc_16a16 / vec3(loc_9fe9d)), normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz)));
         vec4 loc_f95d1 = DirectionalLightSourceDiffuseColorAndIlluminance;
-        loc_4c028 = loc_98d5d + (((loc_6fb9b * imageLoad(s_CascadedShadowBuffer, ivec3(loc_a7ddb, loc_35a24, loc_5f757)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_fbcc6 * loc_fbcc6))) / (loc_93a3c * sqrt(loc_93a3c)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
+        loc_4c028 = loc_98d5d + (((loc_6fb9b * imageLoad(s_CascadedShadowBuffer, ivec3(loc_79ceb, loc_53256, loc_9abbf)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_fbcc6 * loc_fbcc6))) / (loc_93a3c * sqrt(loc_93a3c)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
     }
     else
     {
         loc_4c028 = loc_98d5d;
     }
-    imageStore(s_ScatteringBufferOut, ivec3(loc_a7ddb, loc_35a24, loc_5f757), vec4(loc_4c028, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
+    imageStore(s_ScatteringBufferOut, ivec3(loc_79ceb, loc_53256, loc_9abbf), vec4(loc_4c028, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
 }
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
@@ -760,15 +760,15 @@ void func_0582d(inout vec3 arg_5cc04, inout vec3 arg_534d1, inout vec3 arg_81f82
 }
 #endif
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__ON)
-void func_85ab0() {
-    int loc_a7ddb = int(GlobalInvocationID.x);
-    int loc_35a24 = int(GlobalInvocationID.y);
-    int loc_5f757 = int(GlobalInvocationID.z);
-    if (((loc_a7ddb >= int(VolumeDimensions.x)) || (loc_35a24 >= int(VolumeDimensions.y))) || (loc_5f757 >= int(VolumeDimensions.z)))
+void func_b3558() {
+    int loc_79ceb = int(gl_GlobalInvocationID.x);
+    int loc_53256 = int(gl_GlobalInvocationID.y);
+    int loc_9abbf = int(gl_GlobalInvocationID.z);
+    if (((loc_79ceb >= int(VolumeDimensions.x)) || (loc_53256 >= int(VolumeDimensions.y))) || (loc_9abbf >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_a69bc = (vec3(float(loc_a7ddb), float(loc_35a24), float(loc_5f757)) + vec3(0.5)) / VolumeDimensions.xyz;
+    vec3 loc_a69bc = (vec3(float(loc_79ceb), float(loc_53256), float(loc_9abbf)) + vec3(0.5)) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_a69bc;
     vec3 loc_777c2 = loc_a69bc;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -857,7 +857,7 @@ void func_85ab0() {
     {
         float loc_095bd = (1.0 + (loc_1f492 * loc_1f492)) + ((2.0 * loc_1f492) * dot(loc_09caf, normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz)));
         vec4 loc_f95d1 = DirectionalLightSourceDiffuseColorAndIlluminance;
-        loc_943bd = loc_98d5d + (((loc_cdac6 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_a7ddb, loc_35a24, loc_5f757)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_1f492 * loc_1f492))) / (loc_095bd * sqrt(loc_095bd)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
+        loc_943bd = loc_98d5d + (((loc_cdac6 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_79ceb, loc_53256, loc_9abbf)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_1f492 * loc_1f492))) / (loc_095bd * sqrt(loc_095bd)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
     }
     else
     {
@@ -884,7 +884,7 @@ void func_85ab0() {
     {
         loc_a4366 = loc_943bd;
     }
-    imageStore(s_ScatteringBufferOut, ivec3(loc_a7ddb, loc_35a24, loc_5f757), vec4(loc_a4366, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
+    imageStore(s_ScatteringBufferOut, ivec3(loc_79ceb, loc_53256, loc_9abbf), vec4(loc_a4366, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
 }
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
@@ -921,15 +921,15 @@ void func_f387c(inout vec3 arg_38f6d, inout vec3 arg_0a653, inout uint arg_2632b
     func_f0f8c(loc_58bb3, loc_0b351);
     arg_e5233 = loc_0b351;
 }
-void func_19818() {
-    int loc_a7ddb = int(GlobalInvocationID.x);
-    int loc_35a24 = int(GlobalInvocationID.y);
-    int loc_5f757 = int(GlobalInvocationID.z);
-    if (((loc_a7ddb >= int(VolumeDimensions.x)) || (loc_35a24 >= int(VolumeDimensions.y))) || (loc_5f757 >= int(VolumeDimensions.z)))
+void func_8edf3() {
+    int loc_79ceb = int(gl_GlobalInvocationID.x);
+    int loc_53256 = int(gl_GlobalInvocationID.y);
+    int loc_9abbf = int(gl_GlobalInvocationID.z);
+    if (((loc_79ceb >= int(VolumeDimensions.x)) || (loc_53256 >= int(VolumeDimensions.y))) || (loc_9abbf >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_a69bc = (vec3(float(loc_a7ddb), float(loc_35a24), float(loc_5f757)) + vec3(0.5)) / VolumeDimensions.xyz;
+    vec3 loc_a69bc = (vec3(float(loc_79ceb), float(loc_53256), float(loc_9abbf)) + vec3(0.5)) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_a69bc;
     vec3 loc_777c2 = loc_a69bc;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -1002,7 +1002,7 @@ void func_19818() {
         loc_ea783 = textureLod(s_SkyAmbientSamples, loc_08c5f, 0.0).xy;
     }
     vec3 loc_13ec4;
-    if (DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0)
+    if (DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled.z != 0.0)
     {
         vec3 loc_4ae87 = (loc_c0869 - WorldOrigin.xyz) - vec3(0.5);
         vec3 loc_6bca1 = floor(loc_4ae87 * 0.0625) * 16.0;
@@ -1194,25 +1194,25 @@ void func_19818() {
     {
         float loc_93a3c = (1.0 + (loc_fbcc6 * loc_fbcc6)) + ((2.0 * loc_fbcc6) * dot(-(loc_16a16 / vec3(loc_9fe9d)), normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz)));
         vec4 loc_f95d1 = DirectionalLightSourceDiffuseColorAndIlluminance;
-        loc_4c028 = loc_687db + (((loc_72282 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_a7ddb, loc_35a24, loc_5f757)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_fbcc6 * loc_fbcc6))) / (loc_93a3c * sqrt(loc_93a3c)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
+        loc_4c028 = loc_687db + (((loc_72282 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_79ceb, loc_53256, loc_9abbf)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_fbcc6 * loc_fbcc6))) / (loc_93a3c * sqrt(loc_93a3c)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
     }
     else
     {
         loc_4c028 = loc_687db;
     }
-    imageStore(s_ScatteringBufferOut, ivec3(loc_a7ddb, loc_35a24, loc_5f757), vec4(loc_4c028, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
+    imageStore(s_ScatteringBufferOut, ivec3(loc_79ceb, loc_53256, loc_9abbf), vec4(loc_4c028, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
 }
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
-void func_cba22() {
-    int loc_a7ddb = int(GlobalInvocationID.x);
-    int loc_35a24 = int(GlobalInvocationID.y);
-    int loc_5f757 = int(GlobalInvocationID.z);
-    if (((loc_a7ddb >= int(VolumeDimensions.x)) || (loc_35a24 >= int(VolumeDimensions.y))) || (loc_5f757 >= int(VolumeDimensions.z)))
+void func_5b8ba() {
+    int loc_79ceb = int(gl_GlobalInvocationID.x);
+    int loc_53256 = int(gl_GlobalInvocationID.y);
+    int loc_9abbf = int(gl_GlobalInvocationID.z);
+    if (((loc_79ceb >= int(VolumeDimensions.x)) || (loc_53256 >= int(VolumeDimensions.y))) || (loc_9abbf >= int(VolumeDimensions.z)))
     {
         return;
     }
-    vec3 loc_a69bc = (vec3(float(loc_a7ddb), float(loc_35a24), float(loc_5f757)) + vec3(0.5)) / VolumeDimensions.xyz;
+    vec3 loc_a69bc = (vec3(float(loc_79ceb), float(loc_53256), float(loc_9abbf)) + vec3(0.5)) / VolumeDimensions.xyz;
     vec3 loc_b4177 = loc_a69bc;
     vec3 loc_777c2 = loc_a69bc;
     vec2 loc_b796d = VolumeNearFar.xy;
@@ -1285,17 +1285,17 @@ void func_cba22() {
         loc_ea783 = textureLod(s_SkyAmbientSamples, loc_08c5f, 0.0).xy;
     }
     bool loc_ef987 = DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.z != 0.0;
-    bool loc_fd729;
+    bool loc_47c1b;
     if (loc_ef987)
     {
-        loc_fd729 = DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled.w != 0.0;
+        loc_47c1b = DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled.z != 0.0;
     }
     else
     {
-        loc_fd729 = loc_ef987;
+        loc_47c1b = loc_ef987;
     }
     vec3 loc_000d9;
-    if (loc_fd729)
+    if (loc_47c1b)
     {
         vec3 loc_0f97c = (loc_abfdd - WorldOrigin.xyz) + vec3(-0.5, -0.5, -0.4799999892711639404296875);
         vec3 loc_6bca1 = floor(loc_0f97c * 0.0625) * 16.0;
@@ -1488,7 +1488,7 @@ void func_cba22() {
     {
         float loc_095bd = (1.0 + (loc_1f492 * loc_1f492)) + ((2.0 * loc_1f492) * dot(loc_09caf, normalize((u_view * DirectionalLightSourceWorldSpaceDirection).xyz)));
         vec4 loc_f95d1 = DirectionalLightSourceDiffuseColorAndIlluminance;
-        loc_943bd = loc_687db + (((loc_78e52 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_a7ddb, loc_35a24, loc_5f757)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_1f492 * loc_1f492))) / (loc_095bd * sqrt(loc_095bd)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
+        loc_943bd = loc_687db + (((loc_78e52 * imageLoad(s_CascadedShadowBuffer, ivec3(loc_79ceb, loc_53256, loc_9abbf)).x) * ((0.079577468335628509521484375 * (1.0 - (loc_1f492 * loc_1f492))) / (loc_095bd * sqrt(loc_095bd)))) * (DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_f95d1.w));
     }
     else
     {
@@ -1515,21 +1515,20 @@ void func_cba22() {
     {
         loc_a4366 = loc_943bd;
     }
-    imageStore(s_ScatteringBufferOut, ivec3(loc_a7ddb, loc_35a24, loc_5f757), vec4(loc_a4366, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
+    imageStore(s_ScatteringBufferOut, ivec3(loc_79ceb, loc_53256, loc_9abbf), vec4(loc_a4366, mix(mix(loc_2c406 * AirAlbedoExtinction.w, loc_a5348.w, loc_62499), 0.0, loc_8ddfa)));
 }
 #endif
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__OFF)
-    func_14053();
+    func_e9e34();
 #endif
 #if defined(GPU_BLOCK_LIGHTING__OFF) && defined(POINT_LIGHT_SHADING__ON)
-    func_85ab0();
+    func_b3558();
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__OFF)
-    func_19818();
+    func_8edf3();
 #endif
 #if defined(GPU_BLOCK_LIGHTING__ON) && defined(POINT_LIGHT_SHADING__ON)
-    func_cba22();
+    func_5b8ba();
 #endif
 }

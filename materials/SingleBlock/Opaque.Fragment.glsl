@@ -15,7 +15,7 @@
 * - ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED
 *
 * Lit:
-* - LIT__OFF
+* - LIT__OFF (not used)
 * - LIT__ON
 *
 * Available Resources:
@@ -76,20 +76,18 @@ in highp vec3 v_worldPos;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_4e612 = v_color;
-    highp vec4 var_24474 = v_fog;
-    highp vec4 var_75b96 = texture(s_MatTexture, v_texCoords);
+    highp vec4 var_d358e = vec4(0.0);
+    highp vec4 var_dd77e = texture(s_MatTexture, v_texCoords);
 #ifndef ALPHA_TEST__OFF
     highp vec2 var_ab580 = DitherParams2[1].xy;
     bool var_40e52;
     if (DitheringEnabledToggle.x != 0.0)
     {
         highp mat4 var_4971e = u_view;
-        highp vec4 var_75953 = v_clipPosition;
-        highp vec2 var_376f6 = floor(((((v_clipPosition.xyz / vec3(var_75953.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[1].z)) * DitherParams2[1].z;
-        highp vec2 var_f4989 = floor(var_376f6 * 0.25);
-        highp vec2 var_85686 = floor(var_376f6 * 0.5);
-        highp vec2 var_09c49 = floor(var_376f6);
+        highp vec2 var_3626b = floor(((((v_clipPosition.xyz / vec3(v_clipPosition.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) / vec2(DitherParams2[1].z)) * DitherParams2[1].z;
+        highp vec2 var_f4989 = floor(var_3626b * 0.25);
+        highp vec2 var_85686 = floor(var_3626b * 0.5);
+        highp vec2 var_09c49 = floor(var_3626b);
         var_40e52 = smoothstep(var_ab580.x, var_ab580.y, dot(-normalize(vec4(var_4971e[0].z, var_4971e[1].z, var_4971e[2].z, var_33fae).xyz), v_worldPos - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz)) <= (((((((fract((var_f4989.x * 0.5) + ((var_f4989.y * var_f4989.y) * 0.75)) * 0.25) + fract((var_85686.x * 0.5) + ((var_85686.y * var_85686.y) * 0.75))) * 0.25) + fract((var_09c49.x * 0.5) + ((var_09c49.y * var_09c49.y) * 0.75))) * 64.0) + 0.5) * 0.015625);
     }
     else
@@ -100,10 +98,10 @@ void main() {
     {
 #endif
 #ifdef ALPHA_TEST__ON_DISCARD_VALUE_BASED
-        if ((var_75b96.w < DiscardValue.x) || var_40e52)
+        if ((var_dd77e.w < DiscardValue.x) || var_40e52)
 #endif
 #ifdef ALPHA_TEST__ON_VERTEX_TINT_MASK_BASED
-        if ((var_75b96.w <= 0.0) || var_40e52)
+        if ((var_dd77e.w <= 0.0) || var_40e52)
 #endif
 #ifndef ALPHA_TEST__OFF
         {
@@ -111,23 +109,38 @@ void main() {
         }
     }
 #endif
-    highp vec3 var_e9539 = mix(var_75b96.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
-#ifdef LIT__OFF
-    var_75b96 = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_75b96.w);
-#endif
+    highp vec4 var_ffb5d = var_dd77e;
+    highp vec3 var_2a9cf = mix(var_ffb5d.xyz, OverlayColor.xyz, vec3(OverlayColor.w));
+    var_dd77e.x = var_2a9cf.x;
+    var_dd77e.y = var_2a9cf.y;
+    var_dd77e.z = var_2a9cf.z;
 #ifdef LIT__ON
-    var_75b96 = vec4(var_e9539.x, var_e9539.y, var_e9539.z, var_75b96.w) * v_light;
+    var_dd77e *= v_light;
 #endif
     if (AlphaMaskedTint.x != 0.0)
     {
-        highp vec3 var_a1ec2 = (CurrentColor.xyz * mix(var_75b96.xyz, var_75b96.xyz * v_color.xyz, vec3(var_75b96.w))).xyz * var_4e612.w;
-        var_75b96 = vec4(var_a1ec2.x, var_a1ec2.y, var_a1ec2.z, var_75b96.w);
-        var_75b96.w = 1.0;
+        highp vec4 var_27464 = var_dd77e;
+        highp float var_49bb2 = var_dd77e.w;
+        highp vec3 var_905e7 = CurrentColor.xyz * mix(var_27464.xyz, var_27464.xyz * v_color.xyz, vec3(var_49bb2));
+        var_dd77e.x = var_905e7.x;
+        var_dd77e.y = var_905e7.y;
+        var_dd77e.z = var_905e7.z;
+        highp vec4 var_e9c42 = var_dd77e;
+        highp vec3 var_b0b3b = var_e9c42.xyz * v_color.w;
+        var_dd77e.x = var_b0b3b.x;
+        var_dd77e.y = var_b0b3b.y;
+        var_dd77e.z = var_b0b3b.z;
+        var_dd77e.w = 1.0;
     }
     else
     {
-        var_75b96 = (CurrentColor * v_color) * var_75b96;
+        var_dd77e = (CurrentColor * v_color) * var_dd77e;
     }
-    var_75b96.w *= HudOpacity.x;
-    bgfx_FragData0 = vec4(mix(var_75b96.xyz, v_fog.xyz, vec3(var_24474.w)), var_75b96.w);
+    var_dd77e.w *= HudOpacity.x;
+    var_d358e = var_dd77e;
+    highp vec3 var_c6e56 = mix(var_dd77e.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_d358e.x = var_c6e56.x;
+    var_d358e.y = var_c6e56.y;
+    var_d358e.z = var_c6e56.z;
+    bgfx_FragData0 = var_d358e;
 }

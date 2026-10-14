@@ -24,7 +24,6 @@ in highp vec4 v_ExtraParams;
 flat in highp vec4 v_VaryingData;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_55ddb = v_ExtraParams;
     uvec4 var_41943 = uvec4(v_VaryingData);
     int var_19c0d = int(var_41943.w);
     if (var_19c0d == 15)
@@ -47,7 +46,7 @@ void main() {
         }
         else
         {
-            if (var_55ddb.y < 0.00390625)
+            if (v_ExtraParams.y < 0.00390625)
             {
                 discard;
             }

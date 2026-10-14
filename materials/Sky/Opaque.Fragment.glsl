@@ -24,6 +24,5 @@ precision highp int;
 in highp vec4 v_color0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_07fd6 = v_color0;
-    bgfx_FragData0 = vec4(v_color0.xyz, var_07fd6.w);
+    bgfx_FragData0 = vec4(v_color0.xyz, v_color0.w);
 }

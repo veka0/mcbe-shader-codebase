@@ -30,12 +30,11 @@ flat out vec4 v_VaryingData;
 out vec4 v_VaryingParam0;
 out vec4 v_zPosition;
 void main() {
-    vec4 var_7ebde = a_texcoord1;
     uvec4 var_7bbc0 = uvec4(vec4(a_texcoord4));
     int var_1c26c = int(((var_7bbc0.y & 15u) << 8u) | var_7bbc0.x);
     vec4 var_12588 = vec4(a_position, 1.0) * mat4(Data_VS[var_1c26c], Data_VS[var_1c26c + 1], Data_VS[var_1c26c + 2], Data_VS[var_1c26c + 3]);
     vec4 var_038e6;
-    if (var_7ebde.w == 2.0)
+    if (a_texcoord1.w == 2.0)
     {
         var_038e6 = vec4(a_texcoord1.xy, 0.0, 1.0);
     }

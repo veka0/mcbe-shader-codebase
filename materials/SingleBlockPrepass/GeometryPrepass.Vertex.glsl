@@ -103,20 +103,17 @@ void main() {
     vec3 var_05010 = var_7136d - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_9010c;
-    var_9010c[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_9010c[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_9010c[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_9010c[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    mat4 var_6e698;
+    var_6e698[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_6e698[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_6e698[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_6e698[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_e2d09 = var_9010c * vec4(a_position, 1.0);
+    vec4 var_e2d09 = var_6e698 * vec4(a_position, 1.0);
 #endif
 #if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_2071d = (var_9010c * vec4(a_position, 1.0)).xyz + vec3(0.5);
+    vec3 var_2071d = (var_6e698 * vec4(a_position, 1.0)).xyz + vec3(0.5);
     vec3 var_85f78 = normalize(var_2071d - ViewPositionAndTime.xyz);
     vec3 var_e10ad = normalize(cross(vec3(0.0, 1.0, 0.0), var_85f78));
     vec3 var_0c400 = a_color0.xyz;
@@ -138,8 +135,7 @@ void main() {
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
-    vec4 var_4938b = a_tangent;
-    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4938b.w, 0.0)).xyz;
+    v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * a_tangent.w, 0.0)).xyz;
     v_clipPosition = var_d80ab;
 #ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;

@@ -50,63 +50,62 @@ layout(location = 0, binding = 3, rgba16f) uniform writeonly highp image3D s_Fil
 uniform vec4 BilateralFilterParams;
 uniform vec4 GridDimensions;
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    bool var_0c978 = GlobalInvocationID.x < uint(GridDimensions.x);
-    bool var_8269e;
-    if (var_0c978)
+    bool var_ea030 = gl_GlobalInvocationID.x < uint(GridDimensions.x);
+    bool var_b7c23;
+    if (var_ea030)
     {
-        var_8269e = GlobalInvocationID.y < uint(GridDimensions.y);
+        var_b7c23 = gl_GlobalInvocationID.y < uint(GridDimensions.y);
     }
     else
     {
-        var_8269e = var_0c978;
+        var_b7c23 = var_ea030;
     }
-    bool var_86d1f;
-    if (var_8269e)
+    bool var_a111d;
+    if (var_b7c23)
     {
-        var_86d1f = GlobalInvocationID.z < uint(GridDimensions.z);
+        var_a111d = gl_GlobalInvocationID.z < uint(GridDimensions.z);
     }
     else
     {
-        var_86d1f = var_8269e;
+        var_a111d = var_b7c23;
     }
-    if (var_86d1f)
+    if (var_a111d)
     {
-        int var_c1413 = int(BilateralFilterParams.x);
-        float var_7aa16 = (0.5 * float(var_c1413)) * float(var_c1413);
-        uint var_9020e = uint(clamp(int(GlobalInvocationID.x) - var_c1413, 0, int(GridDimensions.x) - 1));
-        uint var_284d9 = uint(clamp(int(GlobalInvocationID.x) + var_c1413, 0, int(GridDimensions.x) - 1));
-        uint var_1bdce = uint(clamp(int(GlobalInvocationID.y) - var_c1413, 0, int(GridDimensions.y) - 1));
-        uint var_76aee = uint(clamp(int(GlobalInvocationID.y) + var_c1413, 0, int(GridDimensions.y) - 1));
-        float var_4d489;
-        float var_60e32;
-        float var_56db5;
-        var_56db5 = 0.0;
-        var_60e32 = 0.0;
-        var_4d489 = 0.0;
+        int var_2c2b7 = int(BilateralFilterParams.x);
+        float var_7aa16 = (0.5 * float(var_2c2b7)) * float(var_2c2b7);
+        uint var_5b59e = uint(clamp(int(gl_GlobalInvocationID.x) - var_2c2b7, 0, int(GridDimensions.x) - 1));
+        uint var_ac1fa = uint(clamp(int(gl_GlobalInvocationID.x) + var_2c2b7, 0, int(GridDimensions.x) - 1));
+        uint var_aa84a = uint(clamp(int(gl_GlobalInvocationID.y) - var_2c2b7, 0, int(GridDimensions.y) - 1));
+        uint var_f54a3 = uint(clamp(int(gl_GlobalInvocationID.y) + var_2c2b7, 0, int(GridDimensions.y) - 1));
+        float var_0ec25;
+        float var_5ffc7;
+        float var_2e666;
+        var_2e666 = 0.0;
+        var_5ffc7 = 0.0;
+        var_0ec25 = 0.0;
         float var_fb52b;
         float var_d321f;
         float var_c5565;
-        for (uint var_b0725 = var_1bdce; var_b0725 <= var_76aee; var_56db5 = var_d321f, var_60e32 = var_c5565, var_4d489 = var_fb52b, var_b0725++)
+        for (uint var_08815 = var_aa84a; var_08815 <= var_f54a3; var_2e666 = var_d321f, var_5ffc7 = var_c5565, var_0ec25 = var_fb52b, var_08815++)
         {
-            var_c5565 = var_60e32;
-            var_d321f = var_56db5;
-            var_fb52b = var_4d489;
+            var_c5565 = var_5ffc7;
+            var_d321f = var_2e666;
+            var_fb52b = var_0ec25;
             float var_8de10;
             float var_73852;
             float var_5593e;
-            for (uint var_c27ce = var_9020e; var_c27ce <= var_284d9; var_c5565 = var_5593e, var_d321f = var_73852, var_fb52b = var_8de10, var_c27ce++)
+            for (uint var_175d2 = var_5b59e; var_175d2 <= var_ac1fa; var_c5565 = var_5593e, var_d321f = var_73852, var_fb52b = var_8de10, var_175d2++)
             {
                 uvec3 var_9920a = uvec3(GridDimensions.xyz);
-                uvec3 var_e40a1 = uvec3(var_c27ce, var_b0725, GlobalInvocationID.z);
-                uint var_274b7 = (((var_e40a1.z * var_9920a.x) * var_9920a.y) + (var_e40a1.y * var_9920a.x)) + var_e40a1.x;
-                vec2 var_dcf15 = vec2(float(var_c27ce) - float(GlobalInvocationID.x), float(var_b0725) - float(GlobalInvocationID.y));
-                float var_064ee = exp((-((var_dcf15.x * var_dcf15.x) + (var_dcf15.y * var_dcf15.y))) / var_7aa16);
+                uvec3 var_1b1c8 = uvec3(var_175d2, var_08815, gl_GlobalInvocationID.z);
+                uint var_274b7 = (((var_1b1c8.z * var_9920a.x) * var_9920a.y) + (var_1b1c8.y * var_9920a.x)) + var_1b1c8.x;
+                vec2 var_4c8c0 = vec2(float(var_175d2) - float(gl_GlobalInvocationID.x), float(var_08815) - float(gl_GlobalInvocationID.y));
+                float var_064ee = exp((-((var_4c8c0.x * var_4c8c0.x) + (var_4c8c0.y * var_4c8c0.y))) / var_7aa16);
                 var_8de10 = var_fb52b + (var_064ee * (float(var_04520.BilateralGrid[var_274b7].weight) * 0.00390625));
                 var_73852 = var_d321f + (var_064ee * (float(var_04520.BilateralGrid[var_274b7].value) * 0.00390625));
                 var_5593e = var_c5565 + var_064ee;
             }
         }
-        imageStore(s_FilteredBilateralGridOutput, ivec3(int(GlobalInvocationID.x), int(GlobalInvocationID.y), int(GlobalInvocationID.z)), vec4(var_4d489 / var_60e32, var_56db5 / var_60e32, 0.0, 0.0));
+        imageStore(s_FilteredBilateralGridOutput, ivec3(int(gl_GlobalInvocationID.x), int(gl_GlobalInvocationID.y), int(gl_GlobalInvocationID.z)), vec4(var_0ec25 / var_5ffc7, var_2e666 / var_5ffc7, 0.0, 0.0));
     }
 }

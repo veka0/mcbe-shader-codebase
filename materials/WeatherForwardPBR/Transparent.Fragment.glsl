@@ -74,7 +74,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -241,7 +241,7 @@ void main() {
 #ifdef NO_OCCLUSION__ON
     highp vec2 var_17770;
 #endif
-    highp vec4 var_59f74 = texture(s_WeatherTexture, v_texcoord0);
+    highp vec4 var_d289f = texture(s_WeatherTexture, v_texcoord0);
     highp vec4 var_e5cb6 = texture(s_OcclusionTexture, v_occlusionUV);
     uvec4 var_14d49 = uvec4(round(var_e5cb6 * 255.0));
 #ifdef NO_OCCLUSION__OFF
@@ -256,11 +256,17 @@ void main() {
 #if defined(FLIP_OCCLUSION__ON) && defined(NO_OCCLUSION__OFF)
     func_398ee(var_14d49, var_17770);
 #endif
-    highp vec2 var_cbd4c = var_17770;
-    highp vec4 var_66861 = var_59f74;
-    highp vec3 var_76a3f = var_66861.xyz * texture(s_LightingTexture, var_17770).xyz;
-    var_59f74 = vec4(var_76a3f.x, var_76a3f.y, var_76a3f.z, var_66861.w);
-    highp float var_eb925 = var_59f74.w * var_cbd4c.y;
-    highp vec4 var_c0e46 = v_fog;
-    bgfx_FragData0 = vec4(mix(vec4(var_76a3f, var_eb925).xyz, v_fog.xyz, vec3(var_c0e46.w)), var_eb925);
+    highp vec2 var_8e6e3 = var_17770;
+    highp vec4 var_5db6a = var_d289f;
+    highp vec3 var_c1f29 = var_5db6a.xyz * texture(s_LightingTexture, var_17770).xyz;
+    var_d289f.x = var_c1f29.x;
+    var_d289f.y = var_c1f29.y;
+    var_d289f.z = var_c1f29.z;
+    highp vec4 var_10735 = vec4(var_d289f.xyz, var_d289f.w * var_8e6e3.y);
+    highp vec4 var_72c1b = var_10735;
+    highp vec3 var_c6e56 = mix(var_10735.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

@@ -43,7 +43,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -192,18 +192,23 @@ void main() {
     {
         var_04a81 = var_75d4a;
     }
-    highp float var_e05fb;
+    highp float var_e9dd7;
     highp vec3 var_29df1;
     if (!var_0db97)
     {
         var_29df1 = vec3(0.0);
-        var_e05fb = 0.0;
+        var_e9dd7 = 0.0;
     }
     else
     {
         var_29df1 = var_04a81;
-        var_e05fb = 1.0;
+        var_e9dd7 = 1.0;
     }
-    highp vec4 var_2860c = vec4(var_29df1, var_e05fb);
-    bgfx_FragData0 = vec4(var_2860c.xyz + (var_2860c.xyz * SunMoonEmissiveMultiplier.x), var_e05fb);
+    highp vec4 var_95a3c = vec4(var_29df1, var_e9dd7);
+    highp vec4 var_72c1b = var_95a3c;
+    highp vec3 var_3ec1c = var_95a3c.xyz + (var_95a3c.xyz * SunMoonEmissiveMultiplier.x);
+    var_72c1b.x = var_3ec1c.x;
+    var_72c1b.y = var_3ec1c.y;
+    var_72c1b.z = var_3ec1c.z;
+    bgfx_FragData0 = var_72c1b;
 }

@@ -29,8 +29,10 @@ in vec3 a_position;
 in vec2 a_texcoord0;
 out vec2 v_texcoord0;
 void main() {
-    vec4 var_ef43d = vec4(a_position, 1.0);
-    vec2 var_ef197 = vec2(((var_ef43d.xy * 2.0) - vec2(1.0)).x, 1.0 - ((var_ef43d.xy * 2.0) - vec2(1.0)).y);
+    vec4 var_567ef = vec4(a_position, 1.0);
+    vec4 var_e1bc6 = var_567ef;
+    var_e1bc6.x = ((var_567ef.xy * 2.0) - vec2(1.0)).x;
+    var_e1bc6.y = 1.0 - ((var_567ef.xy * 2.0) - vec2(1.0)).y;
     v_texcoord0 = a_texcoord0;
-    gl_Position = vec4(var_ef197.x, var_ef197.y, var_ef43d.z, var_ef43d.w);
+    gl_Position = var_e1bc6;
 }

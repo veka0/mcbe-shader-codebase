@@ -14,7 +14,9 @@
 
 in vec3 a_position;
 void main() {
-    vec4 var_ef43d = vec4(a_position, 1.0);
-    vec2 var_ef197 = vec2(((var_ef43d.xy * 2.0) - vec2(1.0)).x, 1.0 - ((var_ef43d.xy * 2.0) - vec2(1.0)).y);
-    gl_Position = vec4(var_ef197.x, var_ef197.y, var_ef43d.z, var_ef43d.w);
+    vec4 var_567ef = vec4(a_position, 1.0);
+    vec4 var_e1bc6 = var_567ef;
+    var_e1bc6.x = ((var_567ef.xy * 2.0) - vec2(1.0)).x;
+    var_e1bc6.y = 1.0 - ((var_567ef.xy * 2.0) - vec2(1.0)).y;
+    gl_Position = var_e1bc6;
 }

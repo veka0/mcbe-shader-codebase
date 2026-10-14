@@ -61,9 +61,6 @@ void func_caa06(inout float arg_30116, inout uint arg_1cbae) {
     arg_1cbae = uint((clamp((log2(arg_30116) - MinLogLuminance.x) / LogLuminanceRange.x, 0.0, 1.0) * 254.0) + 1.0);
 }
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    uint var_1a89b = GlobalInvocationID.x;
-    uint var_e5a21 = GlobalInvocationID.y;
 #ifdef THREAD_LIMIT__LIMITED_AT128
     for (uint var_a845f = 0u; var_a845f < 2u; var_a845f++)
 #endif
@@ -79,20 +76,20 @@ void main() {
 #endif
     }
     barrier();
-    bool var_65e9e = var_1a89b < uint(ScreenSize.x);
-    bool var_4a46b;
-    if (var_65e9e)
+    bool var_c313b = gl_GlobalInvocationID.x < uint(ScreenSize.x);
+    bool var_de743;
+    if (var_c313b)
     {
-        var_4a46b = var_e5a21 < uint(ScreenSize.y);
+        var_de743 = gl_GlobalInvocationID.y < uint(ScreenSize.y);
     }
     else
     {
-        var_4a46b = var_65e9e;
+        var_de743 = var_c313b;
     }
-    if (var_4a46b)
+    if (var_de743)
     {
-        vec2 var_2a716 = (vec2(ivec2(int(var_1a89b), int(var_e5a21))) + vec2(0.5)) / ScreenSize.zw;
-        vec3 var_43b49 = textureLod(s_GameColor, var_2a716, 0.0).xyz;
+        vec2 var_038ad = (vec2(ivec2(int(gl_GlobalInvocationID.x), int(gl_GlobalInvocationID.y))) + vec2(0.5)) / ScreenSize.zw;
+        vec3 var_43b49 = textureLod(s_GameColor, var_038ad, 0.0).xyz;
         vec3 var_8a584;
         if (PreExposureEnabled.x > 0.0)
         {
@@ -105,7 +102,7 @@ void main() {
         float var_378d8 = dot(var_8a584, vec3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
         uint var_9eefc;
         func_caa06(var_378d8, var_9eefc);
-        vec2 var_529a3 = var_2a716 - vec2(0.5);
+        vec2 var_529a3 = var_038ad - vec2(0.5);
         uint var_be8be = atomicAdd(curFrameLuminanceHistogramShared[var_9eefc], uint(exp((-CenterWeight.x) * dot(var_529a3, var_529a3)) * 256.0));
     }
     barrier();

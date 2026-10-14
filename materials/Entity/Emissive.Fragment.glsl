@@ -73,31 +73,33 @@ in highp vec2 v_texcoord0;
 #endif
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
+#ifdef SOURCE_INPUT_TYPE0__CONSTANT
+    highp vec4 var_26660 = MatColor0;
+#endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec4 var_a6d23 = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_a4eac = texture(s_MatTexture0, v_texcoord0);
+    highp vec4 var_26660 = var_a4eac;
 #endif
     highp vec4 var_5b8d6 = OverlayColor;
 #ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    highp vec3 var_99c58 = mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
-    highp vec4 var_edeb5 = vec4(var_99c58.x, var_99c58.y, var_99c58.z, MatColor0.w);
+    highp vec3 var_517d1 = mix(MatColor0.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
 #endif
 #ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    highp vec3 var_99c58 = mix(var_a6d23.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
-    highp vec4 var_edeb5 = vec4(var_99c58.x, var_99c58.y, var_99c58.z, var_a6d23.w);
+    highp vec3 var_517d1 = mix(var_a4eac.xyz, OverlayColor.xyz, vec3(var_5b8d6.w));
 #endif
-    highp float var_e2805 = var_edeb5.w;
-    highp vec3 var_840b4 = mix(var_99c58.xyz, var_99c58.xyz * v_light.xyz, vec3(var_e2805));
-#ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    var_edeb5 = vec4(var_840b4.x, var_840b4.y, var_840b4.z, MatColor0.w);
-#endif
-#ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    var_edeb5 = vec4(var_840b4.x, var_840b4.y, var_840b4.z, var_a6d23.w);
-#endif
-    highp vec4 var_4d687 = v_fog;
-#ifdef SOURCE_INPUT_TYPE0__CONSTANT
-    bgfx_FragData0 = vec4(mix(var_840b4.xyz, v_fog.xyz, vec3(var_4d687.w)), MatColor0.w);
-#endif
-#ifdef SOURCE_INPUT_TYPE0__SAMPLED
-    bgfx_FragData0 = vec4(mix(var_840b4.xyz, v_fog.xyz, vec3(var_4d687.w)), var_a6d23.w);
-#endif
+    var_26660.x = var_517d1.x;
+    var_26660.y = var_517d1.y;
+    var_26660.z = var_517d1.z;
+    highp vec4 var_6702e = var_26660;
+    highp float var_e2805 = var_6702e.w;
+    highp vec3 var_037d8 = mix(var_26660.xyz, var_26660.xyz * v_light.xyz, vec3(var_e2805));
+    var_6702e.x = var_037d8.x;
+    var_6702e.y = var_037d8.y;
+    var_6702e.z = var_037d8.z;
+    highp vec4 var_72c1b = var_6702e;
+    highp vec3 var_c6e56 = mix(var_6702e.xyz, v_fog.xyz, vec3(v_fog.w));
+    var_72c1b.x = var_c6e56.x;
+    var_72c1b.y = var_c6e56.y;
+    var_72c1b.z = var_c6e56.z;
+    bgfx_FragData0 = var_72c1b;
 }

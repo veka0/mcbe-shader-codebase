@@ -53,13 +53,11 @@ out vec4 v_linearClampBounds;
 out vec2 v_texcoord0;
 void main() {
 #ifndef FONT_TYPE__TRUE_TYPE
-    vec3 var_eede8 = a_position;
-    vec2 var_36674 = a_texcoord0;
     vec2 var_6d827 = a_texcoord0;
-    int var_05516 = int(var_eede8.z);
-    var_6d827.x += (((var_05516 == 1) || (var_05516 == 2)) ? 0.0625 : 0.0);
+    int var_03651 = int(a_position.z);
+    var_6d827.x += (((var_03651 == 1) || (var_03651 == 2)) ? 0.0625 : 0.0);
     float var_c517f;
-    if ((var_05516 == 0) || (var_05516 == 1))
+    if ((var_03651 == 0) || (var_03651 == 1))
     {
         var_c517f = GlyphHeight.x;
     }
@@ -68,26 +66,28 @@ void main() {
         var_c517f = 0.0;
     }
     var_6d827.y += var_c517f;
-    vec4 var_ac299 = vec4(0.0, 0.0, 1.0, 1.0);
+    vec4 var_80c54 = vec4(0.0, 0.0, 1.0, 1.0);
 #endif
 #if defined(FONT_TYPE__BITMAP) || defined(FONT_TYPE__BITMAP_SMOOTH)
-    vec2 var_71f06 = a_texcoord0 + vec2(HalfTexelOffset.x);
-    var_ac299 = vec4(var_71f06.x, var_71f06.y, var_ac299.z, var_ac299.w);
-    var_ac299.z = (var_36674.x + 0.0625) - HalfTexelOffset.x;
-    var_ac299.w = (var_36674.y + GlyphHeight.x) - HalfTexelOffset.x;
+    vec2 var_fbacf = a_texcoord0 + vec2(HalfTexelOffset.x);
+    var_80c54.x = var_fbacf.x;
+    var_80c54.y = var_fbacf.y;
+    var_80c54.z = (a_texcoord0.x + 0.0625) - HalfTexelOffset.x;
+    var_80c54.w = (a_texcoord0.y + GlyphHeight.x) - HalfTexelOffset.x;
 #endif
 #ifdef FONT_TYPE__MSDF
     if (GlyphSmoothRadius.x > 0.00095000001601874828338623046875)
     {
-        vec2 var_a0fda = a_texcoord0 + vec2(HalfTexelOffset.x);
-        var_ac299 = vec4(var_a0fda.x, var_a0fda.y, var_ac299.z, var_ac299.w);
-        var_ac299.z = (var_36674.x + 0.0625) - HalfTexelOffset.x;
-        var_ac299.w = (var_36674.y + GlyphHeight.x) - HalfTexelOffset.x;
+        vec2 var_c801a = a_texcoord0 + vec2(HalfTexelOffset.x);
+        var_80c54.x = var_c801a.x;
+        var_80c54.y = var_c801a.y;
+        var_80c54.z = (a_texcoord0.x + 0.0625) - HalfTexelOffset.x;
+        var_80c54.w = (a_texcoord0.y + GlyphHeight.x) - HalfTexelOffset.x;
     }
 #endif
     v_color0 = a_color0;
 #ifndef FONT_TYPE__TRUE_TYPE
-    v_linearClampBounds = var_ac299;
+    v_linearClampBounds = var_80c54;
     v_texcoord0 = var_6d827;
 #endif
 #ifdef FONT_TYPE__TRUE_TYPE

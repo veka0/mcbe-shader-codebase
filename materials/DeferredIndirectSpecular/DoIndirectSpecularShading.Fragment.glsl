@@ -53,7 +53,7 @@
 * - uniform vec4 ConvolutionType;
 * - uniform vec4 DiffuseSpecularEmissiveAmbientTermToggles;
 * - uniform vec4 DirectionalLightSkyLightHeuristicToggles;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 DownsampleResolutionAndRecipResolution;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
@@ -218,10 +218,12 @@ void main() {
     highp vec4 var_fe231 = texture(s_SceneDepth, v_texcoord0.xy);
 #endif
 #ifdef MODE__MIXED_RES
-    highp vec2 var_c8bfb = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
-    highp vec4 var_b7ade = texture(s_Normal, var_c8bfb.xy);
-    highp vec2 var_0d4a8 = var_c8bfb.xy;
-    highp vec4 var_fe231 = texture(s_SceneDepth, var_c8bfb.xy);
+    highp vec4 var_7f8aa = v_texcoord0;
+    highp vec2 var_3146f = (floor(v_texcoord0.xy * SceneResolutionAndRecipResolution.xy) + vec2(0.5)) * SceneResolutionAndRecipResolution.zw;
+    var_7f8aa.x = var_3146f.x;
+    var_7f8aa.y = var_3146f.y;
+    highp vec4 var_b7ade = texture(s_Normal, var_7f8aa.xy);
+    highp vec4 var_fe231 = texture(s_SceneDepth, var_7f8aa.xy);
 #endif
     highp float var_48a47 = (var_fe231.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_48a47, 1.0);
@@ -262,40 +264,40 @@ void main() {
     highp vec3 var_fddd0 = vec3(QuantizationParameters.z * 0.5) - mod(var_38d64, vec3(QuantizationParameters.z));
     highp vec3 var_ec4b0 = (var_38d64 + (var_fddd0 - (var_76063 * dot(var_fddd0, var_76063)))) + WorldOrigin.xyz;
     highp vec2 var_745cb = var_b7ade.xy;
-    highp vec3 var_b0cb0 = vec3(var_b7ade.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
-    highp vec2 var_c65e0;
-    if (var_b0cb0.z < 0.0)
+    highp vec3 var_81f2d = vec3(var_b7ade.xy, (1.0 - abs(var_745cb.x)) - abs(var_745cb.y));
+    highp vec2 var_46b19;
+    if (var_81f2d.z < 0.0)
     {
-        var_c65e0 = (vec2(1.0) - abs(var_b0cb0.yx)) * ((step(vec2(0.0), var_b0cb0.xy) * 2.0) - vec2(1.0));
+        var_46b19 = (vec2(1.0) - abs(var_81f2d.yx)) * ((step(vec2(0.0), var_81f2d.xy) * 2.0) - vec2(1.0));
     }
     else
     {
-        var_c65e0 = var_b0cb0.xy;
+        var_46b19 = var_81f2d.xy;
     }
-    highp vec3 var_e6b69 = var_b0cb0;
-    var_b0cb0 = vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z);
-    highp vec3 var_b623b = normalize(normalize(vec3(var_c65e0.x, var_c65e0.y, var_e6b69.z)));
-    highp vec3 var_1f28f = normalize((u_view * vec4(var_b623b, 0.0)).xyz);
+    var_81f2d.x = var_46b19.x;
+    var_81f2d.y = var_46b19.y;
+    highp vec3 var_d4823 = normalize(normalize(var_81f2d));
+    highp vec3 var_1f28f = normalize((u_view * vec4(var_d4823, 0.0)).xyz);
 #ifdef MODE__DEFAULT
-    highp vec4 var_5d63f = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
+    highp vec4 var_4ee61 = texture(s_ColorMetalnessSubsurface, v_texcoord0.xy);
 #endif
 #ifdef MODE__MIXED_RES
-    highp vec4 var_5d63f = texture(s_ColorMetalnessSubsurface, var_0d4a8);
+    highp vec4 var_4ee61 = texture(s_ColorMetalnessSubsurface, var_7f8aa.xy);
 #endif
-    highp vec4 var_ee5ba = var_5d63f;
+    highp vec4 var_ee5ba = var_4ee61;
     highp float var_b4a2f = clamp(2.007874011993408203125 * (var_ee5ba.w - 0.501960813999176025390625), 0.0, 1.0);
 #ifdef MODE__DEFAULT
-    uvec4 var_cae5a = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
+    uvec4 var_f453e = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * v_texcoord0.xy), 0);
 #endif
 #ifdef MODE__MIXED_RES
-    uvec4 var_cae5a = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * var_0d4a8), 0);
+    uvec4 var_f453e = texelFetch(s_EmissiveAmbientLinearRoughness, ivec2(vec2(textureSize(s_EmissiveAmbientLinearRoughness, 0)) * var_7f8aa.xy), 0);
 #endif
-    uvec4 var_a0fc9 = var_cae5a;
+    uvec4 var_a0fc9 = var_f453e;
     uint var_4b676 = var_a0fc9.x & 65535u;
     uvec2 var_49e6b = uvec2(var_4b676 >> 8u, var_4b676 & 255u);
     highp vec2 var_0afea = vec2(float(var_49e6b.x), float(var_49e6b.y)) * vec2(0.0039215688593685626983642578125);
-    uvec4 var_42b4e = var_cae5a;
-    uvec2 var_c02ad = var_cae5a.yz;
+    uvec4 var_42b4e = var_f453e;
+    uvec2 var_c02ad = var_f453e.yz;
     uint var_39af7 = var_c02ad.x & 65535u;
     uint var_32bfc = var_c02ad.y & 65535u;
     highp vec4 var_94bd8 = vec4(uvec4(var_39af7 >> 8u, var_39af7 & 255u, var_32bfc >> 8u, var_32bfc & 255u)) * vec4(0.0039215688593685626983642578125);
@@ -304,7 +306,7 @@ void main() {
     highp vec3 var_21abf = (u_invView * vec4(var_20845.xyz, 1.0)).xyz;
     highp vec3 var_f529b = var_20845.xyz;
     highp vec3 var_599e1 = vec3(v_projPosition.xy, var_48a47);
-    highp vec3 var_9e11a = var_5d63f.xyz;
+    highp vec3 var_9e11a = var_4ee61.xyz;
     highp vec3 var_b2786;
     func_9b87e(var_b2786, var_9e11a);
     highp vec3 var_f6b87 = vec3(0.039999999105930328369140625 * (1.0 - var_b4a2f)) + (var_b2786 * var_b4a2f);
@@ -359,13 +361,16 @@ void main() {
             var_23420 = var_f529b;
             var_7c2f6 = var_21abf;
         }
-        highp vec4 var_87e47 = texture(s_SSRTexture, var_bcb12 * ViewportScale.xy);
+        highp vec4 var_dbfbb = texture(s_SSRTexture, var_bcb12 * ViewportScale.xy);
         if (var_46a60)
         {
-            highp vec3 var_417eb = var_87e47.xyz / vec3((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
-            var_87e47 = vec4(var_417eb.x, var_417eb.y, var_417eb.z, var_87e47.w);
+            highp vec4 var_4c680 = var_dbfbb;
+            highp vec3 var_eceee = var_4c680.xyz / vec3((0.180000007152557373046875 / var_fb10a) + 9.9999997473787516355514526367188e-05);
+            var_dbfbb.x = var_eceee.x;
+            var_dbfbb.y = var_eceee.y;
+            var_dbfbb.z = var_eceee.z;
         }
-        highp vec3 var_a56d9 = reflect(normalize(var_7c2f6 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_b623b);
+        highp vec3 var_a56d9 = reflect(normalize(var_7c2f6 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_d4823);
         highp float var_0f441;
         if (int(ConvolutionType.x) == 1)
         {
@@ -415,7 +420,7 @@ void main() {
         highp vec2 var_c1478 = vec2(clamp(dot(var_1f28f, -normalize(var_23420)), 0.0, 1.0), var_0afea.x);
         var_c1478.y = 1.0 - var_c1478.y;
         highp vec2 var_f1a1e = texture(s_BrdfLUT, var_c1478).xy;
-        var_3f03f = mix(var_83a0f, var_87e47.xyz, vec3(var_87e47.w * SSRParameters.y)) * ((var_f6b87 * var_f1a1e.x) + vec3(var_f1a1e.y));
+        var_3f03f = mix(var_83a0f, var_dbfbb.xyz, vec3(var_dbfbb.w * SSRParameters.y)) * ((var_f6b87 * var_f1a1e.x) + vec3(var_f1a1e.y));
     }
     else
     {
@@ -434,7 +439,7 @@ void main() {
                 var_e2d67 = var_f529b;
                 var_ee8d4 = var_21abf;
             }
-            highp vec3 var_44ff1 = reflect(normalize(var_ee8d4 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_b623b);
+            highp vec3 var_44ff1 = reflect(normalize(var_ee8d4 - (u_invView * vec4(0.0, 0.0, 0.0, 1.0)).xyz), var_d4823);
             highp float var_622ee;
             if (int(ConvolutionType.x) == 1)
             {

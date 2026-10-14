@@ -64,7 +64,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -120,11 +120,22 @@ in vec2 a_texcoord0;
 out vec3 v_projPosition;
 out vec4 v_texcoord0;
 void main() {
-    vec4 var_c3366 = vec4(a_position, 1.0);
-    vec2 var_19dcd = (var_c3366.xy * 2.0) - vec2(1.0);
-    vec2 var_00970 = (a_position.xy * 2.0) - vec2(1.0);
-    vec2 var_828cb = a_texcoord0 * ViewportScale.xy;
-    v_projPosition = vec3(var_00970.x, var_00970.y, a_position.z);
-    v_texcoord0 = vec4(var_828cb.x, var_828cb.y, a_texcoord0.x, a_texcoord0.y);
-    gl_Position = vec4(var_19dcd.x, var_19dcd.y, var_c3366.z, var_c3366.w);
+    vec4 var_c1461 = vec4(0.0);
+    vec4 var_91d41 = vec4(a_position, 1.0);
+    vec4 var_273da = var_91d41;
+    vec2 var_5ee7b = (var_91d41.xy * 2.0) - vec2(1.0);
+    var_273da.x = var_5ee7b.x;
+    var_273da.y = var_5ee7b.y;
+    vec3 var_3269b = a_position;
+    vec2 var_db333 = (a_position.xy * 2.0) - vec2(1.0);
+    var_3269b.x = var_db333.x;
+    var_3269b.y = var_db333.y;
+    vec2 var_f32e0 = a_texcoord0 * ViewportScale.xy;
+    var_c1461.x = var_f32e0.x;
+    var_c1461.y = var_f32e0.y;
+    var_c1461.z = a_texcoord0.x;
+    var_c1461.w = a_texcoord0.y;
+    v_projPosition = var_3269b;
+    v_texcoord0 = var_c1461;
+    gl_Position = var_273da;
 }

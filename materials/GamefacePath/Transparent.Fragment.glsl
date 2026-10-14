@@ -25,35 +25,34 @@ in highp vec4 v_ExtraParams;
 flat in highp vec4 v_VaryingData;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_4debe = v_ExtraParams;
     uvec4 var_45880 = floatBitsToUint(v_VaryingData);
     int var_9e7e1 = int((var_45880.z << 4u) | ((var_45880.y & 240u) >> 4u));
     int var_244eb = int(var_45880.w);
-    int var_c4c19 = var_9e7e1 + 1;
+    int var_80d58 = var_9e7e1 + 1;
     highp vec4 var_5f983 = Data_PS[var_9e7e1];
-    int var_8fc81 = int(var_5f983.x);
+    int var_07763 = int(var_5f983.x);
     highp vec4 var_2a631;
     if (14 == var_244eb)
     {
-        highp vec2 var_b71ef = dFdx(v_ExtraParams.xy);
-        highp vec2 var_45c5c = dFdy(v_ExtraParams.xy);
-        highp float var_7084f = ((2.0 * var_4debe.x) * var_b71ef.x) - var_b71ef.y;
-        highp float var_f5098 = ((2.0 * var_4debe.x) * var_45c5c.x) - var_45c5c.y;
-        highp float var_a056d = (var_4debe.x * var_4debe.x) - var_4debe.y;
-        var_2a631 = (Data_PS[var_c4c19] * Data_PS[var_8fc81].x) * clamp(1.0 - sqrt((var_a056d * var_a056d) / ((var_7084f * var_7084f) + (var_f5098 * var_f5098))), 0.0, 1.0);
+        highp vec2 var_663e5 = dFdx(v_ExtraParams.xy);
+        highp vec2 var_292f4 = dFdy(v_ExtraParams.xy);
+        highp float var_ca18b = ((2.0 * v_ExtraParams.x) * var_663e5.x) - var_663e5.y;
+        highp float var_73461 = ((2.0 * v_ExtraParams.x) * var_292f4.x) - var_292f4.y;
+        highp float var_1f860 = (v_ExtraParams.x * v_ExtraParams.x) - v_ExtraParams.y;
+        var_2a631 = (Data_PS[var_80d58] * Data_PS[var_07763].x) * clamp(1.0 - sqrt((var_1f860 * var_1f860) / ((var_ca18b * var_ca18b) + (var_73461 * var_73461))), 0.0, 1.0);
     }
     else
     {
-        highp vec4 var_ff285;
+        highp vec4 var_9c590;
         if (11 == var_244eb)
         {
-            var_ff285 = Data_PS[var_c4c19] * min(1.0, (1.0 - abs((var_4debe.y * Data_PS[var_8fc81].y) - Data_PS[var_8fc81].z)) * Data_PS[var_8fc81].x);
+            var_9c590 = Data_PS[var_80d58] * min(1.0, (1.0 - abs((v_ExtraParams.y * Data_PS[var_07763].y) - Data_PS[var_07763].z)) * Data_PS[var_07763].x);
         }
         else
         {
-            var_ff285 = Data_PS[var_c4c19] * var_4debe.y;
+            var_9c590 = Data_PS[var_80d58] * v_ExtraParams.y;
         }
-        var_2a631 = var_ff285;
+        var_2a631 = var_9c590;
     }
     bgfx_FragData0 = var_2a631;
 }

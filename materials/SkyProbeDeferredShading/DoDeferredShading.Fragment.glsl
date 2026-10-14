@@ -56,7 +56,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -195,7 +195,7 @@ void func_9b87e(inout highp vec3 arg_3007f, inout highp vec3 arg_87bd1) {
     }
 }
 void main() {
-    highp vec4 var_f65ac = vec4(0.0);
+    highp vec4 var_8f846 = vec4(0.0);
     highp vec4 var_11add = texture(s_SceneDepth, v_texcoord0.xy);
     highp float var_971b7 = (var_11add.x * 2.0) - 1.0;
     highp vec4 var_df846 = vec4(v_projPosition.xy, var_971b7, 1.0);
@@ -361,16 +361,18 @@ void main() {
         }
         var_a3b9e = var_d4483;
     }
-    highp vec3 var_0ed56;
+    highp vec3 var_6db37;
     if (PreExposureEnabled.x > 0.0)
     {
-        var_0ed56 = var_a3b9e * 0.0033142860047519207000732421875;
+        var_6db37 = var_a3b9e * 0.0033142860047519207000732421875;
     }
     else
     {
-        var_0ed56 = var_a3b9e;
+        var_6db37 = var_a3b9e;
     }
-    var_f65ac = vec4(var_0ed56.x, var_0ed56.y, var_0ed56.z, var_f65ac.w);
-    var_f65ac.w = 1.0;
-    bgfx_FragData0 = var_f65ac;
+    var_8f846.x = var_6db37.x;
+    var_8f846.y = var_6db37.y;
+    var_8f846.z = var_6db37.z;
+    var_8f846.w = 1.0;
+    bgfx_FragData0 = var_8f846;
 }

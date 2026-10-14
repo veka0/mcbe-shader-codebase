@@ -47,8 +47,8 @@ struct FloatEntry {
 
 layout(binding = 1, std430) buffer s_GpuEntryBuffer { GpuVolumeEntry GpuEntryBuffer[]; } var_c8427;
 layout(binding = 3, std430) buffer s_TransitioningGpuEntryBuffer { GpuVolumeEntry TransitioningGpuEntryBuffer[]; } var_47161;
-layout(binding = 0, std430) buffer s_DirtyVolumeKeys { UintEntry DirtyVolumeKeys[]; } var_00f8d;
-layout(binding = 5, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_cba50;
+layout(binding = 0, std430) buffer s_DirtyVolumeKeys { UintEntry DirtyVolumeKeys[]; } var_40823;
+layout(binding = 5, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_43db8;
 layout(binding = 4, std430) buffer s_TransitioningVoxelBuffer { VoxelNode TransitioningVoxelBuffer[]; } var_3fedc;
 layout(binding = 2, std430) buffer s_PerGroupLerps { FloatEntry PerGroupLerps[]; } var_ed9af;
 uniform vec4 DirtyVolumeCount;
@@ -58,12 +58,12 @@ uniform vec4 TransitioningGpuEntryBufferCapacity;
 uniform vec4 TransitioningVolumesLayerCount;
 shared uint sTransitionOffsetCache[32];
 void func_f0f8c(inout uint arg_047d2, inout vec3 arg_aa7d7) {
-    if (var_cba50.VoxelBuffer[arg_047d2].data == 0u)
+    if (var_43db8.VoxelBuffer[arg_047d2].data == 0u)
     {
         arg_aa7d7 = vec3(0.0);
         return;
     }
-    vec4 loc_951c2 = vec4(uvec4(var_cba50.VoxelBuffer[arg_047d2].data, var_cba50.VoxelBuffer[arg_047d2].data >> 8u, var_cba50.VoxelBuffer[arg_047d2].data >> 16u, var_cba50.VoxelBuffer[arg_047d2].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+    vec4 loc_951c2 = vec4(uvec4(var_43db8.VoxelBuffer[arg_047d2].data, var_43db8.VoxelBuffer[arg_047d2].data >> 8u, var_43db8.VoxelBuffer[arg_047d2].data >> 16u, var_43db8.VoxelBuffer[arg_047d2].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
     vec4 loc_0dc9c = loc_951c2;
     arg_aa7d7 = (loc_951c2.xyz * loc_0dc9c.w) * 6.0;
 }
@@ -177,15 +177,13 @@ void func_2ac1e(inout uint arg_ab3e5, inout vec3 arg_aa7d7) {
     vec4 loc_0dc9c = loc_8af8a;
     arg_aa7d7 = (loc_8af8a.xyz * loc_0dc9c.w) * 6.0;
 }
-void func_8e782() {
-    uint loc_6ffe4 = GlobalInvocationID.y;
-    uint loc_addfb = GlobalInvocationID.x;
-    bool loc_531eb = loc_6ffe4 < uint(DirtyVolumeCount.x);
+void func_012b7() {
+    bool loc_f91a4 = gl_GlobalInvocationID.y < uint(DirtyVolumeCount.x);
     ivec4 loc_2ee36;
-    if (loc_531eb)
+    if (loc_f91a4)
     {
-        uint loc_d0a87 = loc_6ffe4 * 4u;
-        loc_2ee36 = ivec4(int(var_00f8d.DirtyVolumeKeys[loc_d0a87].data), int(var_00f8d.DirtyVolumeKeys[loc_d0a87 + 1u].data), int(var_00f8d.DirtyVolumeKeys[loc_d0a87 + 2u].data), 0);
+        uint loc_46b7f = gl_GlobalInvocationID.y * 4u;
+        loc_2ee36 = ivec4(int(var_40823.DirtyVolumeKeys[loc_46b7f].data), int(var_40823.DirtyVolumeKeys[loc_46b7f + 1u].data), int(var_40823.DirtyVolumeKeys[loc_46b7f + 2u].data), 0);
     }
     else
     {
@@ -194,11 +192,11 @@ void func_8e782() {
     uint loc_53897;
     bool loc_5a4f8;
     bool loc_3cc13;
-    uint loc_5b51e;
+    uint loc_c3cf4;
+    uint loc_1a5a7;
     bool loc_cf3c5;
     uint loc_21bdd;
-    uint loc_4a085;
-    if (loc_531eb)
+    if (loc_f91a4)
     {
         ivec4 loc_6c45e = ivec4(loc_2ee36.xyz, 0);
         ivec4 loc_bdc37 = loc_6c45e;
@@ -470,25 +468,25 @@ void func_8e782() {
                 break;
             }
         }
-        loc_4a085 = loc_11c6b >> 2u;
         loc_21bdd = loc_d4bbd >> 2u;
         loc_cf3c5 = loc_15d4a;
-        loc_5b51e = loc_f6fcc >> 2u;
+        loc_1a5a7 = loc_f6fcc >> 2u;
+        loc_c3cf4 = loc_11c6b >> 2u;
         loc_3cc13 = loc_66d24;
         loc_5a4f8 = loc_8040f;
         loc_53897 = uint(TransitioningVolumesLayerCount.x);
     }
     else
     {
-        loc_4a085 = 0u;
         loc_21bdd = 0u;
         loc_cf3c5 = false;
-        loc_5b51e = 0u;
+        loc_1a5a7 = 0u;
+        loc_c3cf4 = 0u;
         loc_3cc13 = false;
         loc_5a4f8 = false;
         loc_53897 = 0u;
     }
-    if (loc_531eb && (gl_LocalInvocationIndex < min(loc_53897, 32u)))
+    if (loc_f91a4 && (gl_LocalInvocationIndex < min(loc_53897, 32u)))
     {
         ivec4 loc_a3915 = ivec4(loc_2ee36.xyz, int(gl_LocalInvocationIndex));
         ivec4 loc_3c064 = loc_a3915;
@@ -583,15 +581,15 @@ void func_8e782() {
         sTransitionOffsetCache[gl_LocalInvocationIndex] = loc_439a5 ? (loc_9a2fa >> 2u) : 4294967295u;
     }
     barrier();
-    if (((!loc_531eb) || (!loc_5a4f8)) || (!loc_3cc13))
+    if (((!loc_f91a4) || (!loc_5a4f8)) || (!loc_3cc13))
     {
         return;
     }
-    uint loc_e5c08 = loc_addfb * 16u;
-    uint loc_2272d = min((loc_e5c08 + 16u), 4096u);
-    for (uint loc_f7c78 = loc_e5c08; loc_f7c78 < loc_2272d; loc_f7c78++)
+    uint loc_6b407 = gl_GlobalInvocationID.x * 16u;
+    uint loc_2272d = min((loc_6b407 + 16u), 4096u);
+    for (uint loc_f7c78 = loc_6b407; loc_f7c78 < loc_2272d; loc_f7c78++)
     {
-        uint loc_f3dbb = loc_5b51e + loc_f7c78;
+        uint loc_f3dbb = loc_1a5a7 + loc_f7c78;
         vec3 loc_2c21d;
         func_f0f8c(loc_f3dbb, loc_2c21d);
         vec3 loc_13d4b;
@@ -651,10 +649,16 @@ void func_8e782() {
         vec2 loc_cbcc5 = max(loc_48fd3.xy, loc_48fd3.zw);
         float loc_6ad36 = ceil(clamp(max(loc_cbcc5.x, loc_cbcc5.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;
         uvec4 loc_8d2c0 = uvec4(clamp(vec4(loc_c8be4 / vec3(loc_6ad36), loc_6ad36), vec4(0.0), vec4(1.0)) * 255.0);
-        var_cba50.VoxelBuffer[loc_4a085 + loc_f7c78].data = ((loc_8d2c0.x | (loc_8d2c0.y << 8u)) | (loc_8d2c0.z << 16u)) | (loc_8d2c0.w << 24u);
+        var_43db8.VoxelBuffer[loc_c3cf4 + loc_f7c78].data = ((loc_8d2c0.x | (loc_8d2c0.y << 8u)) | (loc_8d2c0.z << 16u)) | (loc_8d2c0.w << 24u);
+    }
+    uint loc_f6d51 = gl_GlobalInvocationID.x * 2u;
+    uint loc_0575c = min((loc_f6d51 + 2u), 328u);
+    for (uint loc_b8662 = loc_f6d51; loc_b8662 < loc_0575c; loc_b8662++)
+    {
+        uint loc_a72b1 = 4123u + loc_b8662;
+        var_43db8.VoxelBuffer[loc_c3cf4 + loc_a72b1].data = var_43db8.VoxelBuffer[loc_1a5a7 + loc_a72b1].data;
     }
 }
 void main() {
-    uvec3 GlobalInvocationID = gl_GlobalInvocationID;
-    func_8e782();
+    func_012b7();
 }

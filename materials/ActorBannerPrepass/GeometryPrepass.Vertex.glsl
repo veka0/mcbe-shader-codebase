@@ -110,23 +110,19 @@ centroid out vec4 v_texcoords;
 out vec3 v_worldPos;
 void main() {
     int var_c8e27 = int(a_indices);
-    mat4 var_c7bcb = u_model[0] * Bones[var_c8e27];
+    mat4 var_95bb0 = u_model[0] * Bones[var_c8e27];
     vec2 var_be3b2 = UVAnimation.xy + (a_texcoord0 * UVAnimation.zw);
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_e43a8;
-    var_e43a8[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_e43a8[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_e43a8[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_e43a8[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
-    vec4 var_96145 = var_e43a8 * vec4(a_position, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_96145 = var_53a7d * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__OFF
-    vec4 var_96145 = var_c7bcb * vec4(a_position, 1.0);
+    vec4 var_96145 = var_95bb0 * vec4(a_position, 1.0);
 #endif
-    vec4 var_db20e = a_color0;
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
@@ -134,19 +130,23 @@ void main() {
     mat4 var_cbf5d = u_proj;
     var_cbf5d[2] = var_67767;
     vec4 var_c804c = var_cbf5d * (u_view * vec4(var_96145.xyz, 1.0));
-    int var_e5df4 = int(var_db20e.w * 255.0);
-    vec2 var_838f4 = (BannerUVOffsetsAndScales[var_e5df4].zw * var_be3b2) + BannerUVOffsetsAndScales[var_e5df4].xy;
-    vec2 var_ad668 = (BannerUVOffsetsAndScales[0].zw * var_be3b2) + BannerUVOffsetsAndScales[0].xy;
+    vec4 var_73701 = vec4(0.0);
+    int var_67e97 = int(a_color0.w * 255.0);
+    vec2 var_daa11 = (BannerUVOffsetsAndScales[var_67e97].zw * var_be3b2) + BannerUVOffsetsAndScales[var_67e97].xy;
+    var_73701.x = var_daa11.x;
+    var_73701.y = var_daa11.y;
+    vec2 var_5088d = (BannerUVOffsetsAndScales[0].zw * var_be3b2) + BannerUVOffsetsAndScales[0].xy;
+    var_73701.z = var_5088d.x;
+    var_73701.w = var_5088d.y;
 #ifdef TINTING__ENABLED
-    vec4 var_55bfd = BannerColors[var_e5df4];
+    vec4 var_55bfd = BannerColors[var_67e97];
     var_55bfd.w = 1.0;
-    if (var_e5df4 > 0)
+    if (var_67e97 > 0)
     {
         var_55bfd.w = 0.0;
     }
 #endif
-    vec4 var_4c816 = a_tangent;
-    v_bitangent = (var_c7bcb * vec4(cross(a_normal.xyz, a_tangent.xyz) * var_4c816.w, 0.0)).xyz;
+    v_bitangent = (var_95bb0 * vec4(cross(a_normal.xyz, a_tangent.xyz) * a_tangent.w, 0.0)).xyz;
     v_clipPosition = var_c804c;
 #ifdef TINTING__DISABLED
     v_color0 = a_color0;
@@ -155,11 +155,11 @@ void main() {
     v_color0 = var_55bfd;
 #endif
     v_frontFacing = 0;
-    v_normal = (var_c7bcb * vec4(a_normal.xyz, 0.0)).xyz;
+    v_normal = (var_95bb0 * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = ((PrevWorld * PrevBones[var_c8e27]) * vec4(a_position, 1.0)).xyz;
-    v_tangent = (var_c7bcb * vec4(a_tangent.xyz, 0.0)).xyz;
+    v_tangent = (var_95bb0 * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = var_be3b2;
-    v_texcoords = vec4(var_838f4.x, var_838f4.y, var_ad668.x, var_ad668.y);
+    v_texcoords = var_73701;
     v_worldPos = var_96145.xyz;
     gl_Position = var_c804c;
 }

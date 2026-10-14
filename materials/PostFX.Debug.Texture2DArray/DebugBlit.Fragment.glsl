@@ -29,12 +29,12 @@ void main() {
     highp vec4 var_d9ef6 = texture(s_RasterColor, vec3(v_texcoord0, TextureArrayIndex.x));
     highp vec4 var_72a58 = var_d9ef6;
     bool var_fedba;
-    highp vec3 var_846e5;
+    highp vec3 var_c6b6c;
     switch (uint(DebugMode.x))
     {
         case 1u:
         {
-            var_846e5 = var_d9ef6.www;
+            var_c6b6c = var_d9ef6.www;
             var_fedba = false;
             break;
         }
@@ -42,86 +42,86 @@ void main() {
         {
             highp vec2 var_7bee0 = (var_d9ef6.xy * 2.0) - vec2(1.0);
             highp vec2 var_5e4f9 = var_7bee0;
-            highp vec3 var_2af73 = vec3(var_7bee0, (1.0 - abs(var_5e4f9.x)) - abs(var_5e4f9.y));
-            highp vec2 var_b9f5e;
-            if (var_2af73.z < 0.0)
+            highp vec3 var_ebe44 = vec3(var_7bee0, (1.0 - abs(var_5e4f9.x)) - abs(var_5e4f9.y));
+            highp vec2 var_de16b;
+            if (var_ebe44.z < 0.0)
             {
-                var_b9f5e = (vec2(1.0) - abs(var_2af73.yx)) * ((step(vec2(0.0), var_2af73.xy) * 2.0) - vec2(1.0));
+                var_de16b = (vec2(1.0) - abs(var_ebe44.yx)) * ((step(vec2(0.0), var_ebe44.xy) * 2.0) - vec2(1.0));
             }
             else
             {
-                var_b9f5e = var_2af73.xy;
+                var_de16b = var_ebe44.xy;
             }
-            highp vec3 var_b5290 = var_2af73;
-            var_2af73 = vec3(var_b9f5e.x, var_b9f5e.y, var_b5290.z);
-            var_846e5 = (normalize(vec3(var_b9f5e.x, var_b9f5e.y, var_b5290.z)) * 0.5) + vec3(0.5);
+            var_ebe44.x = var_de16b.x;
+            var_ebe44.y = var_de16b.y;
+            var_c6b6c = (normalize(var_ebe44) * 0.5) + vec3(0.5);
             var_fedba = false;
             break;
         }
         case 3u:
         {
             highp vec2 var_3b7a3 = var_d9ef6.xy;
-            highp vec3 var_4ad52 = vec3(var_d9ef6.xy, (1.0 - abs(var_3b7a3.x)) - abs(var_3b7a3.y));
-            highp vec2 var_c1b70;
-            if (var_4ad52.z < 0.0)
+            highp vec3 var_b8a8d = vec3(var_d9ef6.xy, (1.0 - abs(var_3b7a3.x)) - abs(var_3b7a3.y));
+            highp vec2 var_241ef;
+            if (var_b8a8d.z < 0.0)
             {
-                var_c1b70 = (vec2(1.0) - abs(var_4ad52.yx)) * ((step(vec2(0.0), var_4ad52.xy) * 2.0) - vec2(1.0));
+                var_241ef = (vec2(1.0) - abs(var_b8a8d.yx)) * ((step(vec2(0.0), var_b8a8d.xy) * 2.0) - vec2(1.0));
             }
             else
             {
-                var_c1b70 = var_4ad52.xy;
+                var_241ef = var_b8a8d.xy;
             }
-            highp vec3 var_de3b3 = var_4ad52;
-            var_4ad52 = vec3(var_c1b70.x, var_c1b70.y, var_de3b3.z);
-            var_846e5 = (normalize(vec3(var_c1b70.x, var_c1b70.y, var_de3b3.z)) * 0.5) + vec3(0.5);
+            var_b8a8d.x = var_241ef.x;
+            var_b8a8d.y = var_241ef.y;
+            var_c6b6c = (normalize(var_b8a8d) * 0.5) + vec3(0.5);
             var_fedba = false;
             break;
         }
         case 4u:
         {
-            var_846e5 = vec3(((clamp(var_d9ef6.xy, vec2(-1.0), vec2(1.0)) * 10.0) * 0.5) + vec2(0.5), 0.0);
+            var_c6b6c = vec3(((clamp(var_d9ef6.xy, vec2(-1.0), vec2(1.0)) * 10.0) * 0.5) + vec2(0.5), 0.0);
             var_fedba = false;
             break;
         }
         case 5u:
         {
-            var_846e5 = vec3(((clamp(var_d9ef6.zw, vec2(-1.0), vec2(1.0)) * 10.0) * 0.5) + vec2(0.5), 0.0);
+            var_c6b6c = vec3(((clamp(var_d9ef6.zw, vec2(-1.0), vec2(1.0)) * 10.0) * 0.5) + vec2(0.5), 0.0);
             var_fedba = false;
             break;
         }
         case 6u:
         {
-            var_846e5 = vec3(var_d9ef6.xy, 0.0);
+            var_c6b6c = vec3(var_d9ef6.xy, 0.0);
             var_fedba = false;
             break;
         }
         case 7u:
         {
-            var_846e5 = (var_d9ef6.xyz * 0.0500000007450580596923828125) + vec3(0.5);
+            var_c6b6c = (var_d9ef6.xyz * 0.0500000007450580596923828125) + vec3(0.5);
             var_fedba = false;
             break;
         }
         case 8u:
         {
-            var_846e5 = var_d9ef6.xyz;
+            var_c6b6c = var_d9ef6.xyz;
             var_fedba = false;
             break;
         }
         case 9u:
         {
-            var_846e5 = var_d9ef6.xxx;
+            var_c6b6c = var_d9ef6.xxx;
             var_fedba = false;
             break;
         }
         case 10u:
         {
-            var_846e5 = var_d9ef6.yyy;
+            var_c6b6c = var_d9ef6.yyy;
             var_fedba = false;
             break;
         }
         case 11u:
         {
-            var_846e5 = var_d9ef6.zzz;
+            var_c6b6c = var_d9ef6.zzz;
             var_fedba = false;
             break;
         }
@@ -136,7 +136,7 @@ void main() {
             {
                 var_8a3e9 = vec3(0.0, var_72a58.x, 0.0);
             }
-            var_846e5 = var_8a3e9;
+            var_c6b6c = var_8a3e9;
             var_fedba = false;
             break;
         }
@@ -153,37 +153,37 @@ void main() {
             var_a8720[7] = vec3(1.0);
             highp float var_eda2e = clamp((log2(dot(var_d9ef6.xyz, vec3(0.2125000059604644775390625, 0.7153999805450439453125, 0.07209999859333038330078125)) * 8.0) + 4.0) * 0.5, 0.0, 8.0);
             int var_1a569 = clamp(int(var_eda2e), 0, 6);
-            var_846e5 = mix(var_a8720[var_1a569], var_a8720[var_1a569 + 1], vec3(fract(var_eda2e)));
+            var_c6b6c = mix(var_a8720[var_1a569], var_a8720[var_1a569 + 1], vec3(fract(var_eda2e)));
             var_fedba = true;
             break;
         }
         case 15u:
         {
-            var_846e5 = vec3((((ClipPlanes.x * ClipPlanes.y) / (ClipPlanes.y + (var_72a58.x * (ClipPlanes.x - ClipPlanes.y)))) - ClipPlanes.x) / (ClipPlanes.y - ClipPlanes.x), 0.0, 0.0);
+            var_c6b6c = vec3((((ClipPlanes.x * ClipPlanes.y) / (ClipPlanes.y + (var_72a58.x * (ClipPlanes.x - ClipPlanes.y)))) - ClipPlanes.x) / (ClipPlanes.y - ClipPlanes.x), 0.0, 0.0);
             var_fedba = true;
             break;
         }
         case 16u:
         {
-            var_846e5 = vec3(clamp(2.007874011993408203125 * (var_72a58.w - 0.501960813999176025390625), 0.0, 1.0));
+            var_c6b6c = vec3(clamp(2.007874011993408203125 * (var_72a58.w - 0.501960813999176025390625), 0.0, 1.0));
             var_fedba = false;
             break;
         }
         case 17u:
         {
-            var_846e5 = vec3(clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_72a58.w), 0.0, 1.0));
+            var_c6b6c = vec3(clamp(2.007874011993408203125 * (0.4980392158031463623046875 - var_72a58.w), 0.0, 1.0));
             var_fedba = false;
             break;
         }
         case 21u:
         {
-            var_846e5 = vec3(((vec2(ClipPlanes.x * ClipPlanes.y) / (vec2(ClipPlanes.y) + (vec2(1.0 - var_72a58.x, 1.0 - var_72a58.y) * (ClipPlanes.x - ClipPlanes.y)))) - vec2(ClipPlanes.x)) / vec2(ClipPlanes.y - ClipPlanes.x), 0.0);
+            var_c6b6c = vec3(((vec2(ClipPlanes.x * ClipPlanes.y) / (vec2(ClipPlanes.y) + (vec2(1.0 - var_72a58.x, 1.0 - var_72a58.y) * (ClipPlanes.x - ClipPlanes.y)))) - vec2(ClipPlanes.x)) / vec2(ClipPlanes.y - ClipPlanes.x), 0.0);
             var_fedba = true;
             break;
         }
         default:
         {
-            var_846e5 = var_d9ef6.xyz;
+            var_c6b6c = var_d9ef6.xyz;
             var_fedba = true;
             break;
         }
@@ -191,11 +191,11 @@ void main() {
     highp vec3 var_d1c50;
     if (var_fedba)
     {
-        var_d1c50 = pow(var_846e5, vec3(0.4545454680919647216796875));
+        var_d1c50 = pow(var_c6b6c, vec3(0.4545454680919647216796875));
     }
     else
     {
-        var_d1c50 = var_846e5;
+        var_d1c50 = var_c6b6c;
     }
     bgfx_FragData0 = vec4(var_d1c50, 1.0);
 }

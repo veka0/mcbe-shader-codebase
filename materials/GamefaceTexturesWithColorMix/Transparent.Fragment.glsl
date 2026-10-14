@@ -30,25 +30,23 @@ in highp vec4 v_NoPerspParam;
 flat in highp vec4 v_VaryingData;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
-    highp vec4 var_2ea28 = v_Additional;
-    highp vec4 var_057c0 = v_NoPerspParam;
     uvec4 var_05e85 = uvec4(v_VaryingData);
     int var_8e4d8 = int((var_05e85.z << 4u) | ((var_05e85.y & 240u) >> 4u));
     highp vec4 var_0a8ca = Data_PS[var_8e4d8];
     highp vec4 var_937d7 = Data_PS[var_8e4d8 + 1];
     highp vec4 var_341fb = Data_PS[int(var_0a8ca.x)];
-    highp vec2 var_e012b = vec2(var_057c0.z, 1.0 - var_057c0.w);
-    highp float var_c2b62 = var_e012b.x;
-    highp float var_ace1a = var_e012b.y;
+    highp vec2 var_c3e1b = vec2(v_NoPerspParam.z, 1.0 - v_NoPerspParam.w);
+    highp float var_c2b62 = var_c3e1b.x;
+    highp float var_ace1a = var_c3e1b.y;
     highp vec2 var_b49e8 = vec2(var_c2b62, 1.0 - var_ace1a);
-    var_e012b = var_b49e8;
+    var_c3e1b = var_b49e8;
     highp vec4 var_aaba4 = texture(s_txBuffer1, vec2(((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).x, 1.0 - ((var_b49e8 * UVTransform[1].zw) + UVTransform[1].xy).y));
     highp vec4 var_53b39 = var_aaba4;
-    highp vec2 var_c52a9 = vec2(var_2ea28.x, 1.0 - var_2ea28.y);
-    highp float var_efb1e = var_c52a9.x;
-    highp float var_ad18e = var_c52a9.y;
+    highp vec2 var_132fc = vec2(v_Additional.x, 1.0 - v_Additional.y);
+    highp float var_efb1e = var_132fc.x;
+    highp float var_ad18e = var_132fc.y;
     highp vec2 var_13da3 = vec2(var_efb1e, 1.0 - var_ad18e);
-    var_c52a9 = var_13da3;
+    var_132fc = var_13da3;
     highp vec4 var_54245 = texture(s_txBuffer, vec2(((var_13da3 * UVTransform[0].zw) + UVTransform[0].xy).x, 1.0 - ((var_13da3 * UVTransform[0].zw) + UVTransform[0].xy).y));
     highp vec4 var_2fba1 = var_54245 * var_937d7.w;
     highp vec4 var_ab3ef = var_2fba1;
@@ -128,48 +126,51 @@ void main() {
             {
                 if (var_55c4b.y <= var_55c4b.z)
                 {
-                    highp vec3 var_7a1a5 = var_55c4b;
-                    if (var_7a1a5.z > var_7a1a5.x)
+                    highp vec3 var_4a060 = var_55c4b;
+                    if (var_4a060.z > var_4a060.x)
                     {
-                        var_7a1a5.y = ((var_7a1a5.y - var_7a1a5.x) * var_eb12b) / max(var_7a1a5.z - var_7a1a5.x, 9.9999997473787516355514526367188e-05);
-                        var_7a1a5.z = var_eb12b;
+                        var_4a060.y = ((var_4a060.y - var_4a060.x) * var_eb12b) / max(var_4a060.z - var_4a060.x, 9.9999997473787516355514526367188e-05);
+                        var_4a060.z = var_eb12b;
                     }
                     else
                     {
-                        var_7a1a5 = vec3(var_7a1a5.x, vec2(0.0).x, vec2(0.0).y);
+                        var_4a060.y = 0.0;
+                        var_4a060.z = 0.0;
                     }
-                    var_55c4b = vec3(0.0, var_7a1a5.y, var_7a1a5.z);
+                    var_55c4b = vec3(0.0, var_4a060.y, var_4a060.z);
                 }
                 else
                 {
                     if (var_55c4b.x <= var_55c4b.z)
                     {
-                        highp vec3 var_78006 = var_55c4b.xzy;
-                        if (var_78006.z > var_78006.x)
+                        highp vec3 var_5ca9c = var_55c4b.xzy;
+                        if (var_5ca9c.z > var_5ca9c.x)
                         {
-                            var_78006.y = ((var_78006.y - var_78006.x) * var_eb12b) / max(var_78006.z - var_78006.x, 9.9999997473787516355514526367188e-05);
-                            var_78006.z = var_eb12b;
+                            var_5ca9c.y = ((var_5ca9c.y - var_5ca9c.x) * var_eb12b) / max(var_5ca9c.z - var_5ca9c.x, 9.9999997473787516355514526367188e-05);
+                            var_5ca9c.z = var_eb12b;
                         }
                         else
                         {
-                            var_78006 = vec3(var_78006.x, vec2(0.0).x, vec2(0.0).y);
+                            var_5ca9c.y = 0.0;
+                            var_5ca9c.z = 0.0;
                         }
-                        highp vec3 var_f67ed = vec3(0.0, var_78006.y, var_78006.z);
+                        highp vec3 var_f67ed = vec3(0.0, var_5ca9c.y, var_5ca9c.z);
                         var_55c4b = vec3(var_f67ed.x, var_f67ed.z, var_f67ed.y);
                     }
                     else
                     {
-                        highp vec3 var_c9c31 = var_55c4b.zxy;
-                        if (var_c9c31.z > var_c9c31.x)
+                        highp vec3 var_c8b3a = var_55c4b.zxy;
+                        if (var_c8b3a.z > var_c8b3a.x)
                         {
-                            var_c9c31.y = ((var_c9c31.y - var_c9c31.x) * var_eb12b) / max(var_c9c31.z - var_c9c31.x, 9.9999997473787516355514526367188e-05);
-                            var_c9c31.z = var_eb12b;
+                            var_c8b3a.y = ((var_c8b3a.y - var_c8b3a.x) * var_eb12b) / max(var_c8b3a.z - var_c8b3a.x, 9.9999997473787516355514526367188e-05);
+                            var_c8b3a.z = var_eb12b;
                         }
                         else
                         {
-                            var_c9c31 = vec3(var_c9c31.x, vec2(0.0).x, vec2(0.0).y);
+                            var_c8b3a.y = 0.0;
+                            var_c8b3a.z = 0.0;
                         }
-                        highp vec3 var_315a0 = vec3(0.0, var_c9c31.y, var_c9c31.z);
+                        highp vec3 var_315a0 = vec3(0.0, var_c8b3a.y, var_c8b3a.z);
                         var_55c4b = vec3(var_315a0.y, var_315a0.z, var_315a0.x);
                     }
                 }
@@ -178,49 +179,52 @@ void main() {
             {
                 if (var_55c4b.x <= var_55c4b.z)
                 {
-                    highp vec3 var_2aba9 = var_55c4b.yxz;
-                    if (var_2aba9.z > var_2aba9.x)
+                    highp vec3 var_23dd0 = var_55c4b.yxz;
+                    if (var_23dd0.z > var_23dd0.x)
                     {
-                        var_2aba9.y = ((var_2aba9.y - var_2aba9.x) * var_eb12b) / max(var_2aba9.z - var_2aba9.x, 9.9999997473787516355514526367188e-05);
-                        var_2aba9.z = var_eb12b;
+                        var_23dd0.y = ((var_23dd0.y - var_23dd0.x) * var_eb12b) / max(var_23dd0.z - var_23dd0.x, 9.9999997473787516355514526367188e-05);
+                        var_23dd0.z = var_eb12b;
                     }
                     else
                     {
-                        var_2aba9 = vec3(var_2aba9.x, vec2(0.0).x, vec2(0.0).y);
+                        var_23dd0.y = 0.0;
+                        var_23dd0.z = 0.0;
                     }
-                    highp vec3 var_414ed = vec3(0.0, var_2aba9.y, var_2aba9.z);
+                    highp vec3 var_414ed = vec3(0.0, var_23dd0.y, var_23dd0.z);
                     var_55c4b = vec3(var_414ed.y, var_414ed.x, var_414ed.z);
                 }
                 else
                 {
                     if (var_55c4b.y <= var_55c4b.z)
                     {
-                        highp vec3 var_06895 = var_55c4b.yzx;
-                        if (var_06895.z > var_06895.x)
+                        highp vec3 var_95e2f = var_55c4b.yzx;
+                        if (var_95e2f.z > var_95e2f.x)
                         {
-                            var_06895.y = ((var_06895.y - var_06895.x) * var_eb12b) / max(var_06895.z - var_06895.x, 9.9999997473787516355514526367188e-05);
-                            var_06895.z = var_eb12b;
+                            var_95e2f.y = ((var_95e2f.y - var_95e2f.x) * var_eb12b) / max(var_95e2f.z - var_95e2f.x, 9.9999997473787516355514526367188e-05);
+                            var_95e2f.z = var_eb12b;
                         }
                         else
                         {
-                            var_06895 = vec3(var_06895.x, vec2(0.0).x, vec2(0.0).y);
+                            var_95e2f.y = 0.0;
+                            var_95e2f.z = 0.0;
                         }
-                        highp vec3 var_7a150 = vec3(0.0, var_06895.y, var_06895.z);
+                        highp vec3 var_7a150 = vec3(0.0, var_95e2f.y, var_95e2f.z);
                         var_55c4b = vec3(var_7a150.z, var_7a150.x, var_7a150.y);
                     }
                     else
                     {
-                        highp vec3 var_ef777 = var_55c4b.zyx;
-                        if (var_ef777.z > var_ef777.x)
+                        highp vec3 var_3cb07 = var_55c4b.zyx;
+                        if (var_3cb07.z > var_3cb07.x)
                         {
-                            var_ef777.y = ((var_ef777.y - var_ef777.x) * var_eb12b) / max(var_ef777.z - var_ef777.x, 9.9999997473787516355514526367188e-05);
-                            var_ef777.z = var_eb12b;
+                            var_3cb07.y = ((var_3cb07.y - var_3cb07.x) * var_eb12b) / max(var_3cb07.z - var_3cb07.x, 9.9999997473787516355514526367188e-05);
+                            var_3cb07.z = var_eb12b;
                         }
                         else
                         {
-                            var_ef777 = vec3(var_ef777.x, vec2(0.0).x, vec2(0.0).y);
+                            var_3cb07.y = 0.0;
+                            var_3cb07.z = 0.0;
                         }
-                        highp vec3 var_b1fa1 = vec3(0.0, var_ef777.y, var_ef777.z);
+                        highp vec3 var_b1fa1 = vec3(0.0, var_3cb07.y, var_3cb07.z);
                         var_55c4b = vec3(var_b1fa1.z, var_b1fa1.y, var_b1fa1.x);
                     }
                 }
@@ -256,48 +260,51 @@ void main() {
             {
                 if (var_51615.y <= var_51615.z)
                 {
-                    highp vec3 var_5de66 = var_51615;
-                    if (var_5de66.z > var_5de66.x)
+                    highp vec3 var_8e9bd = var_51615;
+                    if (var_8e9bd.z > var_8e9bd.x)
                     {
-                        var_5de66.y = ((var_5de66.y - var_5de66.x) * var_6b48b) / max(var_5de66.z - var_5de66.x, 9.9999997473787516355514526367188e-05);
-                        var_5de66.z = var_6b48b;
+                        var_8e9bd.y = ((var_8e9bd.y - var_8e9bd.x) * var_6b48b) / max(var_8e9bd.z - var_8e9bd.x, 9.9999997473787516355514526367188e-05);
+                        var_8e9bd.z = var_6b48b;
                     }
                     else
                     {
-                        var_5de66 = vec3(var_5de66.x, vec2(0.0).x, vec2(0.0).y);
+                        var_8e9bd.y = 0.0;
+                        var_8e9bd.z = 0.0;
                     }
-                    var_51615 = vec3(0.0, var_5de66.y, var_5de66.z);
+                    var_51615 = vec3(0.0, var_8e9bd.y, var_8e9bd.z);
                 }
                 else
                 {
                     if (var_51615.x <= var_51615.z)
                     {
-                        highp vec3 var_08601 = var_51615.xzy;
-                        if (var_08601.z > var_08601.x)
+                        highp vec3 var_b942d = var_51615.xzy;
+                        if (var_b942d.z > var_b942d.x)
                         {
-                            var_08601.y = ((var_08601.y - var_08601.x) * var_6b48b) / max(var_08601.z - var_08601.x, 9.9999997473787516355514526367188e-05);
-                            var_08601.z = var_6b48b;
+                            var_b942d.y = ((var_b942d.y - var_b942d.x) * var_6b48b) / max(var_b942d.z - var_b942d.x, 9.9999997473787516355514526367188e-05);
+                            var_b942d.z = var_6b48b;
                         }
                         else
                         {
-                            var_08601 = vec3(var_08601.x, vec2(0.0).x, vec2(0.0).y);
+                            var_b942d.y = 0.0;
+                            var_b942d.z = 0.0;
                         }
-                        highp vec3 var_c98ca = vec3(0.0, var_08601.y, var_08601.z);
+                        highp vec3 var_c98ca = vec3(0.0, var_b942d.y, var_b942d.z);
                         var_51615 = vec3(var_c98ca.x, var_c98ca.z, var_c98ca.y);
                     }
                     else
                     {
-                        highp vec3 var_b368f = var_51615.zxy;
-                        if (var_b368f.z > var_b368f.x)
+                        highp vec3 var_ec4fe = var_51615.zxy;
+                        if (var_ec4fe.z > var_ec4fe.x)
                         {
-                            var_b368f.y = ((var_b368f.y - var_b368f.x) * var_6b48b) / max(var_b368f.z - var_b368f.x, 9.9999997473787516355514526367188e-05);
-                            var_b368f.z = var_6b48b;
+                            var_ec4fe.y = ((var_ec4fe.y - var_ec4fe.x) * var_6b48b) / max(var_ec4fe.z - var_ec4fe.x, 9.9999997473787516355514526367188e-05);
+                            var_ec4fe.z = var_6b48b;
                         }
                         else
                         {
-                            var_b368f = vec3(var_b368f.x, vec2(0.0).x, vec2(0.0).y);
+                            var_ec4fe.y = 0.0;
+                            var_ec4fe.z = 0.0;
                         }
-                        highp vec3 var_6717a = vec3(0.0, var_b368f.y, var_b368f.z);
+                        highp vec3 var_6717a = vec3(0.0, var_ec4fe.y, var_ec4fe.z);
                         var_51615 = vec3(var_6717a.y, var_6717a.z, var_6717a.x);
                     }
                 }
@@ -306,49 +313,52 @@ void main() {
             {
                 if (var_51615.x <= var_51615.z)
                 {
-                    highp vec3 var_f4a92 = var_51615.yxz;
-                    if (var_f4a92.z > var_f4a92.x)
+                    highp vec3 var_cbaec = var_51615.yxz;
+                    if (var_cbaec.z > var_cbaec.x)
                     {
-                        var_f4a92.y = ((var_f4a92.y - var_f4a92.x) * var_6b48b) / max(var_f4a92.z - var_f4a92.x, 9.9999997473787516355514526367188e-05);
-                        var_f4a92.z = var_6b48b;
+                        var_cbaec.y = ((var_cbaec.y - var_cbaec.x) * var_6b48b) / max(var_cbaec.z - var_cbaec.x, 9.9999997473787516355514526367188e-05);
+                        var_cbaec.z = var_6b48b;
                     }
                     else
                     {
-                        var_f4a92 = vec3(var_f4a92.x, vec2(0.0).x, vec2(0.0).y);
+                        var_cbaec.y = 0.0;
+                        var_cbaec.z = 0.0;
                     }
-                    highp vec3 var_1cde4 = vec3(0.0, var_f4a92.y, var_f4a92.z);
+                    highp vec3 var_1cde4 = vec3(0.0, var_cbaec.y, var_cbaec.z);
                     var_51615 = vec3(var_1cde4.y, var_1cde4.x, var_1cde4.z);
                 }
                 else
                 {
                     if (var_51615.y <= var_51615.z)
                     {
-                        highp vec3 var_ff7da = var_51615.yzx;
-                        if (var_ff7da.z > var_ff7da.x)
+                        highp vec3 var_69be8 = var_51615.yzx;
+                        if (var_69be8.z > var_69be8.x)
                         {
-                            var_ff7da.y = ((var_ff7da.y - var_ff7da.x) * var_6b48b) / max(var_ff7da.z - var_ff7da.x, 9.9999997473787516355514526367188e-05);
-                            var_ff7da.z = var_6b48b;
+                            var_69be8.y = ((var_69be8.y - var_69be8.x) * var_6b48b) / max(var_69be8.z - var_69be8.x, 9.9999997473787516355514526367188e-05);
+                            var_69be8.z = var_6b48b;
                         }
                         else
                         {
-                            var_ff7da = vec3(var_ff7da.x, vec2(0.0).x, vec2(0.0).y);
+                            var_69be8.y = 0.0;
+                            var_69be8.z = 0.0;
                         }
-                        highp vec3 var_57c96 = vec3(0.0, var_ff7da.y, var_ff7da.z);
+                        highp vec3 var_57c96 = vec3(0.0, var_69be8.y, var_69be8.z);
                         var_51615 = vec3(var_57c96.z, var_57c96.x, var_57c96.y);
                     }
                     else
                     {
-                        highp vec3 var_11262 = var_51615.zyx;
-                        if (var_11262.z > var_11262.x)
+                        highp vec3 var_d5d20 = var_51615.zyx;
+                        if (var_d5d20.z > var_d5d20.x)
                         {
-                            var_11262.y = ((var_11262.y - var_11262.x) * var_6b48b) / max(var_11262.z - var_11262.x, 9.9999997473787516355514526367188e-05);
-                            var_11262.z = var_6b48b;
+                            var_d5d20.y = ((var_d5d20.y - var_d5d20.x) * var_6b48b) / max(var_d5d20.z - var_d5d20.x, 9.9999997473787516355514526367188e-05);
+                            var_d5d20.z = var_6b48b;
                         }
                         else
                         {
-                            var_11262 = vec3(var_11262.x, vec2(0.0).x, vec2(0.0).y);
+                            var_d5d20.y = 0.0;
+                            var_d5d20.z = 0.0;
                         }
-                        highp vec3 var_64f55 = vec3(0.0, var_11262.y, var_11262.z);
+                        highp vec3 var_64f55 = vec3(0.0, var_d5d20.y, var_d5d20.z);
                         var_51615 = vec3(var_64f55.z, var_64f55.y, var_64f55.x);
                     }
                 }

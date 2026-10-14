@@ -74,7 +74,7 @@
 * - uniform vec4 DirectionalLightSourceDiffuseColorAndIlluminance;
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
-* - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
+* - uniform vec4 DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
 * - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
@@ -155,12 +155,8 @@ out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
 #ifdef NO_VARIETY__OFF
-    vec4 var_6c969 = a_color0;
-#endif
-    vec2 var_49187 = a_texcoord0;
-#ifdef NO_VARIETY__OFF
-    vec2 var_181bc = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
-    var_181bc.x += ((var_6c969.x * 255.0) * UVOffsetAndScale.z);
+    vec2 var_e7b5c = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
+    var_e7b5c.x += ((a_color0.x * 255.0) * UVOffsetAndScale.z);
 #endif
     vec3 var_5bfc0 = a_position + PositionBaseOffset.xyz;
     vec3 var_4108f = vec3(30.0);
@@ -172,34 +168,36 @@ void main() {
     var_67767.y -= SubPixelOffset.y;
     mat4 var_a3f1d = u_proj;
     var_a3f1d[2] = var_67767;
-    vec4 var_1e5d3 = var_a3f1d * (u_view * vec4(var_45f30, 1.0));
-    vec4 var_8dd4e = var_1e5d3;
+    vec4 var_0d6d9 = var_a3f1d * (u_view * vec4(var_45f30, 1.0));
+    vec4 var_8dd4e = var_0d6d9;
     mat4 var_1d0ff = u_proj;
     vec4 var_f0fcc = var_1d0ff[2];
     var_f0fcc.x += SubPixelOffset.x;
     var_f0fcc.y -= SubPixelOffset.y;
     mat4 var_3a7e1 = u_proj;
     var_3a7e1[2] = var_f0fcc;
-    vec4 var_ac686 = var_3a7e1 * (u_view * vec4(var_45f30 + (Velocity.xyz * Dimensions.y), 1.0));
-    vec4 var_fe173 = var_ac686;
-    vec2 var_67f44 = (var_ac686.xy / vec2(var_fe173.w)) - (var_1e5d3.xy / vec2(var_8dd4e.w));
-    vec4 var_4c962 = mix(var_ac686, var_1e5d3, vec4(var_49187.y));
-    vec2 var_9d8ca = var_4c962.xy + ((normalize(vec2(-var_67f44.y, var_67f44.x)) * (0.5 - var_49187.x)) * Dimensions.x);
-    vec4 var_36755 = vec4(var_9d8ca.x, var_9d8ca.y, var_4c962.z, var_4c962.w);
-    vec4 var_3676c = vec4(var_9d8ca.x, var_9d8ca.y, var_4c962.z, var_4c962.w);
+    vec4 var_54b08 = var_3a7e1 * (u_view * vec4(var_45f30 + (Velocity.xyz * Dimensions.y), 1.0));
+    vec4 var_fe173 = var_54b08;
+    vec2 var_42565 = (var_54b08.xy / vec2(var_fe173.w)) - (var_0d6d9.xy / vec2(var_8dd4e.w));
+    vec4 var_a54f8 = mix(var_54b08, var_0d6d9, vec4(a_texcoord0.y));
+    vec4 var_6e68b = var_a54f8;
+    vec2 var_32c13 = var_a54f8.xy + ((normalize(vec2(-var_42565.y, var_42565.x)) * (0.5 - a_texcoord0.x)) * Dimensions.x);
+    var_6e68b.x = var_32c13.x;
+    var_6e68b.y = var_32c13.y;
+    vec4 var_52536 = var_6e68b;
     vec3 var_694a1 = a_position + PositionBaseOffset.xyz;
     vec3 var_cbc55 = vec3(30.0);
     v_color0 = a_color0;
-    v_fog = vec4(FogColor.xyz, clamp(((var_36755.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
-    v_ndcPosition = vec4(var_9d8ca.x, var_9d8ca.y, var_4c962.z, var_4c962.w).xyz / vec3(var_3676c.w);
+    v_fog = vec4(FogColor.xyz, clamp(((var_6e68b.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
+    v_ndcPosition = var_6e68b.xyz / vec3(var_52536.w);
     v_occlusionHeight = (var_91624.y + (ViewPosition.y - 0.5)) * 0.0039215688593685626983642578125;
     v_occlusionUV = ((var_45f30.xz + ViewPosition.xz) * 0.015625) + vec2(0.5);
 #ifdef NO_VARIETY__OFF
-    v_texcoord0 = var_181bc;
+    v_texcoord0 = var_e7b5c;
 #endif
 #ifdef NO_VARIETY__ON
     v_texcoord0 = UVOffsetAndScale.xy + (a_texcoord0 * UVOffsetAndScale.zw);
 #endif
     v_worldPos = (vec3(var_694a1.x - (var_cbc55.x * trunc(var_694a1.x / var_cbc55.x)), var_694a1.y - (var_cbc55.y * trunc(var_694a1.y / var_cbc55.y)), var_694a1.z - (var_cbc55.z * trunc(var_694a1.z / var_cbc55.z))) - vec3(15.0)) + PositionForwardOffset.xyz;
-    gl_Position = vec4(var_9d8ca.x, var_9d8ca.y, var_4c962.z, var_4c962.w);
+    gl_Position = var_6e68b;
 }

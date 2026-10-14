@@ -99,22 +99,19 @@ void main() {
     var_dc61b.y *= TileLightColor.w;
 #endif
 #ifdef INSTANCING__ON
-    vec4 var_78b44 = i_data1;
-    vec4 var_e67a8 = i_data2;
-    vec4 var_1b7f0 = i_data3;
-    mat4 var_89150;
-    var_89150[0] = vec4(var_78b44.x, var_e67a8.x, var_1b7f0.x, 0.0);
-    var_89150[1] = vec4(var_78b44.y, var_e67a8.y, var_1b7f0.y, 0.0);
-    var_89150[2] = vec4(var_78b44.z, var_e67a8.z, var_1b7f0.z, 0.0);
-    var_89150[3] = vec4(var_78b44.w, var_e67a8.w, var_1b7f0.w, 1.0);
+    mat4 var_8310c;
+    var_8310c[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_8310c[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_8310c[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_8310c[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
 #endif
 #if defined(FANCY__ON) && defined(INSTANCING__OFF)
-    mat4 var_89150 = u_model[0] * Bones[int(a_indices)];
-    vec3 var_dc61b = normalize(var_89150 * vec4(a_normal.xyz, 0.0)).xyz;
+    mat4 var_8310c = u_model[0] * Bones[int(a_indices)];
+    vec3 var_dc61b = normalize(var_8310c * vec4(a_normal.xyz, 0.0)).xyz;
     var_dc61b.y *= TileLightColor.w;
 #endif
 #if defined(FANCY__ON) || defined(INSTANCING__ON)
-    vec4 var_04231 = var_89150 * vec4(a_position, 1.0);
+    vec4 var_04231 = var_8310c * vec4(a_position, 1.0);
 #endif
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
