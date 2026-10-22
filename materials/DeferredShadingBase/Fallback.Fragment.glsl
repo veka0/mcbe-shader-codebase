@@ -36,7 +36,7 @@
 * - uniform vec4 PointLightAttenuationWindow;
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
-* - uniform vec4 PointLightPreCalcValues;
+* - uniform vec4 PointLightPreCalcValuesAndAmbientScalar;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
@@ -50,7 +50,6 @@
 * - uniform vec4 SubPixelOffset;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
-* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 WaterSurfaceEnabledAndExtinctionDistShift;

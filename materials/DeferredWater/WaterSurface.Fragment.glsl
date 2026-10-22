@@ -84,7 +84,7 @@
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform vec4 PointLightPreCalcValues;
+* - uniform vec4 PointLightPreCalcValuesAndAmbientScalar;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
@@ -101,7 +101,6 @@
 * - uniform vec4 SubsurfaceScatteringContributionAndDiffuseWrapValueAndFalloffScale;
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
-* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -196,7 +195,7 @@ uniform highp vec4 NdLFloor;
 uniform highp vec4 PointLightAttenuationWindow;
 uniform highp vec4 PointLightAttenuationWindowEnabled;
 uniform highp vec4 PointLightNdLFloor;
-uniform highp vec4 PointLightPreCalcValues;
+uniform highp vec4 PointLightPreCalcValuesAndAmbientScalar;
 uniform highp vec4 PointLightShadowAtlasResolution;
 uniform highp vec4 PointLightShadowParams1;
 #endif
@@ -212,9 +211,6 @@ uniform highp vec4 SkyZenithColor;
 uniform highp vec4 SubPixelOffset;
 uniform highp vec4 SunColor;
 uniform highp vec4 SunDir;
-#ifdef POINT_LIGHT_SHADING__ON
-uniform highp vec4 TransitioningAmbientScalar;
-#endif
 uniform highp vec4 UndergroundFogColor;
 uniform highp vec4 VolumeDimensions;
 uniform highp vec4 VolumeNearFar;
@@ -520,11 +516,11 @@ void func_69e0d(inout highp float arg_4edfb, inout highp vec3 arg_8685c, inout h
     arg_8685c = (((((((vec3(0.0199999995529651641845703125) + (vec3(0.980000019073486328125) * ((loc_fb0dd * loc_fb0dd) * loc_7fbf1))) * (loc_49fe9 / ((loc_77d95 * loc_77d95) * 3.1415927410125732421875))) * ((loc_16d6e / (((loc_16d6e * (1.0 - loc_9fec4)) + loc_9fec4) + 9.9999997473787516355514526367188e-05)) * (loc_3be74 / (((loc_3be74 * (1.0 - loc_9fec4)) + loc_9fec4) + 9.9999997473787516355514526367188e-05)))) / vec3(((4.0 * loc_3be74) * loc_16d6e) + 9.9999997473787516355514526367188e-05)) * loc_3be74) * loc_ec2b3) * (((DirectionalLightSourceDiffuseColorAndIlluminance.xyz * loc_4e86d.w) * 1.0) * DirectionalLightToggleAndMaxCascadesPerLightAndGPUBlockLightingEnabled.x)) * DiffuseSpecularEmissiveAmbientTermToggles.y;
 }
 #ifdef POINT_LIGHT_SHADING__ON
-void func_06412(inout highp vec3 arg_8d32a, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
+void func_e3b7a(inout highp vec3 arg_8d32a, inout int arg_e45b8, inout int arg_fadf1, inout bool arg_d7f4c) {
     highp vec3 loc_f1110 = arg_8d32a;
     highp vec3 loc_75f4e = ClusterDimensions.xyz;
     highp vec2 loc_7c1c9 = ClusterDepthBounds.xy;
-    highp vec4 loc_c5992 = PointLightPreCalcValues;
+    highp vec4 loc_21c5a = PointLightPreCalcValuesAndAmbientScalar;
     highp float loc_ac0eb = -loc_f1110.z;
     highp float loc_9e40d = loc_ac0eb * ClusterDepthBounds.z;
     highp float loc_fbce7 = loc_9e40d * ClusterDepthBounds.w;
@@ -542,7 +538,7 @@ void func_06412(inout highp vec3 arg_8d32a, inout int arg_e45b8, inout int arg_f
         }
         else
         {
-            loc_a71e8 = min(floor(clamp((log2(loc_ac0eb) - loc_c5992.z) * loc_c5992.x, 0.0, 1.0) * (loc_75f4e.z - 2.0)) + 2.0, loc_75f4e.z - 1.0);
+            loc_a71e8 = min(floor(clamp((log2(loc_ac0eb) - loc_21c5a.z) * loc_21c5a.x, 0.0, 1.0) * (loc_75f4e.z - 2.0)) + 2.0, loc_75f4e.z - 1.0);
         }
         loc_bee80 = loc_a71e8;
     }
@@ -784,7 +780,7 @@ void func_1cb59(inout highp vec3 arg_33c3b, inout highp vec3 arg_534d1, inout hi
     bool loc_a0bb1;
     int loc_79315;
     int loc_822f5;
-    func_06412(arg_33c3b, loc_822f5, loc_79315, loc_a0bb1);
+    func_e3b7a(arg_33c3b, loc_822f5, loc_79315, loc_a0bb1);
     if (!loc_a0bb1)
     {
         arg_534d1 = vec3(0.0);
@@ -819,10 +815,10 @@ void func_1cb59(inout highp vec3 arg_33c3b, inout highp vec3 arg_534d1, inout hi
     }
     arg_534d1 = loc_95dc0;
 }
-void func_2f223(inout highp vec3 arg_6cd76, inout highp vec3 arg_3aadd, inout highp vec3 arg_b40e7, inout highp vec3 arg_4225e, inout highp vec3 arg_4f097, inout highp vec3 arg_9ffae, inout highp vec3 arg_93b0c, inout highp vec2 arg_8115d, inout highp vec3 arg_407d2) {
+void func_72bfd(inout highp vec3 arg_4b291, inout highp vec3 arg_f72e9, inout highp vec3 arg_b40e7, inout highp vec3 arg_4225e, inout highp vec3 arg_4f097, inout highp vec3 arg_9ffae, inout highp vec3 arg_93b0c, inout highp vec2 arg_8115d, inout highp vec3 arg_407d2) {
     if (!(DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle.z != 0.0))
     {
-        arg_6cd76 = arg_3aadd;
+        arg_4b291 = arg_f72e9;
         return;
     }
     highp vec3 loc_2eb4f;
@@ -834,9 +830,9 @@ void func_2f223(inout highp vec3 arg_6cd76, inout highp vec3 arg_3aadd, inout hi
     {
         loc_2eb4f = arg_4225e;
     }
-    highp vec3 loc_1c263;
-    func_1cb59(arg_4f097, loc_1c263, arg_9ffae, arg_93b0c, arg_8115d, arg_4225e, loc_2eb4f, arg_407d2);
-    arg_6cd76 = arg_3aadd + (loc_1c263 * (1.0 - TransitioningAmbientScalar.x));
+    highp vec3 loc_7a844;
+    func_1cb59(arg_4f097, loc_7a844, arg_9ffae, arg_93b0c, arg_8115d, arg_4225e, loc_2eb4f, arg_407d2);
+    arg_4b291 = arg_f72e9 + (loc_7a844 * (1.0 - PointLightPreCalcValuesAndAmbientScalar.w));
 }
 #endif
 void func_4efb5(inout highp float arg_592e1, inout highp float arg_38961) {
@@ -964,7 +960,7 @@ void main() {
     func_69e0d(var_c495d, var_ea1f5, var_d9513, var_cfdac, var_ee319, var_cbd15, var_614bf, var_4dee4);
 #ifdef POINT_LIGHT_SHADING__ON
     highp vec3 var_20622;
-    func_2f223(var_20622, var_ea1f5, var_85d40, var_cf6e2, var_67861, var_d9513, var_614bf, var_4dee4, var_ee319);
+    func_72bfd(var_20622, var_ea1f5, var_85d40, var_cf6e2, var_67861, var_d9513, var_614bf, var_4dee4, var_ee319);
 #endif
     highp float var_5ca3a = clamp(((var_84584 * 0.062745101749897003173828125) - IBLSkyFadeParameters.y) / max(IBLSkyFadeParameters.x - IBLSkyFadeParameters.y, 1.0), 0.0, 1.0);
     highp float var_eceb3 = clamp(1.0 - max(dot(var_614bf, var_d9513), 0.0), 0.0, 1.0);

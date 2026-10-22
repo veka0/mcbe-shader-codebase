@@ -102,7 +102,7 @@
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform vec4 PointLightPreCalcValues;
+* - uniform vec4 PointLightPreCalcValuesAndAmbientScalar;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
@@ -119,7 +119,6 @@
 * - uniform vec4 SunDir;
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
-* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -148,10 +147,10 @@ in vec4 i_data3;
 #endif
 out vec3 v_bitangent;
 out vec4 v_color0;
+out vec3 v_normal;
 out vec3 v_prevWorldPos;
 out vec3 v_tangent;
 out vec2 v_texcoord0;
-out vec3 v_viewSpaceNormal;
 out vec3 v_worldPos;
 void main() {
 #ifdef INSTANCING__OFF
@@ -167,10 +166,10 @@ void main() {
 #endif
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * a_tangent.w, 0.0)).xyz;
     v_color0 = a_color0;
+    v_normal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_prevWorldPos = (u_model[0] * vec4(a_position, 1.0)).xyz;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = a_texcoord0;
-    v_viewSpaceNormal = (u_model[0] * vec4(a_normal.xyz, 0.0)).xyz;
     v_worldPos = var_9b079.xyz;
     gl_Position = u_viewProj * vec4(var_9b079.xyz, 1.0);
 }

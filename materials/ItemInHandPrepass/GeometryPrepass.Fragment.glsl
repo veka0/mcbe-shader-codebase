@@ -134,7 +134,7 @@ void main() {
         var_08281.w = 0.0;
     }
     highp vec4 var_7cd00 = vec4(BlockLightColor.xyz, 0.0);
-    highp vec4 var_224c9 = var_7cd00;
+    highp vec4 var_73c41 = var_7cd00;
     highp vec4 var_d93e5 = vec4(var_08281.xyz, var_08281.w);
     highp vec4 var_33385 = vec4(0.0);
     var_d93e5.x = var_08281.x;
@@ -191,10 +191,13 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_34fa8 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_4c32f = uint(floor(var_224c9.w * 255.0));
-    uvec2 var_b8428 = uvec2(uint(clamp(v_mers.z, 0.0, 1.0) * 255.0) & 255u, uint(clamp(v_mers.y, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_b8428.x << 8u) | var_b8428.y, var_34fa8.x, var_34fa8.y, (uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0) | uint(((var_4c32f & 1u) != 0u) ? 256 : 0)) | uint(((var_4c32f & 2u) != 0u) ? 512 : 0));
+    uvec2 var_a74c0 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    highp vec3 var_0b329 = normalize(v_normal);
+    bvec3 var_50211 = greaterThanEqual(abs(var_0b329), vec3(0.9900000095367431640625));
+    ivec3 var_f1fb7 = ivec3(any(lessThan(var_0b329, vec3(-0.5))) ? (-1) : 1) * ivec3(int(var_50211.x), int(var_50211.y), int(var_50211.z));
+    ivec3 var_6364f = abs(var_f1fb7);
+    uvec2 var_ea3d7 = uvec2(uint(clamp(v_mers.z, 0.0, 1.0) * 255.0) & 255u, uint(clamp(v_mers.y, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_ea3d7.x << 8u) | var_ea3d7.y, var_a74c0.x, var_a74c0.y, (uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0) | uint(((uint(floor(var_73c41.w * 255.0)) & 1u) != 0u) ? 256 : 0)) | ((((uint(var_6364f.x + var_6364f.z) | uint((var_6364f.y + var_6364f.z) << 1)) | uint(int(any(equal(vec3(var_f1fb7), vec3(-1.0)))) << 2)) & 7u) << uint(9)));
     bgfx_FragData1 = var_d93e5;
     bgfx_FragData2 = var_33385;
 }

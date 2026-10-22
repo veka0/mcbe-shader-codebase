@@ -132,7 +132,7 @@
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform vec4 PointLightPreCalcValues;
+* - uniform vec4 PointLightPreCalcValuesAndAmbientScalar;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
@@ -156,7 +156,6 @@
 * - uniform vec4 TileLightIntensity;
 * - uniform vec4 Time;
 * - uniform vec4 TintedAlphaTestEnabled;
-* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UVAnimation;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 UseAlphaRewrite;

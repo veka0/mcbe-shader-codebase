@@ -86,7 +86,7 @@
 * - uniform vec4 PointLightAttenuationWindowEnabled;
 * - uniform mat4 PointLightInvProj;
 * - uniform vec4 PointLightNdLFloor;
-* - uniform vec4 PointLightPreCalcValues;
+* - uniform vec4 PointLightPreCalcValuesAndAmbientScalar;
 * - uniform mat4 PointLightProj;
 * - uniform vec4 PointLightShadowAtlasResolution;
 * - uniform vec4 PointLightShadowParams1;
@@ -102,7 +102,6 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
-* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;
@@ -124,6 +123,7 @@ uniform mat4 u_viewProj;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 FogColor;
 in vec4 a_color0;
+in vec3 a_normal;
 in vec2 a_texcoord1;
 in vec3 a_position;
 in vec2 a_texcoord0;
@@ -161,7 +161,7 @@ void main() {
     v_color0 = a_color0;
     v_coloredLighting = vec3(var_36a75.xyz) * vec3(0.0039215688593685626983642578125);
     v_fog = vec4(FogColor.xyz, clamp(((var_b4024.z / FogAndDistanceControl.z) - FogAndDistanceControl.x) / (FogAndDistanceControl.y - FogAndDistanceControl.x), 0.0, 1.0));
-    v_normal = vec3(0.0);
+    v_normal = a_normal;
     v_texcoord0 = a_texcoord0;
     v_vanillaLighting = vec2(float((var_fc127.w >> uint(4)) & 15u) * 0.066666670143604278564453125, float(var_0245b.w & 15u) * 0.066666670143604278564453125);
     v_worldPos = var_12727.xyz;

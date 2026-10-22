@@ -817,7 +817,7 @@ void main() {
     highp vec4 var_58731 = texture(s_MatTexture, v_texcoord0);
     highp float var_666cd = var_58731.x;
     highp vec4 var_41868 = vec4(v_lightColor, 0.0);
-    highp vec4 var_224c9 = var_41868;
+    highp vec4 var_b74a2 = var_41868;
     highp vec4 var_e4f56 = vec4(var_666cd, var_58731.yz, 1.0);
     highp vec4 var_33385 = vec4(0.0);
     var_e4f56.x = var_666cd;
@@ -874,10 +874,13 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_29510 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_80fb0 = uint(floor(var_224c9.w * 255.0));
-    uvec2 var_565fa = uvec2(uint(clamp(var_08af3, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_de0d6, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_565fa.x << 8u) | var_565fa.y, var_29510.x, var_29510.y, (uint(clamp(v_lightmapUV.y, 0.0, 1.0) * 255.0) | uint(((var_80fb0 & 1u) != 0u) ? 256 : 0)) | uint(((var_80fb0 & 2u) != 0u) ? 512 : 0));
+    uvec2 var_d91c4 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    highp vec3 var_0b329 = normalize(v_normal);
+    bvec3 var_50211 = greaterThanEqual(abs(var_0b329), vec3(0.9900000095367431640625));
+    ivec3 var_9d745 = ivec3(any(lessThan(var_0b329, vec3(-0.5))) ? (-1) : 1) * ivec3(int(var_50211.x), int(var_50211.y), int(var_50211.z));
+    ivec3 var_11e7d = abs(var_9d745);
+    uvec2 var_56ace = uvec2(uint(clamp(var_08af3, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_de0d6, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_56ace.x << 8u) | var_56ace.y, var_d91c4.x, var_d91c4.y, (uint(clamp(v_lightmapUV.y, 0.0, 1.0) * 255.0) | uint(((uint(floor(var_b74a2.w * 255.0)) & 1u) != 0u) ? 256 : 0)) | ((((uint(var_11e7d.x + var_11e7d.z) | uint((var_11e7d.y + var_11e7d.z) << 1)) | uint(int(any(equal(vec3(var_9d745), vec3(-1.0)))) << 2)) & 7u) << uint(9)));
     bgfx_FragData1 = var_e4f56;
     bgfx_FragData2 = var_33385;
 }

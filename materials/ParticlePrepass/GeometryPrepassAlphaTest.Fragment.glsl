@@ -172,7 +172,7 @@ void main() {
         var_9e9f5 = v_normal;
     }
     highp vec4 var_5fd9d = vec4(v_coloredLighting, 0.0);
-    highp vec4 var_224c9 = var_5fd9d;
+    highp vec4 var_28316 = var_5fd9d;
     highp vec4 var_d93e5 = vec4(var_3fc75.xyz, var_3fc75.w);
     highp vec4 var_33385 = vec4(0.0);
     var_d93e5.x = var_3fc75.x;
@@ -229,10 +229,13 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_44ccf = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_ef54d = uint(floor(var_224c9.w * 255.0));
-    uvec2 var_bb252 = uvec2(uint(clamp(var_245c0, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_0d3d5, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_bb252.x << 8u) | var_bb252.y, var_44ccf.x, var_44ccf.y, (uint(clamp(v_vanillaLighting.y, 0.0, 1.0) * 255.0) | uint(((var_ef54d & 1u) != 0u) ? 256 : 0)) | uint(((var_ef54d & 2u) != 0u) ? 512 : 0));
+    uvec2 var_68c40 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    highp vec3 var_0b329 = normalize(v_normal);
+    bvec3 var_50211 = greaterThanEqual(abs(var_0b329), vec3(0.9900000095367431640625));
+    ivec3 var_4fd29 = ivec3(any(lessThan(var_0b329, vec3(-0.5))) ? (-1) : 1) * ivec3(int(var_50211.x), int(var_50211.y), int(var_50211.z));
+    ivec3 var_a4c5e = abs(var_4fd29);
+    uvec2 var_536b5 = uvec2(uint(clamp(var_245c0, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_0d3d5, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_536b5.x << 8u) | var_536b5.y, var_68c40.x, var_68c40.y, (uint(clamp(v_vanillaLighting.y, 0.0, 1.0) * 255.0) | uint(((uint(floor(var_28316.w * 255.0)) & 1u) != 0u) ? 256 : 0)) | ((((uint(var_a4c5e.x + var_a4c5e.z) | uint((var_a4c5e.y + var_a4c5e.z) << 1)) | uint(int(any(equal(vec3(var_4fd29), vec3(-1.0)))) << 2)) & 7u) << uint(9)));
     bgfx_FragData1 = var_d93e5;
     bgfx_FragData2 = var_33385;
 }
