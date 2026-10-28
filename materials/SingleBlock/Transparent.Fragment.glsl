@@ -77,6 +77,7 @@ in highp vec3 v_worldPos;
 layout(location = 0) out highp vec4 bgfx_FragData0;
 void main() {
     highp vec4 var_4e612 = v_color;
+    highp vec4 var_24474 = v_fog;
     highp vec4 var_75b96 = texture(s_MatTexture, v_texCoords);
 #ifndef ALPHA_TEST__OFF
     highp vec2 var_ab580 = DitherParams2[1].xy;
@@ -128,6 +129,5 @@ void main() {
         var_75b96 = (CurrentColor * v_color) * var_75b96;
     }
     var_75b96.w *= HudOpacity.x;
-    highp vec4 var_24474 = v_fog;
     bgfx_FragData0 = vec4(mix(var_75b96.xyz, v_fog.xyz, vec3(var_24474.w)), var_75b96.w);
 }

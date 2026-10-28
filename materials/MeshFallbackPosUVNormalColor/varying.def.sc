@@ -2,7 +2,7 @@ vec4 a_color0    : COLOR0;
 vec4 a_normal    : NORMAL;
 vec3 a_position  : POSITION;
 vec2 a_texcoord0 : TEXCOORD0;
-#if !defined(DEPTH_ONLY_ALPHA_TEST_PASS) && !defined(RASTERIZED_ALPHA_TEST_PASS)
+#ifndef DEPTH_ONLY_ALPHA_TEST_PASS
 
 vec4          v_clipPosition : COLOR3;
 vec4          v_color        : COLOR0;

@@ -44,7 +44,15 @@
 
 precision mediump float;
 precision highp int;
-layout(location = 0) out highp vec4 bgfx_FragData0;
+uniform highp sampler2D s_MatTexture;
+uniform highp vec4 DiscardValue;
+centroid in highp vec2 v_texCoords;
+layout(location = 0) out highp vec4 bgfx_FragColor;
 void main() {
-    bgfx_FragData0 = vec4(0.0);
+    highp vec4 var_cf22a = texture(s_MatTexture, v_texCoords);
+    if (var_cf22a.w < DiscardValue.x)
+    {
+        discard;
+    }
+    bgfx_FragColor = vec4(0.0);
 }

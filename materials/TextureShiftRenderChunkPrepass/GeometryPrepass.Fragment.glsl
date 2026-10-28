@@ -74,7 +74,7 @@ struct TextureShiftBuffer {
 };
 
 layout(binding = 3, std430) buffer s_PBRData { PBRTextureData PBRData[]; } var_6f249;
-layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_90f76;
+layout(binding = 4, std430) buffer s_TextureShiftBufferData { TextureShiftBuffer TextureShiftBufferData[]; } var_77e65;
 uniform highp mat4 u_prevViewProj;
 uniform highp mat4 u_viewProj;
 uniform highp sampler2D s_MatTexture;
@@ -93,15 +93,15 @@ layout(location = 0) out uvec4 bgfx_FragData0;
 layout(location = 1) out highp vec4 bgfx_FragData1;
 layout(location = 2) out highp vec4 bgfx_FragData2;
 void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp float arg_0da03) {
-    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_90f76.TextureShiftBufferData[arg_651a0].noiseSpread);
-    if (var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
+    highp float loc_47c38 = 1.0 - (arg_c2b61.x * var_77e65.TextureShiftBufferData[arg_651a0].noiseSpread);
+    if (var_77e65.TextureShiftBufferData[arg_651a0].localShiftLength == 0.0)
     {
-        arg_0da03 = step(loc_47c38, var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha);
+        arg_0da03 = step(loc_47c38, var_77e65.TextureShiftBufferData[arg_651a0].globalAlpha);
         return;
     }
     else
     {
-        arg_0da03 = 1.0 - clamp((loc_47c38 - var_90f76.TextureShiftBufferData[arg_651a0].globalAlpha) / var_90f76.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
+        arg_0da03 = 1.0 - clamp((loc_47c38 - var_77e65.TextureShiftBufferData[arg_651a0].globalAlpha) / var_77e65.TextureShiftBufferData[arg_651a0].localShiftLength, 0.0, 1.0);
         return;
     }
 }
@@ -335,16 +335,29 @@ void main() {
     highp vec4 var_3f821 = v_color0;
     highp vec2 var_49a9d = v_ditheringAndMaskTinting;
     highp vec2 var_1614a = v_textureShift;
-    int var_34ad7 = int(var_1614a.y * 65535.0);
-    highp float var_29631;
-    func_f1932(var_1614a, var_34ad7, var_29631);
+    int var_1af3d = int(var_1614a.y * 65535.0);
+    highp float var_c5183;
+    func_f1932(var_1614a, var_1af3d, var_c5183);
+    highp vec2 var_2f8a8 = v_texcoord0;
+    int var_39955;
+    if (var_c5183 < 0.5)
+    {
+        var_2f8a8 = vec2(var_2f8a8.x + var_77e65.TextureShiftBufferData[var_1af3d].preUV0, var_2f8a8.y + var_77e65.TextureShiftBufferData[var_1af3d].preUV1);
+        var_39955 = (var_77e65.TextureShiftBufferData[var_1af3d].packedPBRId >> 16) & 65535;
+    }
+    else
+    {
+        var_2f8a8 = vec2(var_2f8a8.x + var_77e65.TextureShiftBufferData[var_1af3d].postUV0, var_2f8a8.y + var_77e65.TextureShiftBufferData[var_1af3d].postUV1);
+        var_39955 = var_77e65.TextureShiftBufferData[var_1af3d].packedPBRId & 65535;
+    }
+    var_49a9d = v_ditheringAndMaskTinting;
     highp vec2 var_f486c = v_texcoord0;
-    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1));
-    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_f486c.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1));
+    highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_77e65.TextureShiftBufferData[var_1af3d].preUV0, var_f486c.y + var_77e65.TextureShiftBufferData[var_1af3d].preUV1));
+    highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_77e65.TextureShiftBufferData[var_1af3d].postUV0, var_f486c.y + var_77e65.TextureShiftBufferData[var_1af3d].postUV1));
     highp vec4 var_da3c1 = var_4b671;
     highp vec4 var_e65e5 = var_2e873;
     highp float var_7dfb9;
-    if (var_29631 > 0.5)
+    if (var_c5183 > 0.5)
     {
         var_7dfb9 = var_e65e5.w;
     }
@@ -352,20 +365,7 @@ void main() {
     {
         var_7dfb9 = var_da3c1.w;
     }
-    highp vec2 var_2f8a8 = v_texcoord0;
-    int var_39955;
-    if (var_29631 < 0.5)
-    {
-        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].preUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].preUV1);
-        var_39955 = (var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId >> 16) & 65535;
-    }
-    else
-    {
-        var_2f8a8 = vec2(var_2f8a8.x + var_90f76.TextureShiftBufferData[var_34ad7].postUV0, var_2f8a8.y + var_90f76.TextureShiftBufferData[var_34ad7].postUV1);
-        var_39955 = var_90f76.TextureShiftBufferData[var_34ad7].packedPBRId & 65535;
-    }
-    var_49a9d = v_ditheringAndMaskTinting;
-    highp vec4 var_c2c1a = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_29631)), var_7dfb9);
+    highp vec4 var_c2c1a = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_c5183)), var_7dfb9);
     if (var_49a9d.y != 0.0)
     {
         highp vec3 var_5e4d7 = mix(var_c2c1a.xyz, var_c2c1a.xyz * v_color0.xyz, vec3(var_c2c1a.w)).xyz * var_3f821.w;
@@ -385,9 +385,9 @@ void main() {
     highp float var_fcacf;
     func_b5a96(var_39955, var_fcacf, var_5e90d, var_fa861, var_d1699, var_b9e8b, var_2f8a8);
     highp vec4 var_08b04 = vec4(var_c2c1a.xyz, var_c2c1a.w);
-    highp vec2 var_26e09 = v_lightmapUV;
+    highp vec2 var_4686c = v_lightmapUV;
     highp vec4 var_41868 = vec4(v_lightColor, 0.0);
-    highp vec4 var_cbce5 = var_41868;
+    highp vec4 var_224c9 = var_41868;
     highp vec4 var_6bfdc = vec4(var_08b04.x, var_08b04.y, var_08b04.z, var_08b04.w);
     highp float var_7aa46;
     func_fb7ab(var_fcacf, var_d1699, var_7aa46);
@@ -416,18 +416,17 @@ void main() {
     var_96bda = var_d0ebc;
     highp vec3 var_d13a4 = var_41868.xyz;
     highp vec3 var_05dbb = var_d13a4;
-    highp vec3 var_774df;
-    if ((((var_05dbb.x + var_05dbb.y) + var_05dbb.z) < 9.9999997473787516355514526367188e-05) && (var_26e09.x > 9.9999997473787516355514526367188e-05))
+    highp vec3 var_eb137;
+    if ((((var_05dbb.x + var_05dbb.y) + var_05dbb.z) < 9.9999997473787516355514526367188e-05) && (var_4686c.x > 9.9999997473787516355514526367188e-05))
     {
-        highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_9a19a = var_26e09.x * var_26e09.x;
-        var_774df = clamp(vec3(var_9a19a + (var_0bc6f.x * var_0bc6f.w), (var_9a19a * ((((var_9a19a * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_9a19a * (((var_9a19a * var_9a19a) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        highp float var_bc033 = var_4686c.x * var_4686c.x;
+        var_eb137 = clamp(vec3(var_bc033, var_bc033 * ((((var_bc033 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_bc033 * (((var_bc033 * var_bc033) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_774df = var_d13a4;
+        var_eb137 = var_d13a4;
     }
-    highp vec3 var_8f0e5 = var_774df * vec3(0.16666667163372039794921875);
+    highp vec3 var_8f0e5 = var_eb137 * vec3(0.16666667163372039794921875);
     highp vec4 var_f46ce = vec4(var_8f0e5, 0.0039215688593685626983642578125);
     highp vec2 var_8a7dd = max(var_f46ce.xy, var_f46ce.zw);
     highp float var_a7109 = ceil(clamp(max(var_8a7dd.x, var_8a7dd.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;
@@ -436,19 +435,10 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_ef8ed = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_af2f9 = uint(clamp(var_26e09.y, 0.0, 1.0) * 255.0);
-    uint var_d3959;
-    if (var_cbce5.w != 0.0)
-    {
-        var_d3959 = var_af2f9 | 256u;
-    }
-    else
-    {
-        var_d3959 = var_af2f9;
-    }
-    uvec2 var_e14de = uvec2(uint(clamp(var_5e90d, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_fa861, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_e14de.x << 8u) | var_e14de.y, var_ef8ed.x, var_ef8ed.y, var_d3959);
+    uvec2 var_aa21b = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    uint var_a7a92 = uint(floor(var_224c9.w * 255.0));
+    uvec2 var_85a42 = uvec2(uint(clamp(var_5e90d, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_fa861, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_85a42.x << 8u) | var_85a42.y, var_aa21b.x, var_aa21b.y, (uint(clamp(var_4686c.y, 0.0, 1.0) * 255.0) | uint(((var_a7a92 & 1u) != 0u) ? 256 : 0)) | uint(((var_a7a92 & 2u) != 0u) ? 512 : 0));
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }

@@ -325,7 +325,7 @@ void main() {
         var_e89aa = v_normal;
     }
     highp vec4 var_39c01 = vec4(var_f710c, var_89833.w);
-    highp vec4 var_893a8 = BlockLightColor;
+    highp vec4 var_d34a5 = BlockLightColor;
     highp vec4 var_6bfdc = vec4(var_39c01.x, var_39c01.y, var_39c01.z, var_39c01.w);
     highp float var_7aa46;
     func_fb7ab(var_f7888, var_da7e2, var_7aa46);
@@ -353,18 +353,17 @@ void main() {
     highp vec4 var_d0ebc = ((var_21b68 / vec4(var_9ef48)) * 0.5) + vec4(0.5);
     var_96bda = var_d0ebc;
     highp vec3 var_f88c4 = BlockLightColor.xyz;
-    highp vec3 var_fbfa9;
+    highp vec3 var_e61b8;
     if ((((var_f88c4.x + var_f88c4.y) + var_f88c4.z) < 9.9999997473787516355514526367188e-05) && (TileLightIntensity.x > 9.9999997473787516355514526367188e-05))
     {
-        highp vec4 var_0bc6f = vec4(0.0);
-        highp float var_88ce0 = TileLightIntensity.x * TileLightIntensity.x;
-        var_fbfa9 = clamp(vec3(var_88ce0 + (var_0bc6f.x * var_0bc6f.w), (var_88ce0 * ((((var_88ce0 * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.y * var_0bc6f.w), (var_88ce0 * (((var_88ce0 * var_88ce0) * 0.60000002384185791015625) + 0.4000000059604644775390625)) + (var_0bc6f.z * var_0bc6f.w)), vec3(0.0), vec3(1.0));
+        highp float var_c1e8f = TileLightIntensity.x * TileLightIntensity.x;
+        var_e61b8 = clamp(vec3(var_c1e8f, var_c1e8f * ((((var_c1e8f * 0.60000002384185791015625) + 0.4000000059604644775390625) * 0.60000002384185791015625) + 0.4000000059604644775390625), var_c1e8f * (((var_c1e8f * var_c1e8f) * 0.60000002384185791015625) + 0.4000000059604644775390625)), vec3(0.0), vec3(1.0));
     }
     else
     {
-        var_fbfa9 = BlockLightColor.xyz;
+        var_e61b8 = BlockLightColor.xyz;
     }
-    highp vec3 var_8f0e5 = var_fbfa9 * vec3(0.16666667163372039794921875);
+    highp vec3 var_8f0e5 = var_e61b8 * vec3(0.16666667163372039794921875);
     highp vec4 var_f46ce = vec4(var_8f0e5, 0.0039215688593685626983642578125);
     highp vec2 var_8a7dd = max(var_f46ce.xy, var_f46ce.zw);
     highp float var_a7109 = ceil(clamp(max(var_8a7dd.x, var_8a7dd.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;
@@ -373,19 +372,10 @@ void main() {
     uvec2 var_f7a74 = uvec2(var_768db.x & 255u, var_768db.y & 255u);
     uvec2 var_cc1c7 = var_63c1c.zw;
     uvec2 var_8bc3e = uvec2(var_cc1c7.x & 255u, var_cc1c7.y & 255u);
-    uvec2 var_ef8ed = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
-    uint var_f94da = uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0);
-    uint var_d3959;
-    if (var_893a8.w != 0.0)
-    {
-        var_d3959 = var_f94da | 256u;
-    }
-    else
-    {
-        var_d3959 = var_f94da;
-    }
-    uvec2 var_e14de = uvec2(uint(clamp(var_5ad51, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_c77d1, 0.0, 1.0) * 255.0) & 255u);
-    bgfx_FragData0 = uvec4((var_e14de.x << 8u) | var_e14de.y, var_ef8ed.x, var_ef8ed.y, var_d3959);
+    uvec2 var_34fa8 = uvec2((var_f7a74.x << 8u) | var_f7a74.y, (var_8bc3e.x << 8u) | var_8bc3e.y);
+    uint var_4c32f = uint(floor(var_d34a5.w * 255.0));
+    uvec2 var_180e3 = uvec2(uint(clamp(var_5ad51, 0.0, 1.0) * 255.0) & 255u, uint(clamp(var_c77d1, 0.0, 1.0) * 255.0) & 255u);
+    bgfx_FragData0 = uvec4((var_180e3.x << 8u) | var_180e3.y, var_34fa8.x, var_34fa8.y, (uint(clamp(TileLightIntensity.y, 0.0, 1.0) * 255.0) | uint(((var_4c32f & 1u) != 0u) ? 256 : 0)) | uint(((var_4c32f & 2u) != 0u) ? 512 : 0));
     bgfx_FragData1 = var_6bfdc;
     bgfx_FragData2 = vec4(var_532c2, var_603d8.xy - var_d0ebc.xy);
 }

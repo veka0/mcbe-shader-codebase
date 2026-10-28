@@ -7,14 +7,6 @@
 * - DO_DEFERRED_SHADING_PASS (not used)
 * - FALLBACK_PASS (not used)
 *
-* GPUBlockLighting:
-* - GPU_BLOCK_LIGHTING__OFF (not used)
-* - GPU_BLOCK_LIGHTING__ON (not used)
-*
-* PointLightShading:
-* - POINT_LIGHT_SHADING__OFF (not used)
-* - POINT_LIGHT_SHADING__ON (not used)
-*
 * Available Resources:
 *
 * Buffers:
@@ -65,7 +57,7 @@
 * - uniform vec4 DirectionalLightSourceShadowDirection;
 * - uniform vec4 DirectionalLightSourceWorldSpaceDirection;
 * - uniform vec4 DirectionalLightToggleAndMaxDistanceAndMaxCascadesPerLightAndGPUBlockLightingEnabled;
-* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggleAndShadowToggle;
+* - uniform vec4 DirectionalShadowModeAndCloudShadowToggleAndPointLightToggle;
 * - uniform vec4 EmissiveMultiplierAndDesaturationAndCloudPCFAndContribution;
 * - uniform vec4 FirstPersonPlayerShadowsEnabledAndResolutionAndFilterWidthAndTextureDimensions;
 * - uniform vec4 FogAndDistanceControl;
@@ -103,6 +95,7 @@
 * - uniform vec4 SunColor;
 * - uniform vec4 SunDir;
 * - uniform vec4 Time;
+* - uniform vec4 TransitioningAmbientScalar;
 * - uniform vec4 UndergroundFogColor;
 * - uniform vec4 ViewportScale;
 * - uniform vec4 VolumeDimensions;

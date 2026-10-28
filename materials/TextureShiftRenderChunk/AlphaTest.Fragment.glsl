@@ -70,13 +70,13 @@ uniform highp sampler2D s_LightMapTexture;
 uniform highp sampler2D s_MatTexture;
 #ifdef DITHERING__ON
 uniform highp vec4 DitherParams2[3];
-uniform highp vec4 DitherParams;
 #endif
+uniform highp vec4 DitherParams;
 uniform highp vec4 FogColor;
 #ifdef DITHERING__ON
 uniform highp vec4 ViewPositionAndTime;
-in highp vec4 v_clipPosition;
 #endif
+in highp vec4 v_clipPosition;
 in highp vec4 v_color0;
 #ifdef DITHERING__ON
 in highp vec2 v_ditheringAndMaskTinting;
@@ -102,31 +102,67 @@ void func_f1932(inout highp vec2 arg_c2b61, inout int arg_651a0, inout highp flo
         return;
     }
 }
+void func_c5ced(inout highp vec4 arg_909f3, inout bool arg_d6663) {
+    if ((arg_909f3.w <= 0.0) || (arg_909f3.w >= 1.0))
+    {
+        arg_d6663 = arg_909f3.w <= 0.0;
+        return;
+    }
+    highp vec4 loc_de7d3 = v_clipPosition;
+    arg_d6663 = arg_909f3.w <= fract(52.98291778564453125 * fract(dot(floor((((v_clipPosition.xyz / vec3(loc_de7d3.w)).xy * 0.5) + vec2(0.5)) * DitherParams.xy) * 1.0, vec2(0.067110560834407806396484375, 0.005837149918079376220703125))));
+}
 void main() {
     highp vec2 var_1614a = v_textureShift;
     int var_d0c42 = int(var_1614a.y * 65535.0);
-    highp float var_b4fa2;
-    func_f1932(var_1614a, var_d0c42, var_b4fa2);
+    highp float var_c18c9;
+    func_f1932(var_1614a, var_d0c42, var_c18c9);
     highp vec2 var_f486c = v_texcoord0;
     highp vec4 var_4b671 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].preUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].preUV1));
     highp vec4 var_2e873 = texture(s_MatTexture, vec2(var_f486c.x + var_803cb.TextureShiftBufferData[var_d0c42].postUV0, var_f486c.y + var_803cb.TextureShiftBufferData[var_d0c42].postUV1));
-    highp vec4 var_da3c1 = var_4b671;
-    highp vec4 var_e65e5 = var_2e873;
-    highp float var_7dfb9;
-    if (var_b4fa2 > 0.5)
+    highp vec4 var_b757a = var_4b671;
+    highp vec4 var_78b1e = var_2e873;
+    highp float var_b2499 = var_c18c9 * var_78b1e.w;
+    highp float var_01f5d = ((1.0 - var_c18c9) * var_b757a.w) + var_b2499;
+    highp float var_051ec;
+    if (var_01f5d > 0.0)
     {
-        var_7dfb9 = var_e65e5.w;
+        var_051ec = var_b2499 / var_01f5d;
     }
     else
     {
-        var_7dfb9 = var_da3c1.w;
+        var_051ec = 0.0;
     }
+    bool var_bd722 = var_b757a.w >= 0.5;
+    bool var_84047 = var_78b1e.w >= 0.5;
+    highp float var_9e295;
+    if (var_bd722 == var_84047)
+    {
+        var_9e295 = float(var_bd722);
+    }
+    else
+    {
+        highp float var_cdc5d = clamp(var_c18c9 * 4.0, 0.0, 1.0);
+        highp float var_dc0f1;
+        if (var_84047)
+        {
+            var_dc0f1 = var_cdc5d;
+        }
+        else
+        {
+            var_dc0f1 = 1.0 - var_cdc5d;
+        }
+        var_9e295 = var_dc0f1;
+    }
+    highp vec4 var_fbb16 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_051ec)), var_9e295);
+    bool var_8ed6d;
+    func_c5ced(var_fbb16, var_8ed6d);
+    var_fbb16.w = var_8ed6d ? 0.0 : 1.0;
 #ifdef DITHERING__ON
     highp vec2 var_4f8e7 = v_ditheringAndMaskTinting;
 #endif
-    highp vec4 var_208f1 = vec4(mix(var_4b671.xyz, var_2e873.xyz, vec3(var_b4fa2)), var_7dfb9);
+    highp vec4 var_bf701 = var_fbb16;
 #ifdef DITHERING__OFF
-    if (false || (var_208f1.w < 0.5))
+    if (false || (var_bf701.w < 0.5))
 #endif
 #ifdef DITHERING__ON
     highp vec2 var_42b21 = DitherParams2[2].xy;
@@ -147,14 +183,14 @@ void main() {
     {
         var_2935c = false;
     }
-    if (var_2935c || (var_208f1.w < 0.5))
+    if (var_2935c || (var_bf701.w < 0.5))
     {
 #endif
         discard;
     }
-    highp vec4 var_15f8b = var_208f1;
+    highp vec4 var_15f8b = var_bf701;
     highp vec3 var_47b05 = var_15f8b.xyz * v_color0.xyz;
-    var_208f1 = vec4(var_47b05.x, var_47b05.y, var_47b05.z, var_15f8b.w);
+    var_bf701 = vec4(var_47b05.x, var_47b05.y, var_47b05.z, var_15f8b.w);
     highp vec4 var_713a6 = v_fog;
-    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_47b05.xyz, var_208f1.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_208f1.w);
+    bgfx_FragData0 = vec4(mix(vec4(texture(s_LightMapTexture, v_lightmapUV).xyz * var_47b05.xyz, var_bf701.w).xyz, FogColor.xyz, vec3(var_713a6.w)), var_bf701.w);
 }
