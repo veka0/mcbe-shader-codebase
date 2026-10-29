@@ -6,6 +6,9 @@
 * Passes:
 * - TRANSPARENT_PASS (not used)
 *
+* Grayscale:
+* - GRAYSCALE__OFF (not used)
+*
 * Available Resources:
 *
 * Uniforms:

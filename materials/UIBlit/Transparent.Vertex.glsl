@@ -6,6 +6,10 @@
 * Passes:
 * - TRANSPARENT_PASS (not used)
 *
+* Grayscale:
+* - GRAYSCALE__OFF (not used)
+* - GRAYSCALE__ON (not used)
+*
 * Available Resources:
 *
 * Buffers:

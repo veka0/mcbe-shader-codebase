@@ -22,10 +22,6 @@
 * - POINT_LIGHT_SHADING__OFF (not used)
 * - POINT_LIGHT_SHADING__ON (not used)
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF (not used)
-* - RENDER_AS_BILLBOARDS__ON (not used)
-*
 * Seasons:
 * - SEASONS__OFF (not used)
 * - SEASONS__ON (not used)

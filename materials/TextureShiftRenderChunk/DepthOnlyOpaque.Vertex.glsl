@@ -18,9 +18,6 @@
 * - INSTANCING__OFF
 * - INSTANCING__ON
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF (not used)
-*
 * Seasons:
 * - SEASONS__OFF (not used)
 *

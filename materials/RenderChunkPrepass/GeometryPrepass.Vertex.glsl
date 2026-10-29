@@ -17,10 +17,6 @@
 * - INSTANCING__OFF
 * - INSTANCING__ON
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF
-* - RENDER_AS_BILLBOARDS__ON
-*
 * Seasons:
 * - SEASONS__OFF (not used)
 * - SEASONS__ON (not used)
@@ -47,9 +43,6 @@ uniform mat4 u_model[4];
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
-#ifdef RENDER_AS_BILLBOARDS__ON
-uniform vec4 ViewPositionAndTime;
-#endif
 in vec4 a_color0;
 in vec2 a_texcoord1;
 in vec4 a_normal;
@@ -74,39 +67,23 @@ out vec3 v_tangent;
 out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__OFF)
+#ifdef INSTANCING__OFF
     vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_7136d = (u_model[0] * vec4(a_position, 1.0)).xyz + vec3(0.5);
-    vec3 var_f280f = normalize(var_7136d - ViewPositionAndTime.xyz);
-    vec3 var_d3ea2 = normalize(cross(vec3(0.0, 1.0, 0.0), var_f280f));
-    vec3 var_c39b1 = a_color0.xyz;
-    vec3 var_edeb8 = var_7136d - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
-#endif
 #ifdef INSTANCING__ON
-    mat4 var_6e698;
-    var_6e698[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
-    var_6e698[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
-    var_6e698[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
-    var_6e698[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = var_6e698 * vec4(a_position, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_2071d = (var_6e698 * vec4(a_position, 1.0)).xyz + vec3(0.5);
-    vec3 var_85f78 = normalize(var_2071d - ViewPositionAndTime.xyz);
-    vec3 var_e10ad = normalize(cross(vec3(0.0, 1.0, 0.0), var_85f78));
-    vec3 var_0c400 = a_color0.xyz;
-    vec3 var_edeb8 = var_2071d - ((cross(var_85f78, var_e10ad) * (var_0c400.z - 0.5)) + (var_e10ad * (var_0c400.x - 0.5)));
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_a67a8 = var_53a7d * vec4(a_position, 1.0);
 #endif
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
     var_67767.y -= SubPixelOffset.y;
-    mat4 var_fab2f = u_proj;
-    var_fab2f[2] = var_67767;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
@@ -119,12 +96,7 @@ void main() {
     vec4 var_f1f3d = vec4(vec3(float(var_021ab.x), float(var_d188a.x), float(var_021ab.y)) * vec3(0.0039215688593685626983642578125), (a_normal.w * 0.5) + 0.5);
     vec4 var_22492 = var_f1f3d;
     v_bitangent = (u_model[0] * vec4(cross(a_normal.xyz, a_tangent.xyz) * a_tangent.w, 0.0)).xyz;
-#ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_color0 = vec4(1.0);
-#endif
     v_ditheringAndMaskTinting = vec2(notEqual((var_09f26 & uvec2(1u)), uvec2(0u)));
     v_frontFacing = 0;
     v_lightColor = (var_f1f3d.xyz * var_22492.w) * 6.0;
@@ -133,12 +105,6 @@ void main() {
     v_pbrTextureId = int(a_texcoord4) & 65535;
     v_tangent = (u_model[0] * vec4(a_tangent.xyz, 0.0)).xyz;
     v_texcoord0 = var_45935;
-#ifdef RENDER_AS_BILLBOARDS__OFF
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_fab2f * (u_view * vec4(var_a67a8.xyz, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_worldPos = var_edeb8;
-    gl_Position = var_fab2f * (u_view * vec4(var_edeb8, 1.0));
-#endif
+    gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

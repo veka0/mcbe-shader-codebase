@@ -18,10 +18,6 @@
 * - INSTANCING__OFF
 * - INSTANCING__ON
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF
-* - RENDER_AS_BILLBOARDS__ON
-*
 * Seasons:
 * - SEASONS__OFF (not used)
 * - SEASONS__ON (not used)
@@ -58,9 +54,6 @@ uniform vec4 MeshContext;
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 SubPixelOffset;
 uniform vec4 ViewPositionAndTime;
-#ifdef RENDER_AS_BILLBOARDS__ON
-in vec4 a_color0;
-#endif
 in vec3 a_position;
 in vec2 a_texcoord0;
 #ifdef INSTANCING__ON
@@ -75,66 +68,34 @@ out vec2 v_lightmapUV;
 centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__OFF)
+#ifdef INSTANCING__OFF
     vec4 var_93fa5 = u_model[0] * vec4(a_position, 1.0);
 #endif
 #ifdef INSTANCING__ON
-    mat4 var_05ce3;
-    var_05ce3[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
-    var_05ce3[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
-    var_05ce3[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
-    var_05ce3[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_93fa5 = var_53a7d * vec4(a_position, 1.0);
 #endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_93fa5 = var_05ce3 * vec4(a_position, 1.0);
-#endif
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    vec3 var_2b3bd = var_93fa5.xyz;
-#endif
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_2b3bd = (u_model[0] * vec4(a_position, 1.0)).xyz;
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_2b3bd = (var_05ce3 * vec4(a_position, 1.0)).xyz;
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    vec3 var_eb4e0 = var_2b3bd + vec3(0.5);
-    vec3 var_f280f = normalize(var_eb4e0 - ViewPositionAndTime.xyz);
-    vec3 var_d3ea2 = normalize(cross(vec3(0.0, 1.0, 0.0), var_f280f));
-    vec3 var_c39b1 = a_color0.xyz;
-    vec3 var_c77d5 = var_eb4e0 - ((cross(var_f280f, var_d3ea2) * (var_c39b1.z - 0.5)) + (var_d3ea2 * (var_c39b1.x - 0.5)));
-#endif
-    vec4 var_870be = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
+    vec3 var_15fa3 = var_93fa5.xyz;
+    vec4 var_b4c0f = mix(FogAndDistanceControl, vec4(0.9900000095367431640625, 1.0, 100000.0, 100000.0), bvec4(MeshContext.x > 0.5));
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
     var_67767.y -= SubPixelOffset.y;
-    mat4 var_fab2f = u_proj;
-    var_fab2f[2] = var_67767;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
     var_45935.y += (3.0517578125e-05 * ((2.0 * float((var_6c76e.y & 32768u) >> uint(15))) - 1.0));
-#ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = vec4(0.0);
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_color0 = vec4(1.0);
-#endif
     v_ditheringAndMaskTinting = vec2(0.0);
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_2b3bd) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_c77d5) / var_870be.z) + RenderChunkFogAlpha.x) - var_870be.x) / (var_870be.y - var_870be.x), 0.0, 1.0));
-#endif
+    v_fog = vec4(FogColor.xyz, clamp((((length(ViewPositionAndTime.xyz - var_15fa3) / var_b4c0f.z) + RenderChunkFogAlpha.x) - var_b4c0f.x) / (var_b4c0f.y - var_b4c0f.x), 0.0, 1.0));
     v_lightmapUV = vec2(0.0);
     v_texcoord0 = var_45935;
-    v_worldPos = var_2b3bd;
-#ifdef RENDER_AS_BILLBOARDS__OFF
-    gl_Position = var_fab2f * (u_view * vec4(var_93fa5.xyz, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    gl_Position = var_fab2f * (u_view * vec4(var_c77d5, 1.0));
-#endif
+    v_worldPos = var_15fa3;
+    gl_Position = var_8e1af * (u_view * vec4(var_93fa5.xyz, 1.0));
 }

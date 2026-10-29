@@ -8,6 +8,9 @@
 * - BLEND_PASS (not used)
 * - TRANSPARENT_PASS (not used)
 *
+* Grayscale:
+* - GRAYSCALE__OFF (not used)
+*
 * MultiColorTint:
 * - MULTI_COLOR_TINT__OFF
 * - MULTI_COLOR_TINT__ON

@@ -19,10 +19,6 @@
 * - POINT_LIGHT_SHADING__OFF (not used)
 * - POINT_LIGHT_SHADING__ON (not used)
 *
-* RenderAsBillboards:
-* - RENDER_AS_BILLBOARDS__OFF
-* - RENDER_AS_BILLBOARDS__ON
-*
 * Seasons:
 * - SEASONS__OFF (not used)
 * - SEASONS__ON (not used)
@@ -137,9 +133,6 @@ uniform mat4 u_model[4];
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform vec4 SubPixelOffset;
-#ifdef RENDER_AS_BILLBOARDS__ON
-uniform vec4 ViewPositionAndTime;
-#endif
 in vec4 a_color0;
 in vec2 a_texcoord1;
 in vec3 a_position;
@@ -159,39 +152,23 @@ out vec3 v_tangent;
 centroid out vec2 v_texcoord0;
 out vec3 v_worldPos;
 void main() {
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__OFF)
+#ifdef INSTANCING__OFF
     vec4 var_a67a8 = u_model[0] * vec4(a_position, 1.0);
 #endif
-#if defined(INSTANCING__OFF) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (u_model[0] * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
-#endif
 #ifdef INSTANCING__ON
-    mat4 var_05ce3;
-    var_05ce3[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
-    var_05ce3[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
-    var_05ce3[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
-    var_05ce3[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__OFF)
-    vec4 var_a67a8 = var_05ce3 * vec4(a_position, 1.0);
-#endif
-#if defined(INSTANCING__ON) && defined(RENDER_AS_BILLBOARDS__ON)
-    vec3 var_91aa3 = (var_05ce3 * vec4(a_position, 1.0)).xyz;
-    vec3 var_2cae0 = var_91aa3 + vec3(0.5);
-    vec3 var_b9097 = normalize(var_2cae0 - ViewPositionAndTime.xyz);
-    vec3 var_3d861 = normalize(cross(vec3(0.0, 1.0, 0.0), var_b9097));
-    vec3 var_0e57e = a_color0.xyz;
+    mat4 var_53a7d;
+    var_53a7d[0] = vec4(i_data1.x, i_data2.x, i_data3.x, 0.0);
+    var_53a7d[1] = vec4(i_data1.y, i_data2.y, i_data3.y, 0.0);
+    var_53a7d[2] = vec4(i_data1.z, i_data2.z, i_data3.z, 0.0);
+    var_53a7d[3] = vec4(i_data1.w, i_data2.w, i_data3.w, 1.0);
+    vec4 var_a67a8 = var_53a7d * vec4(a_position, 1.0);
 #endif
     mat4 var_83c3f = u_proj;
     vec4 var_67767 = var_83c3f[2];
     var_67767.x += SubPixelOffset.x;
     var_67767.y -= SubPixelOffset.y;
-    mat4 var_f12b9 = u_proj;
-    var_f12b9[2] = var_67767;
+    mat4 var_8e1af = u_proj;
+    var_8e1af[2] = var_67767;
     uvec2 var_6c76e = uvec2(round(a_texcoord0 * 65535.0));
     vec2 var_45935 = vec2(float((var_6c76e.x & 32767u) << uint(1)), float((var_6c76e.y & 32767u) << uint(1))) * vec2(1.525902189314365386962890625e-05);
     var_45935.x += (3.0517578125e-05 * ((2.0 * float((var_6c76e.x & 32768u) >> uint(15))) - 1.0));
@@ -199,24 +176,13 @@ void main() {
     uvec2 var_6d79f = uvec2(round(a_texcoord1 * 65535.0));
     uvec2 var_5e4ed = var_6d79f;
     v_bitangent = vec3(0.0);
-#ifdef RENDER_AS_BILLBOARDS__OFF
     v_color0 = a_color0;
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_color0 = vec4(1.0);
-#endif
     v_ditheringAndMaskTinting = vec2(notEqual((var_6d79f & uvec2(256u)), uvec2(0u)));
     v_lightmapUV = vec2(uvec2(var_5e4ed.y >> 4u, var_5e4ed.y) & uvec2(15u)) * vec2(0.066666670143604278564453125);
     v_normal = vec3(0.0);
     v_pbrTextureId = 0;
     v_tangent = vec3(0.0);
     v_texcoord0 = var_45935;
-#ifdef RENDER_AS_BILLBOARDS__OFF
     v_worldPos = var_a67a8.xyz;
-    gl_Position = var_f12b9 * (u_view * vec4(var_a67a8.xyz, 1.0));
-#endif
-#ifdef RENDER_AS_BILLBOARDS__ON
-    v_worldPos = var_91aa3;
-    gl_Position = var_f12b9 * (u_view * vec4(var_2cae0 - ((cross(var_b9097, var_3d861) * (var_0e57e.z - 0.5)) + (var_3d861 * (var_0e57e.x - 0.5))), 1.0));
-#endif
+    gl_Position = var_8e1af * (u_view * vec4(var_a67a8.xyz, 1.0));
 }

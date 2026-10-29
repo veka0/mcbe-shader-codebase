@@ -16,6 +16,9 @@
 * - FONT_TYPE__MSDF
 * - FONT_TYPE__TRUE_TYPE
 *
+* Grayscale:
+* - GRAYSCALE__OFF (not used)
+*
 * Available Resources:
 *
 * Buffers:
