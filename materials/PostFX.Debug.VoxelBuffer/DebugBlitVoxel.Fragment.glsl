@@ -80,7 +80,7 @@ struct GpuVolumeEntry {
     int user_data;
 };
 
-layout(binding = 7, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_77fa1;
+layout(binding = 7, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_0beb1;
 layout(binding = 6, std430) buffer s_GpuEntryBuffer { GpuVolumeEntry GpuEntryBuffer[]; } var_70434;
 uniform highp mat4 u_invProj;
 uniform highp mat4 u_invView;
@@ -91,16 +91,6 @@ uniform highp vec4 VolumeLayer;
 uniform highp vec4 WorldOrigin;
 in highp vec2 v_texcoord0;
 layout(location = 0) out highp vec4 bgfx_FragData0;
-void func_33953(inout uint arg_a601e, inout highp vec3 arg_aa7d7) {
-    if (var_77fa1.VoxelBuffer[arg_a601e].data == 0u)
-    {
-        arg_aa7d7 = vec3(0.0);
-        return;
-    }
-    highp vec4 loc_11fc1 = vec4(uvec4(var_77fa1.VoxelBuffer[arg_a601e].data, var_77fa1.VoxelBuffer[arg_a601e].data >> 8u, var_77fa1.VoxelBuffer[arg_a601e].data >> 16u, var_77fa1.VoxelBuffer[arg_a601e].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
-    highp vec4 loc_3ff2a = loc_11fc1;
-    arg_aa7d7 = (loc_11fc1.xyz * loc_3ff2a.w) * 6.0;
-}
 void main() {
     highp vec2 var_b6a7e = v_texcoord0;
     var_b6a7e = vec2(var_b6a7e.x, 1.0 - var_b6a7e.y);
@@ -229,18 +219,18 @@ void main() {
             break;
         }
     }
-    highp vec3 var_54f91;
+    highp vec3 var_db2c7;
     if (var_c4f05)
     {
         uvec3 var_ffb7a = uvec3(floor(var_54f51 - (floor(var_54f51 * 0.0625) * 16.0))) & uvec3(15u);
-        uint var_5a78b = (var_ae215 >> 2u) + ((var_ffb7a.y + (var_ffb7a.z * 16u)) + (var_ffb7a.x * 256u));
-        highp vec3 var_bf963;
-        func_33953(var_5a78b, var_bf963);
-        var_54f91 = var_bf963;
+        uint var_deea3 = (var_ae215 >> 2u) + ((var_ffb7a.y + (var_ffb7a.z * 16u)) + (var_ffb7a.x * 256u));
+        highp vec4 var_9c3ce = vec4(uvec4(var_0beb1.VoxelBuffer[var_deea3].data, var_0beb1.VoxelBuffer[var_deea3].data >> 8u, var_0beb1.VoxelBuffer[var_deea3].data >> 16u, var_0beb1.VoxelBuffer[var_deea3].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+        highp vec4 var_0fac4 = var_9c3ce;
+        var_db2c7 = (var_9c3ce.xyz * var_0fac4.w) * 6.0;
     }
     else
     {
-        var_54f91 = vec3(0.0);
+        var_db2c7 = vec3(0.0);
     }
-    bgfx_FragData0 = vec4(pow(var_54f91, vec3(0.4545454680919647216796875)), 1.0);
+    bgfx_FragData0 = vec4(pow(var_db2c7, vec3(0.4545454680919647216796875)), 1.0);
 }

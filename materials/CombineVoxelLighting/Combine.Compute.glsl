@@ -48,25 +48,15 @@ struct FloatEntry {
 layout(binding = 1, std430) buffer s_GpuEntryBuffer { GpuVolumeEntry GpuEntryBuffer[]; } var_c8427;
 layout(binding = 3, std430) buffer s_TransitioningGpuEntryBuffer { GpuVolumeEntry TransitioningGpuEntryBuffer[]; } var_47161;
 layout(binding = 0, std430) buffer s_DirtyVolumeKeys { UintEntry DirtyVolumeKeys[]; } var_40823;
-layout(binding = 5, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_43db8;
-layout(binding = 4, std430) buffer s_TransitioningVoxelBuffer { VoxelNode TransitioningVoxelBuffer[]; } var_3fedc;
-layout(binding = 2, std430) buffer s_PerGroupLerps { FloatEntry PerGroupLerps[]; } var_ed9af;
+layout(binding = 5, std430) buffer s_VoxelBuffer { VoxelNode VoxelBuffer[]; } var_509cd;
+layout(binding = 4, std430) buffer s_TransitioningVoxelBuffer { VoxelNode TransitioningVoxelBuffer[]; } var_7ca69;
+layout(binding = 2, std430) buffer s_PerGroupLerps { FloatEntry PerGroupLerps[]; } var_573fa;
 uniform vec4 DirtyVolumeCount;
 uniform vec4 GpuEntryBufferCapacity;
 uniform vec4 TransitioningAmbientScalar;
 uniform vec4 TransitioningGpuEntryBufferCapacity;
 uniform vec4 TransitioningVolumesLayerCount;
 shared uint sTransitionOffsetCache[32];
-void func_f0f8c(inout uint arg_047d2, inout vec3 arg_aa7d7) {
-    if (var_43db8.VoxelBuffer[arg_047d2].data == 0u)
-    {
-        arg_aa7d7 = vec3(0.0);
-        return;
-    }
-    vec4 loc_951c2 = vec4(uvec4(var_43db8.VoxelBuffer[arg_047d2].data, var_43db8.VoxelBuffer[arg_047d2].data >> 8u, var_43db8.VoxelBuffer[arg_047d2].data >> 16u, var_43db8.VoxelBuffer[arg_047d2].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
-    vec4 loc_0dc9c = loc_951c2;
-    arg_aa7d7 = (loc_951c2.xyz * loc_0dc9c.w) * 6.0;
-}
 void func_af205(inout uint arg_9a3a5, inout uint arg_cc2dc, inout bool arg_e4a17, inout ivec4 arg_ebd58) {
     if (arg_9a3a5 < 32u)
     {
@@ -167,17 +157,7 @@ void func_af205(inout uint arg_9a3a5, inout uint arg_cc2dc, inout bool arg_e4a17
     arg_cc2dc = loc_94970 >> 2u;
     arg_e4a17 = loc_1d3fd;
 }
-void func_2ac1e(inout uint arg_ab3e5, inout vec3 arg_aa7d7) {
-    if (var_3fedc.TransitioningVoxelBuffer[arg_ab3e5].data == 0u)
-    {
-        arg_aa7d7 = vec3(0.0);
-        return;
-    }
-    vec4 loc_8af8a = vec4(uvec4(var_3fedc.TransitioningVoxelBuffer[arg_ab3e5].data, var_3fedc.TransitioningVoxelBuffer[arg_ab3e5].data >> 8u, var_3fedc.TransitioningVoxelBuffer[arg_ab3e5].data >> 16u, var_3fedc.TransitioningVoxelBuffer[arg_ab3e5].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
-    vec4 loc_0dc9c = loc_8af8a;
-    arg_aa7d7 = (loc_8af8a.xyz * loc_0dc9c.w) * 6.0;
-}
-void func_012b7() {
+void func_be8a9() {
     bool loc_f91a4 = gl_GlobalInvocationID.y < uint(DirtyVolumeCount.x);
     ivec4 loc_2ee36;
     if (loc_f91a4)
@@ -589,76 +569,76 @@ void func_012b7() {
     uint loc_2272d = min((loc_6b407 + 16u), 4096u);
     for (uint loc_f7c78 = loc_6b407; loc_f7c78 < loc_2272d; loc_f7c78++)
     {
-        uint loc_f3dbb = loc_1a5a7 + loc_f7c78;
-        vec3 loc_2c21d;
-        func_f0f8c(loc_f3dbb, loc_2c21d);
-        vec3 loc_13d4b;
+        uint loc_c0a1f = loc_1a5a7 + loc_f7c78;
+        vec4 loc_47003 = vec4(uvec4(var_509cd.VoxelBuffer[loc_c0a1f].data, var_509cd.VoxelBuffer[loc_c0a1f].data >> 8u, var_509cd.VoxelBuffer[loc_c0a1f].data >> 16u, var_509cd.VoxelBuffer[loc_c0a1f].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+        vec4 loc_6669c = loc_47003;
+        vec3 loc_1a682;
         if (loc_cf3c5)
         {
-            uint loc_366dc = loc_21bdd + loc_f7c78;
-            vec3 loc_7e129;
-            func_f0f8c(loc_366dc, loc_7e129);
-            loc_13d4b = loc_7e129;
+            uint loc_5df7d = loc_21bdd + loc_f7c78;
+            vec4 loc_6581b = vec4(uvec4(var_509cd.VoxelBuffer[loc_5df7d].data, var_509cd.VoxelBuffer[loc_5df7d].data >> 8u, var_509cd.VoxelBuffer[loc_5df7d].data >> 16u, var_509cd.VoxelBuffer[loc_5df7d].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+            vec4 loc_eb32f = loc_6581b;
+            loc_1a682 = (loc_6581b.xyz * loc_eb32f.w) * 6.0;
         }
         else
         {
-            loc_13d4b = vec3(0.0);
+            loc_1a682 = vec3(0.0);
         }
         uint loc_df3fe = loc_53897 / 2u;
-        vec3 loc_53b3e;
-        loc_53b3e = vec3(0.0);
+        vec3 loc_4687d;
+        loc_4687d = vec3(0.0);
         vec3 loc_39565;
-        for (uint loc_74442 = 0u; loc_74442 < loc_df3fe; loc_53b3e = loc_39565, loc_74442++)
+        for (uint loc_74442 = 0u; loc_74442 < loc_df3fe; loc_4687d = loc_39565, loc_74442++)
         {
             uint loc_8512f = loc_74442 * 2u;
             uint loc_de454 = (loc_74442 * 2u) + 1u;
             bool loc_309d1;
             uint loc_fdb16;
             func_af205(loc_8512f, loc_fdb16, loc_309d1, loc_2ee36);
-            vec3 loc_969e3;
+            vec3 loc_7db27;
             if (loc_309d1)
             {
-                uint loc_fccf6 = loc_fdb16 + loc_f7c78;
-                vec3 loc_52a64;
-                func_2ac1e(loc_fccf6, loc_52a64);
-                loc_969e3 = loc_52a64;
+                uint loc_7c32a = loc_fdb16 + loc_f7c78;
+                vec4 loc_888b0 = vec4(uvec4(var_7ca69.TransitioningVoxelBuffer[loc_7c32a].data, var_7ca69.TransitioningVoxelBuffer[loc_7c32a].data >> 8u, var_7ca69.TransitioningVoxelBuffer[loc_7c32a].data >> 16u, var_7ca69.TransitioningVoxelBuffer[loc_7c32a].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+                vec4 loc_308f9 = loc_888b0;
+                loc_7db27 = (loc_888b0.xyz * loc_308f9.w) * 6.0;
             }
             else
             {
-                loc_969e3 = vec3(0.0);
+                loc_7db27 = vec3(0.0);
             }
             bool loc_e0f24;
             uint loc_94b5a;
             func_af205(loc_de454, loc_94b5a, loc_e0f24, loc_2ee36);
-            vec3 loc_3a882;
+            vec3 loc_5d9dd;
             if (loc_e0f24)
             {
-                uint loc_f2bf8 = loc_94b5a + loc_f7c78;
-                vec3 loc_8c93d;
-                func_2ac1e(loc_f2bf8, loc_8c93d);
-                loc_3a882 = loc_8c93d;
+                uint loc_3fda1 = loc_94b5a + loc_f7c78;
+                vec4 loc_8f8c7 = vec4(uvec4(var_7ca69.TransitioningVoxelBuffer[loc_3fda1].data, var_7ca69.TransitioningVoxelBuffer[loc_3fda1].data >> 8u, var_7ca69.TransitioningVoxelBuffer[loc_3fda1].data >> 16u, var_7ca69.TransitioningVoxelBuffer[loc_3fda1].data >> 24u) & uvec4(255u)) * vec4(0.0039215688593685626983642578125);
+                vec4 loc_0d535 = loc_8f8c7;
+                loc_5d9dd = (loc_8f8c7.xyz * loc_0d535.w) * 6.0;
             }
             else
             {
-                loc_3a882 = vec3(0.0);
+                loc_5d9dd = vec3(0.0);
             }
-            loc_39565 = loc_53b3e + mix(loc_969e3, loc_3a882, vec3(var_ed9af.PerGroupLerps[loc_74442].data));
+            loc_39565 = loc_4687d + mix(loc_7db27, loc_5d9dd, vec3(var_573fa.PerGroupLerps[loc_74442].data));
         }
-        vec3 loc_c8be4 = ((loc_2c21d * TransitioningAmbientScalar.x) + ((loc_53b3e + loc_13d4b) * (1.0 - TransitioningAmbientScalar.x))) * vec3(0.16666667163372039794921875);
-        vec4 loc_48fd3 = vec4(loc_c8be4, 0.0039215688593685626983642578125);
+        vec3 loc_06484 = ((((loc_47003.xyz * loc_6669c.w) * 6.0) * TransitioningAmbientScalar.x) + ((loc_4687d + loc_1a682) * (1.0 - TransitioningAmbientScalar.x))) * vec3(0.16666667163372039794921875);
+        vec4 loc_48fd3 = vec4(loc_06484, 0.0039215688593685626983642578125);
         vec2 loc_cbcc5 = max(loc_48fd3.xy, loc_48fd3.zw);
         float loc_6ad36 = ceil(clamp(max(loc_cbcc5.x, loc_cbcc5.y), 0.0, 1.0) * 255.0) * 0.0039215688593685626983642578125;
-        uvec4 loc_8d2c0 = uvec4(clamp(vec4(loc_c8be4 / vec3(loc_6ad36), loc_6ad36), vec4(0.0), vec4(1.0)) * 255.0);
-        var_43db8.VoxelBuffer[loc_c3cf4 + loc_f7c78].data = ((loc_8d2c0.x | (loc_8d2c0.y << 8u)) | (loc_8d2c0.z << 16u)) | (loc_8d2c0.w << 24u);
+        uvec4 loc_8d2c0 = uvec4(clamp(vec4(loc_06484 / vec3(loc_6ad36), loc_6ad36), vec4(0.0), vec4(1.0)) * 255.0);
+        var_509cd.VoxelBuffer[loc_c3cf4 + loc_f7c78].data = ((loc_8d2c0.x | (loc_8d2c0.y << 8u)) | (loc_8d2c0.z << 16u)) | (loc_8d2c0.w << 24u);
     }
     uint loc_f6d51 = gl_GlobalInvocationID.x * 2u;
     uint loc_0575c = min((loc_f6d51 + 2u), 328u);
     for (uint loc_b8662 = loc_f6d51; loc_b8662 < loc_0575c; loc_b8662++)
     {
         uint loc_a72b1 = 4123u + loc_b8662;
-        var_43db8.VoxelBuffer[loc_c3cf4 + loc_a72b1].data = var_43db8.VoxelBuffer[loc_1a5a7 + loc_a72b1].data;
+        var_509cd.VoxelBuffer[loc_c3cf4 + loc_a72b1].data = var_509cd.VoxelBuffer[loc_1a5a7 + loc_a72b1].data;
     }
 }
 void main() {
-    func_012b7();
+    func_be8a9();
 }
